@@ -1,0 +1,33 @@
+{
+  "views": {
+    "ContentView": {
+      "empty": {
+        "status": "added"
+      },
+      "single": {
+        "status": "added"
+      },
+      "typical": {
+        "status": "added"
+      },
+      "many": {
+        "status": "added"
+      },
+      "loading": {
+        "status": "n-a",
+        "reason": "Seeded TodayState is read synchronously at launch; this MVP dashboard has no async fetch, so no loading state exists."
+      },
+      "edge": {
+        "status": "added"
+      },
+      "error": {
+        "status": "n-a",
+        "reason": "No error path on the dashboard read; HealthKit-not-connected resolves to the Connect hero, covered by the empty archetype."
+      },
+      "key-interaction": {
+        "status": "n-a",
+        "reason": "Only action is the Connect Apple Health CTA; its connected result is shown by the dashboard scenarios and its logic is covered by testConnectFlipsState."
+      }
+    }
+  }
+}

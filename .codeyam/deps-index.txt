@@ -1,0 +1,9 @@
+# regenerated from dependency-graph.json on 2026-06-22T19:58:43Z; do not hand-edit
+.claude/skills/review-session/scripts/find-last-session-helpers.mjs :: imports=0 :: imported_by=1
+.claude/hooks/_step_metadata.py :: imports=0 :: imported_by=0
+.claude/hooks/editor-pretool-hook.py :: imports=0 :: imported_by=0
+.claude/hooks/editor-step-hook.py :: imports=0 :: imported_by=0
+.claude/skills/review-session/scripts/extract-session-helpers.mjs :: imports=0 :: imported_by=0
+.claude/skills/review-session/scripts/extract-session.mjs :: imports=0 :: imported_by=0
+.claude/skills/review-session/scripts/find-last-session.mjs :: imports=1 :: imported_by=0
+ui/src/helpers/stepLabels.generated.ts :: imports=0 :: imported_by=0

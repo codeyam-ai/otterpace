@@ -1,6 +1,51 @@
-# Swift + SwiftUI iOS App
+# RunBuddy 🐾
 
-A native iOS application using SwiftUI and a shared SwiftPM AppCore library.
+An open-source, AI running coach for iOS — built in the open as a CodeYam showcase.
+
+RunBuddy is a friendly running coach in your pocket: it pulls your activity from
+Apple HealthKit (and, soon, Strava), keeps you moving toward your daily 10,000
+steps, and gives injury-aware, never-shame-based coaching through **Buddy**, a
+mood-reactive dog mascot.
+
+## What's here today
+
+The **Today dashboard** (this milestone), a native SwiftUI screen that shows:
+
+- A **step-goal ring** toward your daily 10K, plus active minutes, distance, and
+  time since you last moved
+- **Buddy**, whose mood (resting → ready → jogging → cheering → concerned →
+  celebrating → recovery) reflects how the day is going
+- An **AI coach card** with one clear, practical recommendation — conservative and
+  injury-aware, flipping to an amber caution when your training load spikes
+- Your **latest run/walk** and a **weekly training-load** snapshot
+- A friendly **day-one "Connect Apple Health"** hero for first launch
+
+The screen is driven by a single `TodayState` (see `Sources/AppCore/Model.swift`),
+populated from HealthKit in the real app and from each CodeYam scenario's
+`deviceState` preferences in the simulator preview. Production starts empty; each
+scenario carries its own seeded state.
+
+## Architecture
+
+- `App/` — the iOS app entry point (`@main`) and `Info.plist`
+- `Sources/AppCore/` — the SwiftUI views and model, as a shared SwiftPM library:
+  `RunBuddyModel` + `TodayState` (data + derived logic), `BuddyView` (the mascot),
+  and one file per dashboard component (`StepRing`, `CoachCard`, `WeeklyLoadCard`, …)
+- `Tests/AppCoreTests/` — XCTest coverage of the model and pure formatters
+
+## Running
+
+Requires Xcode with an iOS simulator runtime installed.
+
+    # Boot the simulator, build, and launch the app
+    codeyam-editor editor start-simulator swift-ios-swiftui
+
+    # Capture the Today dashboard in a given scenario state
+    codeyam-editor editor preview '{"dimension":"iPhone 16","path":"/","scenarioSlug":"today-goal-crushed"}'
+
+Scenarios live in `.codeyam/scenarios/` and seed the dashboard's state at launch —
+e.g. `today-day-one-connect`, `today-fresh-start`, `today-midday-nudge`,
+`today-almost-there`, `today-recovery-caution`, `today-goal-crushed`.
 
 ## Testing
 

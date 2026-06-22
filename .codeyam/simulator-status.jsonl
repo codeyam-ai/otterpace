@@ -1,0 +1,6 @@
+{"state":"preflight-running"}
+{"state":"simulator-booted","udid":"E347E8E1-DB48-4FE0-A7E5-38635DC7D13D","name":"iPhone 16 Pro"}
+{"state":"building-app","elapsedSec":0}
+{"state":"building-app","elapsedSec":5}
+{"state":"building-app","elapsedSec":10}
+{"state":"app-launched","udid":"E347E8E1-DB48-4FE0-A7E5-38635DC7D13D","appBundleId":"com.example.App"}

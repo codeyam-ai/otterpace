@@ -1,0 +1,149 @@
+{
+  "tests": [
+    {
+      "description": "Caution-leaning moods carry distinct accent colors from the upbeat default.",
+      "file": "Tests/AppCoreTests/BuddyMoodTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.BuddyMoodTests › testAccentsDifferentiateMoods",
+      "line": 29,
+      "registeredAt": "2026-06-22T19:41:43.425970+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Every mood exposes a non-empty caption used by the mood chip.",
+      "file": "Tests/AppCoreTests/BuddyMoodTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.BuddyMoodTests › testEveryMoodHasCaption",
+      "line": 22,
+      "registeredAt": "2026-06-22T19:41:43.424189+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A known raw string maps to the matching mood case, case-insensitively.",
+      "file": "Tests/AppCoreTests/BuddyMoodTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.BuddyMoodTests › testInitFromKnownRaw",
+      "line": 9,
+      "registeredAt": "2026-06-22T19:41:43.420273+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An unknown or empty raw string falls back to the friendly ready default.",
+      "file": "Tests/AppCoreTests/BuddyMoodTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.BuddyMoodTests › testInitUnknownFallsBackToReady",
+      "line": 16,
+      "registeredAt": "2026-06-22T19:41:43.422302+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "formatted groups thousands with separators for readable step counts.",
+      "file": "Tests/AppCoreTests/FormattersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testFormattedGroupsThousands",
+      "line": 8,
+      "registeredAt": "2026-06-22T19:41:43.408321+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "formatted leaves small numbers and zero untouched.",
+      "file": "Tests/AppCoreTests/FormattersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testFormattedSmallNumbers",
+      "line": 15,
+      "registeredAt": "2026-06-22T19:41:43.410060+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "movementLabel rolls into hours, dropping the minutes part when it is zero.",
+      "file": "Tests/AppCoreTests/FormattersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testMovementLabelHours",
+      "line": 35,
+      "registeredAt": "2026-06-22T19:41:43.415087+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "movementLabel uses bare minutes under an hour.",
+      "file": "Tests/AppCoreTests/FormattersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testMovementLabelMinutes",
+      "line": 28,
+      "registeredAt": "2026-06-22T19:41:43.413403+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "movementLabel reads now at or below zero minutes since moving.",
+      "file": "Tests/AppCoreTests/FormattersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testMovementLabelNow",
+      "line": 22,
+      "registeredAt": "2026-06-22T19:41:43.411685+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "prettyDate returns the input unchanged when it is not a valid ISO date.",
+      "file": "Tests/AppCoreTests/FormattersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testPrettyDateInvalidFallsThrough",
+      "line": 48,
+      "registeredAt": "2026-06-22T19:41:43.418638+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "prettyDate turns a valid ISO date into a short weekday and day label.",
+      "file": "Tests/AppCoreTests/FormattersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testPrettyDateValid",
+      "line": 42,
+      "registeredAt": "2026-06-22T19:41:43.416701+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Connecting Apple Health flips the model from the day-one hero into the dashboard.",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testConnectFlipsState",
+      "line": 70,
+      "registeredAt": "2026-06-22T19:41:43.406519+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The empty production default is the not-yet-connected day-one state that shows the Connect hero.",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testEmptyStateIsDisconnected",
+      "line": 10,
+      "registeredAt": "2026-06-22T19:41:43.398712+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Goal progress is the steps over goal ratio clamped to 1.0, and steps-remaining never goes negative.",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testGoalProgressClampsAndRemaining",
+      "line": 19,
+      "registeredAt": "2026-06-22T19:41:43.400855+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "With no keys seeded the reader yields the empty disconnected state with a default 10k goal.",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testReadStateEmptyDefaultsToDisconnected",
+      "line": 60,
+      "registeredAt": "2026-06-22T19:41:43.404808+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Flat rb preference keys are read back into a fully-populated TodayState including the coach group.",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testReadStateFromFlatDefaults",
+      "line": 34,
+      "registeredAt": "2026-06-22T19:41:43.402746+00:00",
+      "runner": "tests"
+    }
+  ],
+  "version": 2
+}

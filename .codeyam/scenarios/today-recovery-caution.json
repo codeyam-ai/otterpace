@@ -1,0 +1,39 @@
+{
+  "name": "Today - Recovery Caution",
+  "id": "4c698329-06ad-49bb-a987-4088816d76a0",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbConnected": true,
+      "rbWorkoutSource": "strava",
+      "rbActiveEnergyKcal": 240,
+      "rbCoachHeadline": "Easy does it today",
+      "rbLoadTrend": "spiking",
+      "rbWorkoutPace": "9:30/mi",
+      "rbSteps": 5400,
+      "rbDaysRunThisWeek": 4,
+      "rbBuddyMood": "concerned",
+      "rbCoachType": "rest",
+      "rbGoalSteps": 10000,
+      "rbDistanceMiles": 2.6,
+      "rbMinutesSinceMovement": 40,
+      "rbWorkoutDistanceMiles": 8.1,
+      "rbWorkoutType": "run",
+      "rbActiveMinutes": 35,
+      "rbWorkoutDate": "2026-06-21",
+      "rbCoachBody": "Your weekly mileage jumped about 40% and you logged a hard 8-mile run yesterday. Today is a great day for a relaxed walk or mobility work — let that effort settle so it builds fitness instead of injury risk.",
+      "rbDate": "2026-06-22",
+      "rbCoachSafety": true,
+      "rbLongestRunMiles": 8.1,
+      "rbWeeklyMileage": 22.0,
+      "rbRestDaysThisWeek": 1,
+      "rbWorkoutDurationMinutes": 77
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/ContentView.swift"
+}

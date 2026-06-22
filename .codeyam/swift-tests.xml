@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<testsuites>
+<testsuite name="TestResults" errors="0" tests="16" failures="0" time="1.8340857920000002">
+<testcase classname="AppCoreTests.BuddyMoodTests" name="testInitUnknownFallsBackToReady" time="0.105206">
+</testcase>
+<testcase classname="AppCoreTests.FormattersTests" name="testMovementLabelHours" time="0.111134708">
+</testcase>
+<testcase classname="AppCoreTests.FormattersTests" name="testFormattedSmallNumbers" time="0.1112275">
+</testcase>
+<testcase classname="AppCoreTests.BuddyMoodTests" name="testEveryMoodHasCaption" time="0.111226042">
+</testcase>
+<testcase classname="AppCoreTests.BuddyMoodTests" name="testInitFromKnownRaw" time="0.111149875">
+</testcase>
+<testcase classname="AppCoreTests.FormattersTests" name="testFormattedGroupsThousands" time="0.111221333">
+</testcase>
+<testcase classname="AppCoreTests.BuddyMoodTests" name="testAccentsDifferentiateMoods" time="0.111229042">
+</testcase>
+<testcase classname="AppCoreTests.FormattersTests" name="testMovementLabelMinutes" time="0.111234125">
+</testcase>
+<testcase classname="AppCoreTests.FormattersTests" name="testMovementLabelNow" time="0.09606675">
+</testcase>
+<testcase classname="AppCoreTests.ModelTests" name="testReadStateFromFlatDefaults" time="0.121965208">
+</testcase>
+<testcase classname="AppCoreTests.FormattersTests" name="testPrettyDateValid" time="0.122099125">
+</testcase>
+<testcase classname="AppCoreTests.ModelTests" name="testConnectFlipsState" time="0.122037334">
+</testcase>
+<testcase classname="AppCoreTests.ModelTests" name="testGoalProgressClampsAndRemaining" time="0.122072208">
+</testcase>
+<testcase classname="AppCoreTests.ModelTests" name="testEmptyStateIsDisconnected" time="0.122027542">
+</testcase>
+<testcase classname="AppCoreTests.FormattersTests" name="testPrettyDateInvalidFallsThrough" time="0.122165875">
+</testcase>
+<testcase classname="AppCoreTests.ModelTests" name="testReadStateEmptyDefaultsToDisconnected" time="0.122023125">
+</testcase>
+</testsuite>
+</testsuites>

@@ -1,0 +1,34 @@
+{
+  "name": "Today - Fresh Start",
+  "id": "612d067a-f27e-4417-87e7-6ccc1652843a",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbGoalSteps": 10000,
+      "rbLoadTrend": "recovering",
+      "rbDistanceMiles": 0.2,
+      "rbBuddyMood": "ready",
+      "rbDaysRunThisWeek": 1,
+      "rbActiveEnergyKcal": 28,
+      "rbConnected": true,
+      "rbMinutesSinceMovement": 25,
+      "rbCoachSafety": false,
+      "rbSteps": 420,
+      "rbActiveMinutes": 6,
+      "rbCoachBody": "You're just getting started today. An easy 10-minute walk now sets a good rhythm — no pressure, just momentum toward your 10K.",
+      "rbLongestRunMiles": 3.1,
+      "rbDate": "2026-06-22",
+      "rbCoachType": "move",
+      "rbRestDaysThisWeek": 4,
+      "rbWorkoutType": "",
+      "rbWeeklyMileage": 6.2,
+      "rbCoachHeadline": "Fresh day, let's move"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/ContentView.swift"
+}

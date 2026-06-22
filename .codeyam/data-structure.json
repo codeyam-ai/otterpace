@@ -1,0 +1,62 @@
+[
+  {
+    "name": "TodaySnapshot",
+    "description": "The day's activity state the Today dashboard renders, sourced from HealthKit. healthKitConnected drives the day-one 'Connect Apple Health' empty state; when false the dashboard shows the friendly connect hero instead of metrics. Production starts empty (no snapshot, treated as not connected). Each scenario seeds one snapshot via flat rb-prefixed UserDefaults keys in deviceState.preferences (e.g. rbConnected, rbSteps, rbGoalSteps, rbActiveMinutes, rbDistanceMiles, rbMinutesSinceMovement, rbDate) read at launch.",
+    "category": "datastore",
+    "order": 1,
+    "fields": [
+      { "name": "id", "type": "number", "isId": true, "required": true },
+      { "name": "date", "type": "string", "required": true, "description": "ISO date for the snapshot, e.g. 2026-06-22" },
+      { "name": "healthKitConnected", "type": "boolean", "required": true, "description": "Whether Apple Health is connected; false => day-one connect hero" },
+      { "name": "steps", "type": "number", "required": true, "description": "Steps so far today" },
+      { "name": "goalSteps", "type": "number", "required": true, "description": "Daily step goal, default 10000" },
+      { "name": "activeMinutes", "type": "number", "required": true, "description": "Active minutes today" },
+      { "name": "distanceMiles", "type": "number", "required": true, "description": "Walking/running distance today, miles" },
+      { "name": "activeEnergyKcal", "type": "number", "required": false, "description": "Active energy burned today, kcal" },
+      { "name": "minutesSinceLastMovement", "type": "number", "required": true, "description": "Minutes since the last meaningful movement; drives inactivity nudges" }
+    ]
+  },
+  {
+    "name": "Workout",
+    "description": "A recent run/walk/ride from HealthKit or Strava. The most recent one renders as the 'Latest run/walk' card on the Today dashboard; the full set feeds weekly-load context. Empty list => no latest-activity card.",
+    "category": "datastore",
+    "order": 2,
+    "fields": [
+      { "name": "id", "type": "number", "isId": true, "required": true },
+      { "name": "type", "type": "string", "required": true, "description": "run | walk | ride" },
+      { "name": "distanceMiles", "type": "number", "required": true },
+      { "name": "durationMinutes", "type": "number", "required": true },
+      { "name": "pace", "type": "string", "required": false, "description": "Average pace, e.g. 10:15/mi" },
+      { "name": "date", "type": "string", "required": true, "description": "ISO date of the workout" },
+      { "name": "source", "type": "string", "required": true, "description": "healthkit | strava" }
+    ]
+  },
+  {
+    "name": "WeeklyLoad",
+    "description": "Rolled-up weekly training-load snapshot shown on the Today dashboard and used as coach context. Drives injury-aware coaching (e.g. a spiking loadTrend triggers a caution recommendation).",
+    "category": "datastore",
+    "order": 3,
+    "fields": [
+      { "name": "id", "type": "number", "isId": true, "required": true },
+      { "name": "weeklyMileage", "type": "number", "required": true },
+      { "name": "daysRunThisWeek", "type": "number", "required": true },
+      { "name": "longestRunMiles", "type": "number", "required": true },
+      { "name": "restDaysThisWeek", "type": "number", "required": true },
+      { "name": "loadTrend", "type": "string", "required": true, "description": "building | steady | spiking | recovering" }
+    ]
+  },
+  {
+    "name": "CoachRecommendation",
+    "description": "The AI running coach's output for the Today card, plus the Buddy mascot mood it drives. In MVP this is a mocked coach response (mock-coach mode), so it is modeled as a mock-api source rather than a persisted store. Conservative and injury-aware: safetyFlag marks a caution/rest recommendation.",
+    "category": "mock-api",
+    "order": 4,
+    "fields": [
+      { "name": "id", "type": "number", "isId": true, "required": true },
+      { "name": "buddyMood", "type": "string", "required": true, "description": "resting | ready | jogging | cheering | concerned | celebrating | recovery" },
+      { "name": "headline", "type": "string", "required": true, "description": "Short coach headline, e.g. 'Easy movement day'" },
+      { "name": "body", "type": "string", "required": true, "description": "The full recommendation text" },
+      { "name": "recommendationType", "type": "string", "required": true, "description": "move | walk | run | rest | celebrate | caution" },
+      { "name": "safetyFlag", "type": "boolean", "required": false, "description": "True when an injury-aware caution applies (e.g. spiking load, reported pain)" }
+    ]
+  }
+]

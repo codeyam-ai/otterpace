@@ -1,0 +1,160 @@
+[
+  {
+    "description": "The Buddy mascot's mood with its presentation logic: a case-insensitive initializer from a raw coach string that falls back to ready, plus an accent color and a caption per mood used by the mascot halo and mood chip.",
+    "filePath": "Sources/AppCore/Theme.swift",
+    "name": "BuddyMood",
+    "testFile": "Tests/AppCoreTests/BuddyMoodTests.swift"
+  },
+  {
+    "description": "Hero card pairing Buddy and its mood chip with the step-goal ring.",
+    "filePath": "Sources/AppCore/BuddySummaryCard.swift",
+    "name": "BuddySummaryCard",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "The friendly dog mascot drawn with SwiftUI shapes; eyes, tongue, and accessory change with BuddyMood. Exercised visually by the Today dashboard application scenarios.",
+    "filePath": "Sources/AppCore/BuddyView.swift",
+    "name": "BuddyView",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; this stack has no component-isolation harness, so it is demonstrated via the application scenarios on the simulator.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "The AI coach recommendation card, with a calm brand treatment normally and an amber shield-marked treatment when the recommendation carries a safety flag.",
+    "filePath": "Sources/AppCore/CoachCard.swift",
+    "name": "CoachCard",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "The day-one empty state shown before Apple Health is connected: Buddy waving, a warm explainer, the connect call-to-action, and a privacy reassurance.",
+    "filePath": "Sources/AppCore/ConnectHero.swift",
+    "name": "ConnectHero",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "Root of the RunBuddy app. Reads the seeded TodayState at launch and shows either the day-one Connect hero or the full Today dashboard.",
+    "filePath": "Sources/AppCore/ContentView.swift",
+    "name": "ContentView",
+    "scenarios": [
+      "today-day-one-connect",
+      "today-goal-crushed",
+      "today-midday-nudge",
+      "today-recovery-caution"
+    ]
+  },
+  {
+    "description": "Small pill under Buddy naming the current mood in its accent color.",
+    "filePath": "Sources/AppCore/MoodChip.swift",
+    "name": "MoodChip",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "Observable model for the Today dashboard. Reads the day's TodayState from flat rb-prefixed UserDefaults keys seeded at launch, and exposes derived values: goalProgress clamped to 1.0, stepsRemaining, goalReached, and a connect action that flips the day-one hero into the dashboard.",
+    "filePath": "Sources/AppCore/Model.swift",
+    "name": "RunBuddyModel",
+    "testFile": "Tests/AppCoreTests/ModelTests.swift"
+  },
+  {
+    "description": "A single labeled metric tile with an icon, value, and caption.",
+    "filePath": "Sources/AppCore/StatTile.swift",
+    "name": "StatTile",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "The three at-a-glance metric tiles: active minutes, distance, and time since moving.",
+    "filePath": "Sources/AppCore/StatsRow.swift",
+    "name": "StatsRow",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "Circular progress ring toward the daily step goal with the count and a to-go or goal-hit caption.",
+    "filePath": "Sources/AppCore/StepRing.swift",
+    "name": "StepRing",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "The full Today surface composed from the header, Buddy summary, stats row, and the coach, latest-activity, and weekly-load cards. Exercised by the Today dashboard application scenarios.",
+    "filePath": "Sources/AppCore/TodayView.swift",
+    "name": "TodayDashboard",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI composition view; this stack has no component-isolation harness, so it is demonstrated via the application scenarios on the simulator.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "The dashboard's top header with the Today title, the day, and the RunBuddy wordmark.",
+    "filePath": "Sources/AppCore/TodayHeader.swift",
+    "name": "TodayHeader",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "Colored pill describing the week's training-load trend, with distinct colors for spiking, recovering, building, and steady.",
+    "filePath": "Sources/AppCore/TrendBadge.swift",
+    "name": "TrendBadge",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "The week's training-load snapshot: mileage, run days, longest run, and rest days, with a trend badge.",
+    "filePath": "Sources/AppCore/WeeklyLoadCard.swift",
+    "name": "WeeklyLoadCard",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "Summary of the most recent run, walk, or ride: distance and pace headline plus duration, date, and source.",
+    "filePath": "Sources/AppCore/WorkoutCard.swift",
+    "name": "WorkoutCard",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "Formats a whole number with locale thousands separators for readable step counts, e.g. 11240 becomes 11,240.",
+    "filePath": "Sources/AppCore/Formatters.swift",
+    "name": "formatted",
+    "testFile": "Tests/AppCoreTests/FormattersTests.swift"
+  },
+  {
+    "description": "Renders minutes-since-last-movement as a compact label: now at or below zero, bare minutes under an hour, and hours-plus-minutes above, dropping the minutes part when it is zero.",
+    "filePath": "Sources/AppCore/Formatters.swift",
+    "name": "movementLabel",
+    "testFile": "Tests/AppCoreTests/FormattersTests.swift"
+  },
+  {
+    "description": "Converts an ISO yyyy-MM-dd date into a short weekday-and-day label such as Mon, Jun 22, returning the input unchanged when it is not a valid ISO date.",
+    "filePath": "Sources/AppCore/Formatters.swift",
+    "name": "prettyDate",
+    "testFile": "Tests/AppCoreTests/FormattersTests.swift"
+  }
+]

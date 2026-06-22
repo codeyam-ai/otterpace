@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 4,
+  "version": 2,
+  "partition": "all",
+  "hash": "20e8bbf8f2932328",
+  "runners": [
+    {
+      "name": "tests",
+      "format": "junit-xml",
+      "output": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<testsuites>\n<testsuite name=\"TestResults\" errors=\"0\" tests=\"16\" failures=\"0\" time=\"1.8340857920000002\">\n<testcase classname=\"AppCoreTests.BuddyMoodTests\" name=\"testInitUnknownFallsBackToReady\" time=\"0.105206\">\n</testcase>\n<testcase classname=\"AppCoreTests.FormattersTests\" name=\"testMovementLabelHours\" time=\"0.111134708\">\n</testcase>\n<testcase classname=\"AppCoreTests.FormattersTests\" name=\"testFormattedSmallNumbers\" time=\"0.1112275\">\n</testcase>\n<testcase classname=\"AppCoreTests.BuddyMoodTests\" name=\"testEveryMoodHasCaption\" time=\"0.111226042\">\n</testcase>\n<testcase classname=\"AppCoreTests.BuddyMoodTests\" name=\"testInitFromKnownRaw\" time=\"0.111149875\">\n</testcase>\n<testcase classname=\"AppCoreTests.FormattersTests\" name=\"testFormattedGroupsThousands\" time=\"0.111221333\">\n</testcase>\n<testcase classname=\"AppCoreTests.BuddyMoodTests\" name=\"testAccentsDifferentiateMoods\" time=\"0.111229042\">\n</testcase>\n<testcase classname=\"AppCoreTests.FormattersTests\" name=\"testMovementLabelMinutes\" time=\"0.111234125\">\n</testcase>\n<testcase classname=\"AppCoreTests.FormattersTests\" name=\"testMovementLabelNow\" time=\"0.09606675\">\n</testcase>\n<testcase classname=\"AppCoreTests.ModelTests\" name=\"testReadStateFromFlatDefaults\" time=\"0.121965208\">\n</testcase>\n<testcase classname=\"AppCoreTests.FormattersTests\" name=\"testPrettyDateValid\" time=\"0.122099125\">\n</testcase>\n<testcase classname=\"AppCoreTests.ModelTests\" name=\"testConnectFlipsState\" time=\"0.122037334\">\n</testcase>\n<testcase classname=\"AppCoreTests.ModelTests\" name=\"testGoalProgressClampsAndRemaining\" time=\"0.122072208\">\n</testcase>\n<testcase classname=\"AppCoreTests.ModelTests\" name=\"testEmptyStateIsDisconnected\" time=\"0.122027542\">\n</testcase>\n<testcase classname=\"AppCoreTests.FormattersTests\" name=\"testPrettyDateInvalidFallsThrough\" time=\"0.122165875\">\n</testcase>\n<testcase classname=\"AppCoreTests.ModelTests\" name=\"testReadStateEmptyDefaultsToDisconnected\" time=\"0.122023125\">\n</testcase>\n</testsuite>\n</testsuites>\n",
+      "invoked_command": "swift test --parallel --disable-swift-testing --xunit-output .codeyam/swift-tests.xml",
+      "exit_code": 0,
+      "tests": [
+        {
+          "key": "AppCoreTests.BuddyMoodTests › testInitUnknownFallsBackToReady",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        },
+        {
+          "key": "AppCoreTests.FormattersTests › testMovementLabelHours",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        },
+        {
+          "key": "AppCoreTests.FormattersTests › testFormattedSmallNumbers",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        },
+        {
+          "key": "AppCoreTests.BuddyMoodTests › testEveryMoodHasCaption",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        },
+        {
+          "key": "AppCoreTests.BuddyMoodTests › testInitFromKnownRaw",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        },
+        {
+          "key": "AppCoreTests.FormattersTests › testFormattedGroupsThousands",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        },
+        {
+          "key": "AppCoreTests.BuddyMoodTests › testAccentsDifferentiateMoods",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        },
+        {
+          "key": "AppCoreTests.FormattersTests › testMovementLabelMinutes",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        },
+        {
+          "key": "AppCoreTests.FormattersTests › testMovementLabelNow",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        },
+        {
+          "key": "AppCoreTests.ModelTests › testReadStateFromFlatDefaults",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        },
+        {
+          "key": "AppCoreTests.FormattersTests › testPrettyDateValid",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        },
+        {
+          "key": "AppCoreTests.ModelTests › testConnectFlipsState",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        },
+        {
+          "key": "AppCoreTests.ModelTests › testGoalProgressClampsAndRemaining",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        },
+        {
+          "key": "AppCoreTests.ModelTests › testEmptyStateIsDisconnected",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        },
+        {
+          "key": "AppCoreTests.FormattersTests › testPrettyDateInvalidFallsThrough",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        },
+        {
+          "key": "AppCoreTests.ModelTests › testReadStateEmptyDefaultsToDisconnected",
+          "status": "passed",
+          "file": null,
+          "line": null,
+          "runner": "tests",
+          "format": "junit-xml"
+        }
+      ]
+    }
+  ]
+}

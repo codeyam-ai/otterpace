@@ -1,0 +1,774 @@
+{
+  "schemaVersion": 2,
+  "ui": {
+    "total": 25,
+    "labels": [
+      [
+        1,
+        "Plan"
+      ],
+      [
+        2,
+        "Explore"
+      ],
+      [
+        3,
+        "Confirm"
+      ],
+      [
+        4,
+        "Prepare"
+      ],
+      [
+        5,
+        "Seed Data"
+      ],
+      [
+        6,
+        "Live Preview Loop"
+      ],
+      [
+        7,
+        "Verify Prototype"
+      ],
+      [
+        8,
+        "Confirm Mode"
+      ],
+      [
+        9,
+        "Demo"
+      ],
+      [
+        10,
+        "Deconstruct"
+      ],
+      [
+        11,
+        "Extract TDD"
+      ],
+      [
+        12,
+        "Glossary"
+      ],
+      [
+        13,
+        "Dependency Graph"
+      ],
+      [
+        14,
+        "Isolation Routes"
+      ],
+      [
+        15,
+        "Component Scenarios"
+      ],
+      [
+        16,
+        "Curate Scenarios"
+      ],
+      [
+        17,
+        "App Scenarios"
+      ],
+      [
+        18,
+        "Present"
+      ],
+      [
+        19,
+        "Reconcile"
+      ],
+      [
+        20,
+        "Journal"
+      ],
+      [
+        21,
+        "Pre-Commit Sync"
+      ],
+      [
+        22,
+        "Finalize"
+      ],
+      [
+        23,
+        "Commit"
+      ],
+      [
+        24,
+        "Push"
+      ],
+      [
+        25,
+        "Feature Complete"
+      ]
+    ],
+    "descriptions": [
+      [
+        1,
+        "Plan the feature and confirm the approach with the user before writing any code."
+      ],
+      [
+        2,
+        "Map out all the files you'll need to read or modify; check for reference implementations."
+      ],
+      [
+        3,
+        "Repeat the plan back to the user and gate on explicit approval before any code is written."
+      ],
+      [
+        4,
+        "Prepare the project environment and dependencies for prototyping."
+      ],
+      [
+        5,
+        "Wire up API routes and seed the database with realistic, demo-rich data."
+      ],
+      [
+        6,
+        "Iterate on the prototype with the live preview — navigate, edit, verify."
+      ],
+      [
+        7,
+        "Verify the prototype's routes, images, and client errors before presenting."
+      ],
+      [
+        8,
+        "Confirm or switch the workflow mode before the demo."
+      ],
+      [
+        9,
+        "Present the live preview and get user approval to proceed."
+      ],
+      [
+        10,
+        "Read the code and plan all component and function extractions."
+      ],
+      [
+        11,
+        "Extract components and functions via TDD; cover library functions with multiple tests."
+      ],
+      [
+        12,
+        "Register every new test and glossary entry produced in the prior step."
+      ],
+      [
+        13,
+        "Rebuild the dependency graph after extraction."
+      ],
+      [
+        14,
+        "Create isolation routes for every visual component."
+      ],
+      [
+        15,
+        "Register and capture component-level scenarios for every visual component."
+      ],
+      [
+        16,
+        "Curate the existing app-scenario set — review, consolidate, dedup, and edit in place — before registering new scenarios."
+      ],
+      [
+        17,
+        "Create app-level scenarios that show full pages with realistic data."
+      ],
+      [
+        18,
+        "Final approval gate — recapture screenshots and present a summary of all work to the user."
+      ],
+      [
+        19,
+        "Run the audit gate, reconcile any registry/glossary drift until clean."
+      ],
+      [
+        20,
+        "Create or update the journal entry documenting what was built."
+      ],
+      [
+        21,
+        "Sync local state with the remote so the next commit lands on a merged tree."
+      ],
+      [
+        22,
+        "Finalize the session — run the full suite once."
+      ],
+      [
+        23,
+        "Commit all changes to git."
+      ],
+      [
+        24,
+        "Push the branch to the remote repository."
+      ],
+      [
+        25,
+        "Fire the feature-complete modal — the cycle ends here."
+      ]
+    ],
+    "restrictions": [
+      [
+        1,
+        "Do NOT write any code. Plan, ask clarifying questions, confirm scope. Plan auto-advances — approval lives at the confirm-plan slug."
+      ],
+      [
+        2,
+        "Read-only. Map files and check for reusable implementations. Run independent reads in parallel batches."
+      ],
+      [
+        3,
+        "Wait for explicit user approval. Do NOT advance until the user picks `Approve`."
+      ],
+      [
+        4,
+        "Do NOT scaffold from scratch (`create-next-app`, `npx create-*`, `vite create`). Use the existing project."
+      ],
+      [
+        5,
+        "Wire API routes and seed realistic mock data only. Do NOT build features beyond what the data demands."
+      ],
+      [
+        6,
+        "Iterate visually via the live preview. Speed of feedback only — tests come later."
+      ],
+      [
+        7,
+        "Run the verification commands in parallel. Fix only — do NOT add features."
+      ],
+      [
+        8,
+        "Confirm whether to keep the current workflow mode or switch via `editor switch-mode`. Do NOT modify code in this step."
+      ],
+      [
+        9,
+        "Present (AskUserQuestion) and gate on user approval. Do NOT refactor or add tests until approved."
+      ],
+      [
+        10,
+        "Read code and write the extraction plan. Do NOT write code yet. Read the glossary through the CLI, never with `Read`."
+      ],
+      [
+        11,
+        "Extract via TDD — failing test first, then implement. Page files contain ZERO direct JSX."
+      ],
+      [
+        12,
+        "Register every new test and glossary entry. Do NOT add new application code."
+      ],
+      [
+        13,
+        "Rebuild the dependency graph. Read the graph and glossary through the CLI, never with `Read`."
+      ],
+      [
+        14,
+        "Create isolation routes for every visual component. Do NOT modify component implementations."
+      ],
+      [
+        15,
+        "Register and capture component scenarios only. Do NOT create app-level scenarios in this step."
+      ],
+      [
+        16,
+        "Curate the existing app-scenario set — review, consolidate, dedup, retire obsolete, edit in place. Do NOT register new scenarios in this step."
+      ],
+      [
+        17,
+        "Create app-level scenarios — do NOT set `componentName`. Do NOT modify application code."
+      ],
+      [
+        18,
+        "Mandatory approval gate. Recapture screenshots, present, AskUserQuestion. Do NOT skip — reconcile fires AFTER this gate."
+      ],
+      [
+        19,
+        "Run the audit gate in partial-run mode and reconcile drift. Do NOT pre-emptively run flag-free `refresh-tests`."
+      ],
+      [
+        20,
+        "Create or update the journal entry. Do NOT include a timestamp — it is auto-generated. The journal entry's commit-SHA association is derived at read time from `git log --diff-filter=A` (see history-show-all-commits plan); do NOT write a `commitSha` field by hand."
+      ],
+      [
+        21,
+        "Run `editor pre-commit-sync`. Do NOT skip — this is the enforced phase that catches remote drift and auto-recovers state."
+      ],
+      [
+        22,
+        "Finalize: pick `session-finalize` (~7 min full suite) or `session-checkpoint --defer` (~30 s). Both stamp the relevant state; do not bypass the menu."
+      ],
+      [
+        23,
+        "Commit all changes. Do NOT push — that happens at the push slug."
+      ],
+      [
+        24,
+        "Check for a git remote and offer to push. WAIT for the user's answer before starting the next feature."
+      ],
+      [
+        25,
+        "Fire the feature-complete modal. WAIT for the user's choice. Do NOT start a new feature without explicit instruction."
+      ]
+    ],
+    "slugsByStep": [
+      [
+        1,
+        "ui-plan"
+      ],
+      [
+        2,
+        "explore"
+      ],
+      [
+        3,
+        "ui-confirm-plan"
+      ],
+      [
+        4,
+        "ui-prepare"
+      ],
+      [
+        5,
+        "seed-data"
+      ],
+      [
+        6,
+        "live-preview-loop"
+      ],
+      [
+        7,
+        "ui-verify-prototype"
+      ],
+      [
+        8,
+        "confirm-mode"
+      ],
+      [
+        9,
+        "present-live"
+      ],
+      [
+        10,
+        "ui-deconstruct"
+      ],
+      [
+        11,
+        "ui-extract-tdd"
+      ],
+      [
+        12,
+        "register-incremental"
+      ],
+      [
+        13,
+        "dependency-graph-rebuild"
+      ],
+      [
+        14,
+        "isolation-routes"
+      ],
+      [
+        15,
+        "ui-component-scenarios"
+      ],
+      [
+        16,
+        "ui-app-scenarios-curate"
+      ],
+      [
+        17,
+        "ui-app-scenarios"
+      ],
+      [
+        18,
+        "ui-present"
+      ],
+      [
+        19,
+        "reconcile"
+      ],
+      [
+        20,
+        "ui-journal"
+      ],
+      [
+        21,
+        "pre-commit-sync"
+      ],
+      [
+        22,
+        "finalize"
+      ],
+      [
+        23,
+        "commit"
+      ],
+      [
+        24,
+        "push"
+      ],
+      [
+        25,
+        "feature-complete"
+      ]
+    ],
+    "codeChangeSlugs": [
+      "ui-prepare",
+      "seed-data",
+      "live-preview-loop",
+      "ui-verify-prototype",
+      "ui-deconstruct",
+      "ui-extract-tdd",
+      "register-incremental",
+      "dependency-graph-rebuild",
+      "isolation-routes",
+      "ui-component-scenarios",
+      "ui-app-scenarios-curate",
+      "ui-app-scenarios",
+      "reconcile",
+      "finalize"
+    ],
+    "commitSlugs": [
+      "commit"
+    ],
+    "pushSlugs": [
+      "push"
+    ],
+    "previewRequiredSlugs": [
+      "present-live",
+      "ui-present"
+    ]
+  },
+  "backend": {
+    "total": 19,
+    "labels": [
+      [
+        1,
+        "Plan"
+      ],
+      [
+        2,
+        "Explore"
+      ],
+      [
+        3,
+        "Confirm Plan"
+      ],
+      [
+        4,
+        "Prepare"
+      ],
+      [
+        5,
+        "Prototype"
+      ],
+      [
+        6,
+        "Confirm Mode"
+      ],
+      [
+        7,
+        "Demo"
+      ],
+      [
+        8,
+        "Deconstruct"
+      ],
+      [
+        9,
+        "Extract TDD"
+      ],
+      [
+        10,
+        "Glossary"
+      ],
+      [
+        11,
+        "Dependency Graph"
+      ],
+      [
+        12,
+        "Present"
+      ],
+      [
+        13,
+        "Reconcile"
+      ],
+      [
+        14,
+        "Journal"
+      ],
+      [
+        15,
+        "Pre-Commit Sync"
+      ],
+      [
+        16,
+        "Finalize"
+      ],
+      [
+        17,
+        "Commit"
+      ],
+      [
+        18,
+        "Push"
+      ],
+      [
+        19,
+        "Feature Complete"
+      ]
+    ],
+    "descriptions": [
+      [
+        1,
+        "Plan the feature and confirm the approach with the user before writing any code."
+      ],
+      [
+        2,
+        "Map out all the files you'll need to read or modify; check for reference implementations."
+      ],
+      [
+        3,
+        "Repeat the plan back to the user and gate on explicit approval before any code is written."
+      ],
+      [
+        4,
+        "Prepare the project environment."
+      ],
+      [
+        5,
+        "Build the feature. Tests come at the Deconstruct cluster."
+      ],
+      [
+        6,
+        "Confirm or switch the workflow mode before the demo."
+      ],
+      [
+        7,
+        "Show the prototype results and gate on the user's yes/iterate decision before any verification work."
+      ],
+      [
+        8,
+        "Read the code and plan all function/method/helper extractions."
+      ],
+      [
+        9,
+        "Extract functions/methods/helpers via TDD; every change must have a red-if-reverted test."
+      ],
+      [
+        10,
+        "Register every new test and glossary entry produced in the prior step."
+      ],
+      [
+        11,
+        "Rebuild the dependency graph after extraction."
+      ],
+      [
+        12,
+        "Present the /results page with architecture diagram, tests, and changed files."
+      ],
+      [
+        13,
+        "Run the audit gate, reconcile any registry/glossary drift until clean."
+      ],
+      [
+        14,
+        "Author the session narrative against post-Verify code, then create the journal entry."
+      ],
+      [
+        15,
+        "Sync local state with the remote so the next commit lands on a merged tree."
+      ],
+      [
+        16,
+        "Finalize the session — run the full suite once."
+      ],
+      [
+        17,
+        "Commit all changes to git."
+      ],
+      [
+        18,
+        "Push the branch to the remote repository."
+      ],
+      [
+        19,
+        "Fire the feature-complete modal — the cycle ends here."
+      ]
+    ],
+    "restrictions": [
+      [
+        1,
+        "Do NOT write any code. Plan, ask clarifying questions, confirm scope. Plan auto-advances — approval lives at the confirm-plan slug."
+      ],
+      [
+        2,
+        "Read-only. Map files and check for reusable implementations. Run independent reads in parallel batches."
+      ],
+      [
+        3,
+        "Wait for explicit user approval. Do NOT advance until the user picks `Approve`."
+      ],
+      [
+        4,
+        "Do NOT scaffold from scratch. Use the existing project."
+      ],
+      [
+        5,
+        "Build the feature. Use `verify-build` for compile/lint feedback. Do NOT run `refresh-tests` — testing is deferred to the Deconstruct cluster (`backend-extract-tdd`)."
+      ],
+      [
+        6,
+        "Confirm whether to keep the current workflow mode or switch via `editor switch-mode`. Do NOT modify code in this step."
+      ],
+      [
+        7,
+        "Show prototype results and gate on the user's yes/iterate decision. Do NOT proceed to verification until approved."
+      ],
+      [
+        8,
+        "Read code and write the extraction plan. Do NOT write code yet. Read the glossary through the CLI, never with `Read`."
+      ],
+      [
+        9,
+        "Extract functions/methods/helpers via TDD; every change must have a red-if-reverted test."
+      ],
+      [
+        10,
+        "Register every new test and glossary entry. Do NOT add new application code."
+      ],
+      [
+        11,
+        "Rebuild the dependency graph. Read the graph and glossary through the CLI, never with `Read`."
+      ],
+      [
+        12,
+        "Present the /results page. Do NOT skip the approval gate."
+      ],
+      [
+        13,
+        "Run the audit gate in partial-run mode and reconcile drift. Do NOT pre-emptively run flag-free `refresh-tests`."
+      ],
+      [
+        14,
+        "Author the journal narrative against post-Verify code. The journal entry's commit-SHA association is derived at read time from `git log --diff-filter=A` (see history-show-all-commits plan); do NOT write a `commitSha` field by hand."
+      ],
+      [
+        15,
+        "Run `editor pre-commit-sync`. Do NOT skip — this is the enforced phase that catches remote drift and auto-recovers state."
+      ],
+      [
+        16,
+        "Finalize: pick `session-finalize` (~7 min full suite) or `session-checkpoint --defer` (~30 s). Both stamp the relevant state; do not bypass the menu."
+      ],
+      [
+        17,
+        "Commit all changes. Do NOT push — that happens at the push slug."
+      ],
+      [
+        18,
+        "Check for a git remote and offer to push. WAIT for the user's answer before starting the next feature."
+      ],
+      [
+        19,
+        "Fire the feature-complete modal. WAIT for the user's choice. Do NOT start a new feature without explicit instruction."
+      ]
+    ],
+    "slugsByStep": [
+      [
+        1,
+        "backend-plan"
+      ],
+      [
+        2,
+        "explore"
+      ],
+      [
+        3,
+        "backend-confirm-plan"
+      ],
+      [
+        4,
+        "backend-prepare"
+      ],
+      [
+        5,
+        "backend-prototype"
+      ],
+      [
+        6,
+        "confirm-mode"
+      ],
+      [
+        7,
+        "backend-confirm"
+      ],
+      [
+        8,
+        "backend-deconstruct"
+      ],
+      [
+        9,
+        "backend-extract-tdd"
+      ],
+      [
+        10,
+        "register-incremental"
+      ],
+      [
+        11,
+        "dependency-graph-rebuild"
+      ],
+      [
+        12,
+        "backend-present"
+      ],
+      [
+        13,
+        "reconcile"
+      ],
+      [
+        14,
+        "backend-journal"
+      ],
+      [
+        15,
+        "pre-commit-sync"
+      ],
+      [
+        16,
+        "finalize"
+      ],
+      [
+        17,
+        "commit"
+      ],
+      [
+        18,
+        "push"
+      ],
+      [
+        19,
+        "feature-complete"
+      ]
+    ],
+    "codeChangeSlugs": [
+      "backend-prepare",
+      "backend-prototype",
+      "backend-deconstruct",
+      "backend-extract-tdd",
+      "register-incremental",
+      "dependency-graph-rebuild",
+      "reconcile",
+      "finalize"
+    ],
+    "commitSlugs": [
+      "commit"
+    ],
+    "pushSlugs": [
+      "push"
+    ],
+    "previewRequiredSlugs": [
+      "backend-present"
+    ]
+  }
+}

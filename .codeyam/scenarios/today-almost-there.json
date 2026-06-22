@@ -1,0 +1,39 @@
+{
+  "name": "Today - Almost There",
+  "id": "16b3eb0e-0e63-43bf-871f-bbd32749f363",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbWorkoutPace": "15:30/mi",
+      "rbCoachType": "walk",
+      "rbCoachHeadline": "So close — 820 to go!",
+      "rbCoachBody": "You're 820 steps from 10K and it's nearly 9:30pm. One short podcast lap around the block and today's goal is yours.",
+      "rbGoalSteps": 10000,
+      "rbSteps": 9180,
+      "rbWeeklyMileage": 12.0,
+      "rbWorkoutDurationMinutes": 31,
+      "rbConnected": true,
+      "rbActiveEnergyKcal": 430,
+      "rbLoadTrend": "steady",
+      "rbWorkoutSource": "healthkit",
+      "rbDistanceMiles": 4.3,
+      "rbLongestRunMiles": 5.0,
+      "rbActiveMinutes": 54,
+      "rbWorkoutDate": "2026-06-22",
+      "rbDaysRunThisWeek": 3,
+      "rbWorkoutDistanceMiles": 2.0,
+      "rbBuddyMood": "cheering",
+      "rbCoachSafety": false,
+      "rbRestDaysThisWeek": 2,
+      "rbDate": "2026-06-22",
+      "rbWorkoutType": "walk",
+      "rbMinutesSinceMovement": 18
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/ContentView.swift"
+}

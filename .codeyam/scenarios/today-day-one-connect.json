@@ -1,0 +1,16 @@
+{
+  "name": "Today - Day One (Connect)",
+  "id": "f7ee3cf8-db14-464a-80af-8f5d2014459e",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbConnected": false
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/ContentView.swift"
+}

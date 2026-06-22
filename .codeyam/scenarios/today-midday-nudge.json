@@ -1,0 +1,34 @@
+{
+  "name": "Today - Midday Nudge",
+  "id": "bc662c81-38ad-4af6-baf4-77667e0a1c39",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbCoachType": "walk",
+      "rbActiveEnergyKcal": 180,
+      "rbRestDaysThisWeek": 3,
+      "rbBuddyMood": "ready",
+      "rbLoadTrend": "steady",
+      "rbWorkoutType": "",
+      "rbCoachHeadline": "Time for a quick walk",
+      "rbActiveMinutes": 22,
+      "rbCoachSafety": false,
+      "rbDate": "2026-06-22",
+      "rbGoalSteps": 10000,
+      "rbLongestRunMiles": 4.0,
+      "rbDistanceMiles": 1.4,
+      "rbWeeklyMileage": 8.0,
+      "rbCoachBody": "You're at 3,200 steps and haven't moved in 92 minutes. A 12-minute walk gets you toward your next milestone without adding meaningful training stress.",
+      "rbConnected": true,
+      "rbDaysRunThisWeek": 2,
+      "rbSteps": 3200,
+      "rbMinutesSinceMovement": 92
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/ContentView.swift"
+}

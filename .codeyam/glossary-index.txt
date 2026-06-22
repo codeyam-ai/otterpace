@@ -1,0 +1,20 @@
+# regenerated from glossary.json on 2026-06-22T19:46:20Z; do not hand-edit
+BuddyMood :: Sources/AppCore/Theme.swift :: tags= :: test=Tests/AppCoreTests/BuddyMoodTests.swift
+BuddySummaryCard :: Sources/AppCore/BuddySummaryCard.swift :: tags=
+BuddyView :: Sources/AppCore/BuddyView.swift :: tags=
+CoachCard :: Sources/AppCore/CoachCard.swift :: tags=
+ConnectHero :: Sources/AppCore/ConnectHero.swift :: tags=
+ContentView :: Sources/AppCore/ContentView.swift :: tags=
+MoodChip :: Sources/AppCore/MoodChip.swift :: tags=
+RunBuddyModel :: Sources/AppCore/Model.swift :: tags= :: test=Tests/AppCoreTests/ModelTests.swift
+StatTile :: Sources/AppCore/StatTile.swift :: tags=
+StatsRow :: Sources/AppCore/StatsRow.swift :: tags=
+StepRing :: Sources/AppCore/StepRing.swift :: tags=
+TodayDashboard :: Sources/AppCore/TodayView.swift :: tags=
+TodayHeader :: Sources/AppCore/TodayHeader.swift :: tags=
+TrendBadge :: Sources/AppCore/TrendBadge.swift :: tags=
+WeeklyLoadCard :: Sources/AppCore/WeeklyLoadCard.swift :: tags=
+WorkoutCard :: Sources/AppCore/WorkoutCard.swift :: tags=
+formatted :: Sources/AppCore/Formatters.swift :: tags= :: test=Tests/AppCoreTests/FormattersTests.swift
+movementLabel :: Sources/AppCore/Formatters.swift :: tags= :: test=Tests/AppCoreTests/FormattersTests.swift
+prettyDate :: Sources/AppCore/Formatters.swift :: tags= :: test=Tests/AppCoreTests/FormattersTests.swift

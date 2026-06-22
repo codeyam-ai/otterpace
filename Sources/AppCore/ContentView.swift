@@ -1,41 +1,27 @@
 import SwiftUI
 
+// Root of the RunBuddy app. Reads the seeded `TodayState` at launch and shows
+// either the day-one "Connect Apple Health" hero (production default) or the
+// full Today dashboard once activity data is available.
+
 public struct ContentView: View {
-    @StateObject private var model = CounterModel()
+    @StateObject private var model = RunBuddyModel()
 
     public init() {}
 
     public var body: some View {
-        VStack(spacing: 20) {
-            Text("CodeYam Swift Template")
-                .font(.title)
-                .bold()
-            
-            Text("Count: \(model.count)")
-                .font(.largeTitle)
-            
-            HStack(spacing: 40) {
-                Button(action: {
-                    model.decrement()
-                }) {
-                    Text("-")
-                        .font(.largeTitle)
-                        .frame(width: 60, height: 60)
-                        .background(Color.red.opacity(0.2))
-                        .cornerRadius(30)
-                }
-                
-                Button(action: {
-                    model.increment()
-                }) {
-                    Text("+")
-                        .font(.largeTitle)
-                        .frame(width: 60, height: 60)
-                        .background(Color.green.opacity(0.2))
-                        .cornerRadius(30)
-                }
+        ZStack {
+            LinearGradient(
+                colors: [Palette.bgTop, Palette.bgBottom],
+                startPoint: .top, endPoint: .bottom
+            )
+            .ignoresSafeArea()
+
+            if model.today.healthKitConnected {
+                TodayDashboard(model: model)
+            } else {
+                ConnectHero(onConnect: { model.connect() })
             }
         }
-        .padding()
     }
 }

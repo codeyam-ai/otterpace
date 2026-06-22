@@ -1,0 +1,11 @@
+.codeyam/editor.json merge=ours
+.codeyam/test-cache/**/*.json merge=ours
+.codeyam/state/provider-auth-verdict.json merge=ours
+.codeyam/mocks/catalog.json merge=ours
+.codeyam/state/session-results-snapshot.json merge=ours
+.codeyam/glossary.json merge=codeyam-glossary
+.codeyam/test-cache.json merge=codeyam-test-cache
+.codeyam/dependency-graph.json merge=codeyam-dependency-graph
+.codeyam/test-registry.json merge=codeyam-test-registry
+.codeyam/per-test-evidence.json merge=codeyam-per-test-evidence
+.codeyam/state/finalize-debt.json merge=codeyam-finalize-debt

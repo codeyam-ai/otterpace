@@ -1,128 +1,101 @@
-━━━ BEGIN STEP 4: Prepare ━━━
+━━━ BEGIN STEP 23: Commit ━━━
 
 NEXT ACTION (same turn — do not stop):
 
-  EXACT_TASK_TITLE: Complete codeyam editor step 4: 'Prepare' and move on to step 5: 'Seed Data'
+  EXACT_TASK_TITLE: Complete codeyam editor step 23: 'Commit' and move on to step 24: 'Push'
 
-# UI Flow 4 / 25: Prepare
+# UI Flow 23 / 25: Commit
 
 **Feature:** Today Dashboard
 
-Prepare the project environment and dependencies for prototyping.
+Commit all changes to git.
 
 ## Instructions
 
 RESUMING this step. Check what was already done before repeating work.
-  Tip: Run verify-routes and client-errors to see what still needs fixing.
   (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
 
-Get the project ready to build.
+Commit all changes for this feature.
+
+The user already approved at the `ui-present` (UI) or `backend-present` (backend) gate. Execute the commit.
+
+Checklist:
+[ ] Recapture screenshots: `codeyam-editor-dev editor recapture-stale --skip-when-clean --include-aged --max-seconds 300 --max-attempts 3`
+    Exits non-zero if (a) any per-slug capture failed, (b) the dev server is
+    unhealthy on pre-flight, or (c) the overall budget expired with zero
+    successes. If the pre-flight bails with "dev server unhealthy", fix the
+    dev server first — do NOT pass `--skip-when-clean` to bypass it (the flag
+    only short-circuits the empty-coverage fast path, not the pre-flight).
+    `stage-feature` will also refuse to run if coverage still shows stale or
+    missing screenshots, so dismissing per-slug failures is no longer possible.
+    `--skip-when-clean` short-circuits with `{"skipped_clean": true}` when
+    audit already reported zero stale + zero missing — common case for
+    backend-only features. `--include-aged` unions the audit's
+    `AGED_STALE_SCREENSHOTS` set into the recapture target, so a scenario
+    whose source mtime crossed the freshness threshold (e.g. an unrelated
+    `git checkout` bumped it forward) is re-captured here — without it,
+    the dep-tree-only check would report `0 stale` while the audit gate
+    afterward still fires on those slugs, leaving the workflow stuck.
+    `--max-seconds` caps each attempt at 5 minutes;
+    individual slugs have their own 60s timeout. `--max-attempts 3` retries
+    after a per-attempt budget hit (stdout JSON `budget_expired: true`) so a
+    single 300s window can't silently leave stale screenshots behind — each
+    retry re-evaluates coverage and only touches slugs that are still stale.
+    The final stdout JSON includes `attempts`, `budget_expired`, and
+    `skipped_count` so you can confirm the run drained the set. Do NOT pipe
+    this through `tail` — full output (per-slug `→ Capturing` / `✓` / `✗` /
+    `⏱` lines plus the `▶ Pass N/M` startup line) is the only signal you
+    have if a scenario hangs. Per-slug timeouts now fail the command;
+    investigate the dev server or the scenario before retrying.
+[ ] Stage the feature: `codeyam-editor-dev editor stage-feature \
+       --path <feature-file-1> --path <feature-file-2> ...`
+    Pass --path for every NON-`.codeyam/` file you edited during this
+    feature. All non-ignored `.codeyam/` files are staged automatically
+    — do NOT ask the user about any `.codeyam/` path, and do NOT pass
+    them via --path. `.gitignore` is the authoritative skip-list.
+    If you have many changed files, you can use `stage-feature --from-status`
+    to stage every dirty file in the working tree. Use `--exclude-prefix`
+    to skip directories you didn't touch.
+    `stage-feature` accepts both file paths and directory paths. File paths
+    work even if they are currently untracked inside an untracked directory.
+    The command prints `stagedInternal` (auto), `stagedExternal`
+    (your --path args), and `untouchedExternal` (other dirty files not
+    yours — leave them for the `push` slug). If `untouchedExternal` is
+    non-empty, that is fine; the `push` slug's `commit-state` will surface them.
+    `stage-feature` also runs `session-cleanup` (orphan screenshots, log
+    rotation, tmp prune) per `editor.json::cleanup` BEFORE the dirty-tree
+    scan, so any deletions land in `stagedInternal` and fold into the
+    feature commit. Best-effort; failures log to stderr.
+[ ] If `.gitignore` was modified, untrack newly-ignored files:
+    `git ls-files --cached | git check-ignore --no-index --stdin`,
+    then `git rm --cached <file>` for each match and re-run
+    `stage-feature`.
+[ ] Commit: `git commit -m "feat: <title>" -m "<journal description>"`
+    The commit message body MUST match the journal description exactly.
+    Verify: git rev-parse HEAD
+
+[ ] If the pre-commit hook fails, read the error, fix the issue,
+    re-run `stage-feature` (the cache regeneration may dirty more
+    `.codeyam/` files — they get auto-staged), and commit again.
+[ ] Review the commit with `git log --stat -1` to confirm the right files were included
+[ ] Don't worry about regenerated .codeyam/ caches dirtied AFTER this commit
+    (post-commit hook output) — the `push` slug captures any such leftovers in a
+    separate `chore: update codeyam state` commit before the push. Caches
+    already dirty BEFORE the commit are now folded into the feature commit
+    itself by `stage-feature`.
 
 
-
-Scaffold the project:
-[ ] Pick a tech stack via the data-driven recommender — do NOT invent
-    options from training-data intuition:
-      codeyam-editor-dev editor stacks-recommend --format json
-    * If `preselectedStackId` is present in the JSON, the user already
-       chose this stack in the new-project questionnaire. Scaffold it
-       directly via `codeyam-editor-dev editor template <preselectedStackId>`
-       and do NOT present a picker or ask the user anything — re-asking
-       a question they already answered is the bug this avoids.
-    * Otherwise present the picker from `recommendations[]` verbatim. The
-       top entry is the recommended option when its `fit` is `strong` or
-       `adjacent`; never marked recommended when the top `fit` is `mismatch`
-       or `projectShape` is `unknown` (ask the user to clarify instead).
-       The `reason` field is the option's description verbatim — do not
-       paraphrase.
-    Verify: codeyam-editor-dev editor stacks-recommend --format json > /dev/null
-
-[ ] Run `codeyam-editor-dev editor template <techStackId>` to scaffold,
-    install dependencies, init git, and configure CodeYam — using the
-    `stackId` from the option the user picked. One command copies the chosen
-    template, runs npm install, initializes git, runs codeyam init, and
-    refreshes the editor.
-    Verify: test -f package.json && test -f .codeyam/stack.json
-
-    CRITICAL: Do NOT run `create-next-app`, `npx create-*`, `vite create`, or
-    any other third-party bootstrap against the project root. Those commands
-    see `.codeyam/` and `.codex/` as conflicting files and fail; scaffolding
-    into `/tmp` and merging by hand is NOT supported. `codeyam-editor-dev editor
-    template` is the ONLY correct way to scaffold a fresh CodeYam project.
-
-    Before editing any scaffolded file (`prisma/schema.prisma`, `app/layout.tsx`,
-    `app/page.tsx`, etc.), open it with the `Read` tool first — a Bash `cat`
-    does not satisfy the Write tool's read-tracking, so a Write-first attempt
-    is rejected with "File has not been read yet" and wastes a round-trip.
-
-[ ] Verify the build toolchain is present before advancing:
-      codeyam-editor-dev editor toolchain-preflight --format json
-    Reads the stack's declared `toolchain` requirements from `.codeyam/stack.json`
-    and checks each. A stack that declares none (most web stacks, needing only the
-    already-present `node`) reports `"ok": true` — a no-op. If any check reports
-    `"passed": false`, DO NOT advance: present its `installCmd` + `estCost` and
-    OFFER to run the setup. For a large download (SDKs, platform images — GB-range
-    or tens of minutes), surface the size/time cost and get explicit consent
-    BEFORE starting, as the iOS pre-flight contract in CLAUDE.md does for
-    `xcodebuild -downloadPlatform iOS`. Re-run the preflight after install.
-    Verify: codeyam-editor-dev editor toolchain-preflight --format json
-
-
-
-[ ] Confirm the seed adapter is wired
-    This stack persists through local storage, not a database — no schema file,
-    migration, `db:push`/`db:seed`, or API routes. Declare your shapes in
-    `.codeyam/data-structure.json` (see below); scenarios seed each app state and
-    production starts empty. CodeYam installed a standard seed adapter at
-    `.codeyam/seed-adapter.ts` during setup — review it to confirm it matches the
-    shapes you declare, then seed a state with:  <path-to-seed-data.json>
-    Verify: test -f .codeyam/seed-adapter.ts
-
-
-
-Create the data structure config:
-[ ] Create `.codeyam/data-structure.json` describing all data sources
-    This tells the editor what data the app uses and how it's stored. It is a
-    JSON array; each entry describes one data source:
-    { "name": "Drink", "description": "...", "category": "datastore", "order": 1,
-      "fields": [{ "name": "id", "type": "number", "isId": true, "required": true }, ...] }
-    category: "datastore" = persisted data (DB, localStorage); "mock-api" =
-    mocked external API responses. order: 1 = primary data store, 2 = secondary.
-    Do NOT include types only used as component props.
-
-
-
-Background vs Foreground:
-  Editor CLI commands that mutate project state (journal, glossary-add,
-  glossary-update, register, plan-select — anything that writes to .codeyam/)
-  MUST run foreground with a bounded timeout; they finish in seconds and print
-  to stdout/stderr. Background shells (run_in_background: true) are only for the
-  dev server and long builds you explicitly need to parallelize. Never poll one
-  with sleep+tail — use BashOutput on the shell ID. Never re-invoke a CLI write
-  command already running; `editor journal` holds `.codeyam/tmp/journal.lock` and
-  a concurrent invocation errors with `another journal write is in progress (pid
-  N)` — treat that as a double-write signal, not something to work around.
-
-Read the glossary through the CLI, never with the `Read` tool.
-  `.codeyam/glossary.json` exceeds the Read tool's token limit. Use
-  `codeyam-editor-dev editor glossary-find <name>` (flags: `--prefix`, `--substring`,
-  `--feature`, `--format`) for a single lookup; `glossary-list`,
-  `glossary-untested`, or `glossary-by-tag <tag>` for table-wide projections. To
-  grep directly, read `.codeyam/glossary-index.txt` (a regenerated line-oriented
-  sidecar — see the `glossary_index_file` entry).
-
-
-When done, move to the next step: `codeyam-editor-dev editor 5`
+When done, move to the next step: `codeyam-editor-dev editor 24`
 
 ━━━ TASK ━━━
 If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
 
 Hand off from the previous step's task to this step's task. Procedure:
   1. Run TaskList
-  2. If a task titled exactly `Complete codeyam editor step 3: 'Confirm' and move on to step 4: 'Prepare'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  2. If a task titled exactly `Complete codeyam editor step 22: 'Finalize' and move on to step 23: 'Commit'` exists and is not yet completed, run TaskUpdate with status "completed" on it
   3. Run TaskCreate with the EXACT title below and set it to in_progress:
 
-EXACT_TASK_TITLE: Complete codeyam editor step 4: 'Prepare' and move on to step 5: 'Seed Data'
+EXACT_TASK_TITLE: Complete codeyam editor step 23: 'Commit' and move on to step 24: 'Push'
 
 When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
 Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
@@ -139,14 +112,14 @@ When you have finished the checklist AND marked the task completed, run:
 
   Bash: codeyam-editor-dev editor advance
 
-━━━ BEGIN STEP 4: Prepare ━━━
+━━━ BEGIN STEP 23: Commit ━━━
 
 NEXT ACTION (same turn — do not stop):
 
-  EXACT_TASK_TITLE: Complete codeyam editor step 4: 'Prepare' and move on to step 5: 'Seed Data'
+  EXACT_TASK_TITLE: Complete codeyam editor step 23: 'Commit' and move on to step 24: 'Push'
 
   1. TaskCreate with the EXACT title above, status in_progress
-  2. Run the step 4 checklist (printed above this trailer)
+  2. Run the step 23 checklist (printed above this trailer)
   3. TaskUpdate completed
   4. Run `codeyam-editor editor advance`
 
