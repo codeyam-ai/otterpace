@@ -1,9 +1,27 @@
 [
   {
+    "description": "Three dots that pulse in sequence as a shared loading affordance.",
+    "filePath": "Sources/AppCore/PuffyBuddyLoader.swift",
+    "name": "BouncingDots",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the buddy-puffy-loader application scenario.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
     "description": "The Buddy mascot's mood with its presentation logic: a case-insensitive initializer from a raw coach string that falls back to ready, plus an accent color and a caption per mood used by the mascot halo and mood chip.",
     "filePath": "Sources/AppCore/Theme.swift",
     "name": "BuddyMood",
     "testFile": "Tests/AppCoreTests/BuddyMoodTests.swift"
+  },
+  {
+    "description": "Scenario-only host that renders the Buddy mood gallery or the loader based on the seeded rbPreviewMode preference.",
+    "filePath": "Sources/AppCore/BuddyPreviewHost.swift",
+    "name": "BuddyPreviewHost",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the buddy-puffy-moods and buddy-puffy-loader application scenarios.",
+      "kind": "no-isolation-harness"
+    }
   },
   {
     "description": "Hero card pairing Buddy and its mood chip with the step-goal ring.",
@@ -11,15 +29,6 @@
     "name": "BuddySummaryCard",
     "untestabilityReason": {
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
-      "kind": "no-isolation-harness"
-    }
-  },
-  {
-    "description": "The friendly dog mascot drawn with SwiftUI shapes; eyes, tongue, and accessory change with BuddyMood. Exercised visually by the Today dashboard application scenarios.",
-    "filePath": "Sources/AppCore/BuddyView.swift",
-    "name": "BuddyView",
-    "untestabilityReason": {
-      "justification": "Native SwiftUI view; this stack has no component-isolation harness, so it is demonstrated via the application scenarios on the simulator.",
       "kind": "no-isolation-harness"
     }
   },
@@ -53,11 +62,47 @@
     ]
   },
   {
+    "description": "SwiftUI Shape drawing an upward-curving arc used for Buddy's smiling eyes.",
+    "filePath": "Sources/AppCore/PuffyBuddy.swift",
+    "name": "HappyArc",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI shape primitive; no component-isolation harness on this stack, so it is shown via the buddy-puffy-moods application scenario.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
     "description": "Small pill under Buddy naming the current mood in its accent color.",
     "filePath": "Sources/AppCore/MoodChip.swift",
     "name": "MoodChip",
     "untestabilityReason": {
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "Buddy the otter mascot in the puffy 3D style, drawn across all seven moods with small round ears, a broad soft muzzle, and glossy eyes.",
+    "filePath": "Sources/AppCore/PuffyBuddy.swift",
+    "name": "PuffyBuddy",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the buddy-puffy-moods application scenario.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "Scenario-only showcase rendering Buddy across every mood in a labelled grid.",
+    "filePath": "Sources/AppCore/PuffyBuddy.swift",
+    "name": "PuffyBuddyGallery",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the buddy-puffy-moods application scenario.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "Bouncy loading state for the puffy mascot with a squash-and-stretch hop, soft shadow, caption, and pulsing dots.",
+    "filePath": "Sources/AppCore/PuffyBuddyLoader.swift",
+    "name": "PuffyBuddyLoader",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the buddy-puffy-loader application scenario.",
       "kind": "no-isolation-harness"
     }
   },

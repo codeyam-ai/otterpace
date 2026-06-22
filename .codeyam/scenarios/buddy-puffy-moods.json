@@ -1,0 +1,16 @@
+{
+  "name": "Buddy Puffy — Moods",
+  "id": "18a507c3-ad60-41fb-a9d0-85ff24338717",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbPreviewMode": "puffy-moods"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/PuffyBuddy.swift"
+}

@@ -8,7 +8,7 @@ struct ConnectHero: View {
     var body: some View {
         VStack(spacing: 22) {
             Spacer()
-            BuddyView(mood: .ready, size: 140)
+            PuffyBuddy(mood: .ready, size: 140)
             VStack(spacing: 8) {
                 Text("Hi, I'm Buddy! 🐾")
                     .font(.system(size: 26, weight: .heavy, design: .rounded))

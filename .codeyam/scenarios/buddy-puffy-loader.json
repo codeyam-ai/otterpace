@@ -1,0 +1,16 @@
+{
+  "name": "Buddy Puffy — Loader",
+  "id": "1c40ea31-1131-4087-be54-e62f4398fea9",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbPreviewMode": "puffy-loader"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/PuffyBuddyLoader.swift"
+}

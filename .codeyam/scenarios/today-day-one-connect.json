@@ -8,7 +8,8 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbConnected": false
+      "rbConnected": false,
+      "rbPreviewMode": ""
     }
   },
   "scenarioType": "application",

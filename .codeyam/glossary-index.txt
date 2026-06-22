@@ -1,11 +1,16 @@
-# regenerated from glossary.json on 2026-06-22T19:46:20Z; do not hand-edit
+# regenerated from glossary.json on 2026-06-22T22:31:24Z; do not hand-edit
+BouncingDots :: Sources/AppCore/PuffyBuddyLoader.swift :: tags=
 BuddyMood :: Sources/AppCore/Theme.swift :: tags= :: test=Tests/AppCoreTests/BuddyMoodTests.swift
+BuddyPreviewHost :: Sources/AppCore/BuddyPreviewHost.swift :: tags=
 BuddySummaryCard :: Sources/AppCore/BuddySummaryCard.swift :: tags=
-BuddyView :: Sources/AppCore/BuddyView.swift :: tags=
 CoachCard :: Sources/AppCore/CoachCard.swift :: tags=
 ConnectHero :: Sources/AppCore/ConnectHero.swift :: tags=
 ContentView :: Sources/AppCore/ContentView.swift :: tags=
+HappyArc :: Sources/AppCore/PuffyBuddy.swift :: tags=
 MoodChip :: Sources/AppCore/MoodChip.swift :: tags=
+PuffyBuddy :: Sources/AppCore/PuffyBuddy.swift :: tags=
+PuffyBuddyGallery :: Sources/AppCore/PuffyBuddy.swift :: tags=
+PuffyBuddyLoader :: Sources/AppCore/PuffyBuddyLoader.swift :: tags=
 RunBuddyModel :: Sources/AppCore/Model.swift :: tags= :: test=Tests/AppCoreTests/ModelTests.swift
 StatTile :: Sources/AppCore/StatTile.swift :: tags=
 StatsRow :: Sources/AppCore/StatsRow.swift :: tags=

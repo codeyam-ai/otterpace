@@ -7,6 +7,10 @@ import SwiftUI
 public struct ContentView: View {
     @StateObject private var model = RunBuddyModel()
 
+    // Scenario-only override: when a preview scenario seeds `rbPreviewMode`, the
+    // app renders the Buddy style/loader showcase instead of the normal flow.
+    private let previewMode = UserDefaults.standard.string(forKey: "rbPreviewMode") ?? ""
+
     public init() {}
 
     public var body: some View {
@@ -17,7 +21,9 @@ public struct ContentView: View {
             )
             .ignoresSafeArea()
 
-            if model.today.healthKitConnected {
+            if !previewMode.isEmpty {
+                BuddyPreviewHost(mode: previewMode)
+            } else if model.today.healthKitConnected {
                 TodayDashboard(model: model)
             } else {
                 ConnectHero(onConnect: { model.connect() })

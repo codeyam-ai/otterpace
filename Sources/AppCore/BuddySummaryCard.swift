@@ -11,7 +11,7 @@ struct BuddySummaryCard: View {
     var body: some View {
         HStack(spacing: 14) {
             VStack(spacing: 6) {
-                BuddyView(mood: mood, size: 92)
+                PuffyBuddy(mood: mood, size: 92)
                 MoodChip(mood: mood)
             }
             StepRing(

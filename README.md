@@ -5,7 +5,7 @@ An open-source, AI running coach for iOS — built in the open as a CodeYam show
 RunBuddy is a friendly running coach in your pocket: it pulls your activity from
 Apple HealthKit (and, soon, Strava), keeps you moving toward your daily 10,000
 steps, and gives injury-aware, never-shame-based coaching through **Buddy**, a
-mood-reactive dog mascot.
+mood-reactive otter mascot.
 
 ## What's here today
 
@@ -29,8 +29,9 @@ scenario carries its own seeded state.
 
 - `App/` — the iOS app entry point (`@main`) and `Info.plist`
 - `Sources/AppCore/` — the SwiftUI views and model, as a shared SwiftPM library:
-  `RunBuddyModel` + `TodayState` (data + derived logic), `BuddyView` (the mascot),
-  and one file per dashboard component (`StepRing`, `CoachCard`, `WeeklyLoadCard`, …)
+  `RunBuddyModel` + `TodayState` (data + derived logic), `PuffyBuddy` (the otter
+  mascot) + `PuffyBuddyLoader` (its loading state), and one file per dashboard
+  component (`StepRing`, `CoachCard`, `WeeklyLoadCard`, …)
 - `Tests/AppCoreTests/` — XCTest coverage of the model and pure formatters
 
 ## Running
