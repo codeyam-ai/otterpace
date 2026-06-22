@@ -1,12 +1,21 @@
-# regenerated from glossary.json on 2026-06-22T22:31:24Z; do not hand-edit
+# regenerated from glossary.json on 2026-06-22T23:31:40Z; do not hand-edit
+AskCoachEmptyState :: Sources/AppCore/AskCoachEmptyState.swift :: tags=
+AskCoachHeader :: Sources/AppCore/AskCoachHeader.swift :: tags=
+AskCoachInputBar :: Sources/AppCore/AskCoachInputBar.swift :: tags=
+AskCoachView :: Sources/AppCore/AskCoachView.swift :: tags=
 BouncingDots :: Sources/AppCore/PuffyBuddyLoader.swift :: tags=
 BuddyMood :: Sources/AppCore/Theme.swift :: tags= :: test=Tests/AppCoreTests/BuddyMoodTests.swift
 BuddyPreviewHost :: Sources/AppCore/BuddyPreviewHost.swift :: tags=
 BuddySummaryCard :: Sources/AppCore/BuddySummaryCard.swift :: tags=
+ChatBubble :: Sources/AppCore/ChatBubble.swift :: tags=
+ChatThread :: Sources/AppCore/ChatThread.swift :: tags=
 CoachCard :: Sources/AppCore/CoachCard.swift :: tags=
+CoachEngine :: Sources/AppCore/CoachEngine.swift :: tags= :: test=Tests/AppCoreTests/CoachEngineTests.swift
+CoachIntent :: Sources/AppCore/CoachEngine.swift :: tags= :: test=Tests/AppCoreTests/CoachEngineTests.swift
 ConnectHero :: Sources/AppCore/ConnectHero.swift :: tags=
 ContentView :: Sources/AppCore/ContentView.swift :: tags=
 HappyArc :: Sources/AppCore/PuffyBuddy.swift :: tags=
+MainTab :: Sources/AppCore/ContentView.swift :: tags= :: test=Tests/AppCoreTests/MainTabTests.swift
 MoodChip :: Sources/AppCore/MoodChip.swift :: tags=
 PuffyBuddy :: Sources/AppCore/PuffyBuddy.swift :: tags=
 PuffyBuddyGallery :: Sources/AppCore/PuffyBuddy.swift :: tags=

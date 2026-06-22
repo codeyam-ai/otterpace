@@ -11,7 +11,14 @@ public struct ContentView: View {
     // app renders the Buddy style/loader showcase instead of the normal flow.
     private let previewMode = UserDefaults.standard.string(forKey: "rbPreviewMode") ?? ""
 
-    public init() {}
+    // Which tab is selected at launch. Scenarios seed `rbStartTab="coach"` to land
+    // directly on the Ask Coach chat; default (and production) opens on Today.
+    @State private var tab: MainTab
+
+    public init() {
+        let seeded = UserDefaults.standard.string(forKey: "rbStartTab") ?? ""
+        _tab = State(initialValue: MainTab(raw: seeded))
+    }
 
     public var body: some View {
         ZStack {
@@ -24,10 +31,34 @@ public struct ContentView: View {
             if !previewMode.isEmpty {
                 BuddyPreviewHost(mode: previewMode)
             } else if model.today.healthKitConnected {
-                TodayDashboard(model: model)
+                connectedTabs
             } else {
                 ConnectHero(onConnect: { model.connect() })
             }
         }
+    }
+
+    // Today + Ask Coach behind a bottom tab bar. The Coach card on Today also
+    // jumps here by flipping `tab` to `.coach`.
+    private var connectedTabs: some View {
+        TabView(selection: $tab) {
+            TodayDashboard(model: model, onAskCoach: { tab = .coach })
+                .tag(MainTab.today)
+                .tabItem { Label("Today", systemImage: "sun.max.fill") }
+
+            AskCoachView(model: model)
+                .tag(MainTab.coach)
+                .tabItem { Label("Coach", systemImage: "bubble.left.and.text.bubble.right.fill") }
+        }
+        .tint(Palette.brand)
+    }
+}
+
+// The app's two top-level destinations.
+public enum MainTab: String, Hashable {
+    case today, coach
+
+    public init(raw: String) {
+        self = MainTab(rawValue: raw.lowercased()) ?? .today
     }
 }

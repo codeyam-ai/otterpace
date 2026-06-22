@@ -1,38 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <testsuites>
-<testsuite name="TestResults" errors="0" tests="16" failures="0" time="2.1407250849999997">
-<testcase classname="AppCoreTests.FormattersTests" name="testFormattedSmallNumbers" time="0.132946834">
+<testsuite name="TestResults" errors="0" tests="32" failures="0" time="3.965789875">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifyInjuryWins" time="0.11283">
 </testcase>
-<testcase classname="AppCoreTests.BuddyMoodTests" name="testEveryMoodHasCaption" time="0.154037459">
+<testcase classname="AppCoreTests.BuddyMoodTests" name="testEveryMoodHasCaption" time="0.112832083">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testFormattedGroupsThousands" time="0.154078792">
+<testcase classname="AppCoreTests.BuddyMoodTests" name="testAccentsDifferentiateMoods" time="0.11283075">
 </testcase>
-<testcase classname="AppCoreTests.BuddyMoodTests" name="testAccentsDifferentiateMoods" time="0.15406675">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifyReflection" time="0.112823625">
 </testcase>
-<testcase classname="AppCoreTests.BuddyMoodTests" name="testInitFromKnownRaw" time="0.154041125">
+<testcase classname="AppCoreTests.BuddyMoodTests" name="testInitFromKnownRaw" time="0.112805833">
 </testcase>
-<testcase classname="AppCoreTests.BuddyMoodTests" name="testInitUnknownFallsBackToReady" time="0.154109459">
+<testcase classname="AppCoreTests.BuddyMoodTests" name="testInitUnknownFallsBackToReady" time="0.112845083">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testMovementLabelHours" time="0.154121625">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifyGeneralFallback" time="0.112802333">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testMovementLabelMinutes" time="0.154095459">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifyMileage" time="0.112851">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testMovementLabelNow" time="0.11349625">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testRunOrRestWhenFreshAllowsRun" time="0.108545542">
 </testcase>
-<testcase classname="AppCoreTests.ModelTests" name="testConnectFlipsState" time="0.1165225">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testMileageReplySpikingIsCaution" time="0.108637792">
 </testcase>
-<testcase classname="AppCoreTests.ModelTests" name="testReadStateEmptyDefaultsToDisconnected" time="0.116506875">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testReflectionWithWorkout" time="0.108606417">
 </testcase>
-<testcase classname="AppCoreTests.ModelTests" name="testEmptyStateIsDisconnected" time="0.116554916">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifySteps" time="0.108636083">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testPrettyDateValid" time="0.116583167">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testRunOrRestAfterHardRunIsRecovery" time="0.108578958">
 </testcase>
-<testcase classname="AppCoreTests.ModelTests" name="testGoalProgressClampsAndRemaining" time="0.116527291">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testMileageReplySteadyIsReassuring" time="0.108626042">
 </testcase>
-<testcase classname="AppCoreTests.ModelTests" name="testReadStateFromFlatDefaults" time="0.1164475">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testInjuryReplyIsSafetyFlagged" time="0.131299083">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testPrettyDateInvalidFallsThrough" time="0.116589083">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifyRunOrRest" time="0.131363125">
+</testcase>
+<testcase classname="AppCoreTests.FormattersTests" name="testMovementLabelNow" time="0.102049959">
+</testcase>
+<testcase classname="AppCoreTests.FormattersTests" name="testPrettyDateInvalidFallsThrough" time="0.102043417">
+</testcase>
+<testcase classname="AppCoreTests.FormattersTests" name="testFormattedSmallNumbers" time="0.201334375">
+</testcase>
+<testcase classname="AppCoreTests.FormattersTests" name="testMovementLabelMinutes" time="0.201345375">
+</testcase>
+<testcase classname="AppCoreTests.CoachEngineTests" name="testStepsReplyGoalReachedCelebrates" time="0.20137725">
+</testcase>
+<testcase classname="AppCoreTests.CoachEngineTests" name="testStepsReplyBelowGoal" time="0.201404666">
+</testcase>
+<testcase classname="AppCoreTests.FormattersTests" name="testMovementLabelHours" time="0.201394625">
+</testcase>
+<testcase classname="AppCoreTests.FormattersTests" name="testFormattedGroupsThousands" time="0.20142475">
+</testcase>
+<testcase classname="AppCoreTests.MainTabTests" name="testInitFromKnownRaw" time="0.087235167">
+</testcase>
+<testcase classname="AppCoreTests.FormattersTests" name="testPrettyDateValid" time="0.087447333">
+</testcase>
+<testcase classname="AppCoreTests.ModelTests" name="testConnectFlipsState" time="0.093642209">
+</testcase>
+<testcase classname="AppCoreTests.ModelTests" name="testReadStateFromFlatDefaults" time="0.093597667">
+</testcase>
+<testcase classname="AppCoreTests.ModelTests" name="testEmptyStateIsDisconnected" time="0.0936665">
+</testcase>
+<testcase classname="AppCoreTests.ModelTests" name="testReadStateEmptyDefaultsToDisconnected" time="0.093605125">
+</testcase>
+<testcase classname="AppCoreTests.ModelTests" name="testGoalProgressClampsAndRemaining" time="0.09363425">
+</testcase>
+<testcase classname="AppCoreTests.MainTabTests" name="testInitUnknownFallsBackToToday" time="0.093673458">
 </testcase>
 </testsuite>
 </testsuites>

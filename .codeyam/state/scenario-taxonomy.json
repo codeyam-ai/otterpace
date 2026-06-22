@@ -1,5 +1,34 @@
 {
   "views": {
+    "AskCoachView": {
+      "empty": {
+        "status": "added"
+      },
+      "single": {
+        "status": "added"
+      },
+      "typical": {
+        "status": "added"
+      },
+      "many": {
+        "status": "n-a",
+        "reason": "The rbAskSeedQuestion seed injects a single opening exchange; multi-turn threads accumulate only through live typing, which a static seeded capture cannot produce."
+      },
+      "loading": {
+        "status": "n-a",
+        "reason": "CoachEngine replies are computed synchronously on send; there is no async/pending state."
+      },
+      "edge": {
+        "status": "added"
+      },
+      "error": {
+        "status": "n-a",
+        "reason": "The mock engine always returns a valid curated reply; no failure path exists in Milestone 2 mock mode."
+      },
+      "key-interaction": {
+        "status": "added"
+      }
+    },
     "ContentView": {
       "empty": {
         "status": "added"

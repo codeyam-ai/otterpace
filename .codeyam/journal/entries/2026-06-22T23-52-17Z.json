@@ -1,0 +1,323 @@
+{
+  "timestamp": "2026-06-22T23:52:17Z",
+  "title": "Ask Coach — Chat Screen (Mock Coach)",
+  "type": "feature",
+  "userRequest": "mode: ui\n\n## Goal\n\nAdd an **Ask Coach** chat screen where the user types a fitness question and\nBuddy replies with a practical, **injury-aware** answer. Mock mode: answers are\n**curated by intent** from the user's own activity context — deterministic, so\nscenarios are stable. This is Milestone 2's chat surface; the Coach *card* on\nToday already exists.\n\n## What exists today\n\n- `CoachCard` (`Sources/AppCore/CoachCard.swift`) — read-only Today\n  recommendation, brand/gold normally, amber + shield when `safetyFlag`.\n- `CoachRecommendation` + `TodayState` (`Sources/AppCore/Model.swift`) — the\n  context (steps, weekly mileage, last run, rest days, load trend).\n- `Palette` + `BuddyMood` (`Sources/AppCore/Theme.swift`) — 7 moods, accent +\n  caption. Reused for bubble tint.\n- `ContentView` — root branches: scenario showcase / `TodayDashboard` /\n  `ConnectHero`. Seed-driven via flat `rb*` UserDefaults keys.\n\n## What to build\n\n- **CoachEngine** (`Sources/AppCore/CoachEngine.swift`) — pure, testable logic:\n  - `CoachIntent`: classify a question → `runOrRest`, `hit10K`,\n    `mileageTooFast`, `injuryPain`, `postRunReflection`, `general`.\n  - `reply(to:context:) -> CoachReply` — curated, context-aware, safety-aware\n    answer text + a `BuddyMood` + `safetyFlag`. Obeys the coach safety rules:\n    never diagnoses; injury/pain → ease off + see a clinician for sharp/\n    persistent/worsening pain; prefers walk/rest when data suggests fatigue.\n- **AskCoachView** (`Sources/AppCore/AskCoachView.swift`) — chat screen:\n  message bubbles, a **blank text input + send button** (no suggestion chips).\n  On send: append the user bubble, run `CoachEngine`, append Buddy's reply\n  tinted by mood and shield-marked when `safetyFlag`.\n- **Navigation — both entry points:** the connected branch of `ContentView`\n  becomes a **tab bar (Today / Coach)**; a seed key (`rbStartTab`) picks the\n  launch tab. The Today `CoachCard` gets an **\"Ask Buddy\" button** that switches\n  to the Coach tab.\n\n## How it's shown (scenarios)\n\nSeed-driven, consistent with the existing `rb*` model. A scenario seeds\n`rbStartTab=\"coach\"` to land on the chat, and an optional seeded opening\nquestion (`rbAskSeedQuestion`) so a populated conversation renders\ndeterministically in the screenshot. Production (no seed) → normal Today flow,\nempty by default.\n\n- **Empty chat** — coach tab, no messages yet (day-one chat state).\n- **Run vs rest** — \"Can I run or should I rest?\" after a hard run yesterday →\n  easy/rest answer, `concerned`/`recovery` Buddy.\n- **Hit 10K** — \"How do I get to 10K without overdoing it?\" mid-day step gap →\n  gentle walk suggestion.\n- **Injury/pain** — \"My knee hurts after my run\" → safety-flagged,\n  non-diagnostic, see-a-clinician reply.\n- **Mileage spike** — \"Am I increasing mileage too fast?\" with 40% week jump →\n  caution answer.\n\n## Out of scope\n\n- Real LLM / BYO-API-key generation (Milestone 3), suggestion chips, persisting\n  chat history, HealthKit/Strava wiring, the Weekly Review and Activity History\n  screens (queued separately).",
+  "description": "Added the Ask Coach chat screen (Milestone 2, mock mode): users type a fitness question and Buddy replies with a practical, injury-aware answer. CoachEngine classifies each question by intent (run-vs-rest, hit-10K, mileage-too-fast, injury/pain, reflection, general) and builds a curated, context-aware reply from the day TodayState — a recent hard run or spiking load steers toward recovery, and pain questions return a non-diagnostic, see-a-clinician answer behind an amber safety-first shield. Reached via a new Today/Coach tab bar and an Ask Buddy button on the coach card. Extracted ChatBubble, ChatThread, AskCoachHeader, AskCoachEmptyState and AskCoachInputBar components, added 16 unit tests (CoachEngine intent + safety branches, MainTab), and 5 Ask Coach scenarios plus refreshed Today scenarios.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/.last-reconcile.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/deps-index.txt",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary-index.txt",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/per-test-evidence.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/completed/ask-coach-chat-screen.md",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/recent-runs.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/runner-timing-history.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-almost-there--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-almost-there--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-day-one-connect--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-day-one-connect--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-fresh-start--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-fresh-start--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-midday-nudge--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-midday-nudge--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-recovery-caution--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-recovery-caution--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-almost-there.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-day-one-connect.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-fresh-start.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-midday-nudge.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-recovery-caution.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/last-advance.txt",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/scenario-taxonomy.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/session-results-snapshot.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/swift-tests.xml",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache/all.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-run-marker.json",
+      "status": "modified"
+    },
+    {
+      "path": "README.md",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CoachCard.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ContentView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/TodayView.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/activity-history.md",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/plans/polish-today-states.md",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/plans/weekly-review-summary.md",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/reconciliation-log.jsonl",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-empty-chat.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-hit-10k.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-knee-pain.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-mileage-spike.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-run-or-rest.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-empty-chat--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-empty-chat--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-hit-10k--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-hit-10k--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-knee-pain--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-knee-pain--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-mileage-spike--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-mileage-spike--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-run-or-rest--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-run-or-rest--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/AskCoachEmptyState.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/AskCoachHeader.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/AskCoachInputBar.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/AskCoachView.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/ChatBubble.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/ChatThread.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CoachEngine.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/MainTabTests.swift",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Ask Coach — Empty Chat",
+      "screenshotPath": "ask-coach-empty-chat--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Hit 10K",
+      "screenshotPath": "ask-coach-hit-10k--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Knee Pain",
+      "screenshotPath": "ask-coach-knee-pain--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Mileage Spike",
+      "screenshotPath": "ask-coach-mileage-spike--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Run or Rest",
+      "screenshotPath": "ask-coach-run-or-rest--iphone-16.png"
+    },
+    {
+      "name": "Today - Almost There",
+      "screenshotPath": "today-almost-there--iphone-16.png"
+    },
+    {
+      "name": "Today - Day One (Connect)",
+      "screenshotPath": "today-day-one-connect--iphone-16.png"
+    },
+    {
+      "name": "Today - Fresh Start",
+      "screenshotPath": "today-fresh-start--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed",
+      "screenshotPath": "today-goal-crushed--iphone-16.png"
+    },
+    {
+      "name": "Today - Midday Nudge",
+      "screenshotPath": "today-midday-nudge--iphone-16.png"
+    },
+    {
+      "name": "Today - Recovery Caution",
+      "screenshotPath": "today-recovery-caution--iphone-16.png"
+    }
+  ]
+}

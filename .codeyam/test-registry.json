@@ -37,6 +37,132 @@
       "runner": "tests"
     },
     {
+      "description": "Anything unrecognized falls back to the general intent.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testClassifyGeneralFallback",
+      "line": 56,
+      "registeredAt": "2026-06-22T23:51:14.945442+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Pain/injury wording routes to the injury intent regardless of other words.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testClassifyInjuryWins",
+      "line": 25,
+      "registeredAt": "2026-06-22T23:51:14.935941+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Mileage-ramp wording routes to the mileage intent.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testClassifyMileage",
+      "line": 32,
+      "registeredAt": "2026-06-22T23:51:14.938005+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Reflection wording routes to the reflection intent.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testClassifyReflection",
+      "line": 50,
+      "registeredAt": "2026-06-22T23:51:14.943549+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Run-vs-rest wording routes to the run-or-rest intent.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testClassifyRunOrRest",
+      "line": 44,
+      "registeredAt": "2026-06-22T23:51:14.941676+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Step-goal wording routes to the hit-10K intent.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testClassifySteps",
+      "line": 38,
+      "registeredAt": "2026-06-22T23:51:14.939868+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An injury question is always safety-flagged, concerned, and never diagnoses.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testInjuryReplyIsSafetyFlagged",
+      "line": 64,
+      "registeredAt": "2026-06-22T23:51:14.947478+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A spiking weekly load makes the mileage answer cautionary and safety-flagged.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testMileageReplySpikingIsCaution",
+      "line": 74,
+      "registeredAt": "2026-06-22T23:51:14.949554+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "With a steady load the mileage answer is reassuring, not flagged.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testMileageReplySteadyIsReassuring",
+      "line": 82,
+      "registeredAt": "2026-06-22T23:51:14.951651+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Reflection with a logged workout cites the run and is upbeat.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testReflectionWithWorkout",
+      "line": 123,
+      "registeredAt": "2026-06-22T23:51:14.961360+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "After a hard run or spiking load, run-or-rest leans to recovery.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testRunOrRestAfterHardRunIsRecovery",
+      "line": 91,
+      "registeredAt": "2026-06-22T23:51:14.953655+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "When fresh, run-or-rest allows an easy run.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testRunOrRestWhenFreshAllowsRun",
+      "line": 99,
+      "registeredAt": "2026-06-22T23:51:14.955681+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Below goal, the steps answer names the remaining steps and stays ready.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testStepsReplyBelowGoal",
+      "line": 107,
+      "registeredAt": "2026-06-22T23:51:14.957469+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "At or past goal, the steps answer celebrates instead of nudging.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testStepsReplyGoalReachedCelebrates",
+      "line": 115,
+      "registeredAt": "2026-06-22T23:51:14.959549+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "formatted groups thousands with separators for readable step counts.",
       "file": "Tests/AppCoreTests/FormattersTests.swift",
       "format": "junit-xml",
@@ -97,6 +223,24 @@
       "key": "AppCoreTests.FormattersTests › testPrettyDateValid",
       "line": 42,
       "registeredAt": "2026-06-22T19:41:43.416701+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A known raw string maps to the matching tab, case-insensitively",
+      "file": "Tests/AppCoreTests/MainTabTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MainTabTests › testInitFromKnownRaw",
+      "line": 8,
+      "registeredAt": "2026-06-22T23:28:37.045413+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An unknown or empty raw string falls back to today, the default landing tab",
+      "file": "Tests/AppCoreTests/MainTabTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MainTabTests › testInitUnknownFallsBackToToday",
+      "line": 15,
+      "registeredAt": "2026-06-22T23:28:43.258069+00:00",
       "runner": "tests"
     },
     {

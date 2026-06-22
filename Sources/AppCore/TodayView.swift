@@ -7,9 +7,11 @@ import SwiftUI
 // load cards. Each section lives in its own file; this view only arranges them.
 public struct TodayDashboard: View {
     @ObservedObject var model: RunBuddyModel
+    var onAskCoach: () -> Void
 
-    public init(model: RunBuddyModel) {
+    public init(model: RunBuddyModel, onAskCoach: @escaping () -> Void = {}) {
         self.model = model
+        self.onAskCoach = onAskCoach
     }
 
     public var body: some View {
@@ -19,7 +21,7 @@ public struct TodayDashboard: View {
                 BuddySummaryCard(model: model)
                 StatsRow(today: model.today)
                 if let coach = model.today.coach {
-                    CoachCard(coach: coach)
+                    CoachCard(coach: coach, onAskCoach: onAskCoach)
                 }
                 if let workout = model.today.latestWorkout {
                     WorkoutCard(workout: workout)

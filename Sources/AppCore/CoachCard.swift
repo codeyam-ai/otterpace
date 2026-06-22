@@ -5,6 +5,7 @@ import SwiftUI
 // safety flag (injury-aware caution).
 struct CoachCard: View {
     let coach: CoachRecommendation
+    var onAskCoach: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -28,6 +29,18 @@ struct CoachCard: View {
                 .font(.system(size: 15, weight: .regular))
                 .foregroundColor(Palette.ink.opacity(0.8))
                 .fixedSize(horizontal: false, vertical: true)
+
+            Button(action: onAskCoach) {
+                HStack(spacing: 6) {
+                    Image(systemName: "bubble.left.and.text.bubble.right.fill")
+                    Text("Ask Buddy")
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                }
+                .foregroundColor(Palette.brandDeep)
+                .padding(.horizontal, 14).padding(.vertical, 9)
+                .background(Capsule().fill(Palette.brand.opacity(0.14)))
+            }
+            .padding(.top, 2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)

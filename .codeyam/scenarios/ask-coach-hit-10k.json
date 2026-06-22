@@ -1,0 +1,31 @@
+{
+  "name": "Ask Coach — Hit 10K",
+  "id": "01158f08-a14f-4abf-981b-84e742ee6e97",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbDistanceMiles": 3.0,
+      "rbStartTab": "coach",
+      "rbActiveEnergyKcal": 220,
+      "rbPreviewMode": "",
+      "rbActiveMinutes": 30,
+      "rbMinutesSinceMovement": 92,
+      "rbWeeklyMileage": 11.0,
+      "rbAskSeedQuestion": "How do I get to 10K steps without overdoing it?",
+      "rbConnected": true,
+      "rbDaysRunThisWeek": 2,
+      "rbLongestRunMiles": 4.2,
+      "rbLoadTrend": "steady",
+      "rbSteps": 6400,
+      "rbGoalSteps": 10000,
+      "rbDate": "2026-06-22",
+      "rbRestDaysThisWeek": 3
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/AskCoachView.swift"
+}

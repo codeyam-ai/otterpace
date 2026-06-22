@@ -1,0 +1,32 @@
+{
+  "name": "Ask Coach — Knee Pain",
+  "id": "789631bf-281d-4f78-9472-9e394616bfef",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbDate": "2026-06-22",
+      "rbSteps": 4200,
+      "rbMinutesSinceMovement": 65,
+      "rbActiveMinutes": 22,
+      "rbWorkoutDurationMinutes": 52,
+      "rbAskSeedQuestion": "My knee hurts after my run yesterday",
+      "rbWorkoutDate": "2026-06-21",
+      "rbWorkoutPace": "10:24/mi",
+      "rbConnected": true,
+      "rbWorkoutSource": "healthkit",
+      "rbStartTab": "coach",
+      "rbGoalSteps": 10000,
+      "rbPreviewMode": "",
+      "rbWorkoutDistanceMiles": 5.0,
+      "rbActiveEnergyKcal": 160,
+      "rbDistanceMiles": 1.9,
+      "rbWorkoutType": "run"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/AskCoachView.swift"
+}

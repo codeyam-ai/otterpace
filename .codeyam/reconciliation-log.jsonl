@@ -1,0 +1,14 @@
+{"timestamp":"2026-06-22T23:26:27Z","kind":"registry-add","message":"registry `AppCoreTests.CoachEngineTests › testClassifyReflection`: added from runner `tests` output"}
+{"timestamp":"2026-06-22T23:26:27Z","kind":"registry-add","message":"registry `AppCoreTests.CoachEngineTests › testInjuryReplyIsSafetyFlagged`: added from runner `tests` output"}
+{"timestamp":"2026-06-22T23:26:27Z","kind":"registry-add","message":"registry `AppCoreTests.CoachEngineTests › testClassifySteps`: added from runner `tests` output"}
+{"timestamp":"2026-06-22T23:26:27Z","kind":"registry-add","message":"registry `AppCoreTests.CoachEngineTests › testRunOrRestWhenFreshAllowsRun`: added from runner `tests` output"}
+{"timestamp":"2026-06-22T23:26:27Z","kind":"registry-add","message":"registry `AppCoreTests.CoachEngineTests › testRunOrRestAfterHardRunIsRecovery`: added from runner `tests` output"}
+{"timestamp":"2026-06-22T23:26:27Z","kind":"registry-add","message":"registry `AppCoreTests.CoachEngineTests › testClassifyRunOrRest`: added from runner `tests` output"}
+{"timestamp":"2026-06-22T23:26:27Z","kind":"registry-add","message":"registry `AppCoreTests.CoachEngineTests › testMileageReplySpikingIsCaution`: added from runner `tests` output"}
+{"timestamp":"2026-06-22T23:26:27Z","kind":"registry-add","message":"registry `AppCoreTests.CoachEngineTests › testStepsReplyBelowGoal`: added from runner `tests` output"}
+{"timestamp":"2026-06-22T23:26:27Z","kind":"registry-add","message":"registry `AppCoreTests.CoachEngineTests › testClassifyMileage`: added from runner `tests` output"}
+{"timestamp":"2026-06-22T23:26:27Z","kind":"registry-add","message":"registry `AppCoreTests.CoachEngineTests › testStepsReplyGoalReachedCelebrates`: added from runner `tests` output"}
+{"timestamp":"2026-06-22T23:26:27Z","kind":"registry-add","message":"registry `AppCoreTests.CoachEngineTests › testClassifyInjuryWins`: added from runner `tests` output"}
+{"timestamp":"2026-06-22T23:26:27Z","kind":"registry-add","message":"registry `AppCoreTests.CoachEngineTests › testReflectionWithWorkout`: added from runner `tests` output"}
+{"timestamp":"2026-06-22T23:26:27Z","kind":"registry-add","message":"registry `AppCoreTests.CoachEngineTests › testClassifyGeneralFallback`: added from runner `tests` output"}
+{"timestamp":"2026-06-22T23:26:27Z","kind":"registry-add","message":"registry `AppCoreTests.CoachEngineTests › testMileageReplySteadyIsReassuring`: added from runner `tests` output"}

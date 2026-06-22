@@ -32,7 +32,9 @@
       "rbLongestRunMiles": 8.1,
       "rbMinutesSinceMovement": 40,
       "rbWorkoutDate": "2026-06-21",
-      "rbWorkoutDistanceMiles": 8.1
+      "rbWorkoutDistanceMiles": 8.1,
+      "rbStartTab": "today",
+      "rbAskSeedQuestion": ""
     }
   },
   "scenarioType": "application",

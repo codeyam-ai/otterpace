@@ -2,12 +2,12 @@
   "schemaVersion": 4,
   "partitions": {
     "all": {
-      "version": 4,
-      "hash": "bcda3804fa2a11d3",
+      "version": 10,
+      "hash": "f59e0a637f00fbb7",
       "green": true,
-      "lastRunAt": "2026-06-22T22:34:48.171099+00:00",
+      "lastRunAt": "2026-06-22T23:54:46.358435+00:00",
       "cacheFile": ".codeyam/test-cache/all.json",
-      "registryDigest": "967d5a08a7df2fe7bed912cf3336cf298057a50498ff7cd5f6f53563b8c1c95a"
+      "registryDigest": "7398a2a6f47894f9e79abcac21da02e2897c65192feb5dfd961f2ce50f2e69dc"
     }
   }
 }

@@ -27,7 +27,9 @@
       "rbActiveEnergyKcal": 180,
       "rbLongestRunMiles": 4.0,
       "rbCoachBody": "You're at 3,200 steps and haven't moved in 92 minutes. A 12-minute walk gets you toward your next milestone without adding meaningful training stress.",
-      "rbGoalSteps": 10000
+      "rbGoalSteps": 10000,
+      "rbStartTab": "today",
+      "rbAskSeedQuestion": ""
     }
   },
   "scenarioType": "application",

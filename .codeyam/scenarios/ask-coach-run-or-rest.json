@@ -1,0 +1,37 @@
+{
+  "name": "Ask Coach — Run or Rest",
+  "id": "436e64e8-029d-44c7-8ec0-a6a2550c9936",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbWorkoutDate": "2026-06-21",
+      "rbActiveEnergyKcal": 240,
+      "rbLongestRunMiles": 8.1,
+      "rbMinutesSinceMovement": 40,
+      "rbDaysRunThisWeek": 4,
+      "rbLoadTrend": "spiking",
+      "rbPreviewMode": "",
+      "rbWorkoutDistanceMiles": 8.1,
+      "rbWorkoutDurationMinutes": 77,
+      "rbStartTab": "coach",
+      "rbAskSeedQuestion": "Can I run today or should I rest?",
+      "rbConnected": true,
+      "rbDate": "2026-06-22",
+      "rbDistanceMiles": 2.6,
+      "rbGoalSteps": 10000,
+      "rbRestDaysThisWeek": 1,
+      "rbSteps": 5400,
+      "rbWeeklyMileage": 22.0,
+      "rbWorkoutPace": "9:30/mi",
+      "rbWorkoutSource": "strava",
+      "rbWorkoutType": "run",
+      "rbActiveMinutes": 35
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/AskCoachView.swift"
+}

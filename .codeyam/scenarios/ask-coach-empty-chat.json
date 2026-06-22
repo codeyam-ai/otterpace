@@ -1,0 +1,26 @@
+{
+  "name": "Ask Coach — Empty Chat",
+  "id": "825df3f8-df87-4b53-87b2-bc13b3b0ab91",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbMinutesSinceMovement": 50,
+      "rbConnected": true,
+      "rbAskSeedQuestion": "",
+      "rbGoalSteps": 10000,
+      "rbSteps": 6400,
+      "rbActiveEnergyKcal": 210,
+      "rbPreviewMode": "",
+      "rbStartTab": "coach",
+      "rbActiveMinutes": 28,
+      "rbDate": "2026-06-22",
+      "rbDistanceMiles": 3.1
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/AskCoachView.swift"
+}

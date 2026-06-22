@@ -1,0 +1,31 @@
+{
+  "name": "Ask Coach — Mileage Spike",
+  "id": "96c1cfc0-40f8-46c4-8fc5-11b8fc3b7fb2",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbWeeklyMileage": 24.0,
+      "rbGoalSteps": 10000,
+      "rbDaysRunThisWeek": 5,
+      "rbActiveEnergyKcal": 260,
+      "rbDistanceMiles": 3.4,
+      "rbMinutesSinceMovement": 30,
+      "rbAskSeedQuestion": "Am I increasing mileage too fast?",
+      "rbPreviewMode": "",
+      "rbSteps": 7200,
+      "rbActiveMinutes": 41,
+      "rbStartTab": "coach",
+      "rbDate": "2026-06-22",
+      "rbRestDaysThisWeek": 0,
+      "rbConnected": true,
+      "rbLoadTrend": "spiking",
+      "rbLongestRunMiles": 9.0
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/AskCoachView.swift"
+}

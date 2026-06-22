@@ -9,7 +9,9 @@
   "deviceState": {
     "preferences": {
       "rbConnected": false,
-      "rbPreviewMode": ""
+      "rbPreviewMode": "",
+      "rbStartTab": "today",
+      "rbAskSeedQuestion": ""
     }
   },
   "scenarioType": "application",

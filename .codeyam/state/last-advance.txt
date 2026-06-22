@@ -1,91 +1,126 @@
-━━━ BEGIN STEP 25: Feature Complete (FINAL STEP) ━━━
+━━━ BEGIN STEP 23: Commit ━━━
 
 NEXT ACTION (same turn — do not stop):
 
-  EXACT_TASK_TITLE: Complete codeyam editor step 25: 'Feature Complete' — final step
+  EXACT_TASK_TITLE: Complete codeyam editor step 23: 'Commit' and move on to step 24: 'Push'
 
-# UI Flow 25 / 25: Feature Complete
+# UI Flow 23 / 25: Commit
 
-**Feature:** Buddy Mascot & Loader — Style/Branding Variations
+**Feature:** Ask Coach — Chat Screen (Mock Coach, Milestone 2)
 
-Fire the feature-complete modal — the cycle ends here.
+Commit all changes to git.
 
 ## Instructions
 
 RESUMING this step. Check what was already done before repeating work.
   (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
 
-Fire the feature-complete modal. The cycle ends here.
+Commit all changes for this feature.
+
+The user already approved at the `ui-present` (UI) or `backend-present` (backend) gate. Execute the commit.
 
 Checklist:
-[ ] Run `codeyam-editor-dev editor feature-complete`. The command verifies a clean
-    tree, that the branch was pushed (or auto-skips if no remote), and POSTs
-    the completion signal to the editor backend. Success writes a durable
-    `featureCompleteSignaledAt` timestamp into `.codeyam/feature-finalized.json`.
-[ ] If the command fails, read the error and fix the underlying issue
-    (uncommitted changes, unpushed branch, etc.). Do NOT bypass — the
-    completion modal must fire before the cycle is considered done.
-[ ] Once the modal has fired, the workflow is over. Any new user request
-    — even if it sounds related — is a NEW feature. Do NOT use
-    `codeyam-editor-dev editor change` or start building directly. The change
-    workflow is ONLY for modifications during the pre-commit slugs, not after
-    the modal fires. Ask the user what they want to build. Once they tell you,
-    run `codeyam-editor-dev editor step --slug ui-plan --mode ui` (or
-    `--slug backend-plan --mode backend`) yourself.
-[ ] NEVER tell the user to run `codeyam-editor-dev editor` commands — these are
-    internal. Just ask what to build.
+[ ] Recapture screenshots: `codeyam-editor-dev editor recapture-stale --skip-when-clean --include-aged --max-seconds 300 --max-attempts 3`
+    Exits non-zero if (a) any per-slug capture failed, (b) the dev server is
+    unhealthy on pre-flight, or (c) the overall budget expired with zero
+    successes. If the pre-flight bails with "dev server unhealthy", fix the
+    dev server first — do NOT pass `--skip-when-clean` to bypass it (the flag
+    only short-circuits the empty-coverage fast path, not the pre-flight).
+    `stage-feature` will also refuse to run if coverage still shows stale or
+    missing screenshots, so dismissing per-slug failures is no longer possible.
+    `--skip-when-clean` short-circuits with `{"skipped_clean": true}` when
+    audit already reported zero stale + zero missing — common case for
+    backend-only features. `--include-aged` unions the audit's
+    `AGED_STALE_SCREENSHOTS` set into the recapture target, so a scenario
+    whose source mtime crossed the freshness threshold (e.g. an unrelated
+    `git checkout` bumped it forward) is re-captured here — without it,
+    the dep-tree-only check would report `0 stale` while the audit gate
+    afterward still fires on those slugs, leaving the workflow stuck.
+    `--max-seconds` caps each attempt at 5 minutes;
+    individual slugs have their own 60s timeout. `--max-attempts 3` retries
+    after a per-attempt budget hit (stdout JSON `budget_expired: true`) so a
+    single 300s window can't silently leave stale screenshots behind — each
+    retry re-evaluates coverage and only touches slugs that are still stale.
+    The final stdout JSON includes `attempts`, `budget_expired`, and
+    `skipped_count` so you can confirm the run drained the set. Do NOT pipe
+    this through `tail` — full output (per-slug `→ Capturing` / `✓` / `✗` /
+    `⏱` lines plus the `▶ Pass N/M` startup line) is the only signal you
+    have if a scenario hangs. Per-slug timeouts now fail the command;
+    investigate the dev server or the scenario before retrying.
+[ ] Stage the feature: `codeyam-editor-dev editor stage-feature \
+       --path <feature-file-1> --path <feature-file-2> ...`
+    Pass --path for every NON-`.codeyam/` file you edited during this
+    feature. All non-ignored `.codeyam/` files are staged automatically
+    — do NOT ask the user about any `.codeyam/` path, and do NOT pass
+    them via --path. `.gitignore` is the authoritative skip-list.
+    If you have many changed files, you can use `stage-feature --from-status`
+    to stage every dirty file in the working tree. Use `--exclude-prefix`
+    to skip directories you didn't touch.
+    `stage-feature` accepts both file paths and directory paths. File paths
+    work even if they are currently untracked inside an untracked directory.
+    The command prints `stagedInternal` (auto), `stagedExternal`
+    (your --path args), and `untouchedExternal` (other dirty files not
+    yours — leave them for the `push` slug). If `untouchedExternal` is
+    non-empty, that is fine; the `push` slug's `commit-state` will surface them.
+    `stage-feature` also runs `session-cleanup` (orphan screenshots, log
+    rotation, tmp prune) per `editor.json::cleanup` BEFORE the dirty-tree
+    scan, so any deletions land in `stagedInternal` and fold into the
+    feature commit. Best-effort; failures log to stderr.
+[ ] If `.gitignore` was modified, untrack newly-ignored files:
+    `git ls-files --cached | git check-ignore --no-index --stdin`,
+    then `git rm --cached <file>` for each match and re-run
+    `stage-feature`.
+[ ] Commit: `git commit -m "feat: <title>" -m "<journal description>"`
+    The commit message body MUST match the journal description exactly.
+    Verify: git rev-parse HEAD
 
-━━━ DO NOT OFFER TO /SCHEDULE ━━━
-The harness offers a `/schedule` skill that asks the model to proactively
-offer recurring or follow-up agents at the end of work. That offer is
-explicitly OUT OF SCOPE here.
-- Do NOT offer to /schedule anything from this closing turn.
-- Do NOT end your reply with "Want me to /schedule an agent…"
-- Do NOT suggest a recurring sweep, a follow-up PR cleanup, or any
-  background routine.
-- The editor workflow ends with the completion modal. The user fires
-  the next cycle by typing what they want to build next.
-- Recurring/follow-up offers belong to the harness, not to the editor
-  workflow's closing turn.
-
-This is the final step. There is no advance.
+[ ] If the pre-commit hook fails, read the error, fix the issue,
+    re-run `stage-feature` (the cache regeneration may dirty more
+    `.codeyam/` files — they get auto-staged), and commit again.
+[ ] Review the commit with `git log --stat -1` to confirm the right files were included
+[ ] Don't worry about regenerated .codeyam/ caches dirtied AFTER this commit
+    (post-commit hook output) — the `push` slug captures any such leftovers in a
+    separate `chore: update codeyam state` commit before the push. Caches
+    already dirty BEFORE the commit are now folded into the feature commit
+    itself by `stage-feature`.
 
 
-Run `codeyam-editor-dev editor feature-complete` to show the completion modal, then ask what to build next.
+When done, move to the next step: `codeyam-editor-dev editor 24`
 
 ━━━ TASK ━━━
 If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
 
 Hand off from the previous step's task to this step's task. Procedure:
   1. Run TaskList
-  2. If a task titled exactly `Complete codeyam editor step 24: 'Push' and move on to step 25: 'Feature Complete'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  2. If a task titled exactly `Complete codeyam editor step 22: 'Finalize' and move on to step 23: 'Commit'` exists and is not yet completed, run TaskUpdate with status "completed" on it
   3. Run TaskCreate with the EXACT title below and set it to in_progress:
 
-EXACT_TASK_TITLE: Complete codeyam editor step 25: 'Feature Complete' — final step
+EXACT_TASK_TITLE: Complete codeyam editor step 23: 'Commit' and move on to step 24: 'Push'
 
-This is the final step. When you finish its checklist, mark this task completed — there is no next step to hand off to.
+When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
 Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
 
-━━━ FEATURE COMPLETE ━━━
+━━━ END OF STEP ━━━
 
-Do NOT offer to /schedule a follow-up agent.
-Do NOT end your reply with a scheduling pitch — the harness's
-/schedule skill description does not apply here.
-The cycle ends with the completion modal; the user
-fires the next cycle by telling you what to build next.
+This is a non-gate step. Do NOT wait for user confirmation.
+Do NOT write a recap. Do NOT ask the user "ready to advance?" — they did
+not opt into a checkpoint. Recaps belong at gate steps, not here.
 
-Do NOT write a recap. Do NOT call `codeyam-editor-dev editor advance` —
-this is the final step. There is no next step.
+If the checklist surfaces a finding that requires a user decision (unrelated test failures, surprising state, ambiguous next action), use AskUserQuestion with 2-4 concrete options — never an inline numbered list. If AskUserQuestion is not loaded, call `ToolSearch` with `select:AskUserQuestion` first.
 
-━━━ BEGIN STEP 25: Feature Complete (FINAL STEP) ━━━
+When you have finished the checklist AND marked the task completed, run:
+
+  Bash: codeyam-editor-dev editor advance
+
+━━━ BEGIN STEP 23: Commit ━━━
 
 NEXT ACTION (same turn — do not stop):
 
-  EXACT_TASK_TITLE: Complete codeyam editor step 25: 'Feature Complete' — final step
+  EXACT_TASK_TITLE: Complete codeyam editor step 23: 'Commit' and move on to step 24: 'Push'
 
   1. TaskCreate with the EXACT title above, status in_progress
-  2. Run the step 25 checklist (printed above this trailer)
+  2. Run the step 23 checklist (printed above this trailer)
   3. TaskUpdate completed
-  4. Run `codeyam-editor editor feature-complete`
+  4. Run `codeyam-editor editor advance`
 
 Tail-truncated this output? Re-run without piping: codeyam-editor editor advance

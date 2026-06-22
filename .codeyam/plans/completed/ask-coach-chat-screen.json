@@ -1,0 +1,36 @@
+{
+  "claimStartedAt": "2026-06-22T22:59:12Z",
+  "completedAt": "2026-06-22T23:52:17Z",
+  "completedBy": {
+    "agentProvider": "claude",
+    "codeyamEditorVersion": "0.1.0",
+    "currentStep": "ui-step19",
+    "machine": "Nadias-MacBook-Pro-2.local",
+    "pid": 96815,
+    "priority": 0,
+    "selectedPlan": "ask-coach-chat-screen",
+    "sessionId": "987f97b9-15ac-44ed-9c83-7a48e1f35a41",
+    "startedAt": "2026-06-22T22:59:12Z"
+  },
+  "createdAt": "2026-06-22T22:58:59Z",
+  "deliverables": [
+    "README.md",
+    "Sources/AppCore/AskCoachEmptyState.swift",
+    "Sources/AppCore/AskCoachHeader.swift",
+    "Sources/AppCore/AskCoachInputBar.swift",
+    "Sources/AppCore/AskCoachView.swift",
+    "Sources/AppCore/ChatBubble.swift",
+    "Sources/AppCore/ChatThread.swift",
+    "Sources/AppCore/CoachCard.swift",
+    "Sources/AppCore/CoachEngine.swift",
+    "Sources/AppCore/ContentView.swift",
+    "Sources/AppCore/TodayView.swift",
+    "Tests/AppCoreTests/CoachEngineTests.swift",
+    "Tests/AppCoreTests/MainTabTests.swift"
+  ],
+  "journalTimestamp": "2026-06-22T23:52:17Z",
+  "mode": "ui",
+  "planFile": "completed/ask-coach-chat-screen.md",
+  "slug": "ask-coach-chat-screen",
+  "title": "Ask Coach — Chat Screen (Mock Coach, Milestone 2)"
+}

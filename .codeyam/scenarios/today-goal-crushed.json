@@ -32,7 +32,9 @@
       "rbWorkoutSource": "strava",
       "rbCoachSafety": false,
       "rbGoalSteps": 10000,
-      "rbPreviewMode": ""
+      "rbPreviewMode": "",
+      "rbStartTab": "today",
+      "rbAskSeedQuestion": ""
     }
   },
   "scenarioType": "application",

@@ -1,5 +1,41 @@
 [
   {
+    "description": "The Ask Coach first-open state: a friendly Buddy and a prompt inviting the user to ask, shown whenever the conversation has no messages yet.",
+    "filePath": "Sources/AppCore/AskCoachEmptyState.swift",
+    "name": "AskCoachEmptyState",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the ask-coach-empty-chat application scenario.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "The Ask Coach title bar: a small Buddy avatar beside the screen name and an honest 'mock coach' subtitle.",
+    "filePath": "Sources/AppCore/AskCoachHeader.swift",
+    "name": "AskCoachHeader",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the ask-coach-run-or-rest application scenario.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "The compose bar pinned to the bottom of the Ask Coach screen: a text field bound to the parent's draft and a send button that activates only when the draft has non-whitespace content.",
+    "filePath": "Sources/AppCore/AskCoachInputBar.swift",
+    "name": "AskCoachInputBar",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the ask-coach-empty-chat and ask-coach-run-or-rest application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "The Ask Coach chat screen. Pure composition over AskCoachHeader, the ChatThread (or AskCoachEmptyState), and AskCoachInputBar. Owns the conversation state and the send/seed behavior: on send it appends the user's question and Buddy's CoachEngine reply; on appear it replays a seeded rbAskSeedQuestion so a scenario renders a real exchange.",
+    "filePath": "Sources/AppCore/AskCoachView.swift",
+    "name": "AskCoachView",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the ask-coach-run-or-rest and ask-coach-empty-chat application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
     "description": "Three dots that pulse in sequence as a shared loading affordance.",
     "filePath": "Sources/AppCore/PuffyBuddyLoader.swift",
     "name": "BouncingDots",
@@ -33,6 +69,24 @@
     }
   },
   {
+    "description": "A single chat row. User messages hug the trailing edge in a coral card; coach messages lead with a small Buddy and tint to the reply's mood, with an amber SAFETY FIRST shield when the answer carries a safety flag.",
+    "filePath": "Sources/AppCore/ChatBubble.swift",
+    "name": "ChatBubble",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the ask-coach-run-or-rest and ask-coach-knee-pain application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "The scrolling conversation: a column of ChatBubbles that auto-scrolls to the newest message as the thread grows.",
+    "filePath": "Sources/AppCore/ChatThread.swift",
+    "name": "ChatThread",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the ask-coach-run-or-rest application scenario.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
     "description": "The AI coach recommendation card, with a calm brand treatment normally and an amber shield-marked treatment when the recommendation carries a safety flag.",
     "filePath": "Sources/AppCore/CoachCard.swift",
     "name": "CoachCard",
@@ -40,6 +94,18 @@
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
       "kind": "no-isolation-harness"
     }
+  },
+  {
+    "description": "Buddy's mock AI coach. Given a free-text question and the day's TodayState, it routes through CoachIntent and builds a curated, context-aware, safety-aware CoachReply (text + Buddy mood + safetyFlag). Pure and deterministic: a recent hard run or spiking weekly load tilts every recommendation toward recovery, and injury/mileage answers carry the safety flag. This is Milestone 2's mock mode; Milestone 3 swaps the reply body for a real model.",
+    "filePath": "Sources/AppCore/CoachEngine.swift",
+    "name": "CoachEngine",
+    "testFile": "Tests/AppCoreTests/CoachEngineTests.swift"
+  },
+  {
+    "description": "The intent classification behind the Ask Coach engine. Its classify(_:) does conservative keyword matching over the user's question into runOrRest, hit10K, mileageTooFast, injuryPain, postRunReflection, or a general fallback. Injury/pain is checked first so a safety-sensitive question is never mis-routed to upbeat coaching.",
+    "filePath": "Sources/AppCore/CoachEngine.swift",
+    "name": "CoachIntent",
+    "testFile": "Tests/AppCoreTests/CoachEngineTests.swift"
   },
   {
     "description": "The day-one empty state shown before Apple Health is connected: Buddy waving, a warm explainer, the connect call-to-action, and a privacy reassurance.",
@@ -69,6 +135,12 @@
       "justification": "Native SwiftUI shape primitive; no component-isolation harness on this stack, so it is shown via the buddy-puffy-moods application scenario.",
       "kind": "no-isolation-harness"
     }
+  },
+  {
+    "description": "The app's two top-level destinations behind the connected tab bar: today and coach. Its init(raw:) coerces a seeded rbStartTab string case-insensitively, falling back to today, so scenarios can land directly on the Ask Coach chat.",
+    "filePath": "Sources/AppCore/ContentView.swift",
+    "name": "MainTab",
+    "testFile": "Tests/AppCoreTests/MainTabTests.swift"
   },
   {
     "description": "Small pill under Buddy naming the current mood in its accent color.",

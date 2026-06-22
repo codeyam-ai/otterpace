@@ -32,7 +32,9 @@
       "rbSteps": 9180,
       "rbCoachSafety": false,
       "rbCoachType": "walk",
-      "rbLoadTrend": "steady"
+      "rbLoadTrend": "steady",
+      "rbStartTab": "today",
+      "rbAskSeedQuestion": ""
     }
   },
   "scenarioType": "application",

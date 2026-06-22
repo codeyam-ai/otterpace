@@ -9,7 +9,7 @@ mood-reactive otter mascot.
 
 ## What's here today
 
-The **Today dashboard** (this milestone), a native SwiftUI screen that shows:
+The **Today dashboard**, a native SwiftUI screen that shows:
 
 - A **step-goal ring** toward your daily 10K, plus active minutes, distance, and
   time since you last moved
@@ -20,7 +20,21 @@ The **Today dashboard** (this milestone), a native SwiftUI screen that shows:
 - Your **latest run/walk** and a **weekly training-load** snapshot
 - A friendly **day-one "Connect Apple Health"** hero for first launch
 
-The screen is driven by a single `TodayState` (see `Sources/AppCore/Model.swift`),
+The **Ask Coach** chat (this milestone), reached from a Today/Coach tab bar or the
+"Ask Buddy" button on the coach card:
+
+- Ask Buddy a fitness question and get a practical, **injury-aware** reply —
+  "Can I run or should I rest?", "How do I hit 10K without overdoing it?",
+  "Am I increasing mileage too fast?", or "my knee hurts after my run"
+- Replies are **classified by intent** and built from your own activity context,
+  so they feel personal — a recent hard run or spiking load steers Buddy toward
+  recovery, and pain questions return a non-diagnostic, see-a-clinician answer
+  behind an amber **"safety first"** shield
+- This is **mock-coach mode** (Milestone 2): answers are curated and
+  deterministic, served by `CoachEngine` (`Sources/AppCore/CoachEngine.swift`).
+  A real model swaps in at Milestone 3
+
+The Today screen is driven by a single `TodayState` (see `Sources/AppCore/Model.swift`),
 populated from HealthKit in the real app and from each CodeYam scenario's
 `deviceState` preferences in the simulator preview. Production starts empty; each
 scenario carries its own seeded state.
@@ -30,9 +44,12 @@ scenario carries its own seeded state.
 - `App/` — the iOS app entry point (`@main`) and `Info.plist`
 - `Sources/AppCore/` — the SwiftUI views and model, as a shared SwiftPM library:
   `RunBuddyModel` + `TodayState` (data + derived logic), `PuffyBuddy` (the otter
-  mascot) + `PuffyBuddyLoader` (its loading state), and one file per dashboard
-  component (`StepRing`, `CoachCard`, `WeeklyLoadCard`, …)
-- `Tests/AppCoreTests/` — XCTest coverage of the model and pure formatters
+  mascot) + `PuffyBuddyLoader` (its loading state), one file per dashboard
+  component (`StepRing`, `CoachCard`, `WeeklyLoadCard`, …), and the Ask Coach
+  surface (`AskCoachView` + `CoachEngine` and its `ChatBubble` / `ChatThread` /
+  `AskCoachInputBar` parts)
+- `Tests/AppCoreTests/` — XCTest coverage of the model, pure formatters, and the
+  coach engine's intent classification and safety branches
 
 ## Running
 
