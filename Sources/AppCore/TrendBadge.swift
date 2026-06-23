@@ -16,9 +16,11 @@ struct TrendBadge: View {
 
     var body: some View {
         Text(trend.capitalized)
-            .font(.system(size: 11, weight: .bold))
+            .font(Typography.captionStrong)
             .foregroundColor(color)
             .padding(.horizontal, 10).padding(.vertical, 4)
             .background(Capsule().fill(color.opacity(0.16)))
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Training load trend: \(trend)")
     }
 }

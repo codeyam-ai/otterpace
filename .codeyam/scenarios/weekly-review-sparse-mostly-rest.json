@@ -1,6 +1,6 @@
 {
   "name": "Weekly Review — Sparse / Mostly Rest",
-  "id": "438af9de-e07a-4a68-acc1-76b4ef4edf53",
+  "id": "1cfd59e9-caa4-44ba-8b50-4c1d03c737cc",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,20 +8,22 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbConnected": true,
-      "rbRestDaysThisWeek": 5,
-      "rbShowWeeklyReview": true,
-      "rbStartTab": "coach",
-      "rbWeeklyMileage": 3.5,
-      "rbDaysRunThisWeek": 1,
-      "rbSteps": 4200,
-      "rbPreviewMode": "",
-      "rbLongestRunMiles": 3.5,
-      "rbWorkoutType": "",
-      "rbGoalSteps": 10000,
-      "rbLoadTrend": "recovering",
       "rbAskSeedQuestion": "",
-      "rbDate": "2026-06-22"
+      "rbLongestRunMiles": 3.5,
+      "rbLoadTrend": "recovering",
+      "rbConnected": true,
+      "rbDaysRunThisWeek": 1,
+      "rbStartTab": "coach",
+      "rbWorkoutType": "",
+      "rbContentSize": "",
+      "rbDate": "2026-06-22",
+      "rbShowHistory": false,
+      "rbSteps": 4200,
+      "rbShowWeeklyReview": true,
+      "rbPreviewMode": "",
+      "rbWeeklyMileage": 3.5,
+      "rbGoalSteps": 10000,
+      "rbRestDaysThisWeek": 5
     }
   },
   "scenarioType": "application",

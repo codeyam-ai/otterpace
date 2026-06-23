@@ -1,6 +1,6 @@
 {
   "name": "Buddy Puffy — Moods",
-  "id": "18a507c3-ad60-41fb-a9d0-85ff24338717",
+  "id": "6907eeb2-5719-4b36-a08f-a68cac5acd5f",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,6 +8,9 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
+      "rbShowWeeklyReview": false,
+      "rbShowHistory": false,
+      "rbContentSize": "",
       "rbPreviewMode": "puffy-moods"
     }
   },

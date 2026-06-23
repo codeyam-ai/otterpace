@@ -1,0 +1,44 @@
+{
+  "name": "Accessibility — Large Text Today",
+  "id": "359a3442-1b02-4b98-9013-dbf3edc839dd",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbWorkoutSource": "strava",
+      "rbShowHistory": false,
+      "rbConnected": true,
+      "rbWorkoutDistanceMiles": 4.2,
+      "rbShowWeeklyReview": false,
+      "rbDate": "2026-06-22",
+      "rbRestDaysThisWeek": 2,
+      "rbAskSeedQuestion": "",
+      "rbActiveMinutes": 42,
+      "rbWorkoutDurationMinutes": 44,
+      "rbLoadTrend": "building",
+      "rbPreviewMode": "",
+      "rbWeeklyMileage": 22.0,
+      "rbActiveEnergyKcal": 240,
+      "rbWorkoutDate": "2026-06-21",
+      "rbWorkoutType": "run",
+      "rbStartTab": "today",
+      "rbDistanceMiles": 3.2,
+      "rbContentSize": "accessibility3",
+      "rbCoachBody": "You ran yesterday, so keep today gentle — a relaxed walk and some mobility.",
+      "rbCoachHeadline": "Easy movement day",
+      "rbBuddyMood": "recovery",
+      "rbCoachType": "walk",
+      "rbLongestRunMiles": 8.0,
+      "rbSteps": 7400,
+      "rbGoalSteps": 10000,
+      "rbWorkoutPace": "10:28/mi",
+      "rbDaysRunThisWeek": 4,
+      "rbMinutesSinceMovement": 35
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/ContentView.swift"
+}

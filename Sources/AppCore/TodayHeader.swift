@@ -9,15 +9,15 @@ struct TodayHeader: View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Today")
-                    .font(.system(size: 30, weight: .heavy, design: .rounded))
+                    .font(Typography.largeTitle)
                     .foregroundColor(Palette.ink)
                 Text(prettyDate(date))
-                    .font(.system(size: 14, weight: .medium))
+                    .font(Typography.caption)
                     .foregroundColor(Palette.subtle)
             }
             Spacer()
             Text("RunBuddy")
-                .font(.system(size: 15, weight: .bold, design: .rounded))
+                .font(Typography.headline)
                 .foregroundColor(Palette.brand)
         }
     }

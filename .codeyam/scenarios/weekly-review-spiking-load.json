@@ -1,6 +1,6 @@
 {
   "name": "Weekly Review — Spiking Load",
-  "id": "97a66000-bd45-40f8-a11a-b4dae5df940d",
+  "id": "835a6c16-876f-40d6-984e-944d3792b134",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,20 +8,22 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
+      "rbShowHistory": false,
+      "rbDate": "2026-06-22",
+      "rbWeeklyMileage": 31.0,
+      "rbRestDaysThisWeek": 0,
+      "rbConnected": true,
+      "rbAskSeedQuestion": "",
+      "rbLongestRunMiles": 11.0,
+      "rbLoadTrend": "spiking",
+      "rbSteps": 7200,
+      "rbPreviewMode": "",
       "rbShowWeeklyReview": true,
       "rbStartTab": "coach",
-      "rbLongestRunMiles": 11.0,
-      "rbWeeklyMileage": 31.0,
-      "rbDate": "2026-06-22",
-      "rbConnected": true,
+      "rbContentSize": "",
+      "rbDaysRunThisWeek": 5,
       "rbGoalSteps": 10000,
-      "rbPreviewMode": "",
-      "rbRestDaysThisWeek": 0,
-      "rbSteps": 7200,
-      "rbLoadTrend": "spiking",
-      "rbWorkoutType": "",
-      "rbAskSeedQuestion": "",
-      "rbDaysRunThisWeek": 5
+      "rbWorkoutType": ""
     }
   },
   "scenarioType": "application",

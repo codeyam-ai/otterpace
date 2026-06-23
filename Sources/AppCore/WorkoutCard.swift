@@ -15,15 +15,15 @@ struct WorkoutCard: View {
             }
             VStack(alignment: .leading, spacing: 3) {
                 Text("Latest \(workout.type)")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(Typography.captionStrong)
                     .foregroundColor(Palette.subtle)
                 Text(String(format: "%.1f mi · %@", workout.distanceMiles, workout.pace))
-                    .font(.system(size: 17, weight: .heavy, design: .rounded))
+                    .font(Typography.headline)
                     .foregroundColor(Palette.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                 Text("\(workout.durationMinutes) min · \(prettyDate(workout.date)) · \(workout.source)")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(Typography.caption)
                     .foregroundColor(Palette.subtle)
                     .lineLimit(2)
             }

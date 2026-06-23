@@ -14,7 +14,7 @@ struct AskCoachInputBar: View {
     var body: some View {
         HStack(spacing: 10) {
             TextField("Ask Buddy a question…", text: $draft)
-                .font(.system(size: 15))
+                .font(Typography.body)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(
@@ -26,6 +26,7 @@ struct AskCoachInputBar: View {
                         .stroke(Palette.ink.opacity(0.08), lineWidth: 1)
                 )
                 .onSubmit(onSend)
+                .accessibilityLabel("Ask Buddy a question")
 
             Button(action: onSend) {
                 Image(systemName: "arrow.up")
@@ -40,6 +41,7 @@ struct AskCoachInputBar: View {
                     )
             }
             .disabled(!canSend)
+            .accessibilityLabel("Send message")
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)

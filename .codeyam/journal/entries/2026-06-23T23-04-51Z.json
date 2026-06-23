@@ -1,0 +1,415 @@
+{
+  "timestamp": "2026-06-23T23:04:51Z",
+  "title": "Accessible & Responsive Design — Contrast, Dynamic Type, Layout",
+  "type": "feature",
+  "userRequest": "## Summary\n\nRaise the whole RunBuddy UI to WCAG AA contrast and make every surface scale\nwith the user's text-size setting and screen size. Today the captions and\nlabels everywhere use `Palette.subtle` (a #737A8A grey ≈ 3.4:1 on the white\ncards and the cream/tan gradient — below the 4.5:1 AA floor, worst on the\n11–14pt labels), body copy is dimmed further with `ink.opacity(0.8/0.85)`, and\nevery view hard-codes `.font(.system(size:))` so text ignores Dynamic Type.\nFixed frames (`StepRing` 150×150) and the 3-up `StatsRow` HStack clip at large\ntext sizes or on small phones, and most controls lack accessibility labels.\nThe fix is centralized: introduce a scalable typography scale + an accessible\ntext color in `Theme.swift`, then adopt those tokens across the section\ncomponents so the whole app inherits contrast, Dynamic Type, and reflow at once.\n\n## Key Decisions\n\n- **Centralized tokens over per-view patches** — the same fixed fonts and grey\n  recur across ~15 files, so a shared `Typography` scale and a darkened\n  `Palette.subtle` give one source of truth and fix everything consistently.\n  Targeted patches were rejected as they'd leave the inconsistency in place.\n- **Dynamic Type via relative fonts, not raw point sizes** — replace\n  `.font(.system(size: N, …))` with `.font(.system(.textStyle, design:…))` (or\n  `size:relativeTo:`) so text scales with the user's setting while keeping the\n  rounded, heavy display look the brand uses. Use `@ScaledMetric` for the few\n  geometry constants that must track text size (e.g. `StepRing` diameter).\n- **Darken `subtle`, stop dimming body text** — change `Palette.subtle` to a\n  darker grey that clears 4.5:1 on both `Palette.card` (white) and `bgTop`\n  (cream), and drop the `ink.opacity(0.8/0.85)` on body/coach/chat copy so it\n  renders at full ink. Keep the warm brand accents (coral/gold/amber/etc.)\n  unchanged — they're decorative tints, not text.\n- **Reflow, don't truncate** — let `StatsRow` switch from a fixed 3-up HStack to\n  a wrapping/adaptive layout at accessibility text sizes, and let `StepRing`\n  scale with `@ScaledMetric`, so large type and small screens never clip.\n- **Labels describe state, not decoration** — give the meaningful controls\n  (`StepRing` progress, stat tiles, mood chip, trend badge, send button)\n  accessibility labels/values; mark purely decorative shapes as hidden.\n\n## Implementation\n\n### 1. Add accessible color + a scalable typography scale\n\n**File**: `Sources/AppCore/Theme.swift`\n\n- Darken `Palette.subtle` from `(0.45, 0.47, 0.54)` to a value that clears\n  ~4.5:1 on both white and the `bgTop` cream (around `(0.34, 0.36, 0.43)` —\n  verify against both backgrounds). Leave the brand/go/sky/amber/gold/lilac\n  accents and `ink` as-is.\n- Add a `Typography` enum (or a set of `Font` helpers) exposing the app's\n  roles — e.g. `largeTitle`, `title`, `headline`, `body`, `caption`,\n  `captionStrong` — each built from a SwiftUI text style with the rounded\n  design and weights already in use, so they scale with Dynamic Type. This is\n  the single place point-sizes map to relative styles.\n\n### 2. Make shared card chrome scale-aware\n\n**File**: `Sources/AppCore/ViewStyles.swift`\n\nKeep `cardStyle()` but ensure corner radius/shadow read fine at large type;\nno behavioral change required beyond confirming padding comes from callers.\n(Most reflow happens in the section components below.)\n\n### 3. Adopt typography tokens + accessible color across section components\n\n**Files**:\n- `Sources/AppCore/TodayHeader.swift`\n- `Sources/AppCore/StatTile.swift` / `Sources/AppCore/StatsRow.swift`\n- `Sources/AppCore/CoachCard.swift`\n- `Sources/AppCore/WeeklyLoadCard.swift`\n- `Sources/AppCore/WorkoutCard.swift`\n- `Sources/AppCore/BuddySummaryCard.swift`\n- `Sources/AppCore/ConnectHero.swift`\n- `Sources/AppCore/MoodChip.swift`\n- `Sources/AppCore/TrendBadge.swift`\n- `Sources/AppCore/AskCoachHeader.swift`\n- `Sources/AppCore/AskCoachEmptyState.swift`\n- `Sources/AppCore/AskCoachInputBar.swift`\n- `Sources/AppCore/ChatBubble.swift`\n\nFor each: replace `.font(.system(size: N, …))` with the matching `Typography`\nrole, replace `Palette.subtle` captions with the new darker token, and remove\n`Palette.ink.opacity(0.8/0.85)` on body/coach/chat text so it renders at full\nink. Add `lineLimit`/`minimumScaleFactor` only where a value must stay on one\nline (e.g. capsule pills); prefer wrapping for sentences.\n\n### 4. Reflow the quick-stats row for large type / small screens\n\n**File**: `Sources/AppCore/StatsRow.swift` (and `StatTile.swift`)\n\nAt accessibility text sizes the fixed 3-up `HStack` overflows. Switch to a\nlayout that wraps to a vertical/2-column arrangement when\n`@Environment(\\.dynamicTypeSize)` is an accessibility size (e.g. swap HStack →\nadaptive `Grid`/`ViewThatFits`), so tiles never clip.\n\n### 5. Scale the step ring with text size\n\n**File**: `Sources/AppCore/StepRing.swift`\n\nReplace the hard `.frame(width: 150, height: 150)` and fixed inner fonts with\n`@ScaledMetric` diameter + `Typography` roles so the ring grows with Dynamic\nType. Add `accessibilityElement(children: .ignore)` with a label like\n\"Daily steps\" and an `accessibilityValue` of the count / goal percentage.\n\n### 6. Add accessibility labels to meaningful controls\n\n**Files**: `StatTile.swift`, `MoodChip.swift`, `TrendBadge.swift`,\n`AskCoachInputBar.swift`, `CoachCard.swift`\n\n- `StatTile`: combine icon+value+label into one element with a spoken label\n  (e.g. \"Active minutes, 42\").\n- `MoodChip` / `TrendBadge`: expose the caption/trend as a label; hide the\n  decorative glyph.\n- `AskCoachInputBar`: label the send button (\"Send message\") and the field\n  (\"Ask Buddy a question\"); ensure the 40×40 tap target is preserved.\n- `CoachCard`: label the \"Ask Buddy\" button.\n\n## Reused existing code\n\n- `Palette` and `BuddyMood` from `Sources/AppCore/Theme.swift` (glossary entry:\n  `BuddyMood`) — extended in place; accents reused unchanged for tints.\n- `cardStyle()` from `Sources/AppCore/ViewStyles.swift` — shared card chrome,\n  unchanged.\n- Existing accessibility pattern from `Sources/AppCore/PuffyBuddy.swift`\n  (glossary entry: `PuffyBuddy`) and `PuffyBuddyLoader` (glossary entry:\n  `PuffyBuddyLoader`) — `accessibilityElement(children: .ignore)` +\n  `accessibilityLabel` — extended to the remaining controls.\n- Section components already composed by `TodayDashboard` (glossary entry:\n  `TodayDashboard`) and `AskCoachView` (glossary entry: `AskCoachView`) — only\n  their fonts/colors/labels change, not their composition.\n- `StatTile` / `StatsRow` / `StepRing` / `WeeklyLoadCard` / `WorkoutCard` /\n  `CoachCard` glossary entries — the surfaces being made accessible.\n\n## Scenarios to Demonstrate\n\n- **Default text size** — Today + Ask Coach look unchanged in layout but with\n  AA-passing captions/labels (visual baseline).\n- **Accessibility XXL text** — largest Dynamic Type size: all text scales,\n  `StatsRow` reflows, `StepRing` grows, nothing clips or truncates a sentence.\n- **Small screen (e.g. iPhone SE)** — 3-up stats and cards fit without\n  horizontal clipping at default and large type.\n- **Contrast audit state** — a side-by-side of the old grey vs. new darker\n  caption color on both the white card and the cream `bgTop` background.\n- **Safety-flagged coach reply** — amber/shield chat bubble still reads clearly\n  at full ink and large type (the safety-sensitive surface stays legible).\n- **VoiceOver labels** — step ring, stat tiles, mood chip, and send button\n  expose meaningful spoken labels/values.",
+  "description": "Raised the RunBuddy UI toward WCAG AA contrast and made it scale with Dynamic Type. Centralized the fix in Theme.swift: darkened Palette.subtle to clear 4.5:1 on both the white cards and the cream gradient, and added a scalable Typography scale mapping the app text roles to SwiftUI text styles (keeping the rounded brand look) so all labels scale with the user text-size setting. Adopted those tokens across the section components, dropped the ink-opacity dimming on body/coach/chat copy so it renders at full ink, reflowed StatsRow to a vertical stack at accessibility sizes, scaled StepRing with @ScaledMetric, and added accessibility labels to the meaningful controls (step ring, stat tiles, mood chip, trend badge, send button, Ask Buddy). A scenario-seeded rbContentSize drives an app-wide Dynamic Type override (pure dynamicTypeSize mapping, 6 unit tests). Demonstrated via new Accessibility — Large Text Today (reflow + StepRing scaling) and Large Text Coach Safety scenarios, with all app scenarios recaptured at the new contrast/typography.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/.last-reconcile.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/deps-index.txt",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary-index.txt",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/per-test-evidence.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/accessible-responsive-design.md\t.codeyam/plans/completed/accessible-responsive-design.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/reconciliation-log.jsonl",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/runner-timing-history.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-empty.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-long-values.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-rich-multi-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-sparse.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-empty-chat.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-hit-10k.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-knee-pain.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-mileage-spike.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-run-or-rest.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/buddy-puffy-loader.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/buddy-puffy-moods.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-empty--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-long-values--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-rich-multi-week--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-sparse--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-empty-chat--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-hit-10k--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-knee-pain--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-mileage-spike--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-run-or-rest--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/buddy-puffy-loader--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/buddy-puffy-moods--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-almost-there--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-almost-there--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-day-one-connect--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-day-one-connect--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-fresh-start--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-fresh-start--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-long-content--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-long-content--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-midday-nudge--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-midday-nudge--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-recovery-caution--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-recovery-caution--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-zero-step-morning--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-zero-step-morning--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-empty-first-week--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-solid-week--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-sparse-mostly-rest--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-spiking-load--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-almost-there.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-day-one-connect.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-fresh-start.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-long-content.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-midday-nudge.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-recovery-caution.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-zero-step-morning.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-empty-first-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-solid-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-sparse-mostly-rest.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-spiking-load.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/last-advance.txt",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/session-results-snapshot.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/swift-tests.xml",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache/all.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-run-marker.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/AskCoachEmptyState.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/AskCoachHeader.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/AskCoachInputBar.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ChatBubble.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CoachCard.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ConnectHero.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ContentView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/MoodChip.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/StatTile.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/StatsRow.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/StepRing.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Theme.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/TodayHeader.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/TrendBadge.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/WeeklyLoadCard.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/WorkoutCard.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/accessibility-large-text-coach-safety.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/accessibility-large-text-today.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/accessibility-large-text-coach-safety--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/accessibility-large-text-today--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/DynamicTypeOverrideTests.swift",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Accessibility — Large Text Coach Safety",
+      "screenshotPath": "accessibility-large-text-coach-safety--iphone-16.png"
+    },
+    {
+      "name": "Accessibility — Large Text Today",
+      "screenshotPath": "accessibility-large-text-today--iphone-16.png"
+    },
+    {
+      "name": "Today - Almost There",
+      "screenshotPath": "today-almost-there--iphone-16.png"
+    },
+    {
+      "name": "Today - Day One (Connect)",
+      "screenshotPath": "today-day-one-connect--iphone-16.png"
+    },
+    {
+      "name": "Today - Fresh Start",
+      "screenshotPath": "today-fresh-start--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed",
+      "screenshotPath": "today-goal-crushed--iphone-16.png"
+    },
+    {
+      "name": "Today - Long Content",
+      "screenshotPath": "today-long-content--iphone-16.png"
+    },
+    {
+      "name": "Today - Midday Nudge",
+      "screenshotPath": "today-midday-nudge--iphone-16.png"
+    },
+    {
+      "name": "Today - Recovery Caution",
+      "screenshotPath": "today-recovery-caution--iphone-16.png"
+    },
+    {
+      "name": "Today - Zero-Step Morning",
+      "screenshotPath": "today-zero-step-morning--iphone-16.png"
+    }
+  ]
+}

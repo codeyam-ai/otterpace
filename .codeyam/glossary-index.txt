@@ -1,4 +1,4 @@
-# regenerated from glossary.json on 2026-06-23T21:50:57Z; do not hand-edit
+# regenerated from glossary.json on 2026-06-23T22:53:02Z; do not hand-edit
 ActivityHistory :: Sources/AppCore/ActivityHistory.swift :: tags= :: test=Tests/AppCoreTests/ActivityHistoryTests.swift
 ActivityHistoryButton :: Sources/AppCore/ActivityHistoryButton.swift :: tags=
 ActivityHistoryEmptyState :: Sources/AppCore/ActivityHistoryEmptyState.swift :: tags=
@@ -20,6 +20,7 @@ CoachEngine :: Sources/AppCore/CoachEngine.swift :: tags= :: test=Tests/AppCoreT
 CoachIntent :: Sources/AppCore/CoachEngine.swift :: tags= :: test=Tests/AppCoreTests/CoachEngineTests.swift
 ConnectHero :: Sources/AppCore/ConnectHero.swift :: tags=
 ContentView :: Sources/AppCore/ContentView.swift :: tags=
+DynamicTypeOverride :: Sources/AppCore/ContentView.swift :: tags=
 HappyArc :: Sources/AppCore/PuffyBuddy.swift :: tags=
 MainTab :: Sources/AppCore/ContentView.swift :: tags= :: test=Tests/AppCoreTests/MainTabTests.swift
 MoodChip :: Sources/AppCore/MoodChip.swift :: tags=
@@ -33,6 +34,7 @@ StepRing :: Sources/AppCore/StepRing.swift :: tags=
 TodayDashboard :: Sources/AppCore/TodayView.swift :: tags=
 TodayHeader :: Sources/AppCore/TodayHeader.swift :: tags=
 TrendBadge :: Sources/AppCore/TrendBadge.swift :: tags=
+Typography :: Sources/AppCore/Theme.swift :: tags=
 WeeklyLoadCard :: Sources/AppCore/WeeklyLoadCard.swift :: tags=
 WeeklyReviewEngine :: Sources/AppCore/WeeklyReviewEngine.swift :: tags= :: test=Tests/AppCoreTests/WeeklyReviewEngineTests.swift
 WeeklyReviewFocusCallout :: Sources/AppCore/WeeklyReviewFocusCallout.swift :: tags=
@@ -42,6 +44,7 @@ WeeklyReviewRiskSection :: Sources/AppCore/WeeklyReviewRiskSection.swift :: tags
 WeeklyReviewSection :: Sources/AppCore/WeeklyReviewSection.swift :: tags=
 WeeklyReviewView :: Sources/AppCore/WeeklyReviewView.swift :: tags=
 WorkoutCard :: Sources/AppCore/WorkoutCard.swift :: tags=
+dynamicTypeSize :: Sources/AppCore/ContentView.swift :: tags= :: test=Tests/AppCoreTests/DynamicTypeOverrideTests.swift
 formatted :: Sources/AppCore/Formatters.swift :: tags= :: test=Tests/AppCoreTests/FormattersTests.swift
 movementLabel :: Sources/AppCore/Formatters.swift :: tags= :: test=Tests/AppCoreTests/FormattersTests.swift
 prettyDate :: Sources/AppCore/Formatters.swift :: tags= :: test=Tests/AppCoreTests/FormattersTests.swift

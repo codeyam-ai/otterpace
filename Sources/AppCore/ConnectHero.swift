@@ -12,10 +12,10 @@ struct ConnectHero: View {
                 .accessibilityHidden(true)
             VStack(spacing: 10) {
                 Text("Hi, I'm Buddy! 🐾")
-                    .font(.system(size: 27, weight: .heavy, design: .rounded))
+                    .font(Typography.title)
                     .foregroundColor(Palette.ink)
                 Text("Connect Apple Health and I'll turn your steps and runs into friendly, day-by-day coaching — toward 10,000 steps a day, without overdoing it.")
-                    .font(.system(size: 16, weight: .regular))
+                    .font(Typography.callout)
                     .foregroundColor(Palette.subtle)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -26,7 +26,7 @@ struct ConnectHero: View {
                 HStack(spacing: 8) {
                     Image(systemName: "heart.fill")
                     Text("Connect Apple Health")
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .font(Typography.headline)
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
@@ -39,7 +39,7 @@ struct ConnectHero: View {
             }
             .padding(.horizontal, 24)
             Text("Your health data stays on your device.")
-                .font(.system(size: 12, weight: .medium))
+                .font(Typography.caption)
                 .foregroundColor(Palette.subtle)
             Spacer()
         }

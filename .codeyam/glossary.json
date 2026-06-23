@@ -179,6 +179,15 @@
     ]
   },
   {
+    "description": "A ViewModifier that applies the scenario-seeded Dynamic Type size to the whole app (via dynamicTypeSize) when rbContentSize is set; a no-op otherwise.",
+    "filePath": "Sources/AppCore/ContentView.swift",
+    "name": "DynamicTypeOverride",
+    "untestabilityReason": {
+      "justification": "Thin SwiftUI environment adapter; its only logic is the dynamicTypeSize(forSeed:) mapping, which is unit-tested.",
+      "kind": "platform-glue"
+    }
+  },
+  {
     "description": "SwiftUI Shape drawing an upward-curving arc used for Buddy's smiling eyes.",
     "filePath": "Sources/AppCore/PuffyBuddy.swift",
     "name": "HappyArc",
@@ -290,6 +299,15 @@
     }
   },
   {
+    "description": "The app's text-role scale (largeTitle, title, body, caption, …) mapping each role to a SwiftUI text style with the brand rounded design and weights, so all text scales with Dynamic Type. Single source of truth replacing scattered fixed point sizes.",
+    "filePath": "Sources/AppCore/Theme.swift",
+    "name": "Typography",
+    "untestabilityReason": {
+      "justification": "A set of static Font constants (design tokens); no branching logic to test, exercised visually via scenarios.",
+      "kind": "type-only"
+    }
+  },
+  {
     "description": "The week's training-load snapshot: mileage, run days, longest run, and rest days, with a trend badge.",
     "filePath": "Sources/AppCore/WeeklyLoadCard.swift",
     "name": "WeeklyLoadCard",
@@ -366,6 +384,12 @@
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
       "kind": "no-isolation-harness"
     }
+  },
+  {
+    "description": "Pure, case-insensitive mapping from a scenario-seeded rbContentSize string (e.g. xxxl, accessibility3) to a SwiftUI DynamicTypeSize; empty/unrecognized returns nil to honor the system size. Drives the app-wide Dynamic Type override for accessibility text-size scenarios.",
+    "filePath": "Sources/AppCore/ContentView.swift",
+    "name": "dynamicTypeSize",
+    "testFile": "Tests/AppCoreTests/DynamicTypeOverrideTests.swift"
   },
   {
     "description": "Formats a whole number with locale thousands separators for readable step counts, e.g. 11240 becomes 11,240.",

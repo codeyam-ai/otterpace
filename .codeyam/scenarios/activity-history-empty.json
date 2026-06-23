@@ -1,6 +1,6 @@
 {
   "name": "Activity History — Empty",
-  "id": "ff7ea2dc-d6e6-41f6-970a-0ba8a2f965bf",
+  "id": "ef42de33-1835-4459-9dfc-90dbaa819790",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,16 +8,17 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbWorkoutsJSON": "",
-      "rbPreviewMode": "",
-      "rbGoalSteps": 10000,
-      "rbSteps": 8200,
-      "rbShowWeeklyReview": false,
       "rbConnected": true,
-      "rbDate": "2026-06-22",
+      "rbAskSeedQuestion": "",
+      "rbContentSize": "",
       "rbStartTab": "today",
+      "rbGoalSteps": 10000,
+      "rbPreviewMode": "",
       "rbShowHistory": true,
-      "rbAskSeedQuestion": ""
+      "rbShowWeeklyReview": false,
+      "rbDate": "2026-06-22",
+      "rbWorkoutsJSON": "",
+      "rbSteps": 8200
     }
   },
   "scenarioType": "application",

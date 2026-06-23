@@ -1,6 +1,6 @@
 {
   "name": "Activity History — Sparse",
-  "id": "9c543f44-5714-4617-82a5-eee63baf3281",
+  "id": "aeaa24fd-b45e-4c45-9b59-f85cf5db5401",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,16 +8,17 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbGoalSteps": 10000,
-      "rbPreviewMode": "",
-      "rbWorkoutsJSON": "[{\"type\": \"run\", \"distanceMiles\": 3.1, \"durationMinutes\": 32, \"pace\": \"10:18/mi\", \"date\": \"2026-06-21\", \"source\": \"healthkit\"}, {\"type\": \"walk\", \"distanceMiles\": 1.4, \"durationMinutes\": 22, \"pace\": \"15:42/mi\", \"date\": \"2026-06-19\", \"source\": \"healthkit\"}]",
-      "rbAskSeedQuestion": "",
       "rbConnected": true,
       "rbDate": "2026-06-22",
+      "rbPreviewMode": "",
+      "rbGoalSteps": 10000,
+      "rbContentSize": "",
       "rbShowHistory": true,
+      "rbWorkoutsJSON": "[{\"type\": \"run\", \"distanceMiles\": 3.1, \"durationMinutes\": 32, \"pace\": \"10:18/mi\", \"date\": \"2026-06-21\", \"source\": \"healthkit\"}, {\"type\": \"walk\", \"distanceMiles\": 1.4, \"durationMinutes\": 22, \"pace\": \"15:42/mi\", \"date\": \"2026-06-19\", \"source\": \"healthkit\"}]",
       "rbShowWeeklyReview": false,
+      "rbStartTab": "today",
       "rbSteps": 8200,
-      "rbStartTab": "today"
+      "rbAskSeedQuestion": ""
     }
   },
   "scenarioType": "application",

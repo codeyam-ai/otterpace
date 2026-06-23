@@ -9,7 +9,7 @@ struct WeeklyLoadCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("This week")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(Typography.captionStrong)
                     .foregroundColor(Palette.subtle)
                 Spacer()
                 TrendBadge(trend: load.loadTrend)
@@ -31,12 +31,12 @@ struct WeeklyLoadCard: View {
     private func loadMetric(_ value: String, _ label: String) -> some View {
         VStack(spacing: 3) {
             Text(value)
-                .font(.system(size: 18, weight: .heavy, design: .rounded))
+                .font(Typography.title3)
                 .foregroundColor(Palette.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
             Text(label)
-                .font(.system(size: 11, weight: .medium))
+                .font(Typography.caption)
                 .foregroundColor(Palette.subtle)
         }
         .frame(maxWidth: .infinity)

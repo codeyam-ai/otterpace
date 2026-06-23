@@ -11,19 +11,19 @@ struct AskCoachHeader: View {
             PuffyBuddy(mood: .ready, size: 34)
             VStack(alignment: .leading, spacing: 1) {
                 Text("Ask Coach")
-                    .font(.system(size: 18, weight: .heavy, design: .rounded))
+                    .font(Typography.title3)
                     .foregroundColor(Palette.ink)
                 Text("Buddy • mock coach")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(Typography.caption)
                     .foregroundColor(Palette.subtle)
             }
             Spacer()
             Button(action: onWeeklyReview) {
                 HStack(spacing: 5) {
                     Image(systemName: "calendar.badge.clock")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(Typography.caption)
                     Text("Weekly")
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .font(Typography.captionStrong)
                 }
                 .foregroundColor(Palette.brandDeep)
                 .padding(.horizontal, 12).padding(.vertical, 7)

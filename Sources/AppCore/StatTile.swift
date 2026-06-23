@@ -10,15 +10,15 @@ struct StatTile: View {
     var body: some View {
         VStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.system(size: 18, weight: .bold))
+                .font(Typography.headline)
                 .foregroundColor(tint)
             Text(value)
-                .font(.system(size: 20, weight: .heavy, design: .rounded))
+                .font(Typography.title2)
                 .foregroundColor(Palette.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
             Text(label)
-                .font(.system(size: 11, weight: .medium))
+                .font(Typography.caption)
                 .foregroundColor(Palette.subtle)
                 .multilineTextAlignment(.center)
         }

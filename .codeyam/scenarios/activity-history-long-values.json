@@ -1,6 +1,6 @@
 {
   "name": "Activity History — Long Values",
-  "id": "a87c884e-608a-49ff-a4ea-aa7607b1ea4a",
+  "id": "e21ddb3b-6df0-4c0b-a171-3164933201e8",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,16 +8,17 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbGoalSteps": 10000,
-      "rbPreviewMode": "",
-      "rbStartTab": "today",
-      "rbSteps": 8200,
-      "rbWorkoutsJSON": "[{\"type\": \"run\", \"distanceMiles\": 26.2, \"durationMinutes\": 275, \"pace\": \"10:30/mi\", \"date\": \"2026-06-21\", \"source\": \"strava\"}, {\"type\": \"run\", \"distanceMiles\": 8.4, \"durationMinutes\": 82, \"pace\": \"9:46/mi\", \"date\": \"2026-06-18\", \"source\": \"strava\"}, {\"type\": \"walk\", \"distanceMiles\": 3.2, \"durationMinutes\": 52, \"pace\": \"16:15/mi\", \"date\": \"2026-06-16\", \"source\": \"healthkit\"}]",
-      "rbDate": "2026-06-22",
-      "rbAskSeedQuestion": "",
-      "rbConnected": true,
       "rbShowWeeklyReview": false,
-      "rbShowHistory": true
+      "rbStartTab": "today",
+      "rbWorkoutsJSON": "[{\"type\": \"run\", \"distanceMiles\": 26.2, \"durationMinutes\": 275, \"pace\": \"10:30/mi\", \"date\": \"2026-06-21\", \"source\": \"strava\"}, {\"type\": \"run\", \"distanceMiles\": 8.4, \"durationMinutes\": 82, \"pace\": \"9:46/mi\", \"date\": \"2026-06-18\", \"source\": \"strava\"}, {\"type\": \"walk\", \"distanceMiles\": 3.2, \"durationMinutes\": 52, \"pace\": \"16:15/mi\", \"date\": \"2026-06-16\", \"source\": \"healthkit\"}]",
+      "rbAskSeedQuestion": "",
+      "rbContentSize": "",
+      "rbDate": "2026-06-22",
+      "rbGoalSteps": 10000,
+      "rbSteps": 8200,
+      "rbShowHistory": true,
+      "rbPreviewMode": "",
+      "rbConnected": true
     }
   },
   "scenarioType": "application",

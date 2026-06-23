@@ -12,7 +12,7 @@ struct ChatBubble: View {
             HStack {
                 Spacer(minLength: 40)
                 Text(message.text)
-                    .font(.system(size: 15))
+                    .font(Typography.body)
                     .foregroundColor(.white)
                     .padding(.horizontal, 14).padding(.vertical, 10)
                     .background(
@@ -30,13 +30,13 @@ struct ChatBubble: View {
                             Image(systemName: "exclamationmark.shield.fill")
                                 .foregroundColor(Palette.amber)
                             Text("SAFETY FIRST")
-                                .font(.system(size: 10, weight: .heavy))
+                                .font(Typography.caption2)
                                 .foregroundColor(Palette.amber)
                         }
                     }
                     Text(message.text)
-                        .font(.system(size: 15))
-                        .foregroundColor(Palette.ink.opacity(0.85))
+                        .font(Typography.body)
+                        .foregroundColor(Palette.ink)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(.horizontal, 14).padding(.vertical, 11)

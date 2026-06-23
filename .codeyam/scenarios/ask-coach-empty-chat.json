@@ -1,6 +1,6 @@
 {
   "name": "Ask Coach — Empty Chat",
-  "id": "34e828d9-3cea-436d-976c-82737cfb18cd",
+  "id": "1c9ffb15-ae6f-4352-a23c-42381bc31a3a",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,18 +8,20 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
+      "rbGoalSteps": 10000,
+      "rbMinutesSinceMovement": 50,
+      "rbShowHistory": false,
+      "rbPreviewMode": "",
       "rbActiveMinutes": 28,
-      "rbDate": "2026-06-22",
+      "rbContentSize": "",
+      "rbStartTab": "coach",
       "rbActiveEnergyKcal": 210,
       "rbAskSeedQuestion": "",
-      "rbDistanceMiles": 3.1,
-      "rbMinutesSinceMovement": 50,
-      "rbPreviewMode": "",
-      "rbStartTab": "coach",
-      "rbSteps": 6400,
-      "rbGoalSteps": 10000,
       "rbConnected": true,
-      "rbShowWeeklyReview": false
+      "rbDistanceMiles": 3.1,
+      "rbSteps": 6400,
+      "rbShowWeeklyReview": false,
+      "rbDate": "2026-06-22"
     }
   },
   "scenarioType": "application",

@@ -262,6 +262,60 @@
       "runner": "tests"
     },
     {
+      "description": "Accessibility aliases map to the matching accessibility sizes.",
+      "file": "Tests/AppCoreTests/DynamicTypeOverrideTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.DynamicTypeOverrideTests › testAccessibilityAliases",
+      "line": 19,
+      "registeredAt": "2026-06-23T23:03:19.175003+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Every accessibility size maps to one flagged as an accessibility size.",
+      "file": "Tests/AppCoreTests/DynamicTypeOverrideTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.DynamicTypeOverrideTests › testAccessibilitySizesAreAccessibility",
+      "line": 37,
+      "registeredAt": "2026-06-23T23:03:50.777640+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The mapping is case-insensitive.",
+      "file": "Tests/AppCoreTests/DynamicTypeOverrideTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.DynamicTypeOverrideTests › testCaseInsensitive",
+      "line": 31,
+      "registeredAt": "2026-06-23T23:03:39.988115+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An empty seed honors the system size, returning nil.",
+      "file": "Tests/AppCoreTests/DynamicTypeOverrideTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.DynamicTypeOverrideTests › testEmptyReturnsNil",
+      "line": 9,
+      "registeredAt": "2026-06-23T23:02:58.531617+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Standard size aliases map to the matching standard sizes.",
+      "file": "Tests/AppCoreTests/DynamicTypeOverrideTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.DynamicTypeOverrideTests › testStandardAliases",
+      "line": 25,
+      "registeredAt": "2026-06-23T23:03:29.304760+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An unrecognized value returns nil rather than a wrong size.",
+      "file": "Tests/AppCoreTests/DynamicTypeOverrideTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.DynamicTypeOverrideTests › testUnknownReturnsNil",
+      "line": 14,
+      "registeredAt": "2026-06-23T23:03:08.900235+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "formatted groups thousands with separators for readable step counts.",
       "file": "Tests/AppCoreTests/FormattersTests.swift",
       "format": "junit-xml",

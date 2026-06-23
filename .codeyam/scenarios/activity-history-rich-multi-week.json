@@ -1,6 +1,6 @@
 {
   "name": "Activity History — Rich Multi-Week",
-  "id": "79cdb770-3148-4f3e-ac6e-266c8da5b450",
+  "id": "89ab6924-e78c-4490-a7e7-25a33cd502d2",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,16 +8,17 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
+      "rbAskSeedQuestion": "",
+      "rbStartTab": "today",
+      "rbShowWeeklyReview": false,
+      "rbSteps": 8200,
+      "rbShowHistory": true,
+      "rbWorkoutsJSON": "[{\"type\": \"run\", \"distanceMiles\": 4.2, \"durationMinutes\": 44, \"pace\": \"10:28/mi\", \"date\": \"2026-06-21\", \"source\": \"strava\"}, {\"type\": \"walk\", \"distanceMiles\": 2.0, \"durationMinutes\": 30, \"pace\": \"15:00/mi\", \"date\": \"2026-06-19\", \"source\": \"healthkit\"}, {\"type\": \"run\", \"distanceMiles\": 3.5, \"durationMinutes\": 36, \"pace\": \"10:17/mi\", \"date\": \"2026-06-16\", \"source\": \"healthkit\"}, {\"type\": \"run\", \"distanceMiles\": 6.1, \"durationMinutes\": 61, \"pace\": \"10:00/mi\", \"date\": \"2026-06-13\", \"source\": \"strava\"}, {\"type\": \"walk\", \"distanceMiles\": 1.8, \"durationMinutes\": 27, \"pace\": \"15:00/mi\", \"date\": \"2026-06-11\", \"source\": \"healthkit\"}, {\"type\": \"run\", \"distanceMiles\": 3.2, \"durationMinutes\": 33, \"pace\": \"10:18/mi\", \"date\": \"2026-06-09\", \"source\": \"healthkit\"}, {\"type\": \"ride\", \"distanceMiles\": 12.0, \"durationMinutes\": 48, \"pace\": \"4:00/mi\", \"date\": \"2026-06-05\", \"source\": \"strava\"}, {\"type\": \"run\", \"distanceMiles\": 4.0, \"durationMinutes\": 41, \"pace\": \"10:15/mi\", \"date\": \"2026-06-02\", \"source\": \"healthkit\"}]",
       "rbGoalSteps": 10000,
       "rbPreviewMode": "",
-      "rbWorkoutsJSON": "[{\"type\": \"run\", \"distanceMiles\": 4.2, \"durationMinutes\": 44, \"pace\": \"10:28/mi\", \"date\": \"2026-06-21\", \"source\": \"strava\"}, {\"type\": \"walk\", \"distanceMiles\": 2.0, \"durationMinutes\": 30, \"pace\": \"15:00/mi\", \"date\": \"2026-06-19\", \"source\": \"healthkit\"}, {\"type\": \"run\", \"distanceMiles\": 3.5, \"durationMinutes\": 36, \"pace\": \"10:17/mi\", \"date\": \"2026-06-16\", \"source\": \"healthkit\"}, {\"type\": \"run\", \"distanceMiles\": 6.1, \"durationMinutes\": 61, \"pace\": \"10:00/mi\", \"date\": \"2026-06-13\", \"source\": \"strava\"}, {\"type\": \"walk\", \"distanceMiles\": 1.8, \"durationMinutes\": 27, \"pace\": \"15:00/mi\", \"date\": \"2026-06-11\", \"source\": \"healthkit\"}, {\"type\": \"run\", \"distanceMiles\": 3.2, \"durationMinutes\": 33, \"pace\": \"10:18/mi\", \"date\": \"2026-06-09\", \"source\": \"healthkit\"}, {\"type\": \"ride\", \"distanceMiles\": 12.0, \"durationMinutes\": 48, \"pace\": \"4:00/mi\", \"date\": \"2026-06-05\", \"source\": \"strava\"}, {\"type\": \"run\", \"distanceMiles\": 4.0, \"durationMinutes\": 41, \"pace\": \"10:15/mi\", \"date\": \"2026-06-02\", \"source\": \"healthkit\"}]",
-      "rbStartTab": "today",
       "rbDate": "2026-06-22",
-      "rbAskSeedQuestion": "",
-      "rbShowWeeklyReview": false,
-      "rbShowHistory": true,
-      "rbSteps": 8200,
-      "rbConnected": true
+      "rbConnected": true,
+      "rbContentSize": ""
     }
   },
   "scenarioType": "application",

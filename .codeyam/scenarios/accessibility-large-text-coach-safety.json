@@ -1,0 +1,31 @@
+{
+  "name": "Accessibility — Large Text Coach Safety",
+  "id": "254cf241-57c7-4d98-8f76-5faa43a32b25",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbWorkoutType": "run",
+      "rbShowWeeklyReview": false,
+      "rbAskSeedQuestion": "My knee hurts after my run yesterday",
+      "rbWorkoutDurationMinutes": 52,
+      "rbWorkoutPace": "10:24/mi",
+      "rbSteps": 4200,
+      "rbContentSize": "accessibility2",
+      "rbShowHistory": false,
+      "rbGoalSteps": 10000,
+      "rbConnected": true,
+      "rbWorkoutSource": "healthkit",
+      "rbWorkoutDate": "2026-06-21",
+      "rbWorkoutDistanceMiles": 5.0,
+      "rbPreviewMode": "",
+      "rbDate": "2026-06-22",
+      "rbStartTab": "coach"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/ContentView.swift"
+}

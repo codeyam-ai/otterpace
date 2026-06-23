@@ -10,6 +10,10 @@ struct StepRing: View {
     let reached: Bool
     var exceeded: Bool = false
 
+    // Ring diameter tracks the user's text size so the centered count never
+    // overflows the circle at large Dynamic Type sizes.
+    @ScaledMetric(relativeTo: .largeTitle) private var diameter: CGFloat = 150
+
     // Presentation logic lives in pure, unit-tested helpers (Formatters.swift).
     private var caption: String {
         stepGoalCaption(reached: reached, exceeded: exceeded, goal: goal)
@@ -36,23 +40,23 @@ struct StepRing: View {
                 .rotationEffect(.degrees(-90))
             VStack(spacing: 1) {
                 Text(formatted(steps))
-                    .font(.system(size: 26, weight: .heavy, design: .rounded))
+                    .font(Typography.title2)
                     .foregroundColor(Palette.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                 Text(caption)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(Typography.caption)
                     .foregroundColor(Palette.subtle)
                     .multilineTextAlignment(.center)
                 if !reached {
                     Text("\(formatted(remaining)) to go")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(Typography.caption)
                         .foregroundColor(Palette.brand)
                 }
             }
             .padding(.horizontal, 12)
         }
-        .frame(width: 150, height: 150)
+        .frame(width: diameter, height: diameter)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Daily step goal")
         .accessibilityValue(accessibilityValue)

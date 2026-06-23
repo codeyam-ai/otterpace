@@ -15,10 +15,32 @@ public enum Palette {
     public static let lilac = Color(red: 0.55, green: 0.51, blue: 0.86)   // recovery
 
     public static let ink = Color(red: 0.16, green: 0.17, blue: 0.22)
-    public static let subtle = Color(red: 0.45, green: 0.47, blue: 0.54)
+    // Darkened from (0.45,0.47,0.54) ≈ 3.4:1 to clear WCAG AA 4.5:1 on both the
+    // white cards and the cream `bgTop` gradient. Used for every caption/label.
+    public static let subtle = Color(red: 0.34, green: 0.36, blue: 0.43)
     public static let card = Color.white
     public static let bgTop = Color(red: 0.99, green: 0.96, blue: 0.93)
     public static let bgBottom = Color(red: 0.96, green: 0.94, blue: 0.98)
+}
+
+// MARK: - Typography
+//
+// One source of truth mapping the app's text roles to SwiftUI text styles, so
+// every label scales with the user's Dynamic Type setting instead of being
+// pinned to a raw point size. The rounded design and heavy/bold weights keep the
+// friendly, brand display look while gaining accessibility scaling. Replaces the
+// scattered `.font(.system(size:))` calls across the section components.
+public enum Typography {
+    public static let largeTitle = Font.system(.largeTitle, design: .rounded).weight(.heavy)   // ~Today / hero titles
+    public static let title = Font.system(.title, design: .rounded).weight(.heavy)             // screen / hero headlines
+    public static let title2 = Font.system(.title2, design: .rounded).weight(.heavy)           // card values, big numbers
+    public static let title3 = Font.system(.title3, design: .rounded).weight(.heavy)           // sub-headlines
+    public static let headline = Font.system(.headline, design: .rounded).weight(.bold)        // emphasized rows / buttons
+    public static let body = Font.system(.body)                                                // sentences / chat / coach copy
+    public static let callout = Font.system(.callout)                                          // secondary body
+    public static let captionStrong = Font.system(.caption, design: .rounded).weight(.bold)    // section labels, pills
+    public static let caption = Font.system(.caption).weight(.medium)                          // metric labels, footnotes
+    public static let caption2 = Font.system(.caption2, design: .rounded).weight(.heavy)       // tiny uppercase tags
 }
 
 // MARK: - Buddy mood

@@ -1,6 +1,6 @@
 {
   "name": "Weekly Review — Empty (First Week)",
-  "id": "e6d1c598-3440-4977-864d-ad8e4b812df3",
+  "id": "691fac16-5534-4b31-ad06-42e0910482b3",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,20 +8,22 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbLongestRunMiles": 0,
-      "rbDate": "2026-06-22",
-      "rbGoalSteps": 10000,
-      "rbDaysRunThisWeek": 0,
-      "rbLoadTrend": "",
-      "rbPreviewMode": "",
-      "rbStartTab": "coach",
       "rbWorkoutType": "",
-      "rbRestDaysThisWeek": 0,
-      "rbShowWeeklyReview": true,
+      "rbAskSeedQuestion": "",
+      "rbLongestRunMiles": 0,
       "rbConnected": true,
-      "rbSteps": 1200,
+      "rbLoadTrend": "",
+      "rbDaysRunThisWeek": 0,
+      "rbPreviewMode": "",
+      "rbRestDaysThisWeek": 0,
+      "rbContentSize": "",
       "rbWeeklyMileage": 0,
-      "rbAskSeedQuestion": ""
+      "rbStartTab": "coach",
+      "rbShowHistory": false,
+      "rbSteps": 1200,
+      "rbGoalSteps": 10000,
+      "rbDate": "2026-06-22",
+      "rbShowWeeklyReview": true
     }
   },
   "scenarioType": "application",

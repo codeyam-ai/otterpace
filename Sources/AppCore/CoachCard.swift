@@ -13,34 +13,35 @@ struct CoachCard: View {
                 Image(systemName: coach.safetyFlag ? "exclamationmark.shield.fill" : "sparkles")
                     .foregroundColor(coach.safetyFlag ? Palette.amber : Palette.brand)
                 Text("Coach Buddy")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(Typography.captionStrong)
                     .foregroundColor(Palette.subtle)
                 Spacer()
                 Text(coach.recommendationType.uppercased())
-                    .font(.system(size: 10, weight: .heavy))
+                    .font(Typography.caption2)
                     .foregroundColor(.white)
                     .padding(.horizontal, 8).padding(.vertical, 3)
                     .background(Capsule().fill(coach.safetyFlag ? Palette.amber : Palette.go))
             }
             Text(coach.headline)
-                .font(.system(size: 19, weight: .heavy, design: .rounded))
+                .font(Typography.title3)
                 .foregroundColor(Palette.ink)
                 .fixedSize(horizontal: false, vertical: true)
             Text(coach.body)
-                .font(.system(size: 15, weight: .regular))
-                .foregroundColor(Palette.ink.opacity(0.8))
+                .font(Typography.body)
+                .foregroundColor(Palette.ink)
                 .fixedSize(horizontal: false, vertical: true)
 
             Button(action: onAskCoach) {
                 HStack(spacing: 6) {
                     Image(systemName: "bubble.left.and.text.bubble.right.fill")
                     Text("Ask Buddy")
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .font(Typography.headline)
                 }
                 .foregroundColor(Palette.brandDeep)
                 .padding(.horizontal, 14).padding(.vertical, 9)
                 .background(Capsule().fill(Palette.brand.opacity(0.14)))
             }
+            .accessibilityLabel("Ask Buddy a question")
             .padding(.top, 2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

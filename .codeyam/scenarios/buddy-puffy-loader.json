@@ -1,6 +1,6 @@
 {
   "name": "Buddy Puffy — Loader",
-  "id": "1c40ea31-1131-4087-be54-e62f4398fea9",
+  "id": "060056e2-6ff1-4d50-9a9d-bec42a1fca45",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,7 +8,10 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbPreviewMode": "puffy-loader"
+      "rbPreviewMode": "puffy-loader",
+      "rbShowHistory": false,
+      "rbShowWeeklyReview": false,
+      "rbContentSize": ""
     }
   },
   "scenarioType": "application",

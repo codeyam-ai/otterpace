@@ -40,3 +40,9 @@
 {"timestamp":"2026-06-23T21:49:41Z","kind":"registry-add","message":"registry `AppCoreTests.ActivityHistoryTests › testTotalMilesSums`: added from runner `tests` output"}
 {"timestamp":"2026-06-23T21:49:41Z","kind":"registry-add","message":"registry `AppCoreTests.ActivityHistoryTests › testRestDaysFromDistinctActiveDays`: added from runner `tests` output"}
 {"timestamp":"2026-06-23T21:49:41Z","kind":"registry-add","message":"registry `AppCoreTests.ActivityHistoryTests › testRestDaysNeverNegative`: added from runner `tests` output"}
+{"timestamp":"2026-06-23T22:52:43Z","kind":"registry-add","message":"registry `AppCoreTests.DynamicTypeOverrideTests › testAccessibilityAliases`: added from runner `tests` output"}
+{"timestamp":"2026-06-23T22:52:43Z","kind":"registry-add","message":"registry `AppCoreTests.DynamicTypeOverrideTests › testEmptyReturnsNil`: added from runner `tests` output"}
+{"timestamp":"2026-06-23T22:52:43Z","kind":"registry-add","message":"registry `AppCoreTests.DynamicTypeOverrideTests › testAccessibilitySizesAreAccessibility`: added from runner `tests` output"}
+{"timestamp":"2026-06-23T22:52:43Z","kind":"registry-add","message":"registry `AppCoreTests.DynamicTypeOverrideTests › testStandardAliases`: added from runner `tests` output"}
+{"timestamp":"2026-06-23T22:52:43Z","kind":"registry-add","message":"registry `AppCoreTests.DynamicTypeOverrideTests › testUnknownReturnsNil`: added from runner `tests` output"}
+{"timestamp":"2026-06-23T22:52:43Z","kind":"registry-add","message":"registry `AppCoreTests.DynamicTypeOverrideTests › testCaseInsensitive`: added from runner `tests` output"}
