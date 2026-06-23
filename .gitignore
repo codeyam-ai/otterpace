@@ -33,3 +33,31 @@ blob-report/
 .codeyam/preview-env.json
 .codeyam/preview-capture.png
 .codeyam/server-state.json
+
+# codeyam-editor:start
+# Managed by `codeyam-editor init` / `codeyam-editor start`.
+# Do not edit between these markers — your changes will be overwritten.
+.codeyam/run/
+.codeyam/tmp/
+.codeyam/logs/
+.codeyam/captures/
+.codeyam/uploads/
+.codeyam/results/
+.codeyam/_legacy/
+.codeyam/preview-state.json
+.codeyam/preview-env.json
+.codeyam/preview-capture.png
+.codeyam/preview-capture.*.png
+.codeyam/results-shown.json
+.codeyam/build-agent-handoff.md
+.codeyam/editor-step.json
+.codeyam/editor-user-prompt.txt
+.codeyam/editor-pending-plan.json
+.codeyam/recent-runs.json
+# Per-clone session start state (sessionId/startedAtSha), read only locally by
+# the authorship check — never read from a commit, so it must not be shared.
+# Tracking it makes it conflict on every rebase; untracking removes the problem.
+.codeyam/session-marker.json
+.codeyam/editor.local.json
+.codeyam/cloud.json
+# codeyam-editor:end
