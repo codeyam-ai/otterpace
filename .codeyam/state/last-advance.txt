@@ -1,175 +1,91 @@
-━━━ BEGIN STEP 24: Push ━━━
+━━━ BEGIN STEP 25: Feature Complete (FINAL STEP) ━━━
 
 NEXT ACTION (same turn — do not stop):
 
-  EXACT_TASK_TITLE: Complete codeyam editor step 24: 'Push' and move on to step 25: 'Feature Complete'
+  EXACT_TASK_TITLE: Complete codeyam editor step 25: 'Feature Complete' — final step
 
-# UI Flow 24 / 25: Push
+# UI Flow 25 / 25: Feature Complete
 
 **Feature:** Polish Today States
 
-Push the branch to the remote repository.
+Fire the feature-complete modal — the cycle ends here.
 
 ## Instructions
 
 RESUMING this step. Check what was already done before repeating work.
   (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
 
-<!-- max-lines: 160 -->
-Push the commit to the remote repository.
+Fire the feature-complete modal. The cycle ends here.
 
 Checklist:
-[ ] Audit leftover dirty state and probe remote setup: `codeyam-editor-dev editor commit-state`
-    This scans `git status`, partitions dirty files into:
-      - `.codeyam/` leftovers (regenerated caches, merge-driver files, etc.) —
-        silently committed as a separate `chore: update codeyam state` commit
-      - external leftovers (anything outside `.codeyam/`) — returned in the
-        `external` array for you to surface to the user
-    `commit-state` also runs `session-cleanup` (orphan screenshots, log rotation,
-    tmp prune) per `editor.json::cleanup` BEFORE the scan, so any deletions land
-    in the chore commit. Best-effort; failures log to stderr.
-    Refuses to commit if any `.codeyam/` JSON file is unparseable — fix it or
-    regenerate it before retrying.
-    **`.gitignore` is the authoritative skip-list. Files outside `.codeyam/`
-    that survive `.gitignore` are project state and should be committed by
-    default — do not prompt for untracked non-ignored files.**
+[ ] Run `codeyam-editor-dev editor feature-complete`. The command verifies a clean
+    tree, that the branch was pushed (or auto-skips if no remote), and POSTs
+    the completion signal to the editor backend. Success writes a durable
+    `featureCompleteSignaledAt` timestamp into `.codeyam/feature-finalized.json`.
+[ ] If the command fails, read the error and fix the underlying issue
+    (uncommitted changes, unpushed branch, etc.). Do NOT bypass — the
+    completion modal must fire before the cycle is considered done.
+[ ] Once the modal has fired, the workflow is over. Any new user request
+    — even if it sounds related — is a NEW feature. Do NOT use
+    `codeyam-editor-dev editor change` or start building directly. The change
+    workflow is ONLY for modifications during the pre-commit slugs, not after
+    the modal fires. Ask the user what they want to build. Once they tell you,
+    run `codeyam-editor-dev editor step --slug ui-plan --mode ui` (or
+    `--slug backend-plan --mode backend`) yourself.
+[ ] NEVER tell the user to run `codeyam-editor-dev editor` commands — these are
+    internal. Just ask what to build.
 
-    The JSON envelope ALSO carries a `remoteSetup` block:
-      `{state, remoteName, ghInstalled, ghAuthenticated, suggestedDefaultRepoName}`
-    Read these structured fields rather than re-probing remote / `gh` state
-    yourself. Surfacing raw shell-probe output at the user is what this
-    checklist exists to retire.
+━━━ DO NOT OFFER TO /SCHEDULE ━━━
+The harness offers a `/schedule` skill that asks the model to proactively
+offer recurring or follow-up agents at the end of work. That offer is
+explicitly OUT OF SCOPE here.
+- Do NOT offer to /schedule anything from this closing turn.
+- Do NOT end your reply with "Want me to /schedule an agent…"
+- Do NOT suggest a recurring sweep, a follow-up PR cleanup, or any
+  background routine.
+- The editor workflow ends with the completion modal. The user fires
+  the next cycle by typing what they want to build next.
+- Recurring/follow-up offers belong to the harness, not to the editor
+  workflow's closing turn.
 
-[ ] If the `external` array from `commit-state` is non-empty, partition it
-    by `status` and act on each bucket separately:
-
-    - `untracked` (status == "untracked") — auto-commit with NO prompt.
-      Stage the paths and create a single `chore: include <paths>` commit.
-      Add a one-line note in your user-facing summary so the user can see
-      what got swept in (e.g. "Also committed:
-      `.claude/scheduled_tasks.lock` (untracked, not gitignored).").
-
-    - `modified` (any status other than "untracked" — modifications to
-      existing tracked files) — these *might* be in-progress work from
-      another session, so ask before acting. The `external[i]` entries
-      already carry `path`, `added`, `removed`, and `summary` — read
-      those structured fields rather than re-running a per-file diff
-      probe in chat. Then use `AskUserQuestion` with a single combined prompt for
-      the whole batch (not per file):
-
-        "These are modifications to tracked files outside the work we
-         just did:
-         - <path> — +<added>/-<removed> (<summary>)
-         - ...
-         Should I commit them with the feature?"
-
-      Options:
-        Option 1: "Commit them now with the feature (Recommended)" →
-                  stage the paths and create a `chore: include <paths>`
-                  commit
-        Option 2: "Leave them alone — part of other work in progress" → skip
-        Option 3: "Discard these changes" → `git checkout -- <paths>` (confirm first)
-
-    Leftover-file decisions and remote-setup decisions MUST fire as separate
-    `AskUserQuestion` calls. Bundling them mixes "what should this commit
-    contain?" with "should this project go on GitHub?" — two unrelated
-    mental models that confuse non-technical users. Wait for the
-    leftover-file answer before moving on to the remote-setup branch below.
-
-[ ] Branch on `remoteSetup.state` from the `commit-state` envelope:
-
-    - `remote-configured` → offer to push (AskUserQuestion — STOP and wait for the user's answer before proceeding):
-      ask (AskUserQuestion): "Would you like me to push this commit to the remote?" with options "Yes, push" and "No, skip"
-      If the user says yes, run: `codeyam-editor-dev editor push`
-      IMPORTANT: Use `codeyam-editor-dev editor push`, NOT raw `git push`.
-      Fast Commit: pushing a deferred commit to THIS feature branch is
-      routine — `editor push` ships it without the emergency
-      `--allow-deferred --reason` ceremony and prints a calm "Fast mode:
-      pushing N deferred commit(s) ... finalize owed before merge to
-      <primary>" note. (Pushing deferred commits directly to the primary
-      branch is still a hard block — the "no un-finalized work on
-      primary" invariant moves to the merge boundary, where the owed
-      `session-finalize` clears it.)
-      If the push output shows `"pulled": true`, new code was pulled via rebase.
-      In that case, run `codeyam-editor-dev editor post-merge-drift-sweep` BEFORE
-      refreshing tests (canonical sequence: reconcile-registry + reconcile-
-      glossary + audit; work through any `remainingActions`). Then refresh the
-      test cache: `codeyam-editor-dev editor refresh-tests`.
-      (Fast Commit defers this drift sweep + refresh to the eventual
-      `session-finalize` too — if you are in fast mode, a `"pulled": true`
-      push just proceeds; the sweep is owed at finalize, not here.)
-      If tests fail after the pull, fix the issues, commit, and re-push.
-      (For the longer rationale, see
-      `codeyam-editor-dev editor step --slug post-merge-drift-sweep`.)
-      (The canonical project config is `.codeyam/editor.json` — `.codeyam/config.json` is a stale artifact from older scaffolders, do not read or write it; the `no-stale-config-json` static check fails the build if it reappears.)
-
-    - `no-remote-ready` → (AskUserQuestion — STOP and wait for the user's answer before proceeding):
-      ask (AskUserQuestion): "I just saved your work locally. Want me to also back this up to GitHub so you can access it from another computer or share it with others?" with options "Back it up on GitHub — private (only me) (Recommended)", "Back it up on GitHub — public (anyone can see)", and "Keep it on my computer for now"
-      On either "back it up" option, ask `AskUserQuestion` for the project
-      name on GitHub. Default to `remoteSetup.suggestedDefaultRepoName` from
-      the envelope as the recommended option, with "Other" available for a
-      custom name. Then run:
-      `codeyam-editor-dev editor github-setup --visibility {private|public} --name <name>`
-      IMPORTANT: Use the helper, NOT raw `gh repo create`. On success,
-      surface the repo URL from the helper's `url` field to the user.
-      On "Keep it on my computer for now", acknowledge in one short line
-      ("Got it — keeping this on your computer.") and proceed. Do NOT ask a
-      follow-up name question.
-
-    - `no-remote-gh-missing` → print exactly one short chat line:
-      "Backing up to GitHub needs the `gh` command-line tool installed first.
-      Skipping for now — install it from https://cli.github.com when you'd
-      like to set this up."
-      Do NOT fire `AskUserQuestion` — there is no useful question here. Proceed.
-
-    - `no-remote-gh-unauthed` → print exactly one short chat line:
-      "Backing up to GitHub needs you to sign in once with `gh auth login`.
-      Skipping for now — run that when you'd like to set this up."
-      Do NOT fire `AskUserQuestion` — there is no useful question here. Proceed.
-
-The completion modal fires in the next slug (`feature-complete`), not here.
-Push is purely about pushing.
-Task management is handled by the ━━━ TASK ━━━ directive below.
-
-Wait for user confirmation before moving on.
+This is the final step. There is no advance.
 
 
-When done, move to the next step: `codeyam-editor-dev editor 25`
+Run `codeyam-editor-dev editor feature-complete` to show the completion modal, then ask what to build next.
 
 ━━━ TASK ━━━
 If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
 
 Hand off from the previous step's task to this step's task. Procedure:
   1. Run TaskList
-  2. If a task titled exactly `Complete codeyam editor step 23: 'Commit' and move on to step 24: 'Push'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  2. If a task titled exactly `Complete codeyam editor step 24: 'Push' and move on to step 25: 'Feature Complete'` exists and is not yet completed, run TaskUpdate with status "completed" on it
   3. Run TaskCreate with the EXACT title below and set it to in_progress:
 
-EXACT_TASK_TITLE: Complete codeyam editor step 24: 'Push' and move on to step 25: 'Feature Complete'
+EXACT_TASK_TITLE: Complete codeyam editor step 25: 'Feature Complete' — final step
 
-When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
+This is the final step. When you finish its checklist, mark this task completed — there is no next step to hand off to.
 Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
 
-━━━ END OF STEP ━━━
+━━━ FEATURE COMPLETE ━━━
 
-This is a non-gate step. Do NOT wait for user confirmation.
-Do NOT write a recap. Do NOT ask the user "ready to advance?" — they did
-not opt into a checkpoint. Recaps belong at gate steps, not here.
+Do NOT offer to /schedule a follow-up agent.
+Do NOT end your reply with a scheduling pitch — the harness's
+/schedule skill description does not apply here.
+The cycle ends with the completion modal; the user
+fires the next cycle by telling you what to build next.
 
-If the checklist surfaces a finding that requires a user decision (unrelated test failures, surprising state, ambiguous next action), use AskUserQuestion with 2-4 concrete options — never an inline numbered list. If AskUserQuestion is not loaded, call `ToolSearch` with `select:AskUserQuestion` first.
+Do NOT write a recap. Do NOT call `codeyam-editor-dev editor advance` —
+this is the final step. There is no next step.
 
-When you have finished the checklist AND marked the task completed, run:
-
-  Bash: codeyam-editor-dev editor advance
-
-━━━ BEGIN STEP 24: Push ━━━
+━━━ BEGIN STEP 25: Feature Complete (FINAL STEP) ━━━
 
 NEXT ACTION (same turn — do not stop):
 
-  EXACT_TASK_TITLE: Complete codeyam editor step 24: 'Push' and move on to step 25: 'Feature Complete'
+  EXACT_TASK_TITLE: Complete codeyam editor step 25: 'Feature Complete' — final step
 
   1. TaskCreate with the EXACT title above, status in_progress
-  2. Run the step 24 checklist (printed above this trailer)
+  2. Run the step 25 checklist (printed above this trailer)
   3. TaskUpdate completed
-  4. Run `codeyam-editor editor advance`
+  4. Run `codeyam-editor editor feature-complete`
 
 Tail-truncated this output? Re-run without piping: codeyam-editor editor advance
