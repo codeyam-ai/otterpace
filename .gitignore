@@ -61,3 +61,23 @@ blob-report/
 .codeyam/editor.local.json
 .codeyam/cloud.json
 # codeyam-editor:end
+
+# Other local AI-tooling config (not part of the shipped project)
+.codex/
+
+# CodeYam machine state — regenerated locally, kept out of the public repo
+# (the curated showcase content under .codeyam/ stays tracked)
+.codeyam/.last-reconcile.json
+.codeyam/deps-index.txt
+.codeyam/glossary-index.txt
+.codeyam/per-test-evidence.json
+.codeyam/reconciliation-log.jsonl
+.codeyam/runner-timing-history.json
+.codeyam/simulator-status.jsonl
+.codeyam/state/finalize-debt.json
+.codeyam/state/last-advance.txt
+.codeyam/state/session-results-snapshot.json
+.codeyam/swift-tests.xml
+.codeyam/test-cache.json
+.codeyam/test-cache/
+.codeyam/test-run-marker.json

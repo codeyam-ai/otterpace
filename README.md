@@ -20,7 +20,7 @@ The **Today dashboard**, a native SwiftUI screen that shows:
 - Your **latest run/walk** and a **weekly training-load** snapshot
 - A friendly **day-one "Connect Apple Health"** hero for first launch
 
-The **Ask Coach** chat (this milestone), reached from a Today/Coach tab bar or the
+The **Ask Coach** chat, reached from a Today/Coach tab bar or the
 "Ask Buddy" button on the coach card:
 
 - Ask Buddy a fitness question and get a practical, **injury-aware** reply —
@@ -33,6 +33,19 @@ The **Ask Coach** chat (this milestone), reached from a Today/Coach tab bar or t
 - This is **mock-coach mode** (Milestone 2): answers are curated and
   deterministic, served by `CoachEngine` (`Sources/AppCore/CoachEngine.swift`).
   A real model swaps in at Milestone 3
+
+The **Weekly Review**, opened from the Coach tab — a read-only recap the coach
+generates from your weekly training load: what went well, what changed, training
+risk, suggested next week, and one focus area, with Buddy's mood and an amber
+safety callout when load spikes. Built by the deterministic `WeeklyReviewEngine`.
+
+The **Activity History** (Milestone 4), opened from the Today dashboard — recent
+workouts grouped by week, each week fronted by its mileage / run-count / rest-day
+rollup, with a friendly empty state for day one. Grouping is the testable
+`ActivityHistory.groupByWeek`.
+
+The whole UI scales with **Dynamic Type** and meets WCAG AA contrast, and the app
+ships a code-generated **app icon** (see below).
 
 The Today screen is driven by a single `TodayState` (see `Sources/AppCore/Model.swift`),
 populated from HealthKit in the real app and from each CodeYam scenario's
