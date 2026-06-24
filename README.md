@@ -51,7 +51,7 @@ generates from your weekly training load: what went well, what changed, training
 risk, suggested next week, and one focus area, with Buddy's mood and an amber
 safety callout when load spikes. Built by the deterministic `WeeklyReviewEngine`.
 
-The **Activity History** (Milestone 4), opened from the Today dashboard — recent
+The **Activity History**, opened from the Today dashboard — recent
 workouts grouped by week, each week fronted by its mileage / run-count / rest-day
 rollup, with a friendly empty state for day one. Grouping is the testable
 `ActivityHistory.groupByWeek`.

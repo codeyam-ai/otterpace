@@ -105,12 +105,3 @@ surprises.)*
 ### 6. Smoke-test the TestFlight build
 On a real device, run the runbook **Phase 6** checklist end-to-end: HealthKit,
 Sign in with Apple, AI coach, Strava, reminders, analytics.
-
----
-
-## C. App name vetting (for the record)
-"Otterpace" was chosen over otter-themed candidates: App Store (fitness) had no
-"Otterpace", no conflicting trademark in fitness (Otter.ai / OtterBox are
-unrelated categories), and `otterpace.com` was available (secured on Namecheap).
-Rejected: OtterRun (event + parked domain collision), Lutra (existing trademark),
-PaceOtter (crowded "Pace___" field), OtterBuddyRun (long/redundant).
