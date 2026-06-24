@@ -56,13 +56,29 @@ workouts grouped by week, each week fronted by its mileage / run-count / rest-da
 rollup, with a friendly empty state for day one. Grouping is the testable
 `ActivityHistory.groupByWeek`.
 
+**Settings**, reached from the gear on the dashboard, gathers the account and
+integration controls:
+
+- **Sign in with Apple** (optional) — no account is required to use Otterpace; if
+  you sign in, only an anonymous identifier is kept in the Keychain. **Sign out**
+  and **delete account** both live here (the App Store account-deletion requirement).
+- **Apple Health** — connect / disconnect with a live status row.
+- **Strava** (optional) — connect to import your runs and rides as an alternative
+  to Apple Health. OAuth runs through a small backend so the client secret stays
+  server-side; the Strava tokens never touch the device.
+- **AI Coach** — paste your own Anthropic key to upgrade Buddy from the built-in
+  coach to a real model (see Ask Coach above).
+- **Movement reminders** — optional on-device notifications: a daily nudge at a
+  time you choose, an evening goal nudge, and an inactivity nudge.
+- Your editable **daily step goal** and a short privacy explainer.
+
 The whole UI scales with **Dynamic Type** and meets WCAG AA contrast, and the app
 ships a code-generated **app icon** (see below).
 
 The Today screen is driven by a single `TodayState` (see `Sources/AppCore/Model.swift`),
-populated from HealthKit in the real app and from each CodeYam scenario's
-`deviceState` preferences in the simulator preview. Production starts empty; each
-scenario carries its own seeded state.
+populated from HealthKit (or imported Strava activity) in the real app and from
+each CodeYam scenario's `deviceState` preferences in the simulator preview.
+Production starts empty; each scenario carries its own seeded state.
 
 ## Architecture
 
@@ -72,7 +88,12 @@ scenario carries its own seeded state.
   mascot) + `PuffyBuddyLoader` (its loading state), one file per dashboard
   component (`StepRing`, `CoachCard`, `WeeklyLoadCard`, …), and the Ask Coach
   surface (`AskCoachView` + `CoachEngine` and its `ChatBubble` / `ChatThread` /
-  `AskCoachInputBar` parts)
+  `AskCoachInputBar` parts), plus the integration modules — `Auth/` (Sign in with
+  Apple + Keychain), `Health/` (HealthKit data source), `Strava/`,
+  `Notifications/` (movement reminders), `Analytics/`, and `SettingsView`
+- `api/` — the Vercel serverless backend: the AI coach proxy (`coach.ts`) and the
+  Strava OAuth + import functions (`strava/`)
+- `site/` — the marketing landing page + privacy policy, deployed with `api/` on Vercel
 - `Tests/AppCoreTests/` — XCTest coverage of the model, pure formatters, and the
   coach engine's intent classification and safety branches
 
