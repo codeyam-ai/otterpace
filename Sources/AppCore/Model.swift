@@ -109,18 +109,31 @@ public struct TodayState: Codable, Equatable {
 
 public final class OtterpaceModel: ObservableObject {
     @Published public var today: TodayState
+    /// Whether the app may read HealthKit. Drives the Connect hero vs. the
+    /// "Health access is off" state. Seeded scenarios start `.authorized`.
+    @Published public var healthAuth: HealthAuthState
 
-    public init(today: TodayState) {
+    private let source: HealthDataSource
+
+    public init(today: TodayState, source: HealthDataSource = SeededHealthDataSource()) {
         self.today = today
+        self.source = source
+        self.healthAuth = today.healthKitConnected ? .authorized : .notDetermined
     }
 
-    /// Launch-time initializer used by the app: builds the `TodayState` from the
-    /// flat `rb*` UserDefaults keys injected by the scenario's
-    /// `deviceState.preferences`. With nothing seeded (production day one, or an
-    /// unseeded launch) every key is absent, yielding the empty, not-yet-connected
-    /// state that renders the Connect hero.
+    /// Launch-time initializer used by the app. In a CodeYam scenario it builds the
+    /// `TodayState` from the seeded `rb*` UserDefaults (previews unchanged). In
+    /// production (no seed) it starts empty and reads live data from HealthKit once
+    /// the user connects.
     public convenience init() {
-        self.init(today: OtterpaceModel.readState())
+        let defaults = UserDefaults.standard
+        let source = HealthSource.make(defaults: defaults)
+        if HealthSource.isScenarioSeeded(defaults) {
+            self.init(today: OtterpaceModel.readState(defaults: defaults), source: source)
+        } else {
+            self.init(today: .empty, source: source)
+            self.healthAuth = source.authorizationState()
+        }
     }
 
     /// Read the snapshot from flat `rb*` UserDefaults keys. Each scenario writes
@@ -214,8 +227,23 @@ public final class OtterpaceModel: ObservableObject {
         today.steps > today.goalSteps && today.goalSteps > 0
     }
 
-    /// Connect Apple Health (used by the day-one hero's call-to-action).
+    /// Connect Apple Health: request read authorization, then load today's data.
+    /// Seeded scenarios "grant" immediately and load their seeded state; production
+    /// drives the real HealthKit permission sheet. On denial the model exposes
+    /// `.denied` so the UI can point the user to Settings.
     public func connect() {
-        today.healthKitConnected = true
+        Task { @MainActor in
+            let state = await source.requestAuthorization()
+            healthAuth = state
+            if state == .authorized {
+                today = await source.loadToday()
+            }
+        }
+    }
+
+    /// Re-read today's data from the source (e.g. on foreground), if authorized.
+    public func refresh() async {
+        guard healthAuth == .authorized else { return }
+        today = await source.loadToday()
     }
 }

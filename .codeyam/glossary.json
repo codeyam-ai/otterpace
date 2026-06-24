@@ -224,6 +224,21 @@
     }
   },
   {
+    "description": "Non-shaming state shown when Health access is denied: explainer + Open Settings button. Reached only via the real HealthKit denial path in production.",
+    "filePath": "Sources/AppCore/HealthDeniedView.swift",
+    "name": "HealthDeniedView",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, and the denied state only arises from the real HealthKit flow.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "Selects the activity data source at launch: SeededHealthDataSource when a CodeYam scenario seeded rb* keys, else the real HealthKitDataSource (production). isScenarioSeeded detects the seed.",
+    "filePath": "Sources/AppCore/Health/HealthDataSource.swift",
+    "name": "HealthSource",
+    "testFile": "Tests/AppCoreTests/HealthDataSourceTests.swift"
+  },
+  {
     "description": "The app's two top-level destinations behind the connected tab bar: today and coach. Its init(raw:) coerces a seeded rbStartTab string case-insensitively, falling back to today, so scenarios can land directly on the Ask Coach chat.",
     "filePath": "Sources/AppCore/ContentView.swift",
     "name": "MainTab",
@@ -268,6 +283,27 @@
     "name": "PuffyBuddyLoader",
     "untestabilityReason": {
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the buddy-puffy-loader application scenario.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "HealthDataSource that serves the TodayState seeded by a scenario's rb* UserDefaults — the pre-HealthKit behavior, now behind the source seam so previews are unchanged.",
+    "filePath": "Sources/AppCore/Health/HealthDataSource.swift",
+    "name": "SeededHealthDataSource",
+    "testFile": "Tests/AppCoreTests/HealthDataSourceTests.swift"
+  },
+  {
+    "description": "Optional Sign in with Apple session state (undecided / guest / signedIn). Stores the Apple user identifier locally via an injectable TokenStoring (Keychain in prod); scenarios skip sign-in by defaulting to guest. Never gates HealthKit.",
+    "filePath": "Sources/AppCore/Auth/SessionStore.swift",
+    "name": "SessionStore",
+    "testFile": "Tests/AppCoreTests/SessionStoreTests.swift"
+  },
+  {
+    "description": "The optional welcome/sign-in screen: Buddy, a Sign in with Apple button, and an equal-weight 'Continue without an account'. Shown in production when undecided; previewable via the sign-in-welcome scenario.",
+    "filePath": "Sources/AppCore/Auth/SignInView.swift",
+    "name": "SignInView",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, shown via the sign-in-welcome application scenario.",
       "kind": "no-isolation-harness"
     }
   },

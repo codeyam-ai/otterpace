@@ -1,0 +1,20 @@
+{
+  "name": "Sign In — Welcome",
+  "id": "62e019da-38a0-46bb-a79f-898543f6413b",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbPreviewMode": "",
+      "rbShowWeeklyReview": false,
+      "rbShowHistory": false,
+      "rbStartScreen": "signin",
+      "rbContentSize": ""
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/Auth/SignInView.swift"
+}

@@ -83,9 +83,10 @@ Open `App.xcodeproj` in Xcode → select the **App** target → **General** /
 
 - [ ] In **Signing & Capabilities**, check **Automatically manage signing** and
       select your **Team**. Xcode creates/uses the provisioning profile.
-- [ ] No capabilities to add yet (no HealthKit/Strava in the shipping build). If
-      you add them later, this is where the entitlement + matching
-      `NS…UsageDescription` Info.plist strings go (see step 7).
+- [ ] **Add capabilities**: in Signing & Capabilities add **HealthKit** and
+      **Sign in with Apple**. The repo already ships `App/App.entitlements` +
+      `NSHealthShareUsageDescription`; enabling the capabilities wires them and
+      registers them on the App ID. (Strava/coach backend remain future work.)
 
 ## 4. Build & test on a real device
 

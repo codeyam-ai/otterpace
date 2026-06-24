@@ -6,6 +6,7 @@ import SwiftUI
 
 public struct ContentView: View {
     @StateObject private var model = OtterpaceModel()
+    @StateObject private var session = SessionStore()
 
     // Scenario-only override: when a preview scenario seeds `rbPreviewMode`, the
     // app renders the Buddy style/loader showcase instead of the normal flow.
@@ -26,6 +27,15 @@ public struct ContentView: View {
         _tab = State(initialValue: MainTab(raw: seeded))
     }
 
+    /// Open the system Settings app so the user can grant Health access.
+    private func openSettings() {
+        #if os(iOS)
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
+        }
+        #endif
+    }
+
     public var body: some View {
         ZStack {
             LinearGradient(
@@ -36,8 +46,12 @@ public struct ContentView: View {
 
             if !previewMode.isEmpty {
                 BuddyPreviewHost(mode: previewMode)
+            } else if session.state == .undecided {
+                SignInView(session: session)
             } else if model.today.healthKitConnected {
                 connectedTabs
+            } else if model.healthAuth == .denied {
+                HealthDeniedView(onOpenSettings: openSettings)
             } else {
                 ConnectHero(onConnect: { model.connect() })
             }

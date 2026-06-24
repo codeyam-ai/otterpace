@@ -89,10 +89,18 @@ final class ModelTests: XCTestCase {
         XCTAssertNil(state.coach)
     }
 
-    // Connecting Apple Health from the day-one hero flips the model into the dashboard.
-    func testConnectFlipsState() {
-        let model = OtterpaceModel(today: .empty)
-        model.connect()
-        XCTAssertTrue(model.today.healthKitConnected)
+    // Connecting Apple Health from the day-one hero authorizes and loads the
+    // dashboard. connect() requests authorization asynchronously (default seeded
+    // source grants), so poll briefly for the state to settle.
+    func testConnectFlipsState() async {
+        let d = UserDefaults(suiteName: "ModelTests.\(UUID().uuidString)")!
+        let model = await MainActor.run { OtterpaceModel(today: .empty, source: SeededHealthDataSource(defaults: d)) }
+        await MainActor.run { model.connect() }
+        for _ in 0..<50 {
+            if await MainActor.run(body: { model.today.healthKitConnected }) { break }
+            try? await Task.sleep(nanoseconds: 20_000_000)
+        }
+        let connected = await MainActor.run { model.today.healthKitConnected }
+        XCTAssertTrue(connected)
     }
 }
