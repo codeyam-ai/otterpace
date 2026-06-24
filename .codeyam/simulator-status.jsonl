@@ -3,11 +3,4 @@
 {"state":"building-app","elapsedSec":0}
 {"state":"building-app","elapsedSec":5}
 {"state":"building-app","elapsedSec":10}
-{"state":"building-app","elapsedSec":15}
-{"state":"building-app","elapsedSec":20}
-{"state":"building-app","elapsedSec":25}
-{"state":"building-app","elapsedSec":30}
-{"state":"building-app","elapsedSec":35}
-{"state":"building-app","elapsedSec":40}
-{"state":"building-app","elapsedSec":45}
 {"state":"app-launched","udid":"E347E8E1-DB48-4FE0-A7E5-38635DC7D13D","appBundleId":"com.example.App"}
