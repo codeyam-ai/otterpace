@@ -22,6 +22,8 @@ public struct BuddyPreviewHost: View {
         switch mode {
         case "puffy-loader":
             PuffyBuddyLoader(size: 122)
+        case "app-icon":
+            AppIconPreviewGallery()
         default:
             PuffyBuddyGallery()
         }

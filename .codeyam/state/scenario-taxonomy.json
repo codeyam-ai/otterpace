@@ -29,6 +29,38 @@
         "status": "added"
       }
     },
+    "AppIconArtwork": {
+      "empty": {
+        "status": "n-a",
+        "reason": "Static brand artwork; no data, so no empty state."
+      },
+      "single": {
+        "status": "n-a",
+        "reason": "Not a list/collection; a single fixed composition."
+      },
+      "typical": {
+        "status": "added"
+      },
+      "many": {
+        "status": "n-a",
+        "reason": "Not a list; the mood comparison shows fixed variants, not overflow."
+      },
+      "loading": {
+        "status": "n-a",
+        "reason": "Static artwork rendered synchronously; no async state."
+      },
+      "edge": {
+        "status": "added"
+      },
+      "error": {
+        "status": "n-a",
+        "reason": "Pure composition with no failure path."
+      },
+      "key-interaction": {
+        "status": "n-a",
+        "reason": "Non-interactive brand artwork; the icon has no user actions."
+      }
+    },
     "AskCoachView": {
       "empty": {
         "status": "added"

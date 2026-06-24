@@ -9,12 +9,14 @@
 /* Begin PBXBuildFile section */
 		111111111111111111111111 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 222222222222222222222222 /* App.swift */; };
 		5EE3CA342998948F002C86E4 /* AppCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5EE3CA332998948F002C86E4 /* AppCore */; };
+		F1C0DE0000000000000000F1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F1C0DE0000000000000000F2 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		000000000000000000000000 /* App.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		222222222222222222222222 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		333333333333333333333333 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F1C0DE0000000000000000F2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -27,6 +29,17 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F1C0DE0000000000000000F3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F1C0DE0000000000000000F1 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXGroup section */
 		555555555555555555555555 = {
@@ -42,6 +55,7 @@
 			children = (
 				222222222222222222222222 /* App.swift */,
 				333333333333333333333333 /* Info.plist */,
+				F1C0DE0000000000000000F2 /* Assets.xcassets */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -63,6 +77,7 @@
 			buildPhases = (
 				AAAA00000000000000000000 /* Sources */,
 				444444444444444444444444 /* Frameworks */,
+				F1C0DE0000000000000000F3 /* Resources */,
 			);
 			buildRules = (
 			);

@@ -1,138 +1,138 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <testsuites>
-<testsuite name="TestResults" errors="0" tests="66" failures="0" time="7.9611766269999995">
-<testcase classname="AppCoreTests.ActivityHistoryTests" name="testRunCountExcludesNonRuns" time="0.123109542">
+<testsuite name="TestResults" errors="0" tests="66" failures="0" time="11.813210298">
+<testcase classname="AppCoreTests.ActivityHistoryTests" name="testEmptyYieldsNoGroups" time="0.125062917">
 </testcase>
-<testcase classname="AppCoreTests.ActivityHistoryTests" name="testModelEmptyWhenUnseeded" time="0.123268875">
+<testcase classname="AppCoreTests.ActivityHistoryTests" name="testRestDaysFromDistinctActiveDays" time="0.136283959">
 </testcase>
-<testcase classname="AppCoreTests.ActivityHistoryTests" name="testDifferentWeeksNewestFirst" time="0.1233675">
+<testcase classname="AppCoreTests.ActivityHistoryTests" name="testModelEmptyWhenUnseeded" time="0.136307334">
 </testcase>
-<testcase classname="AppCoreTests.ActivityHistoryTests" name="testRestDaysNeverNegative" time="0.123168333">
+<testcase classname="AppCoreTests.ActivityHistoryTests" name="testRestDaysNeverNegative" time="0.136291">
 </testcase>
-<testcase classname="AppCoreTests.ActivityHistoryTests" name="testEmptyYieldsNoGroups" time="0.123354375">
+<testcase classname="AppCoreTests.ActivityHistoryTests" name="testDifferentWeeksNewestFirst" time="0.136321417">
 </testcase>
-<testcase classname="AppCoreTests.ActivityHistoryTests" name="testModelDecodesWorkoutsJSON" time="0.123257334">
+<testcase classname="AppCoreTests.ActivityHistoryTests" name="testRunCountExcludesNonRuns" time="0.136334333">
 </testcase>
-<testcase classname="AppCoreTests.ActivityHistoryTests" name="testRestDaysFromDistinctActiveDays" time="0.123219167">
+<testcase classname="AppCoreTests.ActivityHistoryTests" name="testModelDecodesWorkoutsJSON" time="0.136364833">
 </testcase>
-<testcase classname="AppCoreTests.ActivityHistoryTests" name="testInvalidDateDropped" time="0.123367667">
+<testcase classname="AppCoreTests.ActivityHistoryTests" name="testInvalidDateDropped" time="0.136306792">
 </testcase>
-<testcase classname="AppCoreTests.ActivityHistoryTests" name="testWithinWeekNewestFirst" time="0.118085084">
+<testcase classname="AppCoreTests.ActivityHistoryTests" name="testSameWeekGroupsTogether" time="0.172335417">
 </testcase>
-<testcase classname="AppCoreTests.BuddyMoodTests" name="testInitFromKnownRaw" time="0.118038042">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifyGeneralFallback" time="0.184125042">
 </testcase>
-<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifyGeneralFallback" time="0.118026167">
+<testcase classname="AppCoreTests.BuddyMoodTests" name="testEveryMoodHasCaption" time="0.188331334">
 </testcase>
-<testcase classname="AppCoreTests.BuddyMoodTests" name="testInitUnknownFallsBackToReady" time="0.118042">
+<testcase classname="AppCoreTests.BuddyMoodTests" name="testAccentsDifferentiateMoods" time="0.188362">
 </testcase>
-<testcase classname="AppCoreTests.ActivityHistoryTests" name="testSameWeekGroupsTogether" time="0.118154">
+<testcase classname="AppCoreTests.ActivityHistoryTests" name="testWithinWeekNewestFirst" time="0.188369166">
 </testcase>
-<testcase classname="AppCoreTests.ActivityHistoryTests" name="testTotalMilesSums" time="0.1181355">
+<testcase classname="AppCoreTests.BuddyMoodTests" name="testInitFromKnownRaw" time="0.188442125">
 </testcase>
-<testcase classname="AppCoreTests.BuddyMoodTests" name="testAccentsDifferentiateMoods" time="0.11807825">
+<testcase classname="AppCoreTests.BuddyMoodTests" name="testInitUnknownFallsBackToReady" time="0.188297041">
 </testcase>
-<testcase classname="AppCoreTests.BuddyMoodTests" name="testEveryMoodHasCaption" time="0.118078417">
+<testcase classname="AppCoreTests.ActivityHistoryTests" name="testTotalMilesSums" time="0.188374708">
 </testcase>
-<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifyReflection" time="0.093847916">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifyInjuryWins" time="0.192725875">
 </testcase>
-<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifySteps" time="0.103707834">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifyReflection" time="0.200747">
 </testcase>
-<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifyRunOrRest" time="0.10459925">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifyMileage" time="0.209683958">
 </testcase>
-<testcase classname="AppCoreTests.CoachEngineTests" name="testInjuryReplyIsSafetyFlagged" time="0.10457075">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testMileageReplySteadyIsReassuring" time="0.224725916">
 </testcase>
-<testcase classname="AppCoreTests.CoachEngineTests" name="testMileageReplySpikingIsCaution" time="0.104591959">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifyRunOrRest" time="0.225043959">
 </testcase>
-<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifyMileage" time="0.104666166">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testInjuryReplyIsSafetyFlagged" time="0.224957625">
 </testcase>
-<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifyInjuryWins" time="0.104670833">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testMileageReplySpikingIsCaution" time="0.224760875">
 </testcase>
-<testcase classname="AppCoreTests.CoachEngineTests" name="testMileageReplySteadyIsReassuring" time="0.104583">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testClassifySteps" time="0.225009959">
 </testcase>
-<testcase classname="AppCoreTests.CoachEngineTests" name="testRunOrRestAfterHardRunIsRecovery" time="0.093273209">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testRunOrRestAfterHardRunIsRecovery" time="0.172309">
 </testcase>
-<testcase classname="AppCoreTests.DynamicTypeOverrideTests" name="testAccessibilitySizesAreAccessibility" time="0.098997875">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testReflectionWithWorkout" time="0.208373958">
 </testcase>
-<testcase classname="AppCoreTests.DynamicTypeOverrideTests" name="testAccessibilityAliases" time="0.099052958">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testRunOrRestWhenFreshAllowsRun" time="0.170378917">
 </testcase>
-<testcase classname="AppCoreTests.CoachEngineTests" name="testReflectionWithWorkout" time="0.110384083">
+<testcase classname="AppCoreTests.DynamicTypeOverrideTests" name="testAccessibilityAliases" time="0.171343875">
 </testcase>
-<testcase classname="AppCoreTests.CoachEngineTests" name="testRunOrRestWhenFreshAllowsRun" time="0.110769583">
+<testcase classname="AppCoreTests.DynamicTypeOverrideTests" name="testAccessibilitySizesAreAccessibility" time="0.17134825">
 </testcase>
-<testcase classname="AppCoreTests.CoachEngineTests" name="testStepsReplyGoalReachedCelebrates" time="0.110745667">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testStepsReplyBelowGoal" time="0.171374125">
 </testcase>
-<testcase classname="AppCoreTests.DynamicTypeOverrideTests" name="testCaseInsensitive" time="0.110676083">
+<testcase classname="AppCoreTests.DynamicTypeOverrideTests" name="testCaseInsensitive" time="0.171240042">
 </testcase>
-<testcase classname="AppCoreTests.CoachEngineTests" name="testStepsReplyBelowGoal" time="0.110872834">
+<testcase classname="AppCoreTests.CoachEngineTests" name="testStepsReplyGoalReachedCelebrates" time="0.171354">
 </testcase>
-<testcase classname="AppCoreTests.DynamicTypeOverrideTests" name="testEmptyReturnsNil" time="0.091148333">
+<testcase classname="AppCoreTests.DynamicTypeOverrideTests" name="testUnknownReturnsNil" time="0.16538225">
 </testcase>
-<testcase classname="AppCoreTests.DynamicTypeOverrideTests" name="testUnknownReturnsNil" time="0.088708542">
+<testcase classname="AppCoreTests.DynamicTypeOverrideTests" name="testEmptyReturnsNil" time="0.172871333">
 </testcase>
-<testcase classname="AppCoreTests.DynamicTypeOverrideTests" name="testStandardAliases" time="0.098430167">
+<testcase classname="AppCoreTests.DynamicTypeOverrideTests" name="testStandardAliases" time="0.172801459">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testFormattedGroupsThousands" time="0.098034083">
+<testcase classname="AppCoreTests.FormattersTests" name="testFormattedSmallNumbers" time="0.16799">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testMovementLabelMinutes" time="0.099224292">
+<testcase classname="AppCoreTests.FormattersTests" name="testFormattedGroupsThousands" time="0.172706209">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testFormattedSmallNumbers" time="0.099239625">
+<testcase classname="AppCoreTests.FormattersTests" name="testMovementLabelHours" time="0.172718625">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testMovementLabelNow" time="0.0991665">
+<testcase classname="AppCoreTests.FormattersTests" name="testMovementLabelMinutes" time="0.172794917">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testMovementLabelHours" time="0.099232833">
+<testcase classname="AppCoreTests.FormattersTests" name="testMovementLabelNow" time="0.17264175">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testPrettyDateValid" time="0.110605666">
+<testcase classname="AppCoreTests.FormattersTests" name="testPrettyDateValid" time="0.175176167">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testPrettyDateInvalidFallsThrough" time="0.114853333">
+<testcase classname="AppCoreTests.FormattersTests" name="testPrettyDateInvalidFallsThrough" time="0.1805745">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testStepGoalA11yNotReached" time="0.109749">
+<testcase classname="AppCoreTests.FormattersTests" name="testStepGoalA11yExceeded" time="0.176410667">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testStepGoalA11yExceeded" time="0.109851167">
+<testcase classname="AppCoreTests.FormattersTests" name="testStepGoalA11yNotReached" time="0.194415625">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testStepGoalCaptionNotReached" time="0.100438959">
+<testcase classname="AppCoreTests.FormattersTests" name="testStepGoalCaptionReachedExactly" time="0.240284084">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testStepGoalA11yReachedExactly" time="0.100524458">
+<testcase classname="AppCoreTests.FormattersTests" name="testStepGoalCaptionNotReached" time="0.240500709">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testStepGoalCaptionExceeded" time="0.100715917">
+<testcase classname="AppCoreTests.FormattersTests" name="testStepGoalCaptionExceeded" time="0.240603875">
 </testcase>
-<testcase classname="AppCoreTests.FormattersTests" name="testStepGoalCaptionReachedExactly" time="0.100775583">
+<testcase classname="AppCoreTests.FormattersTests" name="testStepGoalA11yReachedExactly" time="0.240583416">
 </testcase>
-<testcase classname="AppCoreTests.MainTabTests" name="testInitUnknownFallsBackToToday" time="0.124115875">
+<testcase classname="AppCoreTests.MainTabTests" name="testInitFromKnownRaw" time="0.201177875">
 </testcase>
-<testcase classname="AppCoreTests.MainTabTests" name="testInitFromKnownRaw" time="0.124197375">
+<testcase classname="AppCoreTests.MainTabTests" name="testInitUnknownFallsBackToToday" time="0.199904709">
 </testcase>
-<testcase classname="AppCoreTests.ModelTests" name="testGoalProgressClampsAndRemaining" time="0.143194709">
+<testcase classname="AppCoreTests.ModelTests" name="testConnectFlipsState" time="0.216557542">
 </testcase>
-<testcase classname="AppCoreTests.ModelTests" name="testReadStateEmptyDefaultsToDisconnected" time="0.142993167">
+<testcase classname="AppCoreTests.ModelTests" name="testEmptyStateIsDisconnected" time="0.205485541">
 </testcase>
-<testcase classname="AppCoreTests.ModelTests" name="testReadStateFromFlatDefaults" time="0.142892166">
+<testcase classname="AppCoreTests.ModelTests" name="testReadStateEmptyDefaultsToDisconnected" time="0.167844625">
 </testcase>
-<testcase classname="AppCoreTests.ModelTests" name="testGoalExceededOnlyWhenPastGoal" time="0.143240625">
+<testcase classname="AppCoreTests.ModelTests" name="testReadStateFromFlatDefaults" time="0.179030666">
 </testcase>
-<testcase classname="AppCoreTests.ModelTests" name="testConnectFlipsState" time="0.15048275">
+<testcase classname="AppCoreTests.ModelTests" name="testGoalProgressClampsAndRemaining" time="0.179094125">
 </testcase>
-<testcase classname="AppCoreTests.ModelTests" name="testEmptyStateIsDisconnected" time="0.150752083">
+<testcase classname="AppCoreTests.ModelTests" name="testGoalExceededOnlyWhenPastGoal" time="0.179129209">
 </testcase>
-<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testBuildingWeekIsCheeringAndUnflagged" time="0.178216417">
+<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testActivityReviewsFillAllSections" time="0.175186292">
 </testcase>
-<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testActivityReviewsFillAllSections" time="0.184884208">
+<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testBuildingWeekIsCheeringAndUnflagged" time="0.175169833">
 </testcase>
-<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testSpikingIsSafetyFlagged" time="0.157555375">
+<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testDeterministic" time="0.169447834">
 </testcase>
-<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testDeterministic" time="0.157587167">
+<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testNoLoadIsEmptyReview" time="0.160583708">
 </testcase>
-<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testNoLoadIsEmptyReview" time="0.157658">
+<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testSparseWeekIsGentleAndUnflagged" time="0.147328167">
 </testcase>
-<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testSparseWeekIsGentleAndUnflagged" time="0.157662833">
+<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testSpikingIsSafetyFlagged" time="0.146328167">
 </testcase>
-<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testSteadyWeekIsUnflagged" time="0.153301375">
+<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testSpikingWinsOverHighRunCount" time="0.146341167">
 </testcase>
-<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testSpikingWinsOverHighRunCount" time="0.156169291">
+<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testSteadyWeekIsUnflagged" time="0.146293042">
 </testcase>
-<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testZeroActivityLoadIsEmptyReview" time="0.157315375">
+<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testZeroActivityLoadIsEmptyReview" time="0.129275875">
 </testcase>
-<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testZeroRunsWithMileageIsSparse" time="0.157499125">
+<testcase classname="AppCoreTests.WeeklyReviewEngineTests" name="testZeroRunsWithMileageIsSparse" time="0.129289583">
 </testcase>
 </testsuite>
 </testsuites>

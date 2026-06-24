@@ -1,10 +1,12 @@
-# regenerated from glossary.json on 2026-06-23T22:53:02Z; do not hand-edit
+# regenerated from glossary.json on 2026-06-24T02:25:03Z; do not hand-edit
 ActivityHistory :: Sources/AppCore/ActivityHistory.swift :: tags= :: test=Tests/AppCoreTests/ActivityHistoryTests.swift
 ActivityHistoryButton :: Sources/AppCore/ActivityHistoryButton.swift :: tags=
 ActivityHistoryEmptyState :: Sources/AppCore/ActivityHistoryEmptyState.swift :: tags=
 ActivityHistoryHeader :: Sources/AppCore/ActivityHistoryHeader.swift :: tags=
 ActivityHistoryView :: Sources/AppCore/ActivityHistoryView.swift :: tags=
 ActivityWeekSection :: Sources/AppCore/ActivityWeekSection.swift :: tags=
+AppIconArtwork :: Sources/AppCore/AppIconArtwork.swift :: tags=
+AppIconPreviewGallery :: Sources/AppCore/AppIconArtwork.swift :: tags=
 AskCoachEmptyState :: Sources/AppCore/AskCoachEmptyState.swift :: tags=
 AskCoachHeader :: Sources/AppCore/AskCoachHeader.swift :: tags=
 AskCoachInputBar :: Sources/AppCore/AskCoachInputBar.swift :: tags=
@@ -21,6 +23,7 @@ CoachIntent :: Sources/AppCore/CoachEngine.swift :: tags= :: test=Tests/AppCoreT
 ConnectHero :: Sources/AppCore/ConnectHero.swift :: tags=
 ContentView :: Sources/AppCore/ContentView.swift :: tags=
 DynamicTypeOverride :: Sources/AppCore/ContentView.swift :: tags=
+GenerateAppIcon :: Scripts/GenerateAppIcon/main.swift :: tags=
 HappyArc :: Sources/AppCore/PuffyBuddy.swift :: tags=
 MainTab :: Sources/AppCore/ContentView.swift :: tags= :: test=Tests/AppCoreTests/MainTabTests.swift
 MoodChip :: Sources/AppCore/MoodChip.swift :: tags=

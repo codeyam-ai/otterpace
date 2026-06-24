@@ -51,6 +51,24 @@
     }
   },
   {
+    "description": "The RunBuddy app icon composed in code: Buddy the otter (halo suppressed) on a full-bleed opaque coral brand gradient, authored at a nominal canvas and resolution-independent so ImageRenderer can rasterize it to the 1024 marketing PNG. Satisfies App Store constraints (opaque, square, no text).",
+    "filePath": "Sources/AppCore/AppIconArtwork.swift",
+    "name": "AppIconArtwork",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the app-icon-showcase application scenario.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "Scenario-only showcase of the app icon (rbPreviewMode=app-icon via BuddyPreviewHost): the raw 1024 square, the masked home-screen look, a mood comparison, and a small-size legibility check.",
+    "filePath": "Sources/AppCore/AppIconArtwork.swift",
+    "name": "AppIconPreviewGallery",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the app-icon-showcase application scenario.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
     "description": "The Ask Coach first-open state: a friendly Buddy and a prompt inviting the user to ask, shown whenever the conversation has no messages yet.",
     "filePath": "Sources/AppCore/AskCoachEmptyState.swift",
     "name": "AskCoachEmptyState",
@@ -184,6 +202,15 @@
     "name": "DynamicTypeOverride",
     "untestabilityReason": {
       "justification": "Thin SwiftUI environment adapter; its only logic is the dynamicTypeSize(forSeed:) mapping, which is unit-tested.",
+      "kind": "platform-glue"
+    }
+  },
+  {
+    "description": "macOS-only dev tool (SwiftPM executable) that rasterizes AppIconArtwork via ImageRenderer and writes the opaque 1024x1024 AppIcon-1024.png, flattening onto the coral background so the output has no alpha channel. Regenerates the icon when the mascot art changes.",
+    "filePath": "Scripts/GenerateAppIcon/main.swift",
+    "name": "GenerateAppIcon",
+    "untestabilityReason": {
+      "justification": "A build-time CLI that renders SwiftUI to a PNG via AppKit/CoreGraphics and writes to disk; an OS/filesystem boundary tool, not shipping app logic.",
       "kind": "platform-glue"
     }
   },

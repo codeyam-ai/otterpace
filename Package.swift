@@ -17,5 +17,13 @@ let package = Package(
             dependencies: ["AppCore"],
             path: "Tests/AppCoreTests"
         ),
+        // macOS-only dev tool: rasterizes `AppIconArtwork` to the 1024×1024
+        // marketing PNG. Not part of the shipping app (the iOS target depends on
+        // the AppCore library product, not this target). Run: swift run GenerateAppIcon
+        .executableTarget(
+            name: "GenerateAppIcon",
+            dependencies: ["AppCore"],
+            path: "Scripts/GenerateAppIcon"
+        ),
     ]
 )

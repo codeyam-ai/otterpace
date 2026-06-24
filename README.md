@@ -65,6 +65,22 @@ Scenarios live in `.codeyam/scenarios/` and seed the dashboard's state at launch
 e.g. `today-day-one-connect`, `today-fresh-start`, `today-midday-nudge`,
 `today-almost-there`, `today-recovery-caution`, `today-goal-crushed`.
 
+## App icon
+
+The app icon is generated from code, not a hand-painted PNG, so it stays
+consistent with the in-app mascot. The artwork is the `AppIconArtwork` SwiftUI
+view (`Sources/AppCore/AppIconArtwork.swift`) — Buddy the otter on the opaque
+coral brand gradient. Regenerate the 1024×1024 marketing PNG whenever the art
+changes:
+
+    swift run GenerateAppIcon
+
+This rasterizes `AppIconArtwork` to
+`App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`. App Store constraints
+the output satisfies: exactly **1024×1024**, sRGB, **opaque (no alpha)**, and no
+rounded corners (iOS applies the superellipse mask). Xcode generates every
+home-screen / Spotlight / Settings size from that single source at build time.
+
 ## Testing
 
 Write tests with **XCTest** (`import XCTest`, `final class …: XCTestCase`,

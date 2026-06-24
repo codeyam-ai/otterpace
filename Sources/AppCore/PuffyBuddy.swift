@@ -10,10 +10,15 @@ import SwiftUI
 public struct PuffyBuddy: View {
     public let mood: BuddyMood
     public var size: CGFloat
+    // Whether to draw the translucent mood-accent halo behind Buddy. The app icon
+    // composes Buddy on a solid coral background and suppresses the halo so the
+    // silhouette reads cleanly.
+    public var showHalo: Bool
 
-    public init(mood: BuddyMood, size: CGFloat = 120) {
+    public init(mood: BuddyMood, size: CGFloat = 120, showHalo: Bool = true) {
         self.mood = mood
         self.size = size
+        self.showHalo = showHalo
     }
 
     private var furTop: Color { Color(red: 0.95, green: 0.78, blue: 0.58) }
@@ -24,8 +29,10 @@ public struct PuffyBuddy: View {
 
     public var body: some View {
         ZStack {
-            Circle().fill(mood.accent.opacity(0.16))
-                .frame(width: size * 1.34, height: size * 1.34)
+            if showHalo {
+                Circle().fill(mood.accent.opacity(0.16))
+                    .frame(width: size * 1.34, height: size * 1.34)
+            }
 
             // small round otter ears, set high & wide
             otterEar.offset(x: -size * 0.33, y: -size * 0.34)

@@ -1,6 +1,6 @@
 {
-  "name": "Buddy Puffy — Moods",
-  "id": "b8484abb-6a3b-4c4f-bccc-54cf84aa2fe0",
+  "name": "App Icon — Showcase",
+  "id": "b75e0e76-11b1-4371-8275-647c93bd7c57",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -10,10 +10,10 @@
     "preferences": {
       "rbContentSize": "",
       "rbShowWeeklyReview": false,
-      "rbPreviewMode": "puffy-moods",
+      "rbPreviewMode": "app-icon",
       "rbShowHistory": false
     }
   },
   "scenarioType": "application",
-  "pageFilePath": "Sources/AppCore/PuffyBuddy.swift"
+  "pageFilePath": "Sources/AppCore/AppIconArtwork.swift"
 }
