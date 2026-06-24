@@ -78,21 +78,25 @@ Scenarios live in `.codeyam/scenarios/` and seed the dashboard's state at launch
 e.g. `today-day-one-connect`, `today-fresh-start`, `today-midday-nudge`,
 `today-almost-there`, `today-recovery-caution`, `today-goal-crushed`.
 
-## App icon
+## App icon & launch screen
 
-The app icon is generated from code, not a hand-painted PNG, so it stays
-consistent with the in-app mascot. The artwork is the `AppIconArtwork` SwiftUI
-view (`Sources/AppCore/AppIconArtwork.swift`) — Buddy the otter on the opaque
-coral brand gradient. Regenerate the 1024×1024 marketing PNG whenever the art
+The app icon and launch screen are generated from code, not hand-painted PNGs, so
+they stay consistent with the in-app mascot. Regenerate both whenever the art
 changes:
 
     swift run GenerateAppIcon
 
-This rasterizes `AppIconArtwork` to
-`App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`. App Store constraints
-the output satisfies: exactly **1024×1024**, sRGB, **opaque (no alpha)**, and no
-rounded corners (iOS applies the superellipse mask). Xcode generates every
-home-screen / Spotlight / Settings size from that single source at build time.
+This rasterizes the `AppIconArtwork` SwiftUI view
+(`Sources/AppCore/AppIconArtwork.swift`) to two sets of assets:
+
+- **App icon** — `App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`, the
+  1024×1024 marketing icon. App Store constraints it satisfies: exactly
+  **1024×1024**, sRGB, **opaque (no alpha)**, no rounded corners (iOS applies the
+  superellipse mask). Xcode derives every home-screen / Spotlight / Settings size
+  from that single source.
+- **Launch screen** — a transparent Buddy (`LaunchBuddy`, 1x/2x/3x) shown over the
+  coral `LaunchBackground` color via the `UILaunchScreen` keys in `App/Info.plist`,
+  so first launch is branded rather than blank.
 
 ## Testing
 
