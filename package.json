@@ -3,10 +3,13 @@
   "private": true,
   "description": "Otterpace marketing site (site/) + AI coach API (api/), deployed on Vercel.",
   "dependencies": {
-    "@anthropic-ai/sdk": "latest"
+    "@anthropic-ai/sdk": "^0.106.0"
   },
   "devDependencies": {
-    "@vercel/node": "latest",
-    "typescript": "^5"
+    "@vercel/node": "^5.8.20",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
   }
 }

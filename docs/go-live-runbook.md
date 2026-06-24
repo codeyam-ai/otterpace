@@ -134,8 +134,8 @@ Ref: `docs/testflight-prep.md`.
 ## Phase 9 — Nice-to-haves (post-launch)
 - ☐ Email alias `hello@otterpace.com` (Namecheap/mail provider) — used in the
   privacy policy + Code of Conduct.
-- ☐ Pin `@anthropic-ai/sdk` / `@vercel/node` to exact versions in `package.json`
-  after the first green Vercel build (they're on `latest` to guarantee install).
+- Backend deps are pinned (`@anthropic-ai/sdk ^0.106`, `@vercel/node ^5.8`) and
+  type-check clean (`npm install && npm run typecheck`); re-check after any bump.
 - ☐ App Store listing copy, screenshots, keywords.
 
 ---
