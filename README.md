@@ -3,9 +3,18 @@
 An open-source, AI running coach for iOS — built in the open as a CodeYam showcase.
 
 Otterpace is a friendly running coach in your pocket: it pulls your activity from
-Apple HealthKit (and, soon, Strava), keeps you moving toward your daily 10,000
+Apple HealthKit (or, optionally, Strava), keeps you moving toward your daily 10,000
 steps, and gives injury-aware, never-shame-based coaching through **Buddy**, a
 mood-reactive otter mascot.
+
+## Launch
+
+Otterpace is code-complete; going live is account/config work (Vercel deploy, DNS,
+API keys, Xcode capabilities, TestFlight). Follow the ordered checklist:
+
+**▶ [docs/go-live-runbook.md](docs/go-live-runbook.md)** — the end-to-end launch sequence, with a verification check at each phase.
+
+Area deep-dives: [site + DNS](docs/site-and-dns.md) · [AI coach](docs/ai-coach.md) · [Strava + analytics](docs/strava-and-analytics.md) · [TestFlight prep](docs/testflight-prep.md).
 
 ## What's here today
 
@@ -30,9 +39,12 @@ The **Ask Coach** chat, reached from a Today/Coach tab bar or the
   so they feel personal — a recent hard run or spiking load steers Buddy toward
   recovery, and pain questions return a non-diagnostic, see-a-clinician answer
   behind an amber **"safety first"** shield
-- This is **mock-coach mode** (Milestone 2): answers are curated and
-  deterministic, served by `CoachEngine` (`Sources/AppCore/CoachEngine.swift`).
-  A real model swaps in at Milestone 3
+- A **real AI coach** is available when you connect your own Anthropic key
+  (Settings → AI Coach): questions go to a Vercel backend that calls Claude with
+  the injury-aware coach prompt. Without a key — and offline, or in scenario
+  previews — the deterministic `CoachEngine`
+  (`Sources/AppCore/CoachEngine.swift`) answers, so the coach always works and
+  captures stay reproducible
 
 The **Weekly Review**, opened from the Coach tab — a read-only recap the coach
 generates from your weekly training load: what went well, what changed, training
