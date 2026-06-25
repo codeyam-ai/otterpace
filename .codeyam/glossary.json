@@ -75,6 +75,15 @@
     }
   },
   {
+    "description": "Production AppleCredentialChecking implementation: a thin passthrough that calls ASAuthorizationAppleIDProvider.getCredentialState(forUserID:) and returns the pure appleCredentialState mapping. Reports .unknown where AuthenticationServices is unavailable so a missing framework never drops the session.",
+    "filePath": "Sources/AppCore/Auth/AppleCredentialChecker.swift",
+    "name": "AppleCredentialChecker",
+    "untestabilityReason": {
+      "justification": "Bare AuthenticationServices boundary call; the credential-state translation lives in the separately-tested appleCredentialState helper.",
+      "kind": "platform-glue"
+    }
+  },
+  {
     "description": "The Ask Coach first-open state: a friendly Buddy and a prompt inviting the user to ask, shown whenever the conversation has no messages yet.",
     "filePath": "Sources/AppCore/AskCoachEmptyState.swift",
     "name": "AskCoachEmptyState",
@@ -299,7 +308,7 @@
     "testFile": "Tests/AppCoreTests/HealthDataSourceTests.swift"
   },
   {
-    "description": "Optional Sign in with Apple session state (undecided / guest / signedIn). Stores the Apple user identifier locally via an injectable TokenStoring (Keychain in prod); scenarios skip sign-in by defaulting to guest. Never gates HealthKit.",
+    "description": "Optional Sign in with Apple session state (undecided / guest / signedIn). Stores the Apple user identifier locally via an injectable TokenStoring (Keychain in prod). The session is durable: revalidate() confirms the stored Apple credential on launch/foreground (throttled per revalidationWindow), and only a genuine revocation ends it gracefully into guest via endSession() — transient/offline checks keep the user signed in. Never gates HealthKit.",
     "filePath": "Sources/AppCore/Auth/SessionStore.swift",
     "name": "SessionStore",
     "testFile": "Tests/AppCoreTests/SessionStoreTests.swift"
@@ -489,6 +498,12 @@
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
       "kind": "no-isolation-harness"
     }
+  },
+  {
+    "description": "Pure mapping from Apple's ASAuthorizationAppleIDProvider.CredentialState to the decoupled AppleCredentialState enum (authorized/revoked/notFound/unknown), with .transferred treated as inconclusive so the session is retained.",
+    "filePath": "Sources/AppCore/Auth/AppleCredentialChecker.swift",
+    "name": "appleCredentialState",
+    "testFile": "Tests/AppCoreTests/AppleCredentialMappingTests.swift"
   },
   {
     "description": "Clamps a custom daily step goal into the minGoal...maxGoal range and rounds it to the nearest goalIncrement, so any user-dialed value is always in-bounds and on a clean 500-step rail.",

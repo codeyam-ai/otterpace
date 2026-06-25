@@ -219,6 +219,42 @@
       "runner": "tests"
     },
     {
+      "description": "Apple .authorized credential state maps to .authorized.",
+      "file": "Tests/AppCoreTests/AppleCredentialMappingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AppleCredentialMappingTests › testAuthorizedMapsToAuthorized",
+      "line": 13,
+      "registeredAt": "2026-06-25T22:02:19.296223+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Apple .notFound credential state maps to .notFound.",
+      "file": "Tests/AppCoreTests/AppleCredentialMappingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AppleCredentialMappingTests › testNotFoundMapsToNotFound",
+      "line": 23,
+      "registeredAt": "2026-06-25T22:02:37.491096+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Apple .revoked credential state maps to .revoked.",
+      "file": "Tests/AppCoreTests/AppleCredentialMappingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AppleCredentialMappingTests › testRevokedMapsToRevoked",
+      "line": 18,
+      "registeredAt": "2026-06-25T22:02:27.782559+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Apple .transferred credential state maps to .unknown so the session is retained.",
+      "file": "Tests/AppCoreTests/AppleCredentialMappingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AppleCredentialMappingTests › testTransferredMapsToUnknown",
+      "line": 28,
+      "registeredAt": "2026-06-25T22:02:47.198213+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "Caution-leaning moods carry distinct accent colors from the upbeat default.",
       "file": "Tests/AppCoreTests/BuddyMoodTests.swift",
       "format": "junit-xml",
@@ -816,6 +852,13 @@
       "runner": "tests"
     },
     {
+      "description": "A stored credential that is still authorized keeps the user signed in across relaunch.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.SessionStoreTests › testAuthorizedStaysSignedInAcrossRelaunch",
+      "registeredAt": "2026-06-25T21:51:14Z",
+      "runner": "tests"
+    },
+    {
       "description": "Continuing as guest is remembered so the app does not re-prompt on the next launch.",
       "format": "junit-xml",
       "key": "AppCoreTests.SessionStoreTests › testContinueAsGuestRemembered",
@@ -844,6 +887,27 @@
       "runner": "tests"
     },
     {
+      "description": "A not-found Apple identifier is treated like revocation and drops the session to guest.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.SessionStoreTests › testNotFoundDropsToGuest",
+      "registeredAt": "2026-06-25T21:51:14Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Revalidation is a no-op for a guest and never triggers a credential check.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.SessionStoreTests › testRevalidateNoOpForGuest",
+      "registeredAt": "2026-06-25T21:51:14Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A genuinely revoked credential drops the session to guest mode rather than the welcome screen.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.SessionStoreTests › testRevokedDropsToGuestNotWelcome",
+      "registeredAt": "2026-06-25T21:51:14Z",
+      "runner": "tests"
+    },
+    {
       "description": "A normal seeded scenario skips sign-in so previews go straight to content.",
       "format": "junit-xml",
       "key": "AppCoreTests.SessionStoreTests › testSeededScenarioSkipsToGuest",
@@ -869,6 +933,20 @@
       "format": "junit-xml",
       "key": "AppCoreTests.SessionStoreTests › testSignOutBecomesGuest",
       "registeredAt": "2026-06-25T15:49:35Z",
+      "runner": "tests"
+    },
+    {
+      "description": "An offline or unknown credential-check result keeps the user signed in; transient failures never log out.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.SessionStoreTests › testUnknownKeepsSessionSignedIn",
+      "registeredAt": "2026-06-25T21:51:14Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Within the revalidation window, no second credential check runs, so the session stays signed in without churn.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.SessionStoreTests › testWithinWindowSkipsRecheck",
+      "registeredAt": "2026-06-25T21:51:14Z",
       "runner": "tests"
     },
     {

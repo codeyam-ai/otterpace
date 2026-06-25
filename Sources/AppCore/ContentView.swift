@@ -36,6 +36,14 @@ public struct ContentView: View {
         _showSettings = State(initialValue: UserDefaults.standard.bool(forKey: "rbShowSettings"))
     }
 
+    /// Revalidate the durable Apple session against Apple's credential state.
+    /// Skipped under preview/scenario seeds so captures stay offline and
+    /// deterministic — only real launches/foregrounds hit the credential check.
+    private func revalidateSessionIfNeeded() {
+        guard previewMode.isEmpty, !HealthSource.isScenarioSeeded() else { return }
+        Task { await session.revalidate() }
+    }
+
     /// Open the system Settings app so the user can grant Health access.
     private func openSettings() {
         #if os(iOS)
@@ -78,13 +86,18 @@ public struct ContentView: View {
         // isolated-component captures (which mount ContentView directly, not via
         // the App scene) render light too. The App scene sets this as well.
         .preferredColorScheme(.light)
-        .onAppear { if previewMode.isEmpty { Analytics.shared.capture("app_opened") } }
+        .onAppear {
+            if previewMode.isEmpty { Analytics.shared.capture("app_opened") }
+            revalidateSessionIfNeeded()
+        }
         .onChange(of: scenePhase) { phase in
             // Never schedule during a preview/scenario capture.
             guard previewMode.isEmpty else { return }
             let settings = ReminderSettings.load()
             switch phase {
-            case .active:     reminderScheduler.applyForeground(settings)
+            case .active:
+                reminderScheduler.applyForeground(settings)
+                revalidateSessionIfNeeded()   // confirm the Apple credential on foreground
             case .background: reminderScheduler.applyBackground(settings)
             default:          break
             }

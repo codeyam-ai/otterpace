@@ -11,8 +11,32 @@ final class SessionStoreTests: XCTestCase {
         func delete(_ account: String) { store[account] = nil }
     }
 
+    // Fake credential checker: returns a canned state and counts calls, so tests
+    // exercise the revalidation lifecycle without ASAuthorizationAppleIDProvider.
+    private final class FakeCredentialChecker: AppleCredentialChecking {
+        var result: AppleCredentialState
+        private(set) var calls = 0
+        init(_ result: AppleCredentialState) { self.result = result }
+        func state(forUserID userID: String) async -> AppleCredentialState {
+            calls += 1
+            return result
+        }
+    }
+
     private func defaults() -> UserDefaults {
         UserDefaults(suiteName: "SessionStoreTests.\(UUID().uuidString)")!
+    }
+
+    private func signedInStore(token: String = "u",
+                               checker: AppleCredentialChecking,
+                               window: TimeInterval = 24 * 60 * 60,
+                               now: @escaping () -> Date = { Date() },
+                               defaults d: UserDefaults? = nil) -> (SessionStore, MemoryTokens) {
+        let t = MemoryTokens(); t.store["otterpace.appleUserID"] = token
+        let s = SessionStore(tokens: t, defaults: d ?? defaults(),
+                             credentialChecker: checker, revalidationWindow: window,
+                             now: now, seeded: false, wantsSignInPreview: false)
+        return (s, t)
     }
 
     // Production with no saved identity and no guest choice → show the sign-in screen.
@@ -80,5 +104,71 @@ final class SessionStoreTests: XCTestCase {
         // A fresh launch with no token and no guest choice stays at the welcome screen.
         let next = SessionStore(tokens: MemoryTokens(), defaults: d, seeded: false, wantsSignInPreview: false)
         XCTAssertEqual(next.state, .undecided)
+    }
+
+    // MARK: - Durable revalidation lifecycle
+
+    // A stored credential that's still authorized keeps the user signed in across
+    // relaunch — the core "session survives restarts" guarantee.
+    func testAuthorizedStaysSignedInAcrossRelaunch() async {
+        let checker = FakeCredentialChecker(.authorized)
+        let (s, t) = signedInStore(checker: checker)
+        XCTAssertEqual(s.state, .signedIn(userID: "u"))
+        await s.revalidate()
+        XCTAssertEqual(s.state, .signedIn(userID: "u"))
+        XCTAssertEqual(t.store["otterpace.appleUserID"], "u")
+        XCTAssertEqual(checker.calls, 1)
+    }
+
+    // Within the revalidation window, a second check is skipped — long-lived, no churn.
+    func testWithinWindowSkipsRecheck() async {
+        let d = defaults()
+        let checker = FakeCredentialChecker(.authorized)
+        let clock = { Date(timeIntervalSinceReferenceDate: 1000) }
+        let s = SessionStore(tokens: MemoryTokens(), defaults: d, credentialChecker: checker,
+                             revalidationWindow: 3600, now: clock, seeded: false, wantsSignInPreview: false)
+        s.signIn(userID: "u")        // stamps lastValidatedAt = 1000
+        await s.revalidate()         // clock still 1000 → inside the 3600s window
+        XCTAssertEqual(checker.calls, 0)
+        XCTAssertEqual(s.state, .signedIn(userID: "u"))
+    }
+
+    // A genuinely revoked credential ends the session into GUEST, not the welcome
+    // screen — the app keeps working, no nag.
+    func testRevokedDropsToGuestNotWelcome() async {
+        let checker = FakeCredentialChecker(.revoked)
+        let (s, t) = signedInStore(checker: checker)
+        await s.revalidate()
+        XCTAssertEqual(s.state, .guest)
+        XCTAssertNotEqual(s.state, .undecided)
+        XCTAssertNil(t.store["otterpace.appleUserID"])
+    }
+
+    // `.notFound` (identifier unknown to Apple) is treated like revocation → guest.
+    func testNotFoundDropsToGuest() async {
+        let checker = FakeCredentialChecker(.notFound)
+        let (s, _) = signedInStore(checker: checker)
+        await s.revalidate()
+        XCTAssertEqual(s.state, .guest)
+    }
+
+    // An offline/unknown check result keeps the user signed in (transient failures
+    // never log the user out).
+    func testUnknownKeepsSessionSignedIn() async {
+        let checker = FakeCredentialChecker(.unknown)
+        let (s, _) = signedInStore(checker: checker)
+        await s.revalidate()
+        XCTAssertEqual(s.state, .signedIn(userID: "u"))
+    }
+
+    // Revalidation is a no-op for a guest (nothing to check, no accidental sign-in).
+    func testRevalidateNoOpForGuest() async {
+        let checker = FakeCredentialChecker(.authorized)
+        let s = SessionStore(tokens: MemoryTokens(), defaults: defaults(), credentialChecker: checker,
+                             seeded: false, wantsSignInPreview: false)
+        s.continueAsGuest()
+        await s.revalidate()
+        XCTAssertEqual(s.state, .guest)
+        XCTAssertEqual(checker.calls, 0)
     }
 }

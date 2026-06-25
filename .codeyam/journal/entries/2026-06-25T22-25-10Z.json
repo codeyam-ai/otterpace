@@ -1,0 +1,187 @@
+{
+  "timestamp": "2026-06-25T22:25:10Z",
+  "title": "Durable Sign in with Apple Session",
+  "type": "feature",
+  "userRequest": "## Summary\n\nDogfooding showed the user getting returned to the welcome/sign-in screen too\noften after signing in with Apple. There is **no intentional session expiry** in\nthe code: `SessionStore` restores `signedIn` whenever the Apple user identifier\nis present in the Keychain (`KeychainTokenStore`, stored\n`kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`), which should persist\nindefinitely. So the premature \"logout\" is an unintended drop, not a TTL. This\nplan (1) makes the signed-in state genuinely durable by validating the stored\nApple credential the way Apple intends — `getCredentialState(forUserID:)` on\nlaunch/foreground and listening for the revocation notification — and (2) makes\nthe session end *only* on real revocation, landing the user in guest mode rather\nthan back at the welcome screen so the app never nags. The result is a long-lived\n(not infinite) session that survives relaunches and only ends when the user\nactually revokes Apple access.\n\n## Key Decisions\n\n- **Validate, don't blindly trust or blindly drop** — adopt Apple's recommended\n  lifecycle: on launch/foreground, call\n  `ASAuthorizationAppleIDProvider().getCredentialState(forUserID:)` for the\n  stored ID. `.authorized` → stay signed in; `.revoked`/`.notFound` → end the\n  session. Also subscribe to\n  `ASAuthorizationAppleIDProvider.credentialRevokedNotification` to react to\n  real revocation immediately.\n- **Throttle revalidation for longevity, not churn** — record a\n  `lastValidatedAt` timestamp and only re-check the credential state every N\n  hours (e.g. 24h), and treat transient/offline check failures as \"stay signed\n  in.\" This is what makes the session feel long-lived instead of re-prompting.\n- **Revocation lands in guest, not undecided** — when the credential is genuinely\n  revoked, transition to `.guest` (keep using the app, no welcome-screen nag)\n  rather than `.undecided`. `deleteAccount()` remains the explicit path back to\n  the welcome screen.\n- **Keep it unit-testable via a seam** — mirror the existing injectable\n  `TokenStoring` pattern: introduce an `AppleCredentialChecking` protocol so the\n  state-machine logic can be tested with a fake credential state (the real\n  `ASAuthorizationAppleIDProvider` is never hit in the XCTest suite).\n\n## Implementation\n\n### 1. Credential-state revalidation seam\n\n**New file**: `Sources/AppCore/Auth/AppleCredentialChecker.swift`\n\nA small `AppleCredentialChecking` protocol (`func state(forUserID:) async -> …`)\nwith a production implementation wrapping\n`ASAuthorizationAppleIDProvider.getCredentialState(forUserID:)`, and an\nin-memory fake for tests. Map Apple's states to a simple\n`authorized | revoked | notFound | unknown` enum.\n\n### 2. Durable session lifecycle in `SessionStore`\n\n**File**: `Sources/AppCore/Auth/SessionStore.swift`\n\n- Inject `AppleCredentialChecking` (default = real impl), alongside the existing\n  `TokenStoring`/`UserDefaults` seams.\n- Add `func revalidate() async`: if `signedIn`, and `lastValidatedAt` is older\n  than the revalidation window, check credential state — `authorized` → refresh\n  `lastValidatedAt` and stay; `revoked`/`notFound` → call a new graceful\n  `endSession()` that drops to `.guest` (clears the Keychain ID, sets the guest\n  flag); `unknown`/offline → keep the session and leave `lastValidatedAt`.\n- Persist `lastValidatedAt` in `UserDefaults`. Set it on `signIn(userID:)`.\n- Subscribe to `credentialRevokedNotification` and call `revalidate()` on fire.\n- Audit existing transitions (`signOut`, `deleteAccount`, the init branch order)\n  to confirm nothing drops a signed-in user spuriously; document the intended\n  longevity in the file's header comment.\n\n### 3. Trigger revalidation at the right moments\n\n**File**: `Sources/AppCore/ContentView.swift`\n\nThe `@StateObject private var session` already owns the session. Call\n`session.revalidate()` on app launch and on\n`scenePhase` → `.active` (foreground). Guard it so scenario-seeded previews\n(`HealthSource.isScenarioSeeded()`) don't perform network credential checks.\n\n### 4. Tests\n\n**File**: `Tests/AppCoreTests/SessionStoreTests.swift` (extend or add)\n\nXCTest cases with the fake `AppleCredentialChecking` + in-memory `TokenStoring`:\nsigned-in + `authorized` → stays signed in across relaunch; within the window →\nno re-check; `revoked` → drops to `.guest` (not `.undecided`); `unknown`/offline\n→ stays signed in. Each `func testX()` prefaced with a `//` description comment;\nregister via `codeyam-editor editor reconcile-registry --auto-apply`.\n\n## Reused existing code\n\n- `SessionStore` + `SessionState` from `Sources/AppCore/Auth/SessionStore.swift`\n  — the state machine extended here.\n- `KeychainTokenStore` / the `TokenStoring` protocol from\n  `Sources/AppCore/Auth/KeychainTokenStore.swift` — the durable identifier store\n  and the injectable-seam pattern this plan mirrors for credential checking.\n- `SignInView` (`Auth/SignInView.swift`) — `signIn(userID:)` entry point that\n  now also stamps `lastValidatedAt`.\n- `ContentView`'s `@StateObject session` + `scenePhase` — where revalidation is\n  triggered.\n- `HealthSource.isScenarioSeeded()` — to keep previews offline/deterministic.\n\n## Scenarios to Demonstrate\n\n- **Persists across relaunch**: signed-in scenario re-opened → still on the\n  dashboard, no welcome screen.\n- **Graceful revocation**: credential reported `revoked` → app continues in guest\n  mode (not bounced to the welcome screen).\n- **Offline relaunch**: credential check fails/unknown → session retained.\n- **Sign-in screen preview**: `rbStartScreen = \"signin\"` still shows the welcome\n  screen for first-run/undecided.",
+  "description": "Fixed dogfooding bug where users were bounced back to the welcome screen too often after signing in with Apple. There was no intentional expiry — it was an unintended session drop. The app now follows Apple recommended credential lifecycle: it validates the stored credential via getCredentialState on launch and foreground (throttled to a 24h window, offline-tolerant so transient failures keep the session) and reacts to the revocation notification. On a genuine revocation it ends the session gracefully into guest mode instead of nagging at the welcome screen. New AppleCredentialChecking seam mirrors the existing TokenStoring pattern so the lifecycle is unit-tested with a fake; 10 new tests cover stay-authorized, within-window skip, revoked-to-guest, not-found-to-guest, offline-keeps-session, and the pure credential-state mapping.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/dogfood-durable-apple-sign-in.md\t.codeyam/plans/completed/dogfood-durable-apple-sign-in.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/accessibility-large-text-coach-safety--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/accessibility-large-text-coach-safety--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/accessibility-large-text-today--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/accessibility-large-text-today--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-almost-there--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-almost-there--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-custom-goal--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-custom-goal--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-day-one-connect--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-day-one-connect--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-fresh-start--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-fresh-start--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-long-content--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-long-content--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-midday-nudge--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-midday-nudge--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-recovery-caution--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-recovery-caution--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-zero-step-morning--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-zero-step-morning--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Auth/SessionStore.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ContentView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/SessionStoreTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/stale-proxy-snapshot.json",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Auth/AppleCredentialChecker.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/AppleCredentialMappingTests.swift",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Accessibility — Large Text Coach Safety",
+      "screenshotPath": "accessibility-large-text-coach-safety--iphone-16.png"
+    },
+    {
+      "name": "Accessibility — Large Text Today",
+      "screenshotPath": "accessibility-large-text-today--iphone-16.png"
+    },
+    {
+      "name": "Today - Almost There",
+      "screenshotPath": "today-almost-there--iphone-16.png"
+    },
+    {
+      "name": "Today - Day One (Connect)",
+      "screenshotPath": "today-day-one-connect--iphone-16.png"
+    },
+    {
+      "name": "Today - Fresh Start",
+      "screenshotPath": "today-fresh-start--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed",
+      "screenshotPath": "today-goal-crushed--iphone-16.png"
+    },
+    {
+      "name": "Today - Long Content",
+      "screenshotPath": "today-long-content--iphone-16.png"
+    },
+    {
+      "name": "Today - Midday Nudge",
+      "screenshotPath": "today-midday-nudge--iphone-16.png"
+    },
+    {
+      "name": "Today - Recovery Caution",
+      "screenshotPath": "today-recovery-caution--iphone-16.png"
+    },
+    {
+      "name": "Today - Zero-Step Morning",
+      "screenshotPath": "today-zero-step-morning--iphone-16.png"
+    },
+    {
+      "name": "Today — Custom Goal",
+      "screenshotPath": "today-custom-goal--iphone-16.png"
+    }
+  ]
+}
