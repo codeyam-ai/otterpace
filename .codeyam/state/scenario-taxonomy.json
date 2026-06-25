@@ -119,6 +119,38 @@
         "reason": "Only action is the Connect Apple Health CTA; its connected result is shown by the dashboard scenarios and its logic is covered by testConnectFlipsState."
       }
     },
+    "SettingsView": {
+      "empty": {
+        "status": "n-a",
+        "reason": "Settings is a fixed-section form (account, health, coach, reminders, goal); it has no zero-data empty state."
+      },
+      "single": {
+        "status": "n-a",
+        "reason": "Not a list view; there is no single-item boundary."
+      },
+      "typical": {
+        "status": "covered"
+      },
+      "many": {
+        "status": "n-a",
+        "reason": "Fixed sections, not a variable-length list; nothing to overflow or truncate."
+      },
+      "loading": {
+        "status": "n-a",
+        "reason": "Settings reads stored state synchronously; account-sync pushes run in the background and are non-blocking, with no loading UI."
+      },
+      "edge": {
+        "status": "n-a",
+        "reason": "Settings renders fixed app copy and toggle rows with no user-variable-length data; Dynamic Type edges are covered by the ContentView accessibility scenarios."
+      },
+      "error": {
+        "status": "n-a",
+        "reason": "Sync failures are non-fatal and silent (local stays the source of truth); Settings has no error UI state."
+      },
+      "key-interaction": {
+        "status": "added"
+      }
+    },
     "TodayDashboard": {
       "empty": {
         "status": "n-a",

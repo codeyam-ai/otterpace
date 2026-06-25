@@ -1,6 +1,6 @@
 {
   "name": "Settings — Reminders On",
-  "id": "baf020d8-2693-4a84-94c5-c65e7638bd4f",
+  "id": "0b35b394-0608-4a18-aab0-2c8537c084b5",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,22 +8,25 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbConnected": true,
       "rbGoalSteps": 10000,
-      "otterpaceRemindDailyMinute": 0,
-      "otterpaceRemindGoal": true,
-      "rbDate": "2026-06-22",
-      "rbPreviewMode": "",
-      "otterpaceRemindDailyHour": 18,
-      "otterpaceRemindInactivity": true,
-      "rbStartScreen": "",
-      "otterpaceRemindInactivityHours": 3,
-      "rbContentSize": "",
-      "rbShowSettings": true,
-      "rbStartTab": "today",
-      "rbSteps": 8000,
       "rbShowHistory": false,
+      "rbStartScreen": "",
+      "rbSyncHealth": false,
       "otterpaceRemindDaily": true,
+      "otterpaceRemindInactivityHours": 3,
+      "otterpaceRemindGoal": true,
+      "rbContentSize": "",
+      "rbSignedInUserID": "001234.abcDEF",
+      "rbDate": "2026-06-22",
+      "otterpaceRemindDailyHour": 18,
+      "rbStartTab": "today",
+      "rbSyncSettings": true,
+      "rbSteps": 8000,
+      "otterpaceRemindDailyMinute": 0,
+      "rbConnected": true,
+      "rbPreviewMode": "",
+      "otterpaceRemindInactivity": true,
+      "rbShowSettings": true,
       "rbShowWeeklyReview": false
     }
   },

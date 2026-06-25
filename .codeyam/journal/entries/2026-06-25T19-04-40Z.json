@@ -1,0 +1,179 @@
+{
+  "timestamp": "2026-06-25T19:04:40Z",
+  "title": "Persist Data to a User Account",
+  "type": "feature",
+  "userRequest": "## Summary\n\nToday all user data lives only on-device: the step goal and preferences in\n`UserDefaults` (`Preferences.swift`), the Apple sign-in identity in the Keychain,\nand HealthKit data that currently never leaves the device. `SessionStore`'s own\ncomment notes the Apple identifier exists for \"a future cross-device/sync story\"\nthat isn't built yet. This plan adds an **optional** account-backed persistence\nlayer: when the user is signed in with Apple, their data can sync to the existing\nSupabase backend, keyed to their account, so it carries across reinstalls and\ndevices. Sync is layered as **two independent opt-ins** — settings/preferences,\nand (separately, off by default) health/activity data — so the user, not the\napp, decides whether health data ever leaves the device. It reuses the exact\nSupabase-via-PostgREST pattern already used for Strava tokens.\n\n## Key Decisions\n\n- **Health-data sync is a user choice, off by default** — on-device-only stays\n  the default, but the user can explicitly opt in to syncing their health/activity\n  data to their account (and opt back out). Settings/preferences sync is a\n  separate, lighter opt-in. Two independent toggles rather than one all-or-nothing\n  switch, so a privacy-minded user can sync settings without health data.\n- **Explicit, informed consent for health sync** — because health data is\n  sensitive, opting in requires a clear consent moment that states what's\n  uploaded, where it's stored, and that they can turn it off and delete it. This\n  is the main UI/UX implication (see \"UI/UX implications\" below) and an App Store\n  / privacy expectation.\n- **Gate all sync behind Sign in with Apple** — sync is only available to\n  `signedIn` users, keyed to the stable Apple `userID`. Guests stay fully local.\n  This is why the plan **depends on `dogfood-durable-apple-sign-in`**: durable\n  identity is the prerequisite for meaningful sync.\n- **Reuse the Strava backend pattern, not a new stack** — add Supabase tables +\n  `api/account/*` serverless functions that mirror `api/_lib/strava.ts`\n  (PostgREST endpoint, service-role key, `merge-duplicates` upsert). No new SDKs\n  or infra.\n- **Separate the two payloads server-side** — settings/preferences and\n  health/activity data go in distinct tables/rows so revoking health sync (and\n  deleting the uploaded health data) never touches preferences, and so a\n  settings-only user never has a health row at all.\n- **Last-write-wins merge on `updated_at`** — simple, predictable conflict\n  handling for single-user blobs; avoids premature CRDT complexity.\n\n## UI/UX implications (because health sync is now opt-in)\n\n- **Settings**: two distinct toggles — \"Sync my settings\" and \"Sync my health &\n  activity data\" — each with its own last-synced status; the health toggle reads\n  as off/private by default.\n- **Consent sheet**: enabling health sync presents a one-time explainer (what's\n  uploaded, that it's tied to the Apple account, how to turn it off / delete it)\n  before the first upload.\n- **Turn-off = delete option**: turning health sync off offers to delete the\n  already-uploaded health data from the backend, with clear confirmation.\n- **Marketing/privacy copy changes**: the site's current absolute promise\n  (\"your Apple Health data stays on your device\") must become conditional — \"by\n  default; only synced if you turn it on.\" This touches `site/index.html` and\n  `site/privacy.html` and should be called out so the claim stays truthful.\n- **Status visibility**: a small indicator (last synced / syncing / off) so the\n  user always knows the current state of each sync.\n\n## Implementation\n\n### 1. Backend: account stores (prefs + optional health)\n\n**File**: `api/_lib/account.ts` (new) — Supabase helpers mirroring\n`api/_lib/strava.ts`: `getPrefs`/`upsertPrefs` and `getHealth`/`upsertHealth`/\n`deleteHealth`, against two tables keyed by the Apple user identifier:\n\n```\ncreate table account_prefs (\n  user_id    text primary key,\n  prefs      jsonb not null,\n  updated_at timestamptz default now()\n);\ncreate table account_health (        -- only written when the user opts in\n  user_id    text primary key,\n  health     jsonb not null,         -- derived activity/health snapshot\n  updated_at timestamptz default now()\n);\n```\n\n**New files**: `api/account/sync.ts` (prefs `GET`/`PUT`, last-write-wins) and\n`api/account/health.ts` (`GET`/`PUT`/`DELETE`, last-write-wins; `DELETE` removes\nthe row on opt-out). Validate input; the prefs endpoint must reject health fields\n(defense in depth) so prefs-only users never leak health data into the wrong row.\n\n**File**: doc under `docs/` — document the new tables + env reuse\n(`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`).\n\n### 2. iOS: account sync service\n\n**New file**: `Sources/AppCore/Account/AccountSyncService.swift`\n\nAn `async` service that, for a `signedIn` user, syncs whichever streams are\nenabled: a `SyncablePreferences` payload always-available behind the settings\ntoggle, and a `SyncableHealthSnapshot` payload only when the health toggle is on.\nEach stream pulls on sign-in/launch and pushes on change; merge by `updatedAt`\n(last-write-wins). Network failures are non-fatal — local values remain the\nsource of truth offline. Make the HTTP seam injectable so merge logic is\nunit-testable without a live backend. Health upload is strictly gated on the\nopt-in flag at the call site (not just the UI).\n\n### 3. Consent + opt-in/out flags\n\n**New file**: `Sources/AppCore/Account/SyncConsent.swift` (or extend\n`Preferences.swift`)\n\nPersist two independent flags (settings-sync enabled, health-sync enabled),\ndefaulting health to off. Enabling health sync requires passing through the\nconsent step before the first push; disabling triggers the optional\ndelete-remote-health flow.\n\n### 4. Wire into preferences + session\n\n**File**: `Sources/AppCore/Preferences.swift`, `Sources/AppCore/Auth/SessionStore.swift`\n\n- Route `Preferences` writes (esp. `setGoalSteps`) through a path that schedules a\n  prefs push when settings sync is on.\n- On `signIn`/successful revalidation, pull enabled streams and reconcile with\n  local. On `deleteAccount`, delete both remote rows and revert to local-only.\n\n### 5. Settings: two toggles, consent, status\n\n**File**: `Sources/AppCore/SettingsView.swift`\n\nIn the Account card (only when `signedIn`): a \"Sync my settings\" toggle and a\nseparate \"Sync my health & activity data\" toggle (off by default) that presents\nthe consent sheet on enable and the delete-on-disable confirmation on turn-off,\neach with a last-synced status line. Reuse the existing `row`/`actionRow`/`card`\nhelpers; guests see a \"sign in to sync\" affordance instead.\n\n### 6. Privacy + marketing disclosure\n\n**File**: `site/privacy.html`, `site/index.html`\n\nUpdate the \"Accounts & Sign in with Apple\" privacy section and the homepage's\non-device claim so they're conditional: settings and (only if the user opts in)\nhealth/activity data sync to the backend keyed to the Apple identifier; health\nsync is off by default and deletable. Keep the analytics statement (health is\nnever sent to analytics) unchanged.\n\n### 7. Tests\n\n**File**: `Tests/AppCoreTests/AccountSyncTests.swift` (new)\n\nXCTest coverage of: prefs merge (remote-newer / local-newer / no-remote);\n`SyncablePreferences` and `SyncableHealthSnapshot` round-trips; the guard that\nguests never sync; and crucially that **health never uploads while the health\nopt-in is off** and that opt-out deletes the remote health row. Use the injectable\nHTTP seam; register via `codeyam-editor editor reconcile-registry --auto-apply`.\n\n## Reused existing code\n\n- `api/_lib/strava.ts` — the Supabase PostgREST + service-role + upsert pattern\n  that `api/_lib/account.ts` mirrors (incl. `supabaseHeaders`, merge-duplicates).\n- `SessionStore` / `SessionState.signedIn(userID:)` from\n  `Sources/AppCore/Auth/SessionStore.swift` — sync identity (depends on\n  `dogfood-durable-apple-sign-in` for durable identity).\n- `Preferences` from `Sources/AppCore/Preferences.swift` — the local prefs this\n  layer mirrors; home for the opt-in flags.\n- `StravaDeviceKey` pattern in `Sources/AppCore/Strava/StravaService.swift` — the\n  existing anonymous-key + injectable `TokenStoring` precedent for backend keys.\n- `SettingsView` `card`/`row`/`actionRow` helpers — for the sync toggles + consent.\n\n## Scenarios to Demonstrate\n\n- **Settings sync on, health off (default)**: change the step goal, \"reinstall\" →\n  goal restored from the account; no health data uploaded.\n- **Health sync opt-in flow**: enabling the health toggle shows the consent sheet,\n  then health snapshot syncs; status shows \"synced\".\n- **Health sync opt-out + delete**: turning health sync off offers to delete the\n  remote health data and confirms it's gone.\n- **Guest stays local**: guest changes settings → nothing syncs; no account UI.\n- **Conflict resolution**: remote newer than local → remote wins on pull (and\n  vice versa).\n- **Offline**: backend unreachable → local data still works, sync retries later.\n- **Account deletion**: `deleteAccount` clears both remote rows and reverts to\n  local-only.",
+  "description": "Added optional, account-backed sync for signed-in (Apple) users, keyed to the stable Apple userID and reusing the Strava Supabase/PostgREST pattern. Two independent opt-ins — settings sync, and health/activity sync (off by default, behind a one-time consent sheet and deletable on opt-out) — keep the user in control of whether health data ever leaves the device. New backend stores (api/_lib/account.ts plus api/account/sync.ts and api/account/health.ts) do last-write-wins with the prefs endpoint rejecting health fields; the iOS AccountSyncService hard-gates every push on sign-in and the relevant opt-in, with the merge/consent logic unit-tested via an injectable transport. Settings gained the two toggles, consent sheet, and delete-on-opt-out, and the privacy/marketing copy is now conditional.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/data-structure.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/dogfood-account-data-sync.md\t.codeyam/plans/completed/dogfood-account-data-sync.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-reminders-on.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/provider-auth-verdict.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/scenario-taxonomy.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Auth/SessionStore.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/SettingsView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "docs/testflight-prep.md",
+      "status": "modified"
+    },
+    {
+      "path": "site/index.html",
+      "status": "modified"
+    },
+    {
+      "path": "site/privacy.html",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-account-sync.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-health-sync-on.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Account/AccountSyncService.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Account/AccountSyncTransport.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Account/SyncConsent.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/AccountSyncTests.swift",
+      "status": "added"
+    },
+    {
+      "path": "api/_lib/account.ts",
+      "status": "added"
+    },
+    {
+      "path": "api/account/health.ts",
+      "status": "added"
+    },
+    {
+      "path": "api/account/sync.ts",
+      "status": "added"
+    },
+    {
+      "path": "docs/account-sync.md",
+      "status": "added"
+    },
+    {
+      "path": "test/api/account-handlers.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "test/api/account.test.ts",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Settings",
+      "screenshotPath": "settings--iphone-16.png"
+    },
+    {
+      "name": "Settings — Account Sync",
+      "screenshotPath": "settings-account-sync--iphone-16.png"
+    },
+    {
+      "name": "Settings — Health Sync On",
+      "screenshotPath": "settings-health-sync-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders On",
+      "screenshotPath": "settings-reminders-on--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 112,
+    "passed": 112,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 112,
+        "passed": 112
+      }
+    ]
+  }
+}

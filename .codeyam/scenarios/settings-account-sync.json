@@ -1,0 +1,24 @@
+{
+  "name": "Settings — Account Sync",
+  "id": "d7695af5-36c2-4f14-b84d-a8910364f6c0",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbConnected": true,
+      "rbDate": "2026-06-22",
+      "rbShowSettings": true,
+      "rbSignedInUserID": "001234.abcDEF",
+      "rbSyncSettings": false,
+      "rbStartTab": "today",
+      "rbSteps": 8000,
+      "rbGoalSteps": 10000,
+      "rbSyncHealth": false
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/SettingsView.swift"
+}

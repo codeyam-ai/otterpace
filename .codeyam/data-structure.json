@@ -58,5 +58,27 @@
       { "name": "recommendationType", "type": "string", "required": true, "description": "move | walk | run | rest | celebrate | caution" },
       { "name": "safetyFlag", "type": "boolean", "required": false, "description": "True when an injury-aware caution applies (e.g. spiking load, reported pain)" }
     ]
+  },
+  {
+    "name": "AccountPrefs",
+    "description": "Optional account-backed copy of a signed-in user's settings/preferences (e.g. step goal), synced to the Supabase backend keyed to the stable Apple userID so it carries across reinstalls/devices. Written only when the user enables the 'Sync my settings' opt-in; guests never have a row. Mirrors local Preferences (UserDefaults) via last-write-wins on updated_at. Reuses the Strava PostgREST + service-role pattern. Contains NO health data by design (the prefs endpoint rejects health fields).",
+    "category": "datastore",
+    "order": 5,
+    "fields": [
+      { "name": "user_id", "type": "string", "isId": true, "required": true, "description": "Stable Apple Sign in with Apple userID; primary key" },
+      { "name": "prefs", "type": "json", "required": true, "description": "JSON blob of synced settings/preferences (e.g. goalSteps, reminder prefs)" },
+      { "name": "updated_at", "type": "string", "required": true, "description": "ISO timestamp; drives last-write-wins merge" }
+    ]
+  },
+  {
+    "name": "AccountHealth",
+    "description": "Optional account-backed snapshot of a signed-in user's health/activity data, synced to the Supabase backend keyed to the Apple userID. OFF BY DEFAULT — written only after the user passes the explicit consent step and enables the separate 'Sync my health & activity data' opt-in. Stored in a distinct table from AccountPrefs so revoking/deleting health sync never touches preferences; turning health sync off deletes this row. Last-write-wins on updated_at. Never sent to analytics.",
+    "category": "datastore",
+    "order": 6,
+    "fields": [
+      { "name": "user_id", "type": "string", "isId": true, "required": true, "description": "Stable Apple userID; primary key" },
+      { "name": "health", "type": "json", "required": true, "description": "JSON blob of the derived health/activity snapshot uploaded only on opt-in" },
+      { "name": "updated_at", "type": "string", "required": true, "description": "ISO timestamp; drives last-write-wins merge" }
+    ]
   }
 ]

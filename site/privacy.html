@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Privacy Policy — Otterpace</title>
-  <meta name="description" content="Otterpace privacy policy: your health data stays on your device. No tracking, no accounts required, no data sold." />
+  <meta name="description" content="Otterpace privacy policy: your health data stays on your device by default, synced only if you turn it on. No tracking, no accounts required, no data sold." />
   <link rel="icon" href="otterpace-icon.png" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -14,18 +14,20 @@
     <h1>Privacy Policy</h1>
     <p class="updated">Last updated: June 24, 2026</p>
 
-    <p>Otterpace is designed to be private, and it's open source so you can verify it. The short version: <strong>your Apple Health data stays on your device</strong> and is never uploaded. We use anonymous product analytics to improve the app, and a couple of optional integrations (Strava, an AI coach) send data only when you choose to turn them on. We don't sell your data and we don't show ads.</p>
+    <p>Otterpace is designed to be private, and it's open source so you can verify it. The short version: <strong>your Apple Health data stays on your device by default</strong> — it's only synced to your account if you turn on health sync, and even then it's never sent to analytics. We use anonymous product analytics to improve the app, and a few optional integrations (Strava, an AI coach, account sync) send data only when you choose to turn them on. We don't sell your data and we don't show ads.</p>
 
     <h2>Health data</h2>
-    <p>With your permission, Otterpace reads activity data from Apple Health — your step count, walking/running distance, active energy, and workouts — to show your dashboard and generate coaching. This data is:</p>
+    <p>With your permission, Otterpace reads activity data from Apple Health — your step count, walking/running distance, active energy, and workouts — to show your dashboard and generate coaching. By default this data is:</p>
     <ul>
       <li>read <strong>on your device only</strong>, and used there to power the app;</li>
       <li><strong>never transmitted</strong> to us or any third party, and never stored on a server;</li>
       <li>used only while you use the app — you can revoke access anytime in iOS Settings → Privacy &amp; Security → Health.</li>
     </ul>
+    <p>If you are signed in and explicitly turn on <strong>health &amp; activity sync</strong> (off by default), a snapshot of this activity data is uploaded to your Otterpace account so it follows you across devices. You're shown what's included before the first upload, and you can turn it off and delete the uploaded data at any time in <strong>Settings → Account</strong>. It's never sold or sent to analytics.</p>
 
     <h2>Accounts &amp; Sign in with Apple</h2>
-    <p>No account is required to use Otterpace. If you choose <strong>Sign in with Apple</strong>, the app stores only the anonymous user identifier Apple provides, kept locally in your device's Keychain so you stay signed in. We don't retain your name or email, and there is no backend that receives it. You can sign out or delete this local identity anytime in <strong>Settings → Account</strong>.</p>
+    <p>No account is required to use Otterpace. If you choose <strong>Sign in with Apple</strong>, the app stores the anonymous user identifier Apple provides, kept locally in your device's Keychain so you stay signed in. We don't retain your name or email.</p>
+    <p>Signing in also unlocks <strong>optional account sync</strong>, keyed to that anonymous Apple identifier. There are two independent opt-ins, both off until you turn them on: <strong>settings sync</strong> (your step goal and preferences) and <strong>health &amp; activity sync</strong> (described above). Synced data is stored privately on our backend and can be deleted at any time. You can sign out, turn off either sync, or delete this account and its synced data anytime in <strong>Settings → Account</strong>.</p>
 
     <h2>Analytics</h2>
     <p>We use <strong>PostHog</strong> to understand how the app is used — which screens are opened, which features are connected — so we can improve it. These events are tied to a <strong>random anonymous identifier</strong> stored on your device, not to your name, email, or Apple ID. <strong>Your health and activity data is never sent to analytics.</strong> The <a href="https://otterpace.com">otterpace.com</a> website also uses <strong>Vercel Web Analytics</strong>, which counts page views anonymously — no cookies, no personal identifiers.</p>

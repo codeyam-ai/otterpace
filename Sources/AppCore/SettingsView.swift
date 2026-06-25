@@ -13,6 +13,15 @@ public struct SettingsView: View {
 
     @State private var confirmDelete = false
 
+    // Optional account-backed sync (signed-in only). Two independent opt-ins:
+    // settings, and (off by default, consent-gated) health/activity data.
+    private let consent = SyncConsentStore()
+    private let accountSync = AccountSyncService()
+    @State private var settingsSyncOn = false
+    @State private var healthSyncOn = false
+    @State private var showHealthConsent = false
+    @State private var confirmHealthOff = false
+
     // BYO Anthropic key for the real AI coach (stored on-device via the Keychain).
     private let coachKeys = CoachKeyStore()
     @State private var coachConnected = false
@@ -61,13 +70,33 @@ public struct SettingsView: View {
         .onAppear {
             coachConnected = coachKeys.isConnected
             reminders = ReminderSettings.load()
+            consent.applySeededPreviewIfPresent()
+            settingsSyncOn = consent.settingsSyncEnabled
+            healthSyncOn = consent.healthSyncEnabled
             Task { notifAuthorized = await reminderScheduler.isAuthorized() }
         }
         .alert("Delete account?", isPresented: $confirmDelete) {
-            Button("Delete", role: .destructive) { session.deleteAccount() }
+            Button("Delete", role: .destructive) {
+                Task { await accountSync.purgeOnAccountDeletion(session: session.state) }
+                session.deleteAccount()
+            }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This removes your sign-in from this device. Your Health data is never stored by Otterpace, so nothing else is deleted.")
+            Text("This removes your sign-in from this device and deletes any data synced to your account. Health data is only ever synced if you turned it on.")
+        }
+        .sheet(isPresented: $showHealthConsent) { healthConsentSheet }
+        .confirmationDialog("Turn off health sync?", isPresented: $confirmHealthOff, titleVisibility: .visible) {
+            Button("Turn off & delete synced data", role: .destructive) {
+                healthSyncOn = false
+                Task { await accountSync.disableHealthSync(deleteRemote: true, session: session.state) }
+            }
+            Button("Turn off, keep synced data") {
+                healthSyncOn = false
+                Task { await accountSync.disableHealthSync(deleteRemote: false, session: session.state) }
+            }
+            Button("Cancel", role: .cancel) { healthSyncOn = true }
+        } message: {
+            Text("Stop syncing your health & activity data to your account. You can also delete what's already been uploaded.")
         }
     }
 
@@ -95,6 +124,7 @@ public struct SettingsView: View {
             switch session.state {
             case .signedIn:
                 row(icon: "applelogo", tint: Palette.ink, title: "Signed in with Apple")
+                syncSection
                 actionRow("Sign out", icon: "rectangle.portrait.and.arrow.right", tint: Palette.sky) {
                     session.signOut()
                 }
@@ -103,10 +133,110 @@ public struct SettingsView: View {
                 }
             case .guest, .undecided:
                 row(icon: "person.crop.circle", tint: Palette.subtle, title: "Using Otterpace as a guest")
+                Text("Sign in to sync your settings across devices. Health data stays on-device unless you turn it on.")
+                    .font(Typography.caption).foregroundColor(Palette.subtle)
+                    .fixedSize(horizontal: false, vertical: true)
                 actionRow("Sign in with Apple", icon: "applelogo", tint: Palette.ink) {
                     session.presentSignIn()
                 }
             }
+        }
+    }
+
+    // The two independent sync opt-ins, shown only when signed in. Settings sync
+    // is a light toggle; health sync is off by default and routes through a
+    // consent sheet on enable and a delete-or-keep choice on disable.
+    @ViewBuilder private var syncSection: some View {
+        Divider().opacity(0.3)
+        VStack(alignment: .leading, spacing: 6) {
+            Toggle(isOn: settingsSyncBinding) {
+                Text("Sync my settings").font(Typography.body).foregroundColor(Palette.ink)
+            }
+            .tint(Palette.brand)
+            Text(settingsSyncOn ? "On — your step goal & preferences sync to your account."
+                                : "Off — settings stay on this device.")
+                .font(Typography.caption).foregroundColor(Palette.subtle)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        VStack(alignment: .leading, spacing: 6) {
+            Toggle(isOn: healthSyncBinding) {
+                Text("Sync my health & activity data").font(Typography.body).foregroundColor(Palette.ink)
+            }
+            .tint(Palette.brand)
+            Text(healthSyncOn ? "On — your activity snapshot syncs to your account. You can turn this off and delete it anytime."
+                              : "Off (private) — your health data stays on this device.")
+                .font(Typography.caption).foregroundColor(healthSyncOn ? Palette.subtle : Palette.go)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var settingsSyncBinding: Binding<Bool> {
+        Binding(get: { settingsSyncOn }, set: { on in
+            settingsSyncOn = on
+            consent.setSettingsSyncEnabled(on)
+            if on {
+                Task { await accountSync.pushPreferences(SyncablePreferences(goalSteps: model.today.goalSteps),
+                                                         session: session.state) }
+            }
+        })
+    }
+
+    private var healthSyncBinding: Binding<Bool> {
+        Binding(get: { healthSyncOn }, set: { on in
+            if on {
+                // Enabling requires the one-time consent moment first.
+                if consent.healthConsentAcknowledged {
+                    enableHealthSync()
+                } else {
+                    showHealthConsent = true   // sheet decides; toggle flips on accept
+                }
+            } else {
+                confirmHealthOff = true        // dialog decides delete-or-keep
+            }
+        })
+    }
+
+    private func enableHealthSync() {
+        consent.acknowledgeHealthConsent()
+        consent.setHealthSyncEnabled(true)
+        healthSyncOn = true
+        let snapshot = SyncableHealthSnapshot(
+            steps: model.today.steps,
+            distanceMiles: model.today.distanceMiles,
+            activeMinutes: model.today.activeMinutes,
+            activeEnergyKcal: model.today.activeEnergyKcal
+        )
+        Task { await accountSync.pushHealth(snapshot, session: session.state) }
+    }
+
+    // One-time explainer shown before the first health upload: what's uploaded,
+    // where it goes, and that it's reversible + deletable.
+    @ViewBuilder private var healthConsentSheet: some View {
+        ZStack {
+            LinearGradient(colors: [Palette.bgTop, Palette.bgBottom], startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 10) {
+                    PuffyBuddy(mood: .ready, size: 34)
+                    Text("Sync health data?").font(Typography.title3).foregroundColor(Palette.ink)
+                }
+                Text("If you turn this on, a snapshot of your activity — steps, distance, active minutes and energy — is uploaded to your Otterpace account, tied to your Apple sign-in, so it follows you across devices.")
+                    .font(Typography.callout).foregroundColor(Palette.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("It's stored privately on Otterpace's backend, never sold or sent to analytics, and you can turn it off and delete it at any time.")
+                    .font(Typography.callout).foregroundColor(Palette.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer()
+                actionRow("Turn on & sync", icon: "checkmark.seal.fill", tint: Palette.brand) {
+                    enableHealthSync()
+                    showHealthConsent = false
+                }
+                actionRow("Not now", icon: "xmark", tint: Palette.subtle) {
+                    healthSyncOn = false
+                    showHealthConsent = false
+                }
+            }
+            .padding(24)
         }
     }
 
@@ -280,7 +410,7 @@ public struct SettingsView: View {
             HStack(spacing: 8) {
                 ForEach(UserPreferences.goalOptions, id: \.self) { goal in
                     let selected = model.today.goalSteps == goal
-                    Button { model.setGoalSteps(goal) } label: {
+                    Button { setGoal(goal) } label: {
                         Text("\(goal / 1000)k")
                             .font(Typography.captionStrong)
                             .foregroundColor(selected ? .white : Palette.ink)
@@ -296,6 +426,14 @@ public struct SettingsView: View {
         }
     }
 
+    /// Apply a new step goal locally, then push it to the account if settings
+    /// sync is on (a no-op for guests / sync-off — the local value is authoritative).
+    private func setGoal(_ goal: Int) {
+        model.setGoalSteps(goal)
+        guard settingsSyncOn else { return }
+        Task { await accountSync.pushPreferences(SyncablePreferences(goalSteps: goal), session: session.state) }
+    }
+
     // MARK: Privacy
 
     @ViewBuilder private var privacyCard: some View {
@@ -303,7 +441,7 @@ public struct SettingsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("What Buddy uses")
                     .font(Typography.captionStrong).foregroundColor(Palette.subtle)
-                Text("Otterpace reads your steps, distance, and active energy from Apple Health, and uses them on your device to coach you. Your health data never leaves your device and is never sent to a server.")
+                Text("Otterpace reads your steps, distance, and active energy from Apple Health, and uses them on your device to coach you. Your health data stays on your device by default — it's only synced to your account if you turn on health sync, and it's never sent to analytics.")
                     .font(Typography.callout).foregroundColor(Palette.ink)
                     .fixedSize(horizontal: false, vertical: true)
             }

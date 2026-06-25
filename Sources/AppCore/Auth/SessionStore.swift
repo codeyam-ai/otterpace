@@ -42,7 +42,12 @@ public final class SessionStore: ObservableObject {
                 wantsSignInPreview: Bool = UserDefaults.standard.string(forKey: "rbStartScreen") == "signin") {
         self.tokens = tokens
         self.defaults = defaults
-        if let id = tokens.read(Self.account) {
+        // Scenario/preview hook: a captured scenario can seed `rbSignedInUserID`
+        // to render the signed-in states (e.g. the account-sync Settings UI)
+        // without a real Sign in with Apple. Production never carries this key.
+        if let previewID = defaults.string(forKey: "rbSignedInUserID"), !previewID.isEmpty {
+            state = .signedIn(userID: previewID)
+        } else if let id = tokens.read(Self.account) {
             state = .signedIn(userID: id)
         } else if defaults.bool(forKey: Self.guestKey) {
             state = .guest

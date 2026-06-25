@@ -1,5 +1,11 @@
 [
   {
+    "description": "Optional account-sync service for signed-in users: gates every push on sign-in and the relevant opt-in, hard-gates health upload behind the health opt-in, reconciles prefs last-write-wins, and purges remote data on account deletion.",
+    "filePath": "Sources/AppCore/Account/AccountSyncService.swift",
+    "name": "AccountSyncService",
+    "testFile": "Tests/AppCoreTests/AccountSyncTests.swift"
+  },
+  {
     "description": "Pure deterministic grouping behind the Activity History screen: rolls a newest-first workout list into per-week groups (Monday-start, POSIX calendar) with training-load basics — weekly mileage, run count, and rest days. Drops workouts with unparseable dates.",
     "filePath": "Sources/AppCore/ActivityHistory.swift",
     "name": "ActivityHistory",
@@ -344,6 +350,18 @@
     }
   },
   {
+    "description": "Persists the two independent sync opt-ins (settings, and health off-by-default) plus the one-time health-consent acknowledgement; health sync cannot be enabled without consent.",
+    "filePath": "Sources/AppCore/Account/SyncConsent.swift",
+    "name": "SyncConsentStore",
+    "testFile": "Tests/AppCoreTests/AccountSyncTests.swift"
+  },
+  {
+    "description": "Pure last-write-wins reconciliation of a local value against an optional remote one, returning the winner plus whether to push local or adopt remote.",
+    "filePath": "Sources/AppCore/Account/AccountSyncService.swift",
+    "name": "SyncMerge",
+    "testFile": "Tests/AppCoreTests/AccountSyncTests.swift"
+  },
+  {
     "description": "The full Today surface composed from the header, Buddy summary, stats row, and the coach, latest-activity, and weekly-load cards. Exercised by the Today dashboard application scenarios.",
     "filePath": "Sources/AppCore/TodayView.swift",
     "name": "TodayDashboard",
@@ -377,6 +395,15 @@
     "untestabilityReason": {
       "justification": "A set of static Font constants (design tokens); no branching logic to test, exercised visually via scenarios.",
       "kind": "type-only"
+    }
+  },
+  {
+    "description": "Live URLSession-backed HTTP transport for the account/* sync endpoints; the network IO seam behind the injectable AccountSyncTransport protocol.",
+    "filePath": "Sources/AppCore/Account/AccountSyncTransport.swift",
+    "name": "URLSessionAccountSyncTransport",
+    "untestabilityReason": {
+      "justification": "URLSession network boundary - the merge/gating logic it serves is unit-tested via the injectable transport seam in AccountSyncTests",
+      "kind": "platform-glue"
     }
   },
   {
@@ -464,6 +491,12 @@
     }
   },
   {
+    "description": "Deletes the user's account_health row entirely - the opt-out and delete-my-health-data path; tolerates a 404.",
+    "filePath": "api/_lib/account.ts",
+    "name": "deleteHealth",
+    "testFile": "test/api/account.test.ts"
+  },
+  {
     "description": "Deletes a device's Strava token row from Supabase, tolerating a 404 and throwing on other errors.",
     "filePath": "api/_lib/strava.ts",
     "name": "deleteToken",
@@ -506,10 +539,34 @@
     "testFile": "test/api/strava.test.ts"
   },
   {
+    "description": "Reads the signed-in user's account_health row from Supabase, or null when none exists.",
+    "filePath": "api/_lib/account.ts",
+    "name": "getHealth",
+    "testFile": "test/api/account.test.ts"
+  },
+  {
+    "description": "Reads the signed-in user's account_prefs row from Supabase, or null when none exists.",
+    "filePath": "api/_lib/account.ts",
+    "name": "getPrefs",
+    "testFile": "test/api/account.test.ts"
+  },
+  {
     "description": "Reads a device's stored Strava token row from Supabase, returning null when none exists and throwing on a failed read.",
     "filePath": "api/_lib/strava.ts",
     "name": "getToken",
     "testFile": "test/api/strava.test.ts"
+  },
+  {
+    "description": "Serverless endpoint for the optional health sync stream: GET reads the health row, PUT does a last-write-wins upsert, DELETE removes the row on opt-out.",
+    "filePath": "api/account/health.ts",
+    "name": "handler",
+    "testFile": "test/api/account-handlers.test.ts"
+  },
+  {
+    "description": "Serverless endpoint for the settings/preferences sync stream: GET reads the prefs row, PUT does a last-write-wins upsert and rejects any payload carrying health fields.",
+    "filePath": "api/account/sync.ts",
+    "name": "handler",
+    "testFile": "test/api/account-handlers.test.ts"
   },
   {
     "description": "Vercel serverless endpoint for the AI coach: validates the BYO Anthropic key and question, calls Claude with the injury-aware system prompt and structured output, and returns a CoachReply, degrading gracefully on refusal or malformed output and mapping 401/429 upstream errors.",
@@ -542,6 +599,18 @@
     "testFile": "test/api/strava-handlers.test.ts"
   },
   {
+    "description": "Builds the Supabase PostgREST URL for the account_health table from SUPABASE_URL.",
+    "filePath": "api/_lib/account.ts",
+    "name": "healthEndpoint",
+    "testFile": "test/api/account.test.ts"
+  },
+  {
+    "description": "Last-write-wins decision shared by both sync streams: true when there is no stored row or the incoming updated_at is strictly newer than the stored one.",
+    "filePath": "api/_lib/account.ts",
+    "name": "incomingWins",
+    "testFile": "test/api/account.test.ts"
+  },
+  {
     "description": "Maps a single Strava activity to a MappedWorkout, returning null when the date is missing or malformed; computes miles and pace.",
     "filePath": "api/_lib/strava.ts",
     "name": "mapActivity",
@@ -558,6 +627,18 @@
     "filePath": "api/_lib/strava.ts",
     "name": "pacePerMile",
     "testFile": "test/api/strava.test.ts"
+  },
+  {
+    "description": "Defense-in-depth guard: true when a settings/preferences payload carries any health field, so the prefs endpoint can reject it and never leak health data into the wrong row.",
+    "filePath": "api/_lib/account.ts",
+    "name": "prefsContainHealthFields",
+    "testFile": "test/api/account.test.ts"
+  },
+  {
+    "description": "Builds the Supabase PostgREST URL for the account_prefs table from SUPABASE_URL.",
+    "filePath": "api/_lib/account.ts",
+    "name": "prefsEndpoint",
+    "testFile": "test/api/account.test.ts"
   },
   {
     "description": "Converts an ISO yyyy-MM-dd date into a short weekday-and-day label such as Mon, Jun 22, returning the input unchanged when it is not a valid ISO date.",
@@ -594,6 +675,18 @@
     "filePath": "api/_lib/strava.ts",
     "name": "tokensEndpoint",
     "testFile": "test/api/strava.test.ts"
+  },
+  {
+    "description": "Upserts the user's health/activity snapshot row into account_health via merge-duplicates.",
+    "filePath": "api/_lib/account.ts",
+    "name": "upsertHealth",
+    "testFile": "test/api/account.test.ts"
+  },
+  {
+    "description": "Upserts the user's settings/preferences row into account_prefs via merge-duplicates.",
+    "filePath": "api/_lib/account.ts",
+    "name": "upsertPrefs",
+    "testFile": "test/api/account.test.ts"
   },
   {
     "description": "Upserts a device's Strava token row into Supabase using merge-duplicates, throwing on a non-OK response.",

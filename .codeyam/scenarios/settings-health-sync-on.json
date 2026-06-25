@@ -1,0 +1,24 @@
+{
+  "name": "Settings — Health Sync On",
+  "id": "4b321266-d4e6-4235-b9d5-d28a268bcd63",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbShowSettings": true,
+      "rbDate": "2026-06-22",
+      "rbGoalSteps": 12000,
+      "rbSignedInUserID": "001234.abcDEF",
+      "rbSteps": 8000,
+      "rbSyncHealth": true,
+      "rbStartTab": "today",
+      "rbSyncSettings": true,
+      "rbConnected": true
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/SettingsView.swift"
+}

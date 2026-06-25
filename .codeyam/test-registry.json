@@ -1,6 +1,125 @@
 {
   "tests": [
     {
+      "description": "Turning health sync off with keep-data does not delete the remote health row.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testDisableHealthSyncKeepDoesNotDelete",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Turning health sync off with delete removes the remote health row and clears the opt-in.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testDisableHealthSyncWithDeleteRemovesRemoteRow",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A guest never pushes health data even when the health opt-in is on.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testGuestNeverPushesHealth",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A guest never pushes preferences even when settings sync is enabled.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testGuestNeverPushesPreferences",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Health never uploads while the health opt-in is off, even for a signed-in user.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testHealthNeverUploadsWhileOptInOff",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A SyncableHealthSnapshot encodes and decodes back to an equal value.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testHealthSnapshotRoundTrip",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Health sync cannot be enabled without first acknowledging the consent step.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testHealthSyncCannotEnableWithoutConsent",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Health uploads only when signed in and the health opt-in is on.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testHealthUploadsOnlyWhenOptInOn",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "With equal timestamps local wins and nothing is pushed when the values match.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testMergeEqualTimestampsLocalWinsNoPushWhenSame",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Last-write-wins: a local-newer merge keeps and pushes the local value.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testMergeLocalNewerPushesLocal",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Last-write-wins: with no remote row the local value wins and is pushed.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testMergeNoRemotePushesLocal",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Last-write-wins: a remote-newer merge adopts the remote value.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testMergeRemoteNewerAdoptsRemote",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A SyncablePreferences encodes and decodes back to an equal value.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testPreferencesRoundTrip",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Account deletion purges the remote health row and forgets both sync opt-ins.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testPurgeOnAccountDeletion",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Reconcile adopts remote preferences when the remote row is newer than local.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testReconcileAdoptsRemoteWhenNewer",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Settings push is blocked when the settings-sync toggle is off.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testSettingsPushBlockedWhenToggleOff",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Settings push happens when signed in and settings sync is enabled.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testSettingsPushHappensWhenSignedInAndOn",
+      "registeredAt": "2026-06-25T18:16:25Z",
+      "runner": "tests"
+    },
+    {
       "description": "Workouts in different weeks produce separate groups, newest week first.",
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
