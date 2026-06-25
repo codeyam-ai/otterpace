@@ -655,6 +655,13 @@
       "runner": "tests"
     },
     {
+      "description": "clampGoal pins out-of-range goals to the min and max bounds and rounds in-range values to the nearest 500 increment.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testClampGoalBoundsAndRounding",
+      "registeredAt": "2026-06-25T20:47:45Z",
+      "runner": "tests"
+    },
+    {
       "description": "Connecting Apple Health flips the model from the day-one hero into the dashboard.",
       "file": "Tests/AppCoreTests/ModelTests.swift",
       "format": "junit-xml",
@@ -698,6 +705,13 @@
       "runner": "tests"
     },
     {
+      "description": "isPreset returns true for a quick-preset goal value and false for a custom non-preset value.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testIsPresetMatchesOptions",
+      "registeredAt": "2026-06-25T20:47:45Z",
+      "runner": "tests"
+    },
+    {
       "description": "With no keys seeded the reader yields the empty disconnected state with a default 10k goal.",
       "file": "Tests/AppCoreTests/ModelTests.swift",
       "format": "junit-xml",
@@ -713,6 +727,13 @@
       "key": "AppCoreTests.ModelTests › testReadStateFromFlatDefaults",
       "line": 57,
       "registeredAt": "2026-06-22T19:41:43.402746+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Setting a non-preset custom goal updates the live TodayState and persists it through UserPreferences.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testSetCustomGoalPersistsAndApplies",
+      "registeredAt": "2026-06-25T20:47:45Z",
       "runner": "tests"
     },
     {

@@ -1,0 +1,139 @@
+{
+  "timestamp": "2026-06-25T21:16:20Z",
+  "title": "Custom Step Goal in Settings",
+  "type": "feature",
+  "userRequest": "## Summary\n\nThe **Daily step goal** card in Settings currently offers only five fixed preset\ncapsules — `6k 8k 10k 12k 15k` (`UserPreferences.goalOptions`). Users who want a\ntarget that isn't one of those (e.g. 9,500 or 20,000) can't set it. This adds a\n**Custom** option to the same card: tapping it reveals an inline stepper to dial in\nany goal within sensible bounds, rounded to a clean increment. The custom value\npersists and syncs through the exact same path the presets already use\n(`model.setGoalSteps` → `UserPreferences` + optional `accountSync.pushPreferences`),\nso no new storage or sync schema is needed. When the active goal isn't one of the\npresets, the card shows the Custom chip as selected (with the live value) and opens\nthe editor automatically.\n\n## Key Decisions\n\n- **Stepper, not a free-text field** — a `Stepper` with a fixed increment keeps\n  input on-rail (no keyboard, no parsing/garbage values, bounds enforced by\n  construction) and matches the card's existing tap-only, capsule-based feel.\n  Decrement/increment by **500**.\n- **Reuse the existing persistence + sync path** — `model.setGoalSteps(_:)` already\n  writes `UserPreferences` and applies to the dashboard immediately, and\n  `setGoal(_:)` in `SettingsView` already pushes to the account when settings sync\n  is on. The custom value flows through these unchanged; `SyncablePreferences`\n  stays `{ goalSteps: Int }`, so no migration and account sync \"just works\".\n- **Clamp + round centrally in `UserPreferences`** — add `minGoal`, `maxGoal`,\n  `goalIncrement`, and a `clampGoal(_:)` helper so the bounds live in one place and\n  are unit-testable, rather than scattering magic numbers in the view. Bounds:\n  **1,000 … 50,000**, rounded to the nearest **500**.\n- **Presets stay** — Custom is additive; the five quick presets remain the fast\n  path. A goal that happens to equal a preset still highlights that preset, not\n  Custom (`isPreset` decides).\n\n## Implementation\n\n### 1. Goal bounds + clamp/preset helpers\n\n**File**: `Sources/AppCore/Preferences.swift`\n\nExtend `UserPreferences` with the bounds and helpers the custom editor needs:\n\n- `public static let minGoal = 1000`\n- `public static let maxGoal = 50000`\n- `public static let goalIncrement = 500`\n- `public static func clampGoal(_ value: Int) -> Int` — clamp to `minGoal…maxGoal`,\n  then round to the nearest `goalIncrement`.\n- `public static func isPreset(_ value: Int) -> Bool` — `goalOptions.contains(value)`.\n\nLeave `goalSteps` / `setGoalSteps` / `goalOptions` / `defaultGoal` as-is.\n\n### 2. Custom entry in the Daily step goal card\n\n**File**: `Sources/AppCore/SettingsView.swift`\n\nReshape `goalCard` (currently just the preset capsule row, lines ~408–427):\n\n- Keep the preset capsule row. Append a **Custom** capsule after the presets.\n  It reads as *selected* when `!UserPreferences.isPreset(model.today.goalSteps)`,\n  and its label shows the live value (e.g. `9.5k`) when custom, or just `Custom`\n  when a preset is active.\n- Tapping **Custom** toggles an inline editor (`customGoalExpanded`). When opened,\n  seed `customGoalDraft` from the current goal (or `defaultGoal`). The editor is a\n  `Stepper` stepping by `UserPreferences.goalIncrement` between `minGoal` and\n  `maxGoal`, with a label showing the formatted draft value (reuse `formatted(_:)`\n  from `Formatters.swift`).\n- On each stepper change, call the existing `setGoal(UserPreferences.clampGoal(draft))`\n  so it persists + syncs immediately, exactly like a preset tap.\n- Add view state near the other `@State` fields: `@State private var\n  customGoalExpanded = false` and `@State private var customGoalDraft =\n  UserPreferences.defaultGoal`. In `.onAppear`, set `customGoalExpanded =\n  !UserPreferences.isPreset(model.today.goalSteps)` so a returning custom user sees\n  the editor already open.\n- Accessibility: label the Custom chip \"Custom step goal\" + `.isSelected` trait when\n  active; the stepper announces the current value via its formatted label.\n\nReuse the existing capsule styling and `setGoal(_:)` — do **not** add a parallel\npersistence path.\n\n### 3. Tests for clamp/round, bounds, and custom persistence\n\n**File**: `Tests/AppCoreTests/ModelTests.swift`\n\nAdd cases alongside the existing goal tests (`testSetGoalStepsApplies`,\n`testGoalDefaults`):\n\n- `testClampGoalBoundsAndRounding` — bounds: `clampGoal(200) == 1000` (min),\n  `clampGoal(99999) == 50000` (max). Rounding to nearest 500 (unambiguous values):\n  `clampGoal(9740) == 9750`, `clampGoal(9700) == 9500`, `clampGoal(9800) == 10000`.\n- `testIsPresetMatchesOptions` — `isPreset(10000) == true`, `isPreset(9500) == false`.\n- `testSetCustomGoalPersistsAndApplies` — `model.setGoalSteps(9500)` updates\n  `model.today.goalSteps` and `UserPreferences.goalSteps()` to `9500`\n  (mirrors `testSetGoalStepsApplies` for a non-preset value).\n\n## Reused existing code\n\n- `model.setGoalSteps(_:)` from `Sources/AppCore/Model.swift` (lines 250–253) —\n  persists + applies the goal; the custom editor calls it unchanged.\n- `setGoal(_:)` in `Sources/AppCore/SettingsView.swift` (lines 431–435) — the\n  existing local-apply + account-push wrapper; reused verbatim for custom values.\n- `UserPreferences` from `Sources/AppCore/Preferences.swift` — `goalSteps`,\n  `setGoalSteps`, `goalOptions`, `defaultGoal`; extended with the new helpers.\n- `SyncablePreferences` / `accountSync.pushPreferences` from\n  `Sources/AppCore/Account/AccountSyncService.swift` — unchanged; custom goals sync\n  through the existing `{ goalSteps: Int }` payload. Covered by\n  `AccountSyncTests.testPreferencesRoundTrip`.\n- `formatted(_:)` from `Sources/AppCore/Formatters.swift` — formats the draft value\n  in the stepper label.\n- The capsule button style already in `goalCard` — the Custom chip mirrors it.\n\n## Scenarios to Demonstrate\n\n- **Default presets** — goal at `10000`; preset row shown, `10k` selected, Custom\n  chip collapsed and unselected.\n- **Custom value active** — goal at `9500` (not a preset); Custom chip selected\n  showing `9.5k`, editor open with the stepper at 9,500.\n- **High custom goal** — goal at `20000`, above the top preset, demonstrating the\n  card handles values past `15k`.\n- **At minimum bound** — goal at `1000`; stepper can't go lower.\n- **At maximum bound** — goal at `50000`; stepper can't go higher.\n- **Today dashboard reflects a custom goal** — the step ring's \"of 9,500\" caption\n  and progress reflect the custom target (ties the Settings change to the visible\n  outcome).",
+  "description": "Added a Custom option to the Daily step goal card in Settings: tapping it reveals an inline Stepper that dials any goal from 1,000 to 50,000 in 500-step increments, alongside the existing quick presets. The value persists and account-syncs through the existing setGoal path with no new storage schema, and bounds/clamp/preset logic is centralized in UserPreferences (clampGoal, isPreset) and unit-tested. New scenarios show the custom goal in Settings and its end-to-end effect on the Today step ring.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/custom-step-goal.md\t.codeyam/plans/completed/custom-step-goal.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/scenario-taxonomy.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Preferences.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/SettingsView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/ModelTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": "docs/testflight-prep.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-custom-goal--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-custom-goal--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-custom-goal--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-custom-goal--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-custom-goal.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/today-custom-goal.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Settings",
+      "screenshotPath": "settings--iphone-16.png"
+    },
+    {
+      "name": "Settings — Account Sync",
+      "screenshotPath": "settings-account-sync--iphone-16.png"
+    },
+    {
+      "name": "Settings — Custom Goal",
+      "screenshotPath": "settings-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Settings — Health Sync On",
+      "screenshotPath": "settings-health-sync-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders On",
+      "screenshotPath": "settings-reminders-on--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 115,
+    "passed": 115,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 115,
+        "passed": 115
+      }
+    ]
+  }
+}

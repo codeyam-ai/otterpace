@@ -141,7 +141,7 @@
       },
       "edge": {
         "status": "n-a",
-        "reason": "Settings renders fixed app copy and toggle rows with no user-variable-length data; Dynamic Type edges are covered by the ContentView accessibility scenarios."
+        "reason": "Settings renders fixed app copy and toggle rows with no user-variable-length data. The custom step goal's edge values (min 1,000 / max 50,000 / nearest-500 rounding) are not visually distinguishable in the below-fold goal card; they are covered by the clampGoal unit tests. Dynamic Type edges are covered by the ContentView accessibility scenarios."
       },
       "error": {
         "status": "n-a",

@@ -1,0 +1,32 @@
+{
+  "name": "Settings — Custom Goal",
+  "id": "c2d2ee6b-7f26-425f-b218-0226a0a58c99",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbSyncHealth": false,
+      "rbShowWeeklyReview": false,
+      "rbPreviewMode": "",
+      "rbDate": "2026-06-22",
+      "rbStartScreen": "",
+      "otterpaceRemindDaily": false,
+      "rbShowSettings": true,
+      "rbSteps": 8000,
+      "rbSyncSettings": false,
+      "rbContentSize": "",
+      "otterpaceRemindInactivity": false,
+      "rbSignedInUserID": "",
+      "otterpaceRemindGoal": false,
+      "rbGoalSteps": 9500,
+      "rbShowHistory": false,
+      "rbStartTab": "today",
+      "rbConnected": true
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/SettingsView.swift"
+}

@@ -305,7 +305,7 @@
     "testFile": "Tests/AppCoreTests/SessionStoreTests.swift"
   },
   {
-    "description": "The Settings overlay (reached via the gear on the dashboard and Connect hero): Account (sign out / delete account — the App Store-required deletion path), Apple Health status, editable daily step goal, a privacy explainer + policy link, and About/version.",
+    "description": "The Settings overlay (reached via the gear on the dashboard and Connect hero): Account (sign out / delete account — the App Store-required deletion path), Apple Health status, daily step goal with quick presets plus a Custom stepper for any in-bounds value, a privacy explainer + policy link, and About/version.",
     "filePath": "Sources/AppCore/SettingsView.swift",
     "name": "SettingsView",
     "untestabilityReason": {
@@ -407,7 +407,7 @@
     }
   },
   {
-    "description": "Locally-persisted user preferences (no account): the daily step goal with a default and preset options, read by the production HealthKit path and edited in Settings.",
+    "description": "Locally-persisted user preferences (no account): the daily step goal with a default, fixed preset options, and custom-goal bounds (minGoal/maxGoal/goalIncrement) plus clampGoal/isPreset helpers. Read by the production HealthKit path and edited in Settings (presets + Custom stepper).",
     "filePath": "Sources/AppCore/Preferences.swift",
     "name": "UserPreferences",
     "testFile": "Tests/AppCoreTests/ModelTests.swift"
@@ -489,6 +489,12 @@
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
       "kind": "no-isolation-harness"
     }
+  },
+  {
+    "description": "Clamps a custom daily step goal into the minGoal...maxGoal range and rounds it to the nearest goalIncrement, so any user-dialed value is always in-bounds and on a clean 500-step rail.",
+    "filePath": "Sources/AppCore/Preferences.swift",
+    "name": "clampGoal",
+    "testFile": "Tests/AppCoreTests/ModelTests.swift"
   },
   {
     "description": "Deletes the user's account_health row entirely - the opt-out and delete-my-health-data path; tolerates a 404.",
@@ -609,6 +615,12 @@
     "filePath": "api/_lib/account.ts",
     "name": "incomingWins",
     "testFile": "test/api/account.test.ts"
+  },
+  {
+    "description": "Reports whether a step goal equals one of the fixed quick-preset options, used by Settings to decide between highlighting a preset capsule and the Custom chip.",
+    "filePath": "Sources/AppCore/Preferences.swift",
+    "name": "isPreset",
+    "testFile": "Tests/AppCoreTests/ModelTests.swift"
   },
   {
     "description": "Maps a single Strava activity to a MappedWorkout, returning null when the date is missing or malformed; computes miles and pace.",

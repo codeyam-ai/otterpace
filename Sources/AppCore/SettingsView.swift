@@ -35,6 +35,10 @@ public struct SettingsView: View {
     // Optional Strava import.
     @StateObject private var strava = StravaService()
 
+    // Custom (non-preset) step goal editor.
+    @State private var customGoalExpanded = false
+    @State private var customGoalDraft = UserPreferences.defaultGoal
+
     public init(model: OtterpaceModel, session: SessionStore, onClose: @escaping () -> Void = {}) {
         self.model = model
         self.session = session
@@ -73,6 +77,9 @@ public struct SettingsView: View {
             consent.applySeededPreviewIfPresent()
             settingsSyncOn = consent.settingsSyncEnabled
             healthSyncOn = consent.healthSyncEnabled
+            // A returning custom-goal user lands with the editor already open.
+            customGoalExpanded = !UserPreferences.isPreset(model.today.goalSteps)
+            customGoalDraft = model.today.goalSteps
             Task { notifAuthorized = await reminderScheduler.isAuthorized() }
         }
         .alert("Delete account?", isPresented: $confirmDelete) {
@@ -406,24 +413,56 @@ public struct SettingsView: View {
     // MARK: Daily goal
 
     @ViewBuilder private var goalCard: some View {
+        let customActive = !UserPreferences.isPreset(model.today.goalSteps)
         card("Daily step goal") {
-            HStack(spacing: 8) {
-                ForEach(UserPreferences.goalOptions, id: \.self) { goal in
-                    let selected = model.today.goalSteps == goal
-                    Button { setGoal(goal) } label: {
-                        Text("\(goal / 1000)k")
-                            .font(Typography.captionStrong)
-                            .foregroundColor(selected ? .white : Palette.ink)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(Capsule().fill(selected ? Palette.brand : Palette.ink.opacity(0.06)))
+            VStack(spacing: 10) {
+                HStack(spacing: 8) {
+                    ForEach(UserPreferences.goalOptions, id: \.self) { goal in
+                        goalCapsule(label: "\(goal / 1000)k",
+                                    selected: model.today.goalSteps == goal,
+                                    a11y: "\(goal) steps") {
+                            customGoalExpanded = false
+                            setGoal(goal)
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("\(goal) steps")
-                    .accessibilityAddTraits(selected ? [.isSelected] : [])
+                    goalCapsule(label: customActive ? "\(model.today.goalSteps / 1000)k" : "Custom",
+                                selected: customActive,
+                                a11y: "Custom step goal") {
+                        customGoalDraft = UserPreferences.clampGoal(model.today.goalSteps)
+                        customGoalExpanded.toggle()
+                    }
+                }
+                if customGoalExpanded {
+                    Stepper(value: $customGoalDraft,
+                            in: UserPreferences.minGoal...UserPreferences.maxGoal,
+                            step: UserPreferences.goalIncrement) {
+                        Text("\(formatted(customGoalDraft)) steps")
+                            .font(Typography.captionStrong)
+                            .foregroundColor(Palette.ink)
+                    }
+                    .onChange(of: customGoalDraft) { newValue in
+                        setGoal(UserPreferences.clampGoal(newValue))
+                    }
+                    .accessibilityLabel("Custom step goal")
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private func goalCapsule(label: String, selected: Bool, a11y: String,
+                             action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(Typography.captionStrong)
+                .foregroundColor(selected ? .white : Palette.ink)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(Capsule().fill(selected ? Palette.brand : Palette.ink.opacity(0.06)))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(a11y)
+        .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
     /// Apply a new step goal locally, then push it to the account if settings

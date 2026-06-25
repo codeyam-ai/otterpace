@@ -1,0 +1,46 @@
+{
+  "name": "Today — Custom Goal",
+  "id": "30dfa8c2-f40b-4366-a718-65fbf8e47562",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbActiveEnergyKcal": 360,
+      "rbWorkoutDurationMinutes": 31,
+      "rbShowHistory": false,
+      "rbWorkoutDistanceMiles": 2.0,
+      "rbActiveMinutes": 41,
+      "rbBuddyMood": "ready",
+      "rbLongestRunMiles": 5.0,
+      "rbGoalSteps": 9500,
+      "rbDate": "2026-06-22",
+      "rbDistanceMiles": 3.1,
+      "rbCoachBody": "You set a custom 9,500-step goal. You're at 7,200 — a 20-minute walk closes the gap without adding training stress.",
+      "rbConnected": true,
+      "rbLoadTrend": "steady",
+      "rbWorkoutSource": "healthkit",
+      "rbWorkoutType": "walk",
+      "rbContentSize": "",
+      "rbWorkoutPace": "15:30/mi",
+      "rbWorkoutDate": "2026-06-22",
+      "rbStartTab": "today",
+      "rbDaysRunThisWeek": 3,
+      "rbMinutesSinceMovement": 22,
+      "rbShowSettings": false,
+      "rbPreviewMode": "",
+      "rbCoachSafety": false,
+      "rbRestDaysThisWeek": 2,
+      "rbCoachHeadline": "2,300 to your 9.5K goal",
+      "rbWeeklyMileage": 12.0,
+      "rbSteps": 7200,
+      "rbAskSeedQuestion": "",
+      "rbCoachType": "walk",
+      "rbShowWeeklyReview": false
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/ContentView.swift"
+}

@@ -119,4 +119,27 @@ final class ModelTests: XCTestCase {
         UserPreferences.setGoalSteps(8000, d)
         XCTAssertEqual(UserPreferences.goalSteps(d), 8000)
     }
+
+    // clampGoal pins out-of-range values to the bounds and rounds to the increment.
+    func testClampGoalBoundsAndRounding() {
+        XCTAssertEqual(UserPreferences.clampGoal(200), UserPreferences.minGoal)   // below min
+        XCTAssertEqual(UserPreferences.clampGoal(99999), UserPreferences.maxGoal) // above max
+        XCTAssertEqual(UserPreferences.clampGoal(9740), 9500) // rounds down to nearest 500
+        XCTAssertEqual(UserPreferences.clampGoal(9300), 9500) // rounds up to nearest 500
+        XCTAssertEqual(UserPreferences.clampGoal(9800), 10000) // rounds up to nearest 500
+    }
+
+    // isPreset distinguishes the quick presets from custom values.
+    func testIsPresetMatchesOptions() {
+        XCTAssertTrue(UserPreferences.isPreset(10000))
+        XCTAssertFalse(UserPreferences.isPreset(9500))
+    }
+
+    // A non-preset custom goal persists and applies just like a preset.
+    @MainActor func testSetCustomGoalPersistsAndApplies() {
+        let model = OtterpaceModel(today: TodayState(healthKitConnected: true, steps: 5000, goalSteps: 10000))
+        model.setGoalSteps(9500)
+        XCTAssertEqual(model.today.goalSteps, 9500)
+        XCTAssertEqual(UserPreferences.goalSteps(), 9500)
+    }
 }
