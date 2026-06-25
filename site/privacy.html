@@ -28,7 +28,7 @@
     <p>No account is required to use Otterpace. If you choose <strong>Sign in with Apple</strong>, the app stores only the anonymous user identifier Apple provides, kept locally in your device's Keychain so you stay signed in. We don't retain your name or email, and there is no backend that receives it. You can sign out or delete this local identity anytime in <strong>Settings → Account</strong>.</p>
 
     <h2>Analytics</h2>
-    <p>We use <strong>PostHog</strong> to understand how the app is used — which screens are opened, which features are connected — so we can improve it. These events are tied to a <strong>random anonymous identifier</strong> stored on your device, not to your name, email, or Apple ID. <strong>Your health and activity data is never sent to analytics.</strong></p>
+    <p>We use <strong>PostHog</strong> to understand how the app is used — which screens are opened, which features are connected — so we can improve it. These events are tied to a <strong>random anonymous identifier</strong> stored on your device, not to your name, email, or Apple ID. <strong>Your health and activity data is never sent to analytics.</strong> The <a href="https://otterpace.com">otterpace.com</a> website also uses <strong>Vercel Web Analytics</strong>, which counts page views anonymously — no cookies, no personal identifiers.</p>
 
     <h2>Strava (optional)</h2>
     <p>If you connect Strava, you authorize Otterpace to import your activities. Your Strava access tokens are stored on our backend (Supabase), keyed to an anonymous device identifier, so we can fetch and refresh your activities on your behalf — we never receive your Strava password. You can disconnect anytime in <strong>Settings → Strava</strong>, which deletes the stored tokens.</p>
@@ -55,5 +55,7 @@
   <footer>
     <a href="index.html">otterpace.com</a> · <a href="https://github.com/nseldeib/otterpace">GitHub</a>
   </footer>
+  <!-- Vercel Web Analytics -->
+  <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
