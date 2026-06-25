@@ -43,12 +43,14 @@ colors; re-check WCAG AA contrast (icons + text) in light. Audit `ChatBubble`,
    clear entry/close affordances on each overlay. This is the biggest UX rework here;
    it spans `ContentView`, `WeeklyReviewView`, `ActivityHistoryView`, `TodayDashboard`.
 
-### C. Coach behavior (needs clarification before building)
-6. **"Coach jumps to feedback and doesn't ask questions."** Capture the intended
-   behavior at kickoff: should Buddy ask a clarifying follow-up before advising,
-   or open more conversationally rather than going straight to a recommendation?
-   This touches the coach **system prompt** (`api/coach.ts`) and/or the
-   `CoachEngine` mock. Decide the desired interaction, then adjust the prompt.
+### C. Coach behavior — RESOLVED
+6. **"Coach jumps to feedback and doesn't ask questions."** **Decision: Buddy
+   should ask a clarifying question FIRST, before giving advice** — open
+   conversationally, gather a bit of context, then coach. Implement by updating the
+   coach **system prompt** in `api/coach.ts` (instruct it to ask one clarifying
+   question when the user's intent/context is thin, before advising) and mirror the
+   intent in the `CoachEngine` mock (the deterministic fallback) so previews match.
+   Keep it to ~one clarifying question, not an interrogation.
 
 ## Approach / order
 1. **Force light theme** (one line at the root) — re-test on device; likely clears 1,2,3,7.
@@ -58,9 +60,9 @@ colors; re-check WCAG AA contrast (icons + text) in light. Audit `ChatBubble`,
 5. **Re-verify scenarios** — `swift test`, `seeded-capture-check`; recapture any screen whose look changed (captures are light already, so likely minimal).
 6. **Rebuild → re-archive → upload build 2** to TestFlight for re-test (use the recorded CLI pipeline in `testflight-prep.md` / the build-fixes commit: team `4D67UCFK3J`, `TARGETED_DEVICE_FAMILY=1`, etc.). **Bump CFBundleVersion to 2.**
 
-## Open questions to resolve at kickoff
-- **Item 6:** what coach interaction do you want (ask clarifying Qs vs. direct advice)?
-- **Functional check from the smoke test:** did your **real step count load** (HealthKit)? Did the **real AI coach reply** come back when you pasted your key? (Item 6 implies the coach *did* respond — confirm so we know the plan is visual/UX, not functional.)
+## Open questions — RESOLVED
+- **Item 6:** Buddy should **ask a clarifying question first**, then advise (see C above).
+- **Functional check:** ✅ Confirmed working on device — **real step count loaded** (HealthKit) and the **real AI coach reply came back**. So this whole plan is **visual/UX + the coach-prompt tweak** — no functional bugs to chase.
 
 ## Context for resuming (after /clear)
 - TestFlight build 1.0/1 is delivered & installed; this plan is the v1 polish round → build 2.
