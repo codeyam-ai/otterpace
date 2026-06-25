@@ -28,6 +28,8 @@
 	<false/>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Otterpace reads your steps, distance, and active energy from Apple Health — on your device — so Buddy can coach you toward your daily goal without overtraining.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Otterpace only reads your activity from Apple Health to coach you — it does not write any data back to Health.</string>
 	<!-- OAuth redirect target for "Connect Strava" (otterpace://strava-callback). -->
 	<key>CFBundleURLTypes</key>
 	<array>
