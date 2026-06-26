@@ -48,6 +48,14 @@ describe("pure helpers", () => {
     expect(prefsContainHealthFields({ HEARTRATE: 60 })).toBe(true); // case-insensitive
   });
 
+  it("catches health fields nested inside objects and arrays (not just top-level)", () => {
+    expect(prefsContainHealthFields({ profile: { steps: 6420 } })).toBe(true);
+    expect(prefsContainHealthFields({ list: [{ ok: 1 }, { workouts: [] }] })).toBe(true);
+    expect(prefsContainHealthFields({ a: { b: { c: { restingHeartRate: 52 } } } })).toBe(true);
+    // A clean, nested-but-health-free payload still passes.
+    expect(prefsContainHealthFields({ ui: { theme: "light", goals: [10000] } })).toBe(false);
+  });
+
   it("last-write-wins: incoming wins only when strictly newer or no stored row", () => {
     expect(incomingWins(null, "2026-06-25T00:00:00Z")).toBe(true);
     expect(incomingWins("2026-06-24T00:00:00Z", "2026-06-25T00:00:00Z")).toBe(true);

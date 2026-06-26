@@ -67,9 +67,29 @@ const HEALTH_KEY_DENYLIST = [
   "sleep",
 ];
 
-/** True when a prefs payload carries any health field (so it must be rejected). */
+// Bound the recursion so a deeply nested (or pathological) payload can't blow the
+// stack. Real prefs are shallow; this is purely a safety ceiling.
+const MAX_SCAN_DEPTH = 8;
+
+/**
+ * True when a prefs payload carries any health field anywhere in its structure
+ * (so it must be rejected). Walks nested objects and arrays, not just top-level
+ * keys, so a health field hidden one level down can't slip past the guard.
+ */
 export function prefsContainHealthFields(prefs: Record<string, unknown>): boolean {
-  return Object.keys(prefs).some((k) => HEALTH_KEY_DENYLIST.includes(k.toLowerCase()));
+  return scanForHealthKey(prefs, 0);
+}
+
+function scanForHealthKey(value: unknown, depth: number): boolean {
+  if (depth > MAX_SCAN_DEPTH || value === null || typeof value !== "object") return false;
+  if (Array.isArray(value)) {
+    return value.some((item) => scanForHealthKey(item, depth + 1));
+  }
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    if (HEALTH_KEY_DENYLIST.includes(key.toLowerCase())) return true;
+    if (scanForHealthKey(child, depth + 1)) return true;
+  }
+  return false;
 }
 
 /**

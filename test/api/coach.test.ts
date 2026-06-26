@@ -38,6 +38,11 @@ function makeRes(): MockRes {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function call(req: any) {
   const res = makeRes();
+  // The real iOS client always sends application/json; default it for POSTs so
+  // each test doesn't repeat the header (an explicit content-type still wins).
+  if (req.method === "POST") {
+    req.headers = { "content-type": "application/json", ...(req.headers ?? {}) };
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return { res, done: handler(req as any, res as any) };
 }
@@ -149,6 +154,31 @@ describe("coach handler", () => {
     expect(logged).not.toContain(SECRET);
     errSpy.mockRestore();
     logSpy.mockRestore();
+  });
+
+  // A non-JSON content type is rejected (BE-7).
+  it("415s on a non-JSON content type", async () => {
+    const { res, done } = call({
+      method: "POST",
+      headers: { "content-type": "text/plain", "x-anthropic-key": "sk-ant-xyz" },
+      body: { question: "hi" },
+    });
+    await done;
+    expect(res.statusCode).toBe(415);
+    expect(createMock).not.toHaveBeenCalled();
+  });
+
+  // A non-object context is rejected before any model call (BE-7).
+  it("400s on a non-object context", async () => {
+    const { res, done } = call({
+      method: "POST",
+      headers: { "x-anthropic-key": "sk-ant-xyz" },
+      body: { question: "hi", context: [1, 2, 3] },
+    });
+    await done;
+    expect(res.statusCode).toBe(400);
+    expect((res.body as { error: string }).error).toBe("invalid_context");
+    expect(createMock).not.toHaveBeenCalled();
   });
 
   // Over-long inputs are rejected before any model call (BE-4 size bounds).

@@ -71,6 +71,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
+  // Require a JSON body (the app always sends application/json). Rejecting other
+  // content types avoids content-type confusion and mis-parsed bodies.
+  const contentType = (req.headers["content-type"] ?? "").toString();
+  if (!contentType.includes("application/json")) {
+    res.status(415).json({ error: "unsupported_media_type" });
+    return;
+  }
+
   const apiKey = req.headers["x-anthropic-key"];
   if (typeof apiKey !== "string" || apiKey.length < 8) {
     res.status(400).json({ error: "missing_key", message: "Connect your Anthropic API key in Settings." });
@@ -85,6 +93,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   if (question.length > MAX_QUESTION_LEN) {
     res.status(413).json({ error: "question_too_long" });
+    return;
+  }
+
+  // Context, when present, must be a plain JSON object (the app's TodayState).
+  // Reject arrays/primitives so only structured context reaches the prompt.
+  if (
+    body.context !== undefined &&
+    (typeof body.context !== "object" || body.context === null || Array.isArray(body.context))
+  ) {
+    res.status(400).json({ error: "invalid_context" });
     return;
   }
 

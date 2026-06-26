@@ -58,19 +58,19 @@ surfaced in `SettingsView` with the error message and a **Retry import** action,
 rather than silently showing an empty dashboard. A legitimate zero-activities import
 still returns `[]` (no error).
 
-### B3. BE-6 — prefs health-field denylist is top-level only
-`prefsContainHealthFields` only inspects top-level keys, so a nested health field
-could slip past the defense-in-depth guard. Plan: recurse the object (bounded depth)
-or schema-validate the prefs payload. Low risk (the client never nests health into
-prefs), defense-in-depth only.
+### ✅ BE-6 — prefs health-field denylist was top-level only — RESOLVED
+`prefsContainHealthFields` now recurses through nested objects and arrays (bounded
+depth) so a health field hidden one level down can't slip past the defense-in-depth
+guard. Covered by a new nested-payload test in `test/api/account.test.ts`.
 
-### B4. BE-7 — coach content-type strictness
-`coach.ts` enforces POST + size bounds but doesn't hard-require
-`Content-Type: application/json`. CORS is intentionally left unset (the endpoint is
-called from the app, not a browser, so the restrictive default is correct). Plan:
-optionally reject non-JSON content types for stricter input validation.
+### ✅ BE-7 — coach content-type / context-shape strictness — RESOLVED
+`coach.ts` now requires `Content-Type: application/json` (415 otherwise — the iOS
+client always sends it) and rejects a non-object `context` (400 `invalid_context`)
+so only structured context reaches the prompt. CORS stays intentionally unset (the
+endpoint is called from the app, not a browser, so the restrictive default is
+correct). Covered by new tests in `test/api/coach.test.ts`.
 
-### B5. TF-5 — unused `NSHealthUpdateUsageDescription` (intentionally kept)
+### B3. TF-5 — unused `NSHealthUpdateUsageDescription` (intentionally kept)
 The app never writes to HealthKit, so this usage string is technically unused. It
 was **kept on purpose**: removing it would reverse a prior TestFlight fix and an
 extra usage string is harmless on upload. Revisit only if Apple ever flags it.
