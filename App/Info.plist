@@ -42,9 +42,16 @@
 			</array>
 		</dict>
 	</array>
-	<!-- Fill these in before shipping: your Strava API client ID and PostHog project key. -->
+	<!-- Strava import is hidden in v1 ON PURPOSE. The Settings "Strava" card only
+	     renders when StravaConfig.isConfigured is true, i.e. when StravaClientID is
+	     non-empty (see Sources/AppCore/Strava/StravaService.swift). Leaving this empty
+	     keeps the whole flow hidden and makes zero Strava network calls — which is what
+	     keeps the build review-safe. Do NOT populate this until the backend OAuth secret
+	     is provisioned for /api/strava/*; a filled client ID with no working backend would
+	     surface a "Connect Strava" button that fails (an App Store Guideline 2.1 reject). -->
 	<key>StravaClientID</key>
 	<string></string>
+	<!-- PostHog analytics key — safe to leave empty (analytics simply no-ops). -->
 	<key>PostHogProjectKey</key>
 	<string></string>
 	<key>PostHogHost</key>
