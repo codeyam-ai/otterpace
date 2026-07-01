@@ -1,6 +1,6 @@
 {
   "feature": "hello-email-send-receive",
-  "maxStep": 25,
-  "version": 63,
-  "updatedAt": "2026-07-01T19:20:32.789933+00:00"
+  "maxStep": 26,
+  "version": 65,
+  "updatedAt": "2026-07-01T19:22:13.114026+00:00"
 }
