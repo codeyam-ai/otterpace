@@ -62,21 +62,32 @@ public struct SettingsView: View {
             VStack(spacing: 0) {
                 header
                 Divider().opacity(0.4)
-                ScrollView {
-                    VStack(spacing: 16) {
-                        accountCard
-                        healthCard
-                        if strava.isConfigured { stravaCard }
-                        coachCard
-                        racesCard
-                        remindersCard
-                        goalCard
-                        privacyCard
-                        aboutCard
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            accountCard
+                            healthCard
+                            if strava.isConfigured { stravaCard }
+                            coachCard
+                            racesCard
+                            remindersCard
+                            goalCard
+                            privacyCard
+                            aboutCard.id("about")
+                        }
+                        .padding(.horizontal, 18)
+                        .padding(.top, 14)
+                        .padding(.bottom, 28)
                     }
-                    .padding(.horizontal, 18)
-                    .padding(.top, 14)
-                    .padding(.bottom, 28)
+                    // Scenario-only hook: a capture can seed `rbSettingsScroll`
+                    // (e.g. "about") to open Settings scrolled to a specific card,
+                    // so below-the-fold rows like "Show welcome tour again" are
+                    // visible in the frame. Production never carries this key.
+                    .onAppear {
+                        let target = UserDefaults.standard.string(forKey: "rbSettingsScroll") ?? ""
+                        guard !target.isEmpty else { return }
+                        proxy.scrollTo(target, anchor: .top)
+                    }
                 }
             }
         }

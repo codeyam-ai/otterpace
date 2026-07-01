@@ -119,6 +119,37 @@
         "reason": "Only action is the Connect Apple Health CTA; its connected result is shown by the dashboard scenarios and its logic is covered by testConnectFlipsState."
       }
     },
+    "OnboardingFlowView": {
+      "empty": {
+        "status": "n-a",
+        "reason": "Fixed three-page welcome carousel; there is no zero-data or empty state"
+      },
+      "single": {
+        "status": "n-a",
+        "reason": "Not a list view; fixed page set with no single-item boundary"
+      },
+      "typical": {
+        "status": "covered"
+      },
+      "many": {
+        "status": "n-a",
+        "reason": "Exactly three pages; nothing to overflow or truncate"
+      },
+      "loading": {
+        "status": "n-a",
+        "reason": "Renders synchronously at launch; no async pending state"
+      },
+      "edge": {
+        "status": "added"
+      },
+      "error": {
+        "status": "n-a",
+        "reason": "No fetch, validation, or failure path in the tour"
+      },
+      "key-interaction": {
+        "status": "covered"
+      }
+    },
     "SettingsView": {
       "empty": {
         "status": "n-a",

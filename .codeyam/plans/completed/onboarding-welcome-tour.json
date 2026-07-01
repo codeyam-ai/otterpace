@@ -1,0 +1,20 @@
+{
+  "completedAt": "2026-07-01T21:04:05Z",
+  "createdAt": "2026-06-26T18:33:44Z",
+  "deliverables": [
+    "README.md",
+    "Sources/AppCore/AskCoachHeader.swift",
+    "Sources/AppCore/AskCoachLockedState.swift",
+    "Sources/AppCore/AskCoachView.swift",
+    "Sources/AppCore/CoachEngine.swift",
+    "Sources/AppCore/ContentView.swift",
+    "Sources/AppCore/SettingsView.swift",
+    "Sources/AppCore/TodayView.swift",
+    "Tests/AppCoreTests/CoachEngineTests.swift"
+  ],
+  "journalTimestamp": "2026-07-01T21:04:05Z",
+  "mode": "ui",
+  "planFile": "completed/onboarding-welcome-tour.md",
+  "slug": "onboarding-welcome-tour",
+  "title": "First-Run Welcome Tour"
+}

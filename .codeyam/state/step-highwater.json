@@ -1,6 +1,6 @@
 {
-  "feature": "hello-email-send-receive",
-  "maxStep": 26,
-  "version": 65,
-  "updatedAt": "2026-07-01T19:22:13.114026+00:00"
+  "feature": "onboarding-welcome-tour",
+  "maxStep": 24,
+  "version": 132,
+  "updatedAt": "2026-07-01T21:12:52.073143+00:00"
 }

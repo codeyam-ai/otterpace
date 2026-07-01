@@ -1,0 +1,123 @@
+{
+  "timestamp": "2026-07-01T21:04:05Z",
+  "title": "Welcome Tour — Accessibility & Replay Scenario Coverage",
+  "type": "feature",
+  "userRequest": "## Summary\n\nFirst-time users currently land straight on the Sign-in screen (`SignInView`)\nwith no introduction to what Otterpace is or who Buddy is. Add a **brief,\nswipeable welcome carousel** that runs once on first launch — three short pages\nintroducing Buddy, the day-by-day movement coaching, and the Ask Coach chat —\nthen hands off to the existing Sign-in screen. The tour is remembered so it\nnever re-appears automatically, and a \"Show welcome tour again\" row in Settings\nlets users replay it. The flow reuses the app's existing mascot (`PuffyBuddy`),\ntheme (`Palette`/`Typography`/`Layout`/`Motion`), and the capsule/gradient\nbutton styling already used by `SignInView` and `ConnectHero`, so it feels native\nto the app on day one. Scenario seeds (mirroring the existing\n`rbStartScreen == \"signin\"` convention) let CodeYam capture each page.\n\n## Key Decisions\n\n- **Placement: a welcome carousel before Sign-in.** It slots in ahead of the\n  `session.state == .undecided` branch in `ContentView`, keeping the tour\n  self-contained and matching the visual language of `SignInView`/`ConnectHero`\n  rather than layering coachmarks over the live dashboard (which would touch\n  many existing views).\n- **Presented as a top-of-`ZStack` overlay (like `SettingsView`), not a new\n  branch in the if/else chain.** This is what makes the same view reusable for\n  both first-launch and Settings-triggered replay without restructuring the\n  launch gating. It sits at the highest `zIndex`, gated by `previewMode.isEmpty`\n  exactly like Settings/Sign-in.\n- **\"Show once\" persisted via a small `OnboardingState` enum**, modeled on\n  `UserPreferences` (a UserDefaults-backed key with an injectable `UserDefaults`\n  for testability) — not bolted onto `SessionStore`, since it's unrelated to\n  Apple-credential lifecycle.\n- **Scenario behavior mirrors `SignInView`:** skipped by default when a scenario\n  is seeded (`HealthSource.isScenarioSeeded()`), but a scenario can opt in to\n  preview it with `rbStartScreen = \"onboarding\"`, and seed `rbOnboardingPage` to\n  start on a specific page for per-page captures.\n- **Replay uses a closure, not UserDefaults polling.** `ContentView` passes an\n  `onReplayTour` closure to `SettingsView`; the Settings row closes Settings and\n  flips `ContentView`'s `showOnboarding` state — consistent with how\n  `onSettings`/`onClose` already work. `markSeen()` is only written on finish,\n  so a replay that's swiped away mid-way doesn't need special handling.\n- **Brief by design:** three pages, a page-dot indicator, a \"Skip\" affordance,\n  and a \"Get started\" CTA on the last page. Keeps with the user's \"brief but\n  useful\" ask.\n\n## Implementation\n\n### 1. Onboarding persistence + show/skip logic\n\n**New file**: `Sources/AppCore/Onboarding/OnboardingState.swift`\n\nA small `public enum OnboardingState` mirroring `UserPreferences`:\n\n- Key `otterpaceOnboardingSeen` (Bool) in `UserDefaults`.\n- `hasSeen(_ d: UserDefaults = .standard) -> Bool` and\n  `markSeen(_ d: UserDefaults = .standard)`.\n- A pure, unit-testable `shouldShow(defaults:seeded:startScreen:) -> Bool` that\n  encodes the launch decision:\n  - `startScreen == \"onboarding\"` → `true` (preview/replay opt-in, regardless of\n    `hasSeen`).\n  - else `hasSeen` → `false`.\n  - else `seeded` (scenario-seeded run) → `false` (scenarios skip by default,\n    matching `SignInView`'s `seeded && !wantsSignInPreview`).\n  - else → `true` (production first launch).\n- `startPage(_ d: UserDefaults = .standard) -> Int` reading `rbOnboardingPage`\n  (clamped to the valid page range) so scenarios can capture a specific page;\n  defaults to `0`.\n\n### 2. The welcome carousel view\n\n**New file**: `Sources/AppCore/Onboarding/OnboardingFlowView.swift`\n\nA `struct OnboardingFlowView: View` taking `onFinish: () -> Void` and an optional\n`startPage: Int`.\n\n- Full-screen background using the same `LinearGradient(colors: [Palette.bgTop,\n  Palette.bgBottom], …)` as `ContentView`/`SettingsView`.\n- A paged `TabView` (`.tabViewStyle(.page)`) bound to a `@State page` over three\n  `OnboardingPage` models. Each page renders a `PuffyBuddy` mascot in a fitting\n  `BuddyMood`, a `Typography.title` headline, and a one-sentence\n  `Typography.callout` body (voice matched to existing `ConnectHero` copy):\n  1. **Meet Buddy** — `mood: .ready` — \"Hi, I'm Buddy! 🐾 Your friendly movement\n     coach, here to cheer you on every day.\"\n  2. **Day-by-day coaching** — `mood: .jogging` — \"I turn your steps and runs\n     into gentle, day-by-day guidance — toward 10,000 steps a day, without\n     overdoing it.\"\n  3. **Ask me anything** — `mood: .cheering` — \"Tap the Coach tab to ask about\n     your training, and get a friendly weekly review of how you're trending.\"\n- A top-trailing **Skip** button (`Typography.caption`, `Palette.subtle`) that\n  calls `onFinish`, present on every page except the last.\n- On the last page, a primary **Get started** CTA reusing the gradient capsule\n  button styling from `ConnectHero` (`LinearGradient([Palette.brand,\n  Palette.brandDeep])`, white `Typography.headline`), calling `onFinish`.\n- Respect Reduce Motion for any custom transitions (follow the `OverlayTransition`\n  pattern in `ViewStyles.swift`); the `.page` style's own paging is fine.\n- Accessibility: `PuffyBuddy` already exposes a label; mark decorative copy\n  appropriately and give Skip/Get started clear labels.\n\nKeep `OnboardingPage` (title/body/mood) as a small private model array so the\npage count has one source of truth shared with `OnboardingState.startPage`\nclamping.\n\n### 3. Gate the tour at launch + wire replay into ContentView\n\n**File**: `Sources/AppCore/ContentView.swift`\n\n- In `init`, seed a new `@State private var showOnboarding` from\n  `OnboardingState.shouldShow(defaults: .standard, seeded:\n  HealthSource.isScenarioSeeded(), startScreen: UserDefaults.standard\n  .string(forKey: \"rbStartScreen\") ?? \"\")`, and a `startOnboardingPage` from\n  `OnboardingState.startPage()`.\n- In `body`, after the existing `SettingsView` overlay block, add the tour as the\n  top overlay:\n  `if showOnboarding && previewMode.isEmpty { OnboardingFlowView(onFinish: …,\n  startPage: startOnboardingPage).overlayTransition().zIndex(3) }`. `onFinish`\n  calls `OnboardingState.markSeen()` then `withAnimation(Motion.overlay) {\n  showOnboarding = false }`.\n- Pass an `onReplayTour` closure into `SettingsView(...)` that runs\n  `withAnimation(Motion.overlay) { showSettings = false; showOnboarding = true }`\n  (page reset to 0).\n- Fire analytics consistent with the existing `app_opened` capture, guarded by\n  `previewMode.isEmpty`: `Analytics.shared.capture(\"onboarding_started\")` when\n  the tour appears and `\"onboarding_completed\"` on finish.\n\n### 4. \"Show welcome tour again\" row in Settings\n\n**File**: `Sources/AppCore/SettingsView.swift`\n\n- Add `var onReplayTour: () -> Void = {}` to the view + its `init`.\n- In the About (or Health-access) card, add an `actionRow(\"Show welcome tour\n  again\", icon: \"sparkles\", tint: Palette.sky) { onReplayTour() }` using the\n  existing `actionRow` helper, so the styling matches every other Settings action.\n\n## Reused existing code\n\n- `PuffyBuddy` + `BuddyMood` from `Sources/AppCore/PuffyBuddy.swift` /\n  `Theme.swift` (glossary entries: `PuffyBuddy`, `BuddyMood`) — the mascot for\n  each page.\n- `Palette`, `Typography`, `Layout`, `Motion` from `Sources/AppCore/Theme.swift`\n  (glossary entry: `Typography`) — colors, fonts, spacing, and overlay easing.\n- Gradient/capsule button styling and copy voice from `ConnectHero`\n  (`Sources/AppCore/ConnectHero.swift`, glossary entry: `ConnectHero`) and\n  `SignInView` (`Sources/AppCore/Auth/SignInView.swift`, glossary entry:\n  `SignInView`).\n- `ContentView` overlay/zIndex + `previewMode` gating pattern, and the\n  `rbStartScreen` scenario-seed convention (glossary entry: `ContentView`).\n- `HealthSource.isScenarioSeeded()` (glossary entry: `HealthSource`) — to skip\n  the tour under scenario seeding by default.\n- `UserPreferences` (glossary entry: `UserPreferences`) — the UserDefaults-backed,\n  injectable-defaults pattern `OnboardingState` follows.\n- `SettingsView.actionRow` + `card` helpers (glossary entry: `SettingsView`) —\n  the replay row.\n- `Analytics.shared.capture` from `Sources/AppCore/Analytics/Analytics.swift` —\n  the onboarding events.\n- `OverlayTransition` from `Sources/AppCore/ViewStyles.swift` — Reduce-Motion-safe\n  overlay presentation.\n\n### Tests\n\n**New file**: `Tests/AppCoreTests/OnboardingStateTests.swift`\n\nPure-logic unit tests for `OnboardingState` against an injected `UserDefaults`\n(suite name), mirroring `SessionStoreTests`/`ModelTests`:\n\n- First launch (nothing seen, not seeded) → `shouldShow == true`.\n- After `markSeen()` → `shouldShow == false`.\n- Seeded scenario run, no opt-in → `shouldShow == false`.\n- `startScreen == \"onboarding\"` forces `shouldShow == true` even when `hasSeen`.\n- `startPage` reads/clamps `rbOnboardingPage` (negative → 0, beyond last → last,\n  unset → 0).\n\nThe views (`OnboardingFlowView`, the Settings row) follow the existing\nconvention where presentational views like `SignInView`/`ConnectHero` carry no\nunit tests and are exercised through scenarios instead.\n\n## Scenarios to Demonstrate\n\n- **Welcome — Meet Buddy** (`rbStartScreen=\"onboarding\"`, `rbOnboardingPage=0`):\n  page one with Buddy waving and the Skip affordance.\n- **Welcome — Day-by-day coaching** (`rbOnboardingPage=1`): the middle page,\n  page dots showing progress.\n- **Welcome — Ask me anything** (`rbOnboardingPage=2`): the final page with the\n  \"Get started\" CTA.\n- **Welcome at large text** (`rbStartScreen=\"onboarding\"`,\n  `rbContentSize=\"accessibility3\"`): a page rendered at an accessibility Dynamic\n  Type size to confirm copy + button wrap gracefully.\n- **Settings — replay row**: the Settings sheet showing the \"Show welcome tour\n  again\" action row.",
+  "description": "Closed the two scenario-coverage gaps in the already-built First-Run Welcome Tour: added a Welcome — Large Text scenario that renders the tour at accessibility3 Dynamic Type (confirming copy and the Get started CTA wrap gracefully), and a Settings — Replay Tour Row scenario showing the About card with the Show welcome tour again row. Added a scenario-only scroll hook to SettingsView (a ScrollViewReader plus an about anchor driven by a new rbSettingsScroll seed key, matching the existing rb* scenario-hook convention) so the below-the-fold replay row is visible in the capture; production never sets that key, so real-user behavior is unchanged.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/onboarding-welcome-tour.md\t.codeyam/plans/completed/onboarding-welcome-tour.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-custom-goal--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-custom-goal--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/scenario-taxonomy.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/SettingsView.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-replay-tour-row--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-large-text--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-replay-tour-row.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/welcome-large-text.json",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Settings",
+      "screenshotPath": "settings--iphone-16.png"
+    },
+    {
+      "name": "Settings — Account Sync",
+      "screenshotPath": "settings-account-sync--iphone-16.png"
+    },
+    {
+      "name": "Settings — Custom Goal",
+      "screenshotPath": "settings-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Settings — Health Sync On",
+      "screenshotPath": "settings-health-sync-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders On",
+      "screenshotPath": "settings-reminders-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Replay Tour Row",
+      "screenshotPath": "settings-replay-tour-row--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 157,
+    "passed": 157,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 157,
+        "passed": 157
+      }
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Welcome — Large Text",
+  "id": "cc7a2dba-f931-4653-a42b-b7b35a136a5b",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbStartScreen": "onboarding",
+      "rbContentSize": "accessibility3",
+      "rbOnboardingPage": 2
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/Onboarding/OnboardingFlowView.swift"
+}
