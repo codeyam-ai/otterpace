@@ -126,4 +126,49 @@ final class CoachEngineTests: XCTestCase {
         XCTAssertEqual(r.mood, .cheering)
         XCTAssertTrue(r.text.contains("8.1"))
     }
+
+    // MARK: dailyNudge — the computed Today-dashboard nudge (no key required)
+
+    // A recent hard run with no weekly-load spike, so the recovery branch is
+    // reached without the spiking-load caution short-circuiting it first.
+    private func recentHardRunState() -> TodayState {
+        var s = TodayState(healthKitConnected: true, steps: 5200, goalSteps: 10000)
+        s.latestWorkout = LatestWorkout(type: "run", distanceMiles: 6.0, durationMinutes: 55,
+                                        pace: "9:10/mi", date: "2026-06-21", source: "healthkit")
+        return s
+    }
+
+    // Goal met → a celebratory nudge, never safety-flagged.
+    func testDailyNudgeGoalMetCelebrates() {
+        let n = CoachEngine.dailyNudge(for: freshState(steps: 11240, goal: 10000))
+        XCTAssertEqual(n.recommendationType, "celebrate")
+        XCTAssertEqual(n.buddyMood, "celebrating")
+        XCTAssertFalse(n.safetyFlag)
+        XCTAssertTrue(n.headline.lowercased().contains("crushed"))
+    }
+
+    // A spiking weekly load takes priority and yields a safety-flagged caution.
+    func testDailyNudgeSpikingLoadIsCaution() {
+        let n = CoachEngine.dailyNudge(for: hardRunState())
+        XCTAssertEqual(n.recommendationType, "caution")
+        XCTAssertTrue(n.safetyFlag)
+        XCTAssertEqual(n.buddyMood, "recovery")
+    }
+
+    // A recent hard run with no spike → a recovery/rest nudge, not flagged.
+    func testDailyNudgeRecentHardRunIsRest() {
+        let n = CoachEngine.dailyNudge(for: recentHardRunState())
+        XCTAssertEqual(n.recommendationType, "rest")
+        XCTAssertEqual(n.buddyMood, "recovery")
+        XCTAssertFalse(n.safetyFlag)
+    }
+
+    // Below goal with nothing else going on → a gentle walk nudge that names the
+    // remaining steps, so the dashboard always has an honest, computed message.
+    func testDailyNudgeBelowGoalNudgesWalk() {
+        let n = CoachEngine.dailyNudge(for: freshState(steps: 6400, goal: 10000))
+        XCTAssertEqual(n.recommendationType, "walk")
+        XCTAssertEqual(n.buddyMood, "ready")
+        XCTAssertTrue(n.headline.contains("3,600"))
+    }
 }

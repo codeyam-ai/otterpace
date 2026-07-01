@@ -1,6 +1,6 @@
 {
   "name": "Ask Coach — Race Taper",
-  "id": "ff410bda-ed4b-4c31-ac23-d10b38447846",
+  "id": "5a46bcd5-04cc-4f9a-b5c3-4b858a1dfb98",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,15 +8,16 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbRacesJSON": "[{\"id\":\"11111111-1111-1111-1111-111111111111\",\"name\":\"October Trail Half\",\"distanceMiles\":13.1,\"date\":\"2026-06-27\",\"location\":\"Bend, OR\"}]",
-      "rbStartTab": "coach",
       "rbGoalSteps": 10000,
       "rbStartScreen": "",
-      "rbSteps": 6400,
-      "rbAskSeedQuestion": "Make me a plan for my race",
-      "rbDistanceMiles": 3.0,
       "rbDate": "2026-06-22",
-      "rbConnected": true
+      "rbAskSeedQuestion": "Make me a plan for my race",
+      "rbCoachConnected": true,
+      "rbConnected": true,
+      "rbSteps": 6400,
+      "rbRacesJSON": "[{\"id\":\"11111111-1111-1111-1111-111111111111\",\"name\":\"October Trail Half\",\"distanceMiles\":13.1,\"date\":\"2026-06-27\",\"location\":\"Bend, OR\"}]",
+      "rbStartTab": "coach",
+      "rbDistanceMiles": 3.0
     }
   },
   "scenarioType": "application",

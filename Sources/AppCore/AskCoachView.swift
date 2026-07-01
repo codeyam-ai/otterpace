@@ -44,14 +44,23 @@ public struct AskCoachView: View {
     @State private var nextId: Int = 0
     @State private var showReview: Bool
 
-    // The real-LLM coach + the user's BYO key store. When a key is connected,
-    // interactive sends go to the backend; otherwise (and on any failure) we fall
-    // back to the deterministic `CoachEngine` mock so the chat always answers.
+    // The real-LLM coach + the user's BYO key store. The conversational chat is
+    // gated on a connected key (see `chatUnlocked`); with none, the tab shows a
+    // connect-key CTA instead of a fabricated answer.
     private let keyStore = CoachKeyStore()
     private let remote = RemoteCoach()
+    private let onOpenSettings: () -> Void
 
-    public init(model: OtterpaceModel) {
+    /// The chat is available when the user has connected a key, or when a scenario
+    /// opts in via `rbCoachConnected` (so a populated conversation is capturable
+    /// offline without a real key). Otherwise the tab shows the connect-key CTA.
+    private var chatUnlocked: Bool {
+        keyStore.isConnected || UserDefaults.standard.bool(forKey: "rbCoachConnected")
+    }
+
+    public init(model: OtterpaceModel, onOpenSettings: @escaping () -> Void = {}) {
         self.model = model
+        self.onOpenSettings = onOpenSettings
         // Scenario hook: when `rbShowWeeklyReview` is seeded, present the recap
         // from the very first frame (initialized here, not in `.onAppear`) so a
         // launch-time capture lands on a fully-rendered screen, never mid-transition.
@@ -61,14 +70,19 @@ public struct AskCoachView: View {
     public var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                AskCoachHeader(onWeeklyReview: { withAnimation(Motion.overlay) { showReview = true } })
+                AskCoachHeader(connected: chatUnlocked,
+                               onWeeklyReview: { withAnimation(Motion.overlay) { showReview = true } })
                 Divider().opacity(0.4)
-                if messages.isEmpty {
+                if !chatUnlocked {
+                    AskCoachLockedState(onAddKey: onOpenSettings)
+                } else if messages.isEmpty {
                     AskCoachEmptyState()
                 } else {
                     ChatThread(messages: messages)
                 }
-                AskCoachInputBar(draft: $draft, onSend: send)
+                if chatUnlocked {
+                    AskCoachInputBar(draft: $draft, onSend: send)
+                }
             }
             .background(
                 LinearGradient(colors: [Palette.bgTop, Palette.bgBottom],
@@ -107,6 +121,8 @@ public struct AskCoachView: View {
     private func submit(_ question: String) {
         append(ChatMessage(id: takeId(), role: .user, text: question))
 
+        // Seeded/preview chat without a real key (rbCoachConnected): answer
+        // deterministically offline so captures render without a network call.
         guard let apiKey = keyStore.key else {
             ask(question, appendUser: false)
             return
@@ -121,16 +137,21 @@ public struct AskCoachView: View {
             do {
                 reply = try await remote.reply(to: question, context: context, apiKey: apiKey)
             } catch CoachError.invalidKey {
-                reply = offlineFallback(question, note: "Your AI coach key was rejected — reconnect it in Settings → AI Coach. Here's my offline take:")
+                reply = CoachReply(intent: .general,
+                    text: "Your AI coach key was rejected. Reconnect it in Settings, then ask again.",
+                    mood: .concerned)
             } catch {
-                reply = offlineFallback(question)
+                reply = CoachReply(intent: .general,
+                    text: "I couldn't reach Buddy just now. Check your connection and try again.",
+                    mood: .concerned)
             }
             replaceCoach(placeholderId, with: reply)
         }
     }
 
-    /// Deterministic mock exchange. Used by scenario seeding (and as the no-key
-    /// path). `appendUser` is false when the caller already appended the question.
+    /// Deterministic offline exchange. Used by scenario seeding and the seeded-
+    /// preview send path (a connected scenario carrying no real key). `appendUser`
+    /// is false when the caller already appended the question.
     private func ask(_ question: String, appendUser: Bool = true) {
         if appendUser {
             append(ChatMessage(id: takeId(), role: .user, text: question))
@@ -138,14 +159,6 @@ public struct AskCoachView: View {
         let reply = CoachEngine.reply(to: question, context: model.today)
         append(ChatMessage(id: takeId(), role: .coach, text: reply.text,
                            mood: reply.mood, safetyFlag: reply.safetyFlag))
-    }
-
-    /// Mock reply, optionally prefixed with a note (used when the remote coach
-    /// fails so the user still gets a useful, on-device answer).
-    private func offlineFallback(_ question: String, note: String? = nil) -> CoachReply {
-        var reply = CoachEngine.reply(to: question, context: model.today)
-        if let note { reply.text = note + "\n\n" + reply.text }
-        return reply
     }
 
     /// Swap a "thinking…" placeholder for the finished coach reply.
@@ -168,7 +181,7 @@ public struct AskCoachView: View {
     /// Review's `rbShowWeeklyReview` hook is handled in `init` so it renders from
     /// the first frame — see `showReview`.)
     private func seedFromScenario() {
-        guard messages.isEmpty else { return }
+        guard messages.isEmpty, chatUnlocked else { return }
         let seeded = UserDefaults.standard.string(forKey: "rbAskSeedQuestion") ?? ""
         let q = seeded.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty else { return }

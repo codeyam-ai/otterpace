@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "ui": {
-    "total": 25,
+    "total": 26,
     "labels": [
       [
         1,
@@ -41,66 +41,70 @@
       ],
       [
         10,
-        "Deconstruct"
+        "Interactive Test"
       ],
       [
         11,
-        "Extract TDD"
+        "Deconstruct"
       ],
       [
         12,
-        "Glossary"
+        "Extract TDD"
       ],
       [
         13,
-        "Dependency Graph"
+        "Glossary"
       ],
       [
         14,
-        "Isolation Routes"
+        "Dependency Graph"
       ],
       [
         15,
-        "Component Scenarios"
+        "Isolation Routes"
       ],
       [
         16,
-        "Curate Scenarios"
+        "Component Scenarios"
       ],
       [
         17,
-        "App Scenarios"
+        "Curate Scenarios"
       ],
       [
         18,
-        "Present"
+        "App Scenarios"
       ],
       [
         19,
-        "Reconcile"
+        "Present"
       ],
       [
         20,
-        "Journal"
+        "Reconcile"
       ],
       [
         21,
-        "Pre-Commit Sync"
+        "Journal"
       ],
       [
         22,
-        "Finalize"
+        "Pre-Commit Sync"
       ],
       [
         23,
-        "Commit"
+        "Finalize"
       ],
       [
         24,
-        "Push"
+        "Commit"
       ],
       [
         25,
+        "Push"
+      ],
+      [
+        26,
         "Feature Complete"
       ]
     ],
@@ -139,70 +143,74 @@
       ],
       [
         9,
-        "Present the live preview and get user approval to proceed."
+        "Capture and show a verified live-preview demonstration of the change."
       ],
       [
         10,
-        "Read the code and plan all component and function extractions."
+        "Hand the live preview to the user for interactive testing and get approval."
       ],
       [
         11,
-        "Extract components and functions via TDD; cover library functions with multiple tests."
+        "Read the code and plan all component and function extractions."
       ],
       [
         12,
-        "Register every new test and glossary entry produced in the prior step."
+        "Extract components and functions via TDD; cover library functions with multiple tests."
       ],
       [
         13,
-        "Rebuild the dependency graph after extraction."
+        "Register every new test and glossary entry produced in the prior step."
       ],
       [
         14,
-        "Create isolation routes for every visual component."
+        "Rebuild the dependency graph after extraction."
       ],
       [
         15,
-        "Register and capture component-level scenarios for every visual component."
+        "Create isolation routes for every visual component."
       ],
       [
         16,
-        "Curate the existing app-scenario set — review, consolidate, dedup, and edit in place — before registering new scenarios."
+        "Register and capture component-level scenarios for every visual component."
       ],
       [
         17,
-        "Create app-level scenarios that show full pages with realistic data."
+        "Curate the existing app-scenario set — review, consolidate, dedup, and edit in place — before registering new scenarios."
       ],
       [
         18,
-        "Final approval gate — recapture screenshots and present a summary of all work to the user."
+        "Create app-level scenarios that show full pages with realistic data."
       ],
       [
         19,
-        "Run the audit gate, reconcile any registry/glossary drift until clean."
+        "Final approval gate — recapture screenshots and present a summary of all work to the user."
       ],
       [
         20,
-        "Create or update the journal entry documenting what was built."
+        "Run the audit gate, reconcile any registry/glossary drift until clean."
       ],
       [
         21,
-        "Sync local state with the remote so the next commit lands on a merged tree."
+        "Create or update the journal entry documenting what was built."
       ],
       [
         22,
-        "Finalize the session — run the full suite once."
+        "Sync local state with the remote so the next commit lands on a merged tree."
       ],
       [
         23,
-        "Commit all changes to git."
+        "Finalize the session — run the full suite once."
       ],
       [
         24,
-        "Push the branch to the remote repository."
+        "Commit all changes to git."
       ],
       [
         25,
+        "Push the branch to the remote repository."
+      ],
+      [
+        26,
         "Fire the feature-complete modal — the cycle ends here."
       ]
     ],
@@ -241,70 +249,74 @@
       ],
       [
         9,
-        "Present (AskUserQuestion) and gate on user approval. Do NOT refactor or add tests until approved."
+        "Produce and show a verified preview capture, then advance to interactive testing. Do NOT refactor or add tests yet."
       ],
       [
         10,
-        "Read code and write the extraction plan. Do NOT write code yet. Read the glossary through the CLI, never with `Read`."
+        "Guide interactive testing (AskUserQuestion) and gate on user approval. Do NOT refactor or add tests until approved."
       ],
       [
         11,
-        "Extract via TDD — failing test first, then implement. Page files contain ZERO direct JSX."
+        "Read code and write the extraction plan. Do NOT write code yet. Read the glossary through the CLI, never with `Read`."
       ],
       [
         12,
-        "Register every new test and glossary entry. Do NOT add new application code."
+        "Extract via TDD — failing test first, then implement. Page files contain ZERO direct JSX."
       ],
       [
         13,
-        "Rebuild the dependency graph. Read the graph and glossary through the CLI, never with `Read`."
+        "Register every new test and glossary entry. Do NOT add new application code."
       ],
       [
         14,
-        "Create isolation routes for every visual component. Do NOT modify component implementations."
+        "Rebuild the dependency graph. Read the graph and glossary through the CLI, never with `Read`."
       ],
       [
         15,
-        "Register and capture component scenarios only. Do NOT create app-level scenarios in this step."
+        "Create isolation routes for every visual component. Do NOT modify component implementations."
       ],
       [
         16,
-        "Curate the existing app-scenario set — review, consolidate, dedup, retire obsolete, edit in place. Do NOT register new scenarios in this step."
+        "Register and capture component scenarios only. Do NOT create app-level scenarios in this step."
       ],
       [
         17,
-        "Create app-level scenarios — do NOT set `componentName`. Do NOT modify application code."
+        "Curate the existing app-scenario set — review, consolidate, dedup, retire obsolete, edit in place. Do NOT register new scenarios in this step."
       ],
       [
         18,
-        "Mandatory approval gate. Recapture screenshots, present, AskUserQuestion. Do NOT skip — reconcile fires AFTER this gate."
+        "Create app-level scenarios — do NOT set `componentName`. Do NOT modify application code."
       ],
       [
         19,
-        "Run the audit gate in partial-run mode and reconcile drift. Do NOT pre-emptively run flag-free `refresh-tests`."
+        "Mandatory approval gate. Recapture screenshots, present, AskUserQuestion. Do NOT skip — reconcile fires AFTER this gate."
       ],
       [
         20,
-        "Create or update the journal entry. Do NOT include a timestamp — it is auto-generated. The journal entry's commit-SHA association is derived at read time from `git log --diff-filter=A` (see history-show-all-commits plan); do NOT write a `commitSha` field by hand."
+        "Run the audit gate in partial-run mode and reconcile drift. Do NOT pre-emptively run flag-free `refresh-tests`."
       ],
       [
         21,
-        "Run `editor pre-commit-sync`. Do NOT skip — this is the enforced phase that catches remote drift and auto-recovers state."
+        "Create or update the journal entry. Do NOT include a timestamp — it is auto-generated. The journal entry's commit-SHA association is derived at read time from `git log --diff-filter=A` (see history-show-all-commits plan); do NOT write a `commitSha` field by hand."
       ],
       [
         22,
-        "Finalize: pick `session-finalize` (~7 min full suite) or `session-checkpoint --defer` (~30 s). Both stamp the relevant state; do not bypass the menu."
+        "Run `editor pre-commit-sync`. Do NOT skip — this is the enforced phase that catches remote drift and auto-recovers state."
       ],
       [
         23,
-        "Commit all changes. Do NOT push — that happens at the push slug."
+        "Finalize: pick `session-finalize` (~7 min full suite) or `session-checkpoint --defer` (~30 s). Both stamp the relevant state; do not bypass the menu."
       ],
       [
         24,
-        "Check for a git remote and offer to push. WAIT for the user's answer before starting the next feature."
+        "Commit all changes. Do NOT push — that happens at the push slug."
       ],
       [
         25,
+        "Check for a git remote and offer to push. WAIT for the user's answer before starting the next feature."
+      ],
+      [
+        26,
         "Fire the feature-complete modal. WAIT for the user's choice. Do NOT start a new feature without explicit instruction."
       ]
     ],
@@ -347,66 +359,70 @@
       ],
       [
         10,
-        "ui-deconstruct"
+        "present-interactive"
       ],
       [
         11,
-        "ui-extract-tdd"
+        "ui-deconstruct"
       ],
       [
         12,
-        "register-incremental"
+        "ui-extract-tdd"
       ],
       [
         13,
-        "dependency-graph-rebuild"
+        "register-incremental"
       ],
       [
         14,
-        "isolation-routes"
+        "dependency-graph-rebuild"
       ],
       [
         15,
-        "ui-component-scenarios"
+        "isolation-routes"
       ],
       [
         16,
-        "ui-app-scenarios-curate"
+        "ui-component-scenarios"
       ],
       [
         17,
-        "ui-app-scenarios"
+        "ui-app-scenarios-curate"
       ],
       [
         18,
-        "ui-present"
+        "ui-app-scenarios"
       ],
       [
         19,
-        "reconcile"
+        "ui-present"
       ],
       [
         20,
-        "ui-journal"
+        "reconcile"
       ],
       [
         21,
-        "pre-commit-sync"
+        "ui-journal"
       ],
       [
         22,
-        "finalize"
+        "pre-commit-sync"
       ],
       [
         23,
-        "commit"
+        "finalize"
       ],
       [
         24,
-        "push"
+        "commit"
       ],
       [
         25,
+        "push"
+      ],
+      [
+        26,
         "feature-complete"
       ]
     ],
@@ -434,6 +450,7 @@
     ],
     "previewRequiredSlugs": [
       "present-live",
+      "present-interactive",
       "ui-present"
     ]
   },

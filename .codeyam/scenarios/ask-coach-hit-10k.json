@@ -1,6 +1,6 @@
 {
   "name": "Ask Coach — Hit 10K",
-  "id": "5b758164-12d3-4fbb-9713-23f7794366ad",
+  "id": "713d787c-fbaf-4e30-90b4-703becf9e7b5",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,25 +8,26 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbGoalSteps": 10000,
-      "rbContentSize": "",
-      "rbStartTab": "coach",
-      "rbRestDaysThisWeek": 3,
-      "rbActiveMinutes": 30,
-      "rbPreviewMode": "",
-      "rbConnected": true,
-      "rbAskSeedQuestion": "How do I get to 10K steps without overdoing it?",
+      "rbWeeklyMileage": 11.0,
       "rbShowHistory": false,
-      "rbSteps": 6400,
-      "rbDaysRunThisWeek": 2,
-      "rbMinutesSinceMovement": 92,
-      "rbShowWeeklyReview": false,
+      "rbActiveMinutes": 30,
+      "rbAskSeedQuestion": "How do I get to 10K steps without overdoing it?",
+      "rbRestDaysThisWeek": 3,
+      "rbDate": "2026-06-22",
+      "rbConnected": true,
+      "rbContentSize": "",
+      "rbGoalSteps": 10000,
       "rbLoadTrend": "steady",
       "rbLongestRunMiles": 4.2,
-      "rbWeeklyMileage": 11.0,
+      "rbSteps": 6400,
+      "rbMinutesSinceMovement": 92,
+      "rbCoachConnected": true,
       "rbDistanceMiles": 3.0,
-      "rbDate": "2026-06-22",
-      "rbActiveEnergyKcal": 220
+      "rbActiveEnergyKcal": 220,
+      "rbShowWeeklyReview": false,
+      "rbDaysRunThisWeek": 2,
+      "rbPreviewMode": "",
+      "rbStartTab": "coach"
     }
   },
   "scenarioType": "application",

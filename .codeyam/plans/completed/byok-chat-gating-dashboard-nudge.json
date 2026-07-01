@@ -1,0 +1,18 @@
+{
+  "completedAt": "2026-07-01T18:05:09Z",
+  "createdAt": "2026-06-29T20:25:25Z",
+  "deliverables": [
+    "Sources/AppCore/AskCoachHeader.swift",
+    "Sources/AppCore/AskCoachLockedState.swift",
+    "Sources/AppCore/AskCoachView.swift",
+    "Sources/AppCore/CoachEngine.swift",
+    "Sources/AppCore/ContentView.swift",
+    "Sources/AppCore/TodayView.swift",
+    "Tests/AppCoreTests/CoachEngineTests.swift"
+  ],
+  "journalTimestamp": "2026-07-01T18:05:09Z",
+  "mode": "ui",
+  "planFile": "completed/byok-chat-gating-dashboard-nudge.md",
+  "slug": "byok-chat-gating-dashboard-nudge",
+  "title": "BYOK Chat Gating + Real Dashboard Nudge"
+}

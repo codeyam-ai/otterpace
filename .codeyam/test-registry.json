@@ -426,6 +426,42 @@
       "runner": "tests"
     },
     {
+      "description": "Below goal with nothing else notable, dailyNudge returns a gentle walk nudge naming the remaining steps.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testDailyNudgeBelowGoalNudgesWalk",
+      "line": 168,
+      "registeredAt": "2026-07-01T18:02:05.234694+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "When the step goal is met, dailyNudge returns a celebratory, non-safety-flagged nudge (buddyMood celebrating).",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testDailyNudgeGoalMetCelebrates",
+      "line": 142,
+      "registeredAt": "2026-07-01T18:01:53.472520+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A recent hard run with no load spike yields a recovery/rest nudge that is not safety-flagged.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testDailyNudgeRecentHardRunIsRest",
+      "line": 159,
+      "registeredAt": "2026-07-01T18:02:01.329499+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A spiking weekly load takes priority and yields a safety-flagged caution nudge (buddyMood recovery).",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testDailyNudgeSpikingLoadIsCaution",
+      "line": 151,
+      "registeredAt": "2026-07-01T18:01:57.399554+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "An injury question is always safety-flagged, concerned, and never diagnoses.",
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",

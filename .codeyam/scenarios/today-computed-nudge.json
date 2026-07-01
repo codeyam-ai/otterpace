@@ -1,0 +1,37 @@
+{
+  "name": "Today - Computed Nudge",
+  "id": "eb2e0eb3-7bb9-4397-bc2d-12cea0674406",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbAskSeedQuestion": "",
+      "rbCoachSafety": false,
+      "rbShowWeeklyReview": false,
+      "rbCoachBody": "",
+      "rbGoalSteps": 10000,
+      "rbShowSettings": false,
+      "rbContentSize": "",
+      "rbWorkoutType": "",
+      "rbSteps": 6400,
+      "rbStartTab": "today",
+      "rbActiveEnergyKcal": 210,
+      "rbActiveMinutes": 28,
+      "rbDistanceMiles": 3.1,
+      "rbDate": "2026-06-22",
+      "rbMinutesSinceMovement": 92,
+      "rbPreviewMode": "",
+      "rbShowHistory": false,
+      "rbCoachHeadline": "",
+      "rbBuddyMood": "ready",
+      "rbLoadTrend": "",
+      "rbCoachType": "",
+      "rbConnected": true
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/ContentView.swift"
+}

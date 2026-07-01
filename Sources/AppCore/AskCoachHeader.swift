@@ -1,9 +1,10 @@
 import SwiftUI
 
 // The Ask Coach screen's title bar: a small Buddy avatar beside the screen name
-// and a "mock coach" subtitle that's honest about the current coaching mode. A
-// trailing "Weekly" pill opens the generated Weekly Review recap.
+// and a subtitle reflecting the coaching mode. A trailing "Weekly" pill opens
+// the generated Weekly Review recap.
 struct AskCoachHeader: View {
+    var connected: Bool = false
     var onWeeklyReview: () -> Void = {}
 
     var body: some View {
@@ -13,7 +14,7 @@ struct AskCoachHeader: View {
                 Text("Ask Coach")
                     .font(Typography.title3)
                     .foregroundColor(Palette.ink)
-                Text("Buddy • mock coach")
+                Text(connected ? "Buddy • AI coach" : "Buddy")
                     .font(Typography.caption)
                     .foregroundColor(Palette.subtle)
             }

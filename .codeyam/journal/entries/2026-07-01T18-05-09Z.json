@@ -1,0 +1,291 @@
+{
+  "timestamp": "2026-07-01T18:05:09Z",
+  "title": "BYOK Chat Gating + Real Dashboard Nudge",
+  "type": "feature",
+  "userRequest": "## Summary\n\nMake Otterpace honest about what is AI and what is computed. Today the\nopen-ended \"Ask Buddy\" chat answers with a rule-based mock (labeled \"mock\ncoach\") when no Anthropic key is connected, and the Today dashboard's coach\nnudge only appears when a scenario seeds it (`rbCoachHeadline`) — in\nproduction it is `nil`, so real users see no nudge. This plan: (1) generates\nthe dashboard coach nudge deterministically from the day's data so the no-key\ntier genuinely delivers computed insights + encouragement; (2) gates the\nconversational chat behind bring-your-own-key — no key shows an \"Add your AI\nkey to chat with Buddy\" prompt instead of a fabricated answer; (3) removes the\n\"mock coach\" label. The result: free tier = real insights + nudges; AI chat =\nthe reason to add a key. Everything stays reviewable by Apple with no setup.\n\n## Key Decisions\n\n- **Free tier is \"insights + nudges,\" not a fake coach.** The deterministic\n  `CoachEngine` stops impersonating a conversational coach in the chat and\n  instead powers the honest, computed Today nudge. This kills the \"mock coach\"\n  label problem at the root.\n- **Dashboard nudge becomes a real production feature** (chosen over\n  \"gate chat only\"). `TodayState.coach` is currently populated only from the\n  `rbCoachHeadline` seed (`Model.swift:196`); in production it is `nil`. We\n  generate it from `TodayState` via `CoachEngine` so no-key users get a real\n  nudge, and so the App Store dashboard screenshot reflects real behavior.\n- **Conversational chat is key-gated, not removed.** With a key: `RemoteCoach`\n  exactly as today. Without a key: a clear CTA into Settings, not a mock reply.\n- **On a keyed transient failure, show a retry/error, not a fabricated mock.**\n  Today `submit` falls back to `CoachEngine` on network/server errors, which\n  reintroduces fake answers. Replace that with an honest \"couldn't reach Buddy,\n  try again\" state. Keep the existing invalid-key message (points to Settings).\n- **Keep all coach SAFETY behavior on the keyed path** (backend `api/coach.ts`\n  owns prompt + safety; unchanged).\n\n## Implementation\n\n### 1. Generate the Today coach nudge in production\n\n**File**: `Sources/AppCore/Model.swift`\n\nIn `TodayState.readState` (and/or the production builder), when no\n`rbCoachHeadline` seed is present, populate `coach: CoachRecommendation?` by\nderiving it from the current `TodayState` (steps vs goal, load trend, latest\nworkout). Reuse `CoachEngine`'s deterministic logic (e.g. a new\n`CoachEngine.dailyNudge(context:)` that returns a `CoachRecommendation` from\nthe same intent/branch helpers as `generalReply`/`stepsReply`/`runOrRestReply`)\nso the nudge is computed, not seeded. Seeds still override for scenarios.\n\n### 2. Add a dashboard-nudge generator to CoachEngine\n\n**File**: `Sources/AppCore/CoachEngine.swift`\n\nAdd `static func dailyNudge(context: TodayState, asOf:) -> CoachRecommendation`\nthat maps the day's state to a short headline + body + `recommendationType` +\n`safetyFlag` (celebrate / easy-day / nudge-to-move / recovery-caution). This is\nthe honest, computed encouragement — distinct from the chat. Keep the existing\n`reply(to:context:)` (still used by scenario seeding for chat captures; see #6).\n\n### 3. Gate the chat behind a connected key\n\n**File**: `Sources/AppCore/AskCoachView.swift`\n\n- In `submit(_:)`, when `keyStore.key == nil`, do NOT call `ask()` (the mock).\n  Instead surface the no-key state: an \"Add your AI key to chat with Buddy\"\n  message/CTA that routes to Settings → AI Coach (reuse the existing\n  Settings/coach navigation; the chat already has `model`). Built-in insights\n  are free; conversational chat needs a key.\n- Keyed path unchanged (`RemoteCoach`), except: on `CoachError.network`/\n  `.server`, replace `offlineFallback(...)` (mock) with a retry/error coach\n  bubble. Keep the `.invalidKey` message.\n- Remove `offlineFallback` and the no-key branch's `ask(...)` mock call.\n  `ask(...)` itself stays only if still needed by scenario seeding (#6);\n  otherwise inline/remove.\n\n### 4. Empty / CTA state for the no-key chat\n\n**File**: `Sources/AppCore/AskCoachEmptyState.swift` (and/or a small new\nsubview)\n\nWhen no key is connected, the empty chat should present the \"Add your AI key\"\nexplainer + button rather than the \"ask me anything\" prompt. When a key is\nconnected, keep today's empty prompt. Drive this off `CoachKeyStore.isConnected`.\n\n### 5. Remove the \"mock coach\" label\n\n**File**: `Sources/AppCore/AskCoachHeader.swift`\n\nReplace `Text(\"Buddy • mock coach\")` (line 16). When a key is connected, show\n`Buddy • AI coach` (or just `Buddy`); with no key, the header pairs with the\nCTA empty state, so show `Buddy` with no \"mock\" wording. Update the file's\nheader comment that describes the \"mock coach\" subtitle.\n\n### 6. Keep scenarios capturable offline\n\n**Files**: affected scenario JSON under `.codeyam/scenarios/` + any new seed\nkey handling in `AskCoachView` / `Model`.\n\nThe ask-coach scenarios (`ask-coach-knee-pain`, `ask-coach-hit-10k`,\n`ask-coach-mileage-spike`, `ask-coach-race-taper`, `ask-coach-run-or-rest`)\ncurrently render a mock reply via `rbAskSeedQuestion` → `CoachEngine`. After\ngating, the no-key path won't render a reply. Preserve deterministic, offline\ncaptures by treating a seeded conversation as a \"connected\" preview: e.g. when\n`rbAskSeedQuestion` is present, seed the chat as if a key is connected and\nrender the reply directly from `CoachEngine` (no live network). Add a new\nno-key CTA scenario (e.g. `ask-coach-no-key`) to demonstrate the gated state.\nRe-capture the App Store screenshot `02-ask-coach-knee-pain.png` from the\nkeyed-seed state afterward.\n\n### 7. Tests\n\n**File**: `Tests/AppCoreTests/CoachEngineTests.swift` (+ new cases)\n\n- Add tests for `CoachEngine.dailyNudge(context:)` across states (goal hit,\n  load spike, fresh start, recovery caution).\n- Add tests that `requireUser`-style gating holds: no key → chat produces the\n  CTA path and makes no network call; key present → routes to `RemoteCoach`.\n- Keep existing `CoachEngine.reply` intent tests (still used by seeded chat\n  captures).\n\n## Reused existing code\n\n- `CoachEngine` / `CoachIntent` / `CoachReply` from\n  `Sources/AppCore/CoachEngine.swift` (glossary: `CoachEngine`, `CoachIntent`) —\n  source of the deterministic nudge + seeded-chat replies.\n- `CoachKeyStore` / `RemoteCoach` / `CoachConfig` from\n  `Sources/AppCore/Coach/RemoteCoach.swift` — `isConnected` is the gate signal;\n  `RemoteCoach.reply` is the keyed path (unchanged).\n- `CoachRecommendation` + `TodayState` from `Sources/AppCore/Model.swift`\n  (glossary: `OtterpaceModel`/model types) — the nudge shape the dashboard\n  `CoachCard` already renders.\n- `CoachCard` from `Sources/AppCore/CoachCard.swift` (glossary: `CoachCard`) —\n  renders the dashboard nudge as-is; no change needed beyond it now having data\n  in production.\n- Settings AI Coach card / key entry in `Sources/AppCore/SettingsView.swift`\n  (`coachCard`, line ~349) — the CTA destination.\n\n## Scenarios to Demonstrate\n\n- Today dashboard with a real computed nudge, no key (goal crushed → celebrate).\n- Today dashboard nudge in a recovery-caution state (load spiking).\n- Ask Buddy, no key: the \"Add your AI key to chat with Buddy\" CTA empty state.\n- Ask Buddy, key connected: a populated conversation (seeded reply, offline).\n- Ask Buddy, key connected, transient failure: honest retry/error bubble.\n- Settings AI Coach card: not connected vs connected.",
+  "description": "The Today dashboard now generates its coach nudge deterministically via CoachEngine.dailyNudge, so users without an AI key still get a real, computed recommendation (e.g. a gentle-walk nudge naming the steps remaining to goal, or a rest/caution nudge after a hard run or spiking load). Conversational chat with Buddy is now gated behind bring-your-own-key: without a key the coach shows an honest \"Add your AI key to chat with Buddy\" call-to-action instead of a fabricated mock reply, and the old \"mock coach\" label is gone (the Ask Coach header now reads \"Buddy • AI coach\"). New CoachEngine.dailyNudge unit tests cover the celebrate/caution/rest/walk branches.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/cache/step-metadata.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/byok-chat-gating-dashboard-nudge.md\t.codeyam/plans/completed/byok-chat-gating-dashboard-nudge.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/accessibility-large-text-coach-safety.json",
+      "status": "deleted"
+    },
+    {
+      "path": ".codeyam/scenarios/accessibility-large-text-today.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-empty-chat.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-hit-10k.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-knee-pain.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-mileage-spike.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-race-taper.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-run-or-rest.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/accessibility-large-text-coach-safety--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/accessibility-large-text-coach-safety--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-empty-chat--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-empty-chat--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-hit-10k--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-knee-pain--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-mileage-spike--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-race-taper--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-run-or-rest--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-add-a-race-banner--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-add-a-race-banner.json",
+      "status": "deleted"
+    },
+    {
+      "path": ".codeyam/scenarios/today-almost-there.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-custom-goal.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-day-one-connect.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-fresh-start.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-long-content.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-midday-nudge.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-recovery-caution.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-zero-step-morning.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/provider-auth-verdict.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/scenario-taxonomy.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/AskCoachHeader.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/AskCoachView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CoachEngine.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ContentView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/TodayView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/subtle-buddy-ask-coach-header.md",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-no-key-connect-prompt.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-no-key-connect-prompt--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-computed-nudge--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/today-computed-nudge.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/AskCoachLockedState.swift",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Accessibility — Large Text Today",
+      "screenshotPath": "accessibility-large-text-today--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Empty Chat",
+      "screenshotPath": "ask-coach-empty-chat--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Hit 10K",
+      "screenshotPath": "ask-coach-hit-10k--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Knee Pain",
+      "screenshotPath": "ask-coach-knee-pain--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Mileage Spike",
+      "screenshotPath": "ask-coach-mileage-spike--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — No Key (Connect Prompt)",
+      "screenshotPath": "ask-coach-no-key-connect-prompt--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Race Taper",
+      "screenshotPath": "ask-coach-race-taper--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Run or Rest",
+      "screenshotPath": "ask-coach-run-or-rest--iphone-16.png"
+    },
+    {
+      "name": "Today - Almost There",
+      "screenshotPath": "today-almost-there--iphone-16.png"
+    },
+    {
+      "name": "Today - Computed Nudge",
+      "screenshotPath": "today-computed-nudge--iphone-16.png"
+    },
+    {
+      "name": "Today - Day One (Connect)",
+      "screenshotPath": "today-day-one-connect--iphone-16.png"
+    },
+    {
+      "name": "Today - Fresh Start",
+      "screenshotPath": "today-fresh-start--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed",
+      "screenshotPath": "today-goal-crushed--iphone-16.png"
+    },
+    {
+      "name": "Today - Long Content",
+      "screenshotPath": "today-long-content--iphone-16.png"
+    },
+    {
+      "name": "Today - Midday Nudge",
+      "screenshotPath": "today-midday-nudge--iphone-16.png"
+    },
+    {
+      "name": "Today - Recovery Caution",
+      "screenshotPath": "today-recovery-caution--iphone-16.png"
+    },
+    {
+      "name": "Today - Zero-Step Morning",
+      "screenshotPath": "today-zero-step-morning--iphone-16.png"
+    },
+    {
+      "name": "Today — Custom Goal",
+      "screenshotPath": "today-custom-goal--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 157,
+    "passed": 157,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 157,
+        "passed": 157
+      }
+    ]
+  }
+}

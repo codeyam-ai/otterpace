@@ -111,6 +111,16 @@
     }
   },
   {
+    "conformsToView": true,
+    "description": "The Ask Coach no-key state: explains that Today insights and the weekly review are always free while conversational chat needs the user's own AI key, with a button to connect one in Settings.",
+    "filePath": "Sources/AppCore/AskCoachLockedState.swift",
+    "name": "AskCoachLockedState",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the ask-coach-no-key application scenario.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
     "description": "The Ask Coach chat screen. Pure composition over AskCoachHeader, the ChatThread (or AskCoachEmptyState), and AskCoachInputBar. Owns the conversation state and the send/seed behavior: on send it appends the user's question and Buddy's CoachEngine reply; on appear it replays a seeded rbAskSeedQuestion so a scenario renders a real exchange.",
     "filePath": "Sources/AppCore/AskCoachView.swift",
     "name": "AskCoachView",

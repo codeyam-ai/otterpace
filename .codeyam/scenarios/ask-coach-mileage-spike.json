@@ -1,6 +1,6 @@
 {
   "name": "Ask Coach — Mileage Spike",
-  "id": "d4c86641-0ac6-48f0-b9cf-43022cc1d034",
+  "id": "b124f76b-2a91-408c-a8e0-62bb9781b9ff",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,25 +8,26 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbDate": "2026-06-22",
-      "rbShowWeeklyReview": false,
-      "rbConnected": true,
-      "rbLongestRunMiles": 9.0,
-      "rbRestDaysThisWeek": 0,
-      "rbStartTab": "coach",
-      "rbPreviewMode": "",
       "rbGoalSteps": 10000,
       "rbContentSize": "",
+      "rbPreviewMode": "",
+      "rbCoachConnected": true,
+      "rbDaysRunThisWeek": 5,
+      "rbDistanceMiles": 3.4,
+      "rbConnected": true,
+      "rbLongestRunMiles": 9.0,
+      "rbActiveEnergyKcal": 260,
+      "rbStartTab": "coach",
+      "rbShowHistory": false,
+      "rbAskSeedQuestion": "Am I increasing mileage too fast?",
+      "rbActiveMinutes": 41,
+      "rbRestDaysThisWeek": 0,
       "rbSteps": 7200,
       "rbLoadTrend": "spiking",
-      "rbDistanceMiles": 3.4,
-      "rbWeeklyMileage": 24.0,
+      "rbShowWeeklyReview": false,
+      "rbDate": "2026-06-22",
       "rbMinutesSinceMovement": 30,
-      "rbActiveMinutes": 41,
-      "rbActiveEnergyKcal": 260,
-      "rbAskSeedQuestion": "Am I increasing mileage too fast?",
-      "rbDaysRunThisWeek": 5,
-      "rbShowHistory": false
+      "rbWeeklyMileage": 24.0
     }
   },
   "scenarioType": "application",

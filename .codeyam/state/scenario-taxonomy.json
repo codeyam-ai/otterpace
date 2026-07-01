@@ -84,7 +84,7 @@
       },
       "error": {
         "status": "n-a",
-        "reason": "The mock engine always returns a valid curated reply; no failure path exists in Milestone 2 mock mode."
+        "reason": "BYOK gating added a real error path (keyed transient network/server failure -> honest retry bubble, AskCoachView.submit catch), but it is only reachable via a live network failure with a connected key; there is no offline preview seed hook, so it cannot be captured as a static seeded scenario."
       },
       "key-interaction": {
         "status": "added"

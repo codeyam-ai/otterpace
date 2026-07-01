@@ -206,3 +206,55 @@ To register your tests with the editor after writing them, run:
 This diffs the runner output against the registry and auto-adds new tests —
 line numbers and descriptions are resolved automatically, so you do not need
 to pass `--line` by hand.
+
+<!-- codeyam:run-and-edit:start -->
+## Develop this project with codeyam-editor
+
+This project is built with [codeyam-editor](https://codeyam.com) — code and runnable data scenarios are authored side by side against a live preview.
+
+```bash
+# Launch the editor (split-screen terminal + live preview)
+codeyam-editor editor
+
+# Run the tests
+swift test --parallel --disable-swift-testing --xunit-output .codeyam/swift-tests.xml
+```
+<!-- codeyam:run-and-edit:end -->
+
+<!-- codeyam:scenario-gallery:start -->
+## Scenario gallery
+
+States captured as runnable scenarios with codeyam-editor:
+
+### Accessibility — Large Text Today
+
+![Accessibility — Large Text Today](.codeyam/scenarios/screenshots/accessibility-large-text-today--iphone-16.png)
+
+### Activity History — Empty
+
+![Activity History — Empty](.codeyam/scenarios/screenshots/activity-history-empty--iphone-16.png)
+
+### Activity History — Long Values
+
+![Activity History — Long Values](.codeyam/scenarios/screenshots/activity-history-long-values--iphone-16.png)
+
+### Activity History — Rich Multi-Week
+
+![Activity History — Rich Multi-Week](.codeyam/scenarios/screenshots/activity-history-rich-multi-week--iphone-16.png)
+
+### Activity History — Sparse
+
+![Activity History — Sparse](.codeyam/scenarios/screenshots/activity-history-sparse--iphone-16.png)
+
+### App Icon — Showcase
+
+![App Icon — Showcase](.codeyam/scenarios/screenshots/app-icon-showcase--iphone-16.png)
+
+### Ask Coach — Empty Chat
+
+![Ask Coach — Empty Chat](.codeyam/scenarios/screenshots/ask-coach-empty-chat--iphone-16.png)
+
+### Ask Coach — Hit 10K
+
+![Ask Coach — Hit 10K](.codeyam/scenarios/screenshots/ask-coach-hit-10k--iphone-16.png)
+<!-- codeyam:scenario-gallery:end -->

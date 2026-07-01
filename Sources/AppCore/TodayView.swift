@@ -52,9 +52,10 @@ public struct TodayDashboard: View {
                             }
                         )
                     }
-                    if let coach = model.today.coach {
-                        CoachCard(coach: coach, onAskCoach: onAskCoach)
-                    }
+                    // Seeded scenarios may pin a coach recommendation; otherwise
+                    // compute the honest nudge from the day's data (no key needed).
+                    CoachCard(coach: model.today.coach ?? CoachEngine.dailyNudge(for: model.today),
+                              onAskCoach: onAskCoach)
                     if let workout = model.today.latestWorkout {
                         WorkoutCard(workout: workout)
                     }

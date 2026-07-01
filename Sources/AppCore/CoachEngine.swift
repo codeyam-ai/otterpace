@@ -82,6 +82,55 @@ public enum CoachEngine {
         }
     }
 
+    /// Build the deterministic Today-dashboard nudge from the day's state. This is
+    /// the honest, computed encouragement every user sees with no AI key required
+    /// (analysis, not pretend reasoning) — distinct from `reply(to:context:)`, which
+    /// is a chat answer. A scenario's seeded `rbCoachHeadline` still overrides this.
+    public static func dailyNudge(for c: TodayState, asOf today: String = "") -> CoachRecommendation {
+        let day = resolvedToday(today, c)
+        // Safety first: a spiking weekly load pulls the nudge toward caution.
+        if let l = c.weeklyLoad, l.loadTrend == "spiking" {
+            return CoachRecommendation(
+                buddyMood: "recovery",
+                headline: "Ease up this week",
+                body: "Your weekly load is climbing, about \(miles(l.weeklyMileage)) mi so far. Hold steady or pull back about 10% and keep runs easy, so the work settles into fitness instead of soreness.",
+                recommendationType: "caution",
+                safetyFlag: true)
+        }
+        // A recent hard effort means today is for recovery.
+        if ranHardRecently(c) {
+            return CoachRecommendation(
+                buddyMood: "recovery",
+                headline: "Recover today",
+                body: "After that recent effort, an easy 20 to 40 minute walk or some light mobility is the move. That's how hard work turns into fitness.",
+                recommendationType: "rest")
+        }
+        // Goal met for the day.
+        let remaining = max(0, c.goalSteps - c.steps)
+        if remaining == 0 {
+            return CoachRecommendation(
+                buddyMood: "celebrating",
+                headline: "Goal crushed, nice work!",
+                body: "You cleared \(formatted(c.goalSteps)) steps today. Anything more is a bonus, so a gentle walk to loosen up is plenty.",
+                recommendationType: "celebrate")
+        }
+        // A race on the calendar frames the day.
+        if let clause = raceClause(c, asOf: day) {
+            return CoachRecommendation(
+                buddyMood: "ready",
+                headline: "Eyes on race day",
+                body: clause,
+                recommendationType: "run")
+        }
+        // Otherwise, a gentle nudge toward the step goal.
+        let minutes = max(8, Int((Double(remaining) / 110.0).rounded()))
+        return CoachRecommendation(
+            buddyMood: "ready",
+            headline: "\(formatted(remaining)) steps to go",
+            body: "A relaxed \(minutes)-minute walk gets you to \(formatted(c.goalSteps)). Keep it light and consistent, that's what builds the habit.",
+            recommendationType: "walk")
+    }
+
     /// The "today" date used for race math: an explicit override wins, else the
     /// context's own date, else the system date (only hit in production / when no
     /// race is set, so determinism for the no-race tests is preserved).

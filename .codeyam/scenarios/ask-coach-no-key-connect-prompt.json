@@ -1,0 +1,28 @@
+{
+  "name": "Ask Coach — No Key (Connect Prompt)",
+  "id": "038ef3ff-832e-47bd-b9a9-446dfadb8e10",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbStartTab": "coach",
+      "rbDate": "2026-06-22",
+      "rbDistanceMiles": 3.1,
+      "rbSteps": 6400,
+      "rbCoachConnected": false,
+      "rbAskSeedQuestion": "",
+      "rbShowWeeklyReview": false,
+      "rbContentSize": "",
+      "rbActiveMinutes": 28,
+      "rbConnected": true,
+      "rbShowHistory": false,
+      "rbGoalSteps": 10000,
+      "rbPreviewMode": ""
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/AskCoachView.swift"
+}

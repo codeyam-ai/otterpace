@@ -1,6 +1,6 @@
 {
   "name": "Ask Coach — Knee Pain",
-  "id": "ca5e4d7c-16ba-4379-ae20-07e8f0be406e",
+  "id": "4f4b5dea-b366-4557-b324-4bbf0da3766f",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,27 +8,28 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbStartTab": "coach",
-      "rbShowHistory": false,
-      "rbDate": "2026-06-22",
-      "rbWorkoutSource": "healthkit",
-      "rbAskSeedQuestion": "My knee hurts after my run yesterday",
-      "rbConnected": true,
       "rbWorkoutType": "run",
-      "rbContentSize": "",
+      "rbPreviewMode": "",
+      "rbWorkoutSource": "healthkit",
       "rbGoalSteps": 10000,
-      "rbWorkoutDistanceMiles": 5.0,
+      "rbDate": "2026-06-22",
+      "rbShowHistory": false,
+      "rbActiveEnergyKcal": 160,
       "rbWorkoutDurationMinutes": 52,
       "rbLoadTrend": "",
-      "rbSteps": 4200,
+      "rbActiveMinutes": 22,
       "rbDistanceMiles": 1.9,
-      "rbWorkoutDate": "2026-06-21",
-      "rbWorkoutPace": "10:24/mi",
+      "rbStartTab": "coach",
       "rbMinutesSinceMovement": 65,
-      "rbPreviewMode": "",
+      "rbWorkoutPace": "10:24/mi",
       "rbShowWeeklyReview": false,
-      "rbActiveEnergyKcal": 160,
-      "rbActiveMinutes": 22
+      "rbConnected": true,
+      "rbCoachConnected": true,
+      "rbWorkoutDate": "2026-06-21",
+      "rbSteps": 4200,
+      "rbContentSize": "",
+      "rbAskSeedQuestion": "My knee hurts after my run yesterday",
+      "rbWorkoutDistanceMiles": 5.0
     }
   },
   "scenarioType": "application",

@@ -8,20 +8,21 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbGoalSteps": 10000,
-      "rbMinutesSinceMovement": 50,
-      "rbShowHistory": false,
-      "rbPreviewMode": "",
+      "rbDate": "2026-06-22",
       "rbActiveMinutes": 28,
-      "rbContentSize": "",
-      "rbStartTab": "coach",
-      "rbActiveEnergyKcal": 210,
+      "rbDistanceMiles": 3.1,
       "rbAskSeedQuestion": "",
       "rbConnected": true,
-      "rbDistanceMiles": 3.1,
+      "rbContentSize": "",
       "rbSteps": 6400,
+      "rbCoachConnected": true,
+      "rbGoalSteps": 10000,
+      "rbPreviewMode": "",
       "rbShowWeeklyReview": false,
-      "rbDate": "2026-06-22"
+      "rbShowHistory": false,
+      "rbMinutesSinceMovement": 50,
+      "rbActiveEnergyKcal": 210,
+      "rbStartTab": "coach"
     }
   },
   "scenarioType": "application",

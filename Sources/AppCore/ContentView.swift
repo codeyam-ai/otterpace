@@ -144,7 +144,8 @@ public struct ContentView: View {
                 .tag(MainTab.today)
                 .tabItem { Label("Today", systemImage: "sun.max.fill") }
 
-            AskCoachView(model: model)
+            AskCoachView(model: model,
+                         onOpenSettings: { withAnimation(Motion.overlay) { showSettings = true } })
                 .tag(MainTab.coach)
                 .tabItem { Label("Coach", systemImage: "bubble.left.and.text.bubble.right.fill") }
         }
