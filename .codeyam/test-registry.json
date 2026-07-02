@@ -462,6 +462,24 @@
       "runner": "tests"
     },
     {
+      "description": "A walking-focused profile (no other training) personalizes the below-goal walk nudge with walking-is-your-training copy, staying safety-neutral.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testDailyNudgeWalkingFocusedProfilePersonalizes",
+      "line": 178,
+      "registeredAt": "2026-07-02T00:11:44.974838+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Without a walking-focused profile (none, or one that includes running) the walk nudge keeps its original generic copy; personalization is additive.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testDailyNudgeWithoutWalkingFocusKeepsGenericCopy",
+      "line": 190,
+      "registeredAt": "2026-07-02T00:11:53.436943+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "An injury question is always safety-flagged, concerned, and never diagnoses.",
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
@@ -567,6 +585,60 @@
       "key": "AppCoreTests.CoachKeyStoreTests › testWhitespaceSaveIsNotConnected",
       "line": 79,
       "registeredAt": "2026-06-25T16:43:33.272414+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "CoachProfileStore.clear removes the stored profile so a subsequent load is empty again.",
+      "file": "Tests/AppCoreTests/CoachProfileTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProfileTests › testClear",
+      "line": 48,
+      "registeredAt": "2026-07-02T00:12:03.484948+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A never-stored CoachProfile loads as the empty default (walkVolume/walkTime nil, otherTraining empty).",
+      "file": "Tests/AppCoreTests/CoachProfileTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProfileTests › testDefaultIsEmpty",
+      "line": 15,
+      "registeredAt": "2026-07-02T00:12:11.658683+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Encoded CoachProfile JSON uses enum raw values and omits skipped (nil) fields, matching the coach backend shape.",
+      "file": "Tests/AppCoreTests/CoachProfileTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProfileTests › testEncodesRawValuesAndOmitsNil",
+      "line": 67,
+      "registeredAt": "2026-07-02T00:12:20.036238+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A fully-filled CoachProfile survives save then load unchanged and is non-empty.",
+      "file": "Tests/AppCoreTests/CoachProfileTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProfileTests › testFullRoundTrip",
+      "line": 25,
+      "registeredAt": "2026-07-02T00:12:28.562525+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "isEmpty is true only for an all-nil/empty profile; any single set field makes it non-empty.",
+      "file": "Tests/AppCoreTests/CoachProfileTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProfileTests › testIsEmptyPredicate",
+      "line": 58,
+      "registeredAt": "2026-07-02T00:12:37.666395+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A partially-filled CoachProfile (a skipped question stored as nil) round-trips and is still considered non-empty.",
+      "file": "Tests/AppCoreTests/CoachProfileTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProfileTests › testPartialRoundTrip",
+      "line": 36,
+      "registeredAt": "2026-07-02T00:12:45.888848+00:00",
       "runner": "tests"
     },
     {
@@ -855,7 +927,7 @@
       "file": "Tests/AppCoreTests/ModelTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testConnectFlipsState",
-      "line": 95,
+      "line": 129,
       "registeredAt": "2026-06-22T19:41:43.406519+00:00",
       "runner": "tests"
     },
@@ -901,11 +973,20 @@
       "runner": "tests"
     },
     {
+      "description": "The onboarding profile seeds into TodayState via rbCoachProfileJSON; an all-empty profile blob leaves TodayState.profile nil.",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testReadStateDecodesSeededProfile",
+      "line": 98,
+      "registeredAt": "2026-07-02T00:12:54.759726+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "With no keys seeded the reader yields the empty disconnected state with a default 10k goal.",
       "file": "Tests/AppCoreTests/ModelTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testReadStateEmptyDefaultsToDisconnected",
-      "line": 83,
+      "line": 117,
       "registeredAt": "2026-06-22T19:41:43.404808+00:00",
       "runner": "tests"
     },
@@ -930,6 +1011,15 @@
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testSetGoalStepsApplies",
       "registeredAt": "2026-06-25T15:49:35Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Legacy TodayState scenario JSON without a profile field still decodes, defaulting the optional profile to nil (back-compat).",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testTodayStateDecodesLegacyJSONWithoutProfile",
+      "line": 84,
+      "registeredAt": "2026-07-02T00:13:04.361179+00:00",
       "runner": "tests"
     },
     {
@@ -964,7 +1054,7 @@
       "file": "Tests/AppCoreTests/OnboardingStateTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.OnboardingStateTests › testStartPageClamps",
-      "line": 41,
+      "line": 42,
       "registeredAt": "2026-06-26T21:10:52.765008+00:00",
       "runner": "tests"
     },
@@ -975,6 +1065,15 @@
       "key": "AppCoreTests.OnboardingStateTests › testStartScreenForcesShow",
       "line": 34,
       "registeredAt": "2026-06-26T21:10:59.286009+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The flow models the three intro pages plus four personalization steps, with pageCount kept as a back-compat alias for the intro count.",
+      "file": "Tests/AppCoreTests/OnboardingStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.OnboardingStateTests › testStepCountCoversIntroPlusPersonalization",
+      "line": 58,
+      "registeredAt": "2026-07-02T00:13:12.941458+00:00",
       "runner": "tests"
     },
     {

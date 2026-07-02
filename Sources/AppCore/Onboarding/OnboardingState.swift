@@ -10,9 +10,23 @@ import Foundation
 public enum OnboardingState {
     static let seenKey = "otterpaceOnboardingSeen"
 
-    /// Number of pages in the welcome tour — the single source of truth shared
-    /// with the view and with `startPage` clamping.
-    public static let pageCount = 3
+    /// Number of swipeable intro pages in the welcome carousel (Meet Buddy /
+    /// day-by-day coaching / ask me anything). The single source of truth shared
+    /// with the view's pager.
+    public static let introPageCount = 3
+
+    /// Personalization steps that follow the intro carousel: set goal, walking
+    /// habits, other training, add AI coaching. Each is individually skippable.
+    public static let personalizationStepCount = 4
+
+    /// Total steps in the personalized onboarding flow (intro pages +
+    /// personalization steps). `startPage` clamps into `0..<stepCount` so a
+    /// scenario can seed a capture on any intro page or personalization step.
+    public static let stepCount = introPageCount + personalizationStepCount
+
+    /// Back-compat alias: older call sites / tests referred to `pageCount` for the
+    /// intro carousel length. Kept pointing at the intro carousel count.
+    public static let pageCount = introPageCount
 
     public static func hasSeen(_ d: UserDefaults = .standard) -> Bool {
         d.bool(forKey: seenKey)
@@ -38,10 +52,11 @@ public enum OnboardingState {
         return true
     }
 
-    /// Scenario hook: which page to start on (`rbOnboardingPage`), clamped to the
-    /// valid range so a capture can target a specific page. Defaults to 0.
+    /// Scenario hook: which step to start on (`rbOnboardingPage`), clamped to the
+    /// valid range so a capture can target a specific intro page OR personalization
+    /// step. Defaults to 0.
     public static func startPage(_ d: UserDefaults = .standard) -> Int {
         let raw = d.integer(forKey: "rbOnboardingPage")
-        return min(max(0, raw), pageCount - 1)
+        return min(max(0, raw), stepCount - 1)
     }
 }

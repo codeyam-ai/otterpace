@@ -37,7 +37,8 @@ final class OnboardingStateTests: XCTestCase {
         XCTAssertTrue(OnboardingState.shouldShow(defaults: d, seeded: true, startScreen: "onboarding"))
     }
 
-    // startPage reads + clamps rbOnboardingPage into the valid range.
+    // startPage reads + clamps rbOnboardingPage into the valid range, which now
+    // spans the whole personalized flow (intro pages + personalization steps).
     func testStartPageClamps() {
         let (d, name) = freshDefaults(); defer { d.removePersistentDomain(forName: name) }
         XCTAssertEqual(OnboardingState.startPage(d), 0)               // unset -> 0
@@ -45,7 +46,19 @@ final class OnboardingStateTests: XCTestCase {
         XCTAssertEqual(OnboardingState.startPage(d), 1)
         d.set(-3, forKey: "rbOnboardingPage")
         XCTAssertEqual(OnboardingState.startPage(d), 0)               // negative -> 0
+        // A personalization step index (past the intro carousel) is valid now.
+        d.set(OnboardingState.introPageCount, forKey: "rbOnboardingPage")
+        XCTAssertEqual(OnboardingState.startPage(d), OnboardingState.introPageCount)
         d.set(99, forKey: "rbOnboardingPage")
-        XCTAssertEqual(OnboardingState.startPage(d), OnboardingState.pageCount - 1) // beyond last -> last
+        XCTAssertEqual(OnboardingState.startPage(d), OnboardingState.stepCount - 1) // beyond last -> last step
+    }
+
+    // The flow models the intro carousel plus the four personalization steps, so
+    // scenario seeding can target any step in the range.
+    func testStepCountCoversIntroPlusPersonalization() {
+        XCTAssertEqual(OnboardingState.introPageCount, 3)
+        XCTAssertEqual(OnboardingState.personalizationStepCount, 4)
+        XCTAssertEqual(OnboardingState.stepCount, 7)
+        XCTAssertEqual(OnboardingState.pageCount, OnboardingState.introPageCount) // back-compat alias
     }
 }

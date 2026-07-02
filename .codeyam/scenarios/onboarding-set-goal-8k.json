@@ -1,0 +1,18 @@
+{
+  "name": "Onboarding — Set Goal (8K)",
+  "id": "dd0e4cfc-3fcd-4523-a562-b2fd72afff6e",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbOnboardingPage": 3,
+      "rbStartScreen": "onboarding",
+      "rbGoalSteps": 8000
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/Onboarding/OnboardingFlowView.swift"
+}

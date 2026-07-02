@@ -27,6 +27,12 @@ iOS app ──{question, TodayState}──▶  otterpace.com/api/coach   ──�
 - The backend constrains Claude to a structured `{ text, mood, safetyFlag }`
   reply (mood ∈ the app's `BuddyMood` raw values) so the app decodes it directly.
 - **You pay nothing for coach usage** — each user's calls run on their own key.
+- The `TodayState` context now also carries an **optional onboarding
+  personalization profile** (`profile`: usual walking volume + time of day, and
+  any other training) alongside the day's activity summary. It rides inside the
+  same request — no new transport — and the system prompt uses it to tailor tone
+  and suggestions. Every field is optional; a missing/`null` field means the user
+  didn't share it, and the profile never overrides the hard safety rules.
 
 ## Files
 

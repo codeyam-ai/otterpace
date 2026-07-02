@@ -181,6 +181,48 @@ describe("coach handler", () => {
     expect(createMock).not.toHaveBeenCalled();
   });
 
+  // The onboarding personalization profile rides inside `context` (TodayState)
+  // and is stringified into the prompt, so the coach can reason over it.
+  it("includes the personalization profile in the prompt when present", async () => {
+    createMock.mockResolvedValue(textReply(JSON.stringify({ text: "ok", mood: "ready", safetyFlag: false })));
+    const context = {
+      steps: 6400,
+      goalSteps: 10000,
+      profile: { walkVolume: "mostDays", walkTime: "mornings", otherTraining: ["strength"] },
+    };
+    const { res, done } = call({
+      method: "POST",
+      headers: { "x-anthropic-key": "sk-ant-xyz" },
+      body: { question: "what should I do today?", context },
+    });
+    await done;
+    expect(res.statusCode).toBe(200);
+    expect(createMock).toHaveBeenCalledTimes(1);
+    const sentContent = createMock.mock.calls[0][0].messages[0].content as string;
+    // The whole TodayState (including profile) is serialized into the user turn.
+    expect(sentContent).toContain("mostDays");
+    expect(sentContent).toContain("mornings");
+    expect(sentContent).toContain("strength");
+    // The system prompt teaches the model how to use the optional profile.
+    const system = createMock.mock.calls[0][0].system as string;
+    expect(system).toContain("Personalization");
+  });
+
+  // Behavior is unchanged when no profile is present — the call still succeeds and
+  // the prompt simply carries no profile fields.
+  it("works unchanged when the context has no profile", async () => {
+    createMock.mockResolvedValue(textReply(JSON.stringify({ text: "ok", mood: "ready", safetyFlag: false })));
+    const { res, done } = call({
+      method: "POST",
+      headers: { "x-anthropic-key": "sk-ant-xyz" },
+      body: { question: "hi", context: { steps: 6400, goalSteps: 10000 } },
+    });
+    await done;
+    expect(res.statusCode).toBe(200);
+    const sentContent = createMock.mock.calls[0][0].messages[0].content as string;
+    expect(sentContent).not.toContain("profile");
+  });
+
   // Over-long inputs are rejected before any model call (BE-4 size bounds).
   it("413s on an over-long question", async () => {
     const { res, done } = call({

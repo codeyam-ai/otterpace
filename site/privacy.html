@@ -36,7 +36,7 @@
     <p>If you connect Strava, you authorize Otterpace to import your activities. Your Strava access tokens are stored on our backend (Supabase), keyed to an anonymous device identifier, so we can fetch and refresh your activities on your behalf — we never receive your Strava password. You can disconnect anytime in <strong>Settings → Strava</strong>, which deletes the stored tokens.</p>
 
     <h2>AI coach (optional)</h2>
-    <p>If you connect an AI coach by adding your own Anthropic API key, your question and a summary of the day's activity are sent to our backend and on to Anthropic to generate a reply. Your key is stored only in your device's Keychain — never on our server — and we don't retain your questions.</p>
+    <p>If you connect an AI coach by adding your own Anthropic API key, your question, a summary of the day's activity, and the <strong>personalization profile you set during onboarding</strong> (your step goal, how and when you usually walk, and any other training) are sent to our backend and on to Anthropic to generate a reply. Your key is stored only in your device's Keychain — never on our server — and we don't retain your questions. Your personalization profile stays on your device and is never sent to analytics; it leaves your device only on these AI coach requests, and only when an AI coach is connected.</p>
 
     <h2>What we don't do</h2>
     <ul>

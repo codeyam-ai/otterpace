@@ -1,0 +1,18 @@
+{
+  "name": "Onboarding — AI Coaching Connected",
+  "id": "f71f58ea-0792-486d-ba82-bd10ef5fd2ce",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbStartScreen": "onboarding",
+      "rbOnboardingPage": 6,
+      "rbCoachConnected": true
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/Onboarding/OnboardingFlowView.swift"
+}

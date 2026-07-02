@@ -122,12 +122,18 @@ public enum CoachEngine {
                 body: clause,
                 recommendationType: "run")
         }
-        // Otherwise, a gentle nudge toward the step goal.
+        // Otherwise, a gentle nudge toward the step goal. For a walking-focused
+        // user (their onboarding profile lists no other training), frame the walk
+        // as their real training rather than a warm-up. Safety-neutral copy only.
         let minutes = max(8, Int((Double(remaining) / 110.0).rounded()))
+        let walkingFocused = c.profile.map { !$0.isEmpty && $0.otherTraining.isEmpty } ?? false
+        let body = walkingFocused
+            ? "A relaxed \(minutes)-minute walk gets you to \(formatted(c.goalSteps)). Walking is your training, so keep it easy and steady, that's exactly what builds the habit."
+            : "A relaxed \(minutes)-minute walk gets you to \(formatted(c.goalSteps)). Keep it light and consistent, that's what builds the habit."
         return CoachRecommendation(
             buddyMood: "ready",
             headline: "\(formatted(remaining)) steps to go",
-            body: "A relaxed \(minutes)-minute walk gets you to \(formatted(c.goalSteps)). Keep it light and consistent, that's what builds the habit.",
+            body: body,
             recommendationType: "walk")
     }
 

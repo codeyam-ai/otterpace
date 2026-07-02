@@ -73,6 +73,7 @@ public struct TodayState: Codable, Equatable {
     public var coach: CoachRecommendation?
     public var workouts: [LatestWorkout]   // recent history, newest-first; [] => day-one empty
     public var races: [RaceGoal]           // optional upcoming races; [] => none set
+    public var profile: CoachProfile?      // optional onboarding personalization; nil => not shared
 
     public init(
         healthKitConnected: Bool,
@@ -87,7 +88,8 @@ public struct TodayState: Codable, Equatable {
         weeklyLoad: WeeklyLoad? = nil,
         coach: CoachRecommendation? = nil,
         workouts: [LatestWorkout] = [],
-        races: [RaceGoal] = []
+        races: [RaceGoal] = [],
+        profile: CoachProfile? = nil
     ) {
         self.healthKitConnected = healthKitConnected
         self.date = date
@@ -102,6 +104,7 @@ public struct TodayState: Codable, Equatable {
         self.coach = coach
         self.workouts = workouts
         self.races = races
+        self.profile = profile
     }
 
     // Production default: nothing connected yet, blank day-one state.
@@ -139,6 +142,10 @@ public final class OtterpaceModel: ObservableObject {
             // Races live on-device (not in the HealthKit snapshot), so load them
             // so a real user's races reach coaching from launch.
             self.today.races = RaceStore.load(defaults)
+            // The onboarding personalization profile is also on-device; attach it
+            // (nil when empty) so it reaches coaching from launch too.
+            let profile = CoachProfileStore.load(defaults)
+            self.today.profile = profile.isEmpty ? nil : profile
         }
     }
 
@@ -192,6 +199,16 @@ public final class OtterpaceModel: ObservableObject {
             races = decoded
         }
 
+        // Personalization profile: a JSON-encoded CoachProfile under one key, so a
+        // scenario can seed the onboarding-collected profile for capture / coaching.
+        var profile: CoachProfile? = nil
+        if let json = d.string(forKey: "rbCoachProfileJSON"), !json.isEmpty,
+           let data = json.data(using: .utf8),
+           let decoded = try? JSONDecoder().decode(CoachProfile.self, from: data),
+           !decoded.isEmpty {
+            profile = decoded
+        }
+
         var coach: CoachRecommendation? = nil
         if let headline = d.string(forKey: "rbCoachHeadline"), !headline.isEmpty {
             coach = CoachRecommendation(
@@ -216,7 +233,8 @@ public final class OtterpaceModel: ObservableObject {
             weeklyLoad: load,
             coach: coach,
             workouts: workouts,
-            races: races
+            races: races,
+            profile: profile
         )
     }
 

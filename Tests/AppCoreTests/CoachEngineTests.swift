@@ -171,4 +171,29 @@ final class CoachEngineTests: XCTestCase {
         XCTAssertEqual(n.buddyMood, "ready")
         XCTAssertTrue(n.headline.contains("3,600"))
     }
+
+    // A walking-focused profile (onboarding shared, no other training) personalizes
+    // the below-goal walk nudge: same recommendation + steps, but copy that treats
+    // walking as their training. Stays safety-neutral (not flagged).
+    func testDailyNudgeWalkingFocusedProfilePersonalizes() {
+        var s = freshState(steps: 6400, goal: 10000)
+        s.profile = CoachProfile(walkVolume: .mostDays, walkTime: .mornings, otherTraining: [])
+        let n = CoachEngine.dailyNudge(for: s)
+        XCTAssertEqual(n.recommendationType, "walk")
+        XCTAssertFalse(n.safetyFlag)
+        XCTAssertTrue(n.headline.contains("3,600"))
+        XCTAssertTrue(n.body.lowercased().contains("walking is your training"))
+    }
+
+    // With no profile (or another-training profile), the walk nudge keeps its
+    // original generic copy — the personalization is additive, not a rewrite.
+    func testDailyNudgeWithoutWalkingFocusKeepsGenericCopy() {
+        let plain = CoachEngine.dailyNudge(for: freshState(steps: 6400, goal: 10000))
+        XCTAssertFalse(plain.body.lowercased().contains("walking is your training"))
+
+        var withRunning = freshState(steps: 6400, goal: 10000)
+        withRunning.profile = CoachProfile(walkVolume: .someDays, otherTraining: [.running])
+        let n = CoachEngine.dailyNudge(for: withRunning)
+        XCTAssertFalse(n.body.lowercased().contains("walking is your training"))
+    }
 }

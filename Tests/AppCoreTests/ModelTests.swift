@@ -78,6 +78,40 @@ final class ModelTests: XCTestCase {
         XCTAssertNil(state.weeklyLoad)
     }
 
+    // A legacy scenario snapshot (encoded before `profile` existed) still decodes:
+    // the optional field defaults to nil, so old scenario JSON and the Codable
+    // contract are unaffected by the new personalization field.
+    func testTodayStateDecodesLegacyJSONWithoutProfile() throws {
+        let legacy = """
+        {"healthKitConnected":true,"date":"2026-06-22","steps":8200,"goalSteps":10000,
+         "activeMinutes":30,"distanceMiles":3.4,"activeEnergyKcal":210,
+         "minutesSinceLastMovement":40,"workouts":[],"races":[]}
+        """
+        let state = try JSONDecoder().decode(TodayState.self, from: Data(legacy.utf8))
+        XCTAssertEqual(state.steps, 8200)
+        XCTAssertNil(state.profile)
+    }
+
+    // The onboarding personalization profile seeds into TodayState via
+    // `rbCoachProfileJSON` (JSON under one key), mirroring how races seed. An
+    // all-empty profile stays absent.
+    func testReadStateDecodesSeededProfile() {
+        let defaults = UserDefaults(suiteName: "runbuddy.tests.profile")!
+        defaults.removePersistentDomain(forName: "runbuddy.tests.profile")
+        defaults.set(true, forKey: "rbConnected")
+        defaults.set(#"{"walkVolume":"mostDays","walkTime":"mornings","otherTraining":["running"]}"#,
+                     forKey: "rbCoachProfileJSON")
+
+        let state = OtterpaceModel.readState(defaults: defaults)
+        XCTAssertEqual(state.profile?.walkVolume, .mostDays)
+        XCTAssertEqual(state.profile?.walkTime, .mornings)
+        XCTAssertEqual(state.profile?.otherTraining, [.running])
+
+        // An empty profile blob leaves TodayState.profile nil (back-compat).
+        defaults.set(#"{"otherTraining":[]}"#, forKey: "rbCoachProfileJSON")
+        XCTAssertNil(OtterpaceModel.readState(defaults: defaults).profile)
+    }
+
     // With no keys seeded (production day one) the reader yields the empty,
     // disconnected state — goal defaults to 10k and the Connect hero shows.
     func testReadStateEmptyDefaultsToDisconnected() {

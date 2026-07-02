@@ -1,0 +1,25 @@
+{
+  "completedAt": "2026-07-02T00:16:44Z",
+  "createdAt": "2026-07-01T17:00:00Z",
+  "deliverables": [
+    "Sources/AppCore/CoachEngine.swift",
+    "Sources/AppCore/Model.swift",
+    "Sources/AppCore/Onboarding/CoachProfile.swift",
+    "Sources/AppCore/Onboarding/OnboardingFlowView.swift",
+    "Sources/AppCore/Onboarding/OnboardingState.swift",
+    "Tests/AppCoreTests/CoachEngineTests.swift",
+    "Tests/AppCoreTests/CoachProfileTests.swift",
+    "Tests/AppCoreTests/ModelTests.swift",
+    "Tests/AppCoreTests/OnboardingStateTests.swift",
+    "api/coach.ts",
+    "docs/ai-coach.md",
+    "site/index.html",
+    "site/privacy.html",
+    "test/api/coach.test.ts"
+  ],
+  "journalTimestamp": "2026-07-02T00:16:44Z",
+  "mode": "ui",
+  "planFile": "completed/personalized-onboarding-flow.md",
+  "slug": "personalized-onboarding-flow",
+  "title": "Personalized Onboarding Flow"
+}

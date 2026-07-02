@@ -1,6 +1,6 @@
 {
-  "feature": "onboarding-welcome-tour",
-  "maxStep": 25,
-  "version": 134,
-  "updatedAt": "2026-07-01T21:15:34.544202+00:00"
+  "feature": "personalized-onboarding-flow",
+  "maxStep": 24,
+  "version": 144,
+  "updatedAt": "2026-07-02T00:25:06.863744+00:00"
 }

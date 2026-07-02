@@ -80,5 +80,16 @@
       { "name": "health", "type": "json", "required": true, "description": "JSON blob of the derived health/activity snapshot uploaded only on opt-in" },
       { "name": "updated_at", "type": "string", "required": true, "description": "ISO timestamp; drives last-write-wins merge" }
     ]
+  },
+  {
+    "name": "CoachProfile",
+    "description": "Lightweight personalization profile collected during the onboarding flow and stored on-device (UserDefaults-backed, single JSON key), following the RaceStore pattern. All fields optional so a skipped onboarding step is representable as nil. Attached as an optional field on TodayState and threaded into coach context; it leaves the device only on connected-coach requests (never sent to analytics). The daily step goal is intentionally NOT duplicated here — it stays the single source of truth in UserPreferences.",
+    "category": "datastore",
+    "order": 7,
+    "fields": [
+      { "name": "walkVolume", "type": "string", "required": false, "description": "How much the user usually walks: rarely | someDays | mostDays | daily; nil => skipped" },
+      { "name": "walkTime", "type": "string", "required": false, "description": "When the user usually walks: mornings | midday | evenings | varies; nil => skipped" },
+      { "name": "otherTraining", "type": "json", "required": false, "description": "Array of other training the user does: running | strength | cycling | mobility | sports; empty/absent => none" }
+    ]
   }
 ]

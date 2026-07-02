@@ -202,6 +202,20 @@
     "testFile": "Tests/AppCoreTests/CoachEngineTests.swift"
   },
   {
+    "conformsToView": false,
+    "description": "Optional on-device personalization profile collected during the onboarding flow: usual walking volume (WalkVolume), usual walking time (WalkTime), and other training (TrainingKind array). Every field is optional so a skipped onboarding step is representable as nil/empty. Carried as an optional field on TodayState and threaded into the coach context (CoachEngine + api/coach.ts); it leaves the device only on connected-coach requests and is never sent to analytics. isEmpty is the predicate the model uses to keep an all-skipped profile off TodayState.",
+    "filePath": "Sources/AppCore/Onboarding/CoachProfile.swift",
+    "name": "CoachProfile",
+    "testFile": "Tests/AppCoreTests/CoachProfileTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "UserDefaults-backed store for CoachProfile, following the RaceStore pattern (single JSON key, injectable defaults). load returns an empty profile when nothing is stored (so callers never handle a decode failure); save encodes the profile to JSON under one key; clear removes it. Written as the user advances through the onboarding personalization steps.",
+    "filePath": "Sources/AppCore/Onboarding/CoachProfile.swift",
+    "name": "CoachProfileStore",
+    "testFile": "Tests/AppCoreTests/CoachProfileTests.swift"
+  },
+  {
     "description": "The day-one empty state shown before Apple Health is connected: Buddy waving, a warm explainer, the connect call-to-action, and a privacy reassurance.",
     "filePath": "Sources/AppCore/ConnectHero.swift",
     "name": "ConnectHero",
@@ -277,6 +291,13 @@
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
       "kind": "no-isolation-harness"
     }
+  },
+  {
+    "conformsToView": false,
+    "description": "Pure launch-gating and step model for the personalized onboarding flow. hasSeen/markSeen/shouldShow decide whether to show the flow at launch (forced when rbStartScreen is onboarding, hidden once seen or under a scenario seed). introPageCount/personalizationStepCount/stepCount model the swipeable intro carousel plus the four personalization steps (goal, walking habits, other training, AI key); pageCount is a back-compat alias for the intro count. startPage reads and clamps rbOnboardingPage into 0..<stepCount so a scenario can target any intro page or personalization step for capture.",
+    "filePath": "Sources/AppCore/Onboarding/OnboardingState.swift",
+    "name": "OnboardingState",
+    "testFile": "Tests/AppCoreTests/OnboardingStateTests.swift"
   },
   {
     "description": "Observable model for the Today dashboard. Reads the day's TodayState from flat rb-prefixed UserDefaults keys seeded at launch, and exposes derived values: goalProgress clamped to 1.0, stepsRemaining, goalReached, and a connect action that flips the day-one hero into the dashboard.",

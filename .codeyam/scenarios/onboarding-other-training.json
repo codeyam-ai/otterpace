@@ -1,0 +1,18 @@
+{
+  "name": "Onboarding — Other Training",
+  "id": "c7c1659d-83a6-4c0e-8ee2-36f65771d7c0",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbOnboardingPage": 5,
+      "rbCoachProfileJSON": "{\"otherTraining\":[\"running\",\"strength\"]}",
+      "rbStartScreen": "onboarding"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/Onboarding/OnboardingFlowView.swift"
+}

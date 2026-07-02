@@ -1,0 +1,42 @@
+{
+  "name": "Today - Walking-Focused Nudge",
+  "id": "25b164aa-1850-4394-921e-4f69143e1ba1",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbActiveEnergyKcal": 210,
+      "rbConnected": true,
+      "rbCoachHeadline": "",
+      "rbDistanceMiles": 3.1,
+      "rbGoalSteps": 10000,
+      "rbLoadTrend": "",
+      "rbRacesJSON": "",
+      "rbShowHistory": false,
+      "rbMinutesSinceMovement": 92,
+      "rbShowSettings": false,
+      "rbCoachType": "",
+      "rbActiveMinutes": 28,
+      "rbBuddyMood": "ready",
+      "rbCoachBody": "",
+      "rbCoachConnected": false,
+      "rbSteps": 6400,
+      "rbWorkoutType": "",
+      "rbCoachProfileJSON": "{\"walkVolume\":\"mostDays\",\"walkTime\":\"mornings\",\"otherTraining\":[]}",
+      "rbContentSize": "",
+      "rbWorkoutsJSON": "",
+      "rbDate": "2026-06-22",
+      "rbStartTab": "today",
+      "rbShowWeeklyReview": false,
+      "rbStartScreen": "",
+      "rbAskSeedQuestion": "",
+      "rbPreviewMode": "",
+      "rbCoachSafety": false
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/ContentView.swift"
+}

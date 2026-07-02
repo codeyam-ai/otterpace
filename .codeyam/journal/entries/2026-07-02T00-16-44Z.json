@@ -1,0 +1,247 @@
+{
+  "timestamp": "2026-07-02T00:16:44Z",
+  "title": "Personalized Onboarding Flow",
+  "type": "feature",
+  "userRequest": "## Summary\n\nTurn the first-run welcome tour into a personalized setup flow. After the\nexisting three intro pages, add a short, movement-first sequence where the user\nsets their daily step goal, tells Buddy about their walking habits (how much,\nwhen) and any other training, and is prompted to connect an AI coaching key —\nwith **every one of these steps individually skippable**. The answers persist\non-device as a lightweight profile and are threaded into the coach context\n(`TodayState`) so both the deterministic nudge and the real AI coach speak to\nthe person instead of a generic runner. Because the profile now leaves the\ndevice on connected-coach requests, the privacy policy and marketing site copy\nare updated to say so.\n\n## Key Decisions\n\n- **Extend the existing onboarding, don't build a parallel flow.** The new\n  steps live inside `OnboardingFlowView` after the intro carousel and remain\n  replayable from Settings via the existing `onReplayTour` path — one gated\n  overlay, one \"seen\" flag, no second entry point.\n- **Movement-first, nutrition dropped.** Steps cover daily step goal, walking\n  habits, and other training only. No eating/nutrition questions, per scope.\n- **Every step is skippable and leaves a safe default.** Skipping the goal keeps\n  `UserPreferences.defaultGoal` (10k); skipping a profile question stores `nil`\n  for that field; skipping the key prompt leaves the built-in coach in place.\n  Nothing collected is required to finish onboarding.\n- **Profile feeds the coach, stored locally, sent only when coach is connected.**\n  A new `CoachProfile` (UserDefaults-backed, mirroring `UserPreferences` /\n  `RaceStore`) is attached as an optional field on `TodayState`, so it flows\n  through the existing `RemoteCoach` → `/api/coach` request with no new\n  transport. It's optional/`nil`-defaulting so existing scenarios and the\n  `TodayState` Codable shape are unaffected.\n- **Privacy + site copy updated because behavior changed.** With a connected\n  key, the request now includes a small personalization profile in addition to\n  the day's activity summary. `site/privacy.html` and `docs/ai-coach.md` must\n  reflect that; the profile itself is never sent to analytics and never leaves\n  the device unless the AI coach is connected.\n- **Reuse, don't reinvent, the goal picker and key entry.** The goal step reuses\n  `UserPreferences` presets + `clampGoal`; the key step reuses `CoachKeyStore`\n  and the exact \"stored only on this device\" framing from the Settings AI Coach\n  card.\n\n## Implementation\n\n### 1. New on-device profile store\n\n**New file**: `Sources/AppCore/Onboarding/CoachProfile.swift`\n\nA `CoachProfile: Codable, Equatable` value plus a UserDefaults-backed store,\nfollowing the `RaceStore` pattern (single JSON key, injectable `defaults`,\n`load` / `save` / `clear`). All fields optional so \"skipped\" is representable:\n\n- `walkVolume` — enum (`rarely`, `someDays`, `mostDays`, `daily`), \"how much do\n  you usually walk?\"\n- `walkTime` — enum (`mornings`, `midday`, `evenings`, `varies`), \"when do you\n  usually walk?\"\n- `otherTraining` — set/array of enum (`running`, `strength`, `cycling`,\n  `mobility`, `sports`; empty => none), \"do you do any other training?\"\n\nEach enum carries a short human `label` for the coach payload. The daily step\ngoal is intentionally **not** duplicated here — it stays the single source of\ntruth in `UserPreferences`. Keep this file focused so it can register cleanly in\nthe glossary.\n\n### 2. Attach the profile to the coach context\n\n**File**: `Sources/AppCore/Model.swift`\n\nAdd an optional `profile: CoachProfile?` to `TodayState` (default `nil`, placed\nnext to `races`). In `OtterpaceModel` where `self.today.races = RaceStore.load(...)`\nis set (around line 141), also load `CoachProfile` and assign it. Keeping it\noptional means existing scenario JSON and the Codable contract are unchanged.\n\n### 3. Extend the onboarding into a personalized flow\n\n**File**: `Sources/AppCore/Onboarding/OnboardingFlowView.swift`\n\nKeep the three intro pages, then continue into a small stepped sequence rather\nthan finishing at \"Get started\":\n\n1. **Set your goal** — reuse `UserPreferences.goalOptions` + `clampGoal`; a\n   preset chooser (optionally the custom stepper) that calls\n   `UserPreferences.setGoalSteps` on selection. Skip keeps the default.\n2. **Walking habits** — how much (`walkVolume`) and when (`walkTime`); tap-to-\n   pick chips.\n3. **Other training** — multi-select chips for `otherTraining`.\n4. **Add AI coaching (optional)** — reuse the Settings AI Coach copy and\n   `CoachKeyStore.save`; a `SecureField(\"sk-ant-…\")` + Connect, a \"Get an API\n   key\" link, and a prominent **Skip for now** that explains the built-in coach\n   still works.\n\nEvery personalization step shows a clearly visible per-step **Skip** control\n(distinct from finishing the tour). Persist collected values to `CoachProfile`\n(and the goal to `UserPreferences`) as the user advances or on finish. The final\nstep's primary button is \"Get started\", which calls `onFinish`.\n\n### 4. Track the flow's structure + step gating\n\n**File**: `Sources/AppCore/Onboarding/OnboardingState.swift`\n\n`pageCount` currently hardcodes `3` for the intro carousel and drives\n`startPage` clamping + the scenario `rbOnboardingPage` hook. Update it to model\nthe full flow — keep an `introPageCount` (3) for the swipeable carousel and add\nthe personalization step indices — so `startPage` clamping and scenario seeding\ncan target any step (intro page or a specific personalization step) for capture.\nKeep `hasSeen` / `markSeen` / `shouldShow` semantics unchanged.\n\n### 5. Analytics for the new steps\n\n**File**: `Sources/AppCore/ContentView.swift` (and/or `OnboardingFlowView`)\n\nKeep the existing `onboarding_started` / `onboarding_completed` events. Add\nlightweight step events via `Analytics.shared.capture` — e.g.\n`onboarding_goal_set`, `onboarding_profile_saved`, `onboarding_key_connected`,\nand `onboarding_step_skipped` (with a step name property) — so completion vs.\nskip of each new step is visible. No PII in properties (enum labels only).\n\n### 6. Teach the coach to use the profile\n\n**File**: `api/coach.ts`\n\nThe profile now rides inside `context` (`TodayState.profile`). Add a\n\"Personalization\" section to `SYSTEM_PROMPT` describing the optional profile\n(usual walking volume + time of day, other training) and how to use it: tailor\ntone and suggestions to their normal movement, respect that walking may be their\nmain activity, and fold other training into load reasoning. Reassert that the\nexisting hard safety rules and the ~10% guidance still win. Missing/`null`\nfields mean \"not shared — don't assume.\"\n\n**File** (optional, deterministic parity): `Sources/AppCore/CoachEngine.swift` —\nif low-effort, let `dailyNudge(for:)` lightly reference `profile` (e.g. a\nwalking-focused nudge when `otherTraining` is empty), so the no-key tier also\nfeels personalized. Keep it optional and safety-neutral.\n\n### 7. Update privacy + marketing copy\n\n**File**: `site/privacy.html`\n\nUpdate the \"AI coach (optional)\" paragraph (line ~39) so it states that, when a\nkey is connected, the request includes **your question, a summary of the day's\nactivity, and the personalization profile you set in onboarding** (goal, walking\nhabits, other training) — sent to our backend and on to Anthropic, key stored\nonly in the Keychain, questions not retained. Reaffirm the profile is never sent\nto analytics and never leaves the device unless the AI coach is connected.\n\n**File**: `docs/ai-coach.md`\n\nNote in the \"How it connects\" section that the coach context now carries the\noptional onboarding profile alongside the activity summary.\n\n**File** (light touch): `site/index.html` — if a feature bullet describes the\ncoach/onboarding, mention the quick personalized setup; no privacy claim changes\nneeded beyond the health-data language already present.\n\n### 8. Tests\n\n**Files**: `Tests/AppCoreTests/` (Swift) and `test/` (vitest, `npm test`)\n\n- Swift: `CoachProfile` round-trip (save/load/clear, all-nil default, partial\n  fill), and `OnboardingState` step-count / `startPage` clamping across the new\n  step range.\n- Swift: `TodayState` still decodes legacy scenario JSON with no `profile` field\n  (optional-field back-compat).\n- Swift (if #6 done): a `CoachEngine.dailyNudge` case exercising a profile with\n  empty `otherTraining`.\n- Vitest: `api/coach.ts` builds the prompt/request including the profile when\n  `context.profile` is present and behaves unchanged when it's absent.\n\n## Reused existing code\n\n- `UserPreferences` (goal presets, `clampGoal`, `setGoalSteps`,\n  `defaultGoal`) from `Sources/AppCore/Preferences.swift` (glossary:\n  `UserPreferences`, `clampGoal`) — the goal step's source of truth.\n- `RaceStore` UserDefaults-JSON pattern from `Sources/AppCore/RaceGoals.swift` —\n  the template for `CoachProfile` persistence.\n- `CoachKeyStore` (`save` / `isConnected`) from\n  `Sources/AppCore/Coach/RemoteCoach.swift` — the onboarding key step reuses it,\n  same as Settings.\n- `TodayState` / `CoachRecommendation` from `Sources/AppCore/Model.swift` — add\n  the optional `profile` field alongside `races`; `RemoteCoach` already ships\n  `context: TodayState` to the backend, so no transport change.\n- `OnboardingFlowView` / `OnboardingState` from `Sources/AppCore/Onboarding/` —\n  extended in place; `ContentView`'s `showOnboarding` overlay + `onReplayTour`\n  wiring is reused unchanged.\n- Settings AI Coach card copy + `SecureField(\"sk-ant-…\")` pattern from\n  `Sources/AppCore/SettingsView.swift` (`coachCard`, line ~349) — reused for the\n  onboarding key step.\n- `CoachEngine.dailyNudge(for:)` / `reply(to:context:)` from\n  `Sources/AppCore/CoachEngine.swift` (glossary: `CoachEngine`) — the deterministic\n  tier that can optionally read `profile`.\n\n## Scenarios to Demonstrate\n\n- Onboarding — goal step: choosing an 8k preset (goal reflected on entry).\n- Onboarding — walking-habits step: \"most days / mornings\" selected.\n- Onboarding — other-training step: multi-select with running + strength picked.\n- Onboarding — AI-key prompt step, not connected: the Skip-for-now / built-in\n  coach explainer.\n- Onboarding — AI-key prompt step, key entered: connected confirmation.\n- Skip-everything fast path: user skips each step and lands in the app with\n  defaults (10k goal, no profile, built-in coach).\n- Replay from Settings: re-entering the full personalized flow via the tour.\n- Ask Buddy with a profile set (seeded, offline): reply that reflects walking-\n  focused personalization.",
+  "description": "Extended the first-run welcome tour into a personalized, movement-first onboarding flow. After the three intro pages the user sets a daily step goal, shares walking habits (how much / when) and any other training, and can optionally connect an AI coaching key, with every personalization step individually skippable and safe defaults preserved. Answers persist on-device as a new CoachProfile and thread into both the deterministic CoachEngine nudge and the remote AI coach via TodayState; the privacy policy, marketing site, and coach docs were updated because the profile now leaves the device on connected-coach requests (never to analytics).",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/data-structure.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/personalized-onboarding-flow.md\t.codeyam/plans/completed/personalized-onboarding-flow.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-ask-me-anything--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-ask-me-anything--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-day-by-day-coaching--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-day-by-day-coaching--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-large-text--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-large-text--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-meet-buddy--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-meet-buddy--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CoachEngine.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Model.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Onboarding/OnboardingFlowView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Onboarding/OnboardingState.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/ModelTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/OnboardingStateTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": "api/coach.ts",
+      "status": "modified"
+    },
+    {
+      "path": "docs/ai-coach.md",
+      "status": "modified"
+    },
+    {
+      "path": "site/index.html",
+      "status": "modified"
+    },
+    {
+      "path": "site/privacy.html",
+      "status": "modified"
+    },
+    {
+      "path": "test/api/coach.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/onboarding-add-ai-coaching-skip.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/onboarding-ai-coaching-connected.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/onboarding-other-training.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/onboarding-set-goal-8k.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/onboarding-walking-habits.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-add-ai-coaching-skip--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-add-ai-coaching-skip--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-ai-coaching-connected--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-ai-coaching-connected--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-other-training--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-other-training--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-set-goal-8k--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-set-goal-8k--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-walking-habits--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-walking-habits--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-walking-focused-nudge--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-walking-focused-nudge--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/today-walking-focused-nudge.json",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Onboarding/CoachProfile.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/CoachProfileTests.swift",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Onboarding — AI Coaching Connected",
+      "screenshotPath": "onboarding-ai-coaching-connected--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Add AI Coaching (Skip)",
+      "screenshotPath": "onboarding-add-ai-coaching-skip--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Other Training",
+      "screenshotPath": "onboarding-other-training--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Set Goal (8K)",
+      "screenshotPath": "onboarding-set-goal-8k--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Walking Habits",
+      "screenshotPath": "onboarding-walking-habits--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Ask Me Anything",
+      "screenshotPath": "welcome-ask-me-anything--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Day-by-Day Coaching",
+      "screenshotPath": "welcome-day-by-day-coaching--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Large Text",
+      "screenshotPath": "welcome-large-text--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Meet Buddy",
+      "screenshotPath": "welcome-meet-buddy--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 168,
+    "passed": 168,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 168,
+        "passed": 168
+      }
+    ]
+  }
+}
