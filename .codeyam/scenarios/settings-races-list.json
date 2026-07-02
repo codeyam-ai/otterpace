@@ -1,0 +1,23 @@
+{
+  "name": "Settings — Races List",
+  "id": "c0f5c60e-d8ae-45b5-aa99-be20d7adfe16",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbGoalSteps": 10000,
+      "rbRacesJSON": "[{\"id\":\"22222222-2222-2222-2222-222222222222\",\"name\":\"Summer Series 10K\",\"distanceMiles\":6.2,\"date\":\"2026-06-27\",\"location\":\"Portland, OR\"},{\"id\":\"33333333-3333-3333-3333-333333333333\",\"name\":\"Cascade Marathon\",\"distanceMiles\":26.2,\"date\":\"2026-09-06\",\"location\":\"Seattle, WA\",\"notes\":\"Goal sub-4:00, corral C\"}]",
+      "rbConnected": true,
+      "rbStartTab": "today",
+      "rbShowSettings": true,
+      "rbSettingsScroll": "races",
+      "rbSteps": 8000,
+      "rbDate": "2026-06-22"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/SettingsView.swift"
+}

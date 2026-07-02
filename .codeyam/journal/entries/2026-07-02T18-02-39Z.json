@@ -1,0 +1,203 @@
+{
+  "timestamp": "2026-07-02T18:02:39Z",
+  "title": "Race Goals & Race-Aware Coaching",
+  "type": "feature",
+  "userRequest": "## Summary\n\nLet users tell Otterpace about upcoming races — name, distance, date, and\nlocation/site details — and feed that into Buddy's coaching so guidance becomes\ngoal-aware (build toward the distance early, taper near race day, race-day\nframing, and a gentle \"how'd it go?\" after). Races are entirely optional: most\nusers don't have one, so the feature lives in a new **Races** card in Settings\nand is surfaced by a single **dismissable banner** on the Today dashboard that\nonly appears when the user has no races yet and hasn't dismissed it. Races are\nstored on-device (same UserDefaults pattern as `UserPreferences` /\n`ReminderSettings`) and carried on `TodayState` so they flow, with zero new\nplumbing, into all three coaching engines: the on-device `CoachEngine`, the\nremote AI coach (`RemoteCoach` → `api/coach.ts`), and the `WeeklyReviewEngine`.\n\n## Key Decisions\n\n- **Carry races on `TodayState`, don't build a parallel context path.** The\n  coaching context is already `model.today`: `AskCoachView` passes it to both\n  `CoachEngine.reply` and `RemoteCoach.reply`, and `RemoteCoach` ships the whole\n  `TodayState` to `api/coach.ts`, which stringifies it into the prompt. Adding\n  `races: [RaceGoal]` to `TodayState` (default `[]`) means the AI coach gets race\n  context \"for free,\" and the on-device engines can read it directly — mirroring\n  exactly how `workouts` already rides on `TodayState`.\n- **Race-aware coaching = derive \"the next race\" + days-until, then branch.**\n  Rather than scatter race logic, add one small pure helper (`RaceGoal.next(in:)`\n  + a days-until computation against a passed-in \"today\" date) so `CoachEngine`,\n  `WeeklyReviewEngine`, and the backend prompt all reason about the same notion\n  of \"soonest upcoming race.\" Keeps it pure/deterministic and unit-testable, in\n  the spirit of the existing engines.\n- **Presets + custom distance**, mirroring the daily-step-goal capsule + custom\n  stepper already in `SettingsView` (`UserPreferences.goalOptions` + clampers).\n  Distance presets: 5K, 10K, Half, Marathon, plus a Custom miles value.\n- **Multiple races, list-based.** Users add/edit/delete; coaching keys off the\n  soonest race whose date is today or later. Stored as a JSON array under one\n  preference key (the flat `rb*` primitives can't hold a list — same reasoning as\n  `rbWorkoutsJSON`).\n- **Discovery via a dismissable Today banner, not a forced step.** Shown only\n  when `races.isEmpty && !dismissed` (so it never nags users who don't race, and\n  disappears once they add one). Dismissal persists via a tiny\n  UserDefaults-backed flag modeled on the just-planned `OnboardingState`. Tapping\n  the banner opens Settings (reusing the existing `onSettings` closure) — no new\n  presentation surface needed.\n- **Backend prompt change is additive and safety-preserving.** The race guidance\n  is appended to the existing `SYSTEM_PROMPT` and explicitly subordinated to the\n  existing hard safety rules (taper/goal advice never overrides pain/load\n  caution), so race ambition can't push a user through warning signs.\n\n## Implementation\n\n### 1. Race domain model + on-device store\n\n**New file**: `Sources/AppCore/RaceGoals.swift`\n\n- `public struct RaceGoal: Codable, Equatable, Identifiable` with:\n  `id: UUID`, `name: String`, `distanceMiles: Double`, `date: String` (ISO\n  `yyyy-MM-dd`, matching `LatestWorkout.date`), `location: String` (city / venue),\n  and optional `notes: String?` (the \"site etc.\" details — start area, corral,\n  goal time).\n- A `RaceDistance` preset enum (`fiveK`, `tenK`, `half`, `marathon`, `custom`)\n  with a `miles` value and a display label, used by the Settings editor and to\n  round-trip a stored `distanceMiles` back to a preset selection. Reuse\n  `UserPreferences.clampGoal`-style clamping for the custom-miles bounds (define\n  `minMiles`/`maxMiles` here as the single source of truth).\n- A pure helper surface on the type:\n  - `RaceGoal.upcoming(in races: [RaceGoal], asOf today: String) -> [RaceGoal]`\n    — races with `date >= today`, sorted soonest-first (ISO date strings sort\n    lexicographically, so plain string comparison is correct and keeps it\n    dependency-free).\n  - `RaceGoal.next(in:asOf:) -> RaceGoal?` — the soonest upcoming race.\n  - `daysUntil(date:asOf:) -> Int?` — whole days between two ISO dates (used to\n    drive taper vs build vs race-week messaging). Compute via `DateFormatter`/\n    `Calendar` from the ISO strings; return nil on unparseable input.\n- `public enum RaceStore` mirroring `UserPreferences`/`ReminderSettings`: a\n  single JSON-array key `otterpaceRaces` in an injectable `UserDefaults`, with\n  `load(_:) -> [RaceGoal]`, `save(_:_:)`, `add`, `update`, and `remove(id:)`\n  helpers. Encode/decode with `JSONEncoder`/`JSONDecoder` exactly like\n  `OtterpaceModel.readState` does for `rbWorkoutsJSON`.\n\n### 2. Carry races on TodayState + load them into the model\n\n**File**: `Sources/AppCore/Model.swift`\n\n- Add `public var races: [RaceGoal]` (default `[]`) to `TodayState`, including the\n  `init` parameter (defaulted, so all existing call sites keep compiling) and the\n  `Codable` round-trip (it's part of the struct, so it's automatic — and it\n  therefore appears in the JSON `RemoteCoach` sends to `api/coach.ts`).\n- In `OtterpaceModel.readState`, decode an optional `rbRacesJSON` preference into\n  `races` (same shape as the existing `rbWorkoutsJSON` block) so scenarios can\n  seed races for capture.\n- In the production `convenience init()` path (the non-seeded branch), populate\n  `today.races` from `RaceStore.load()` so a real user's races reach coaching\n  even though they aren't part of the HealthKit snapshot. Keep `.empty` as-is\n  (empty races by default).\n- Add model mutators so Settings edits apply immediately and persist:\n  `addRace`, `updateRace`, `removeRace(id:)` — each writes through `RaceStore`\n  and updates `today.races` (mirroring `setGoalSteps`). `@MainActor`-consistent\n  with the other published mutations.\n\n### 3. Make the on-device coach race-aware\n\n**File**: `Sources/AppCore/CoachEngine.swift`\n\n- Add a private `raceContext(_ c: TodayState, asOf:)` helper that resolves the\n  next race and days-until, and a race-aware clause woven into the existing\n  intent replies — **without** weakening the current safety bias (a recent hard\n  run / spiking load still tilts toward recovery first; race framing is additive):\n  - **Race week (≤7 days):** taper framing — \"Your {name} is in {n} days. This is\n    taper time: keep runs short and easy, trust the work you've banked, prioritize\n    sleep.\" Mood `.ready`.\n  - **Approaching (8–~21 days):** sharpen-but-don't-cram framing.\n  - **Building (>21 days):** \"plenty of runway — build gradually (~10%/week)\n    toward {distance} mi.\"\n  - **Race day (0 days):** brief, calm race-day encouragement.\n- Thread an `asOf` \"today\" date (default to the context's `date`, falling back to\n  the system date only at the call site) so the logic stays pure/deterministic\n  and testable — consistent with how the engine already takes everything from\n  `context`.\n- Optionally add a new `CoachIntent.raceGoal` classified from keywords\n  (`race`, `marathon`, `half`, `5k`, `10k`, `taper`, `goal race`) so direct race\n  questions route to dedicated copy; keep injury/mileage classification first so\n  safety routing is unchanged.\n\n### 4. Make the Weekly Review race-aware\n\n**File**: `Sources/AppCore/WeeklyReviewEngine.swift`\n\n- When an upcoming race exists, fold a race line into `nextWeek` and bias the\n  `focusArea` toward the race phase (taper vs build), reusing the same\n  `RaceGoal.next`/`daysUntil` helpers from step 1. Preserve the spiking-load\n  branch's precedence — a spiking week still produces the caution review; the\n  race note rides alongside as \"even with {race} coming up, this is the week to\n  ease off.\" No change to `emptyReview` beyond an optional \"and you've got\n  {race} on the calendar — we'll build toward it\" nudge when a race is set but no\n  activity yet.\n\n### 5. Race-aware AI coach prompt\n\n**File**: `api/coach.ts`\n\n- Append a **Race awareness** section to `SYSTEM_PROMPT` instructing Buddy to use\n  `context.races` when present: identify the soonest upcoming race, reason about\n  days-until (taper in the final week, build gradually before that, calm\n  encouragement on race day), reference distance/location naturally, and — stated\n  explicitly — **never let race ambition override the hard safety rules** (pain,\n  spiking load, and the ~10% rule still win). No schema change: races arrive\n  inside the already-stringified `context`, and the reply shape is unchanged.\n- This is the only backend change. `RemoteCoach`/`api` request/response shapes\n  stay as-is because races travel inside the existing `TodayState` context.\n\n### 6. Races card in Settings (add / edit / delete)\n\n**File**: `Sources/AppCore/SettingsView.swift`\n\n- Add a `racesCard` to the existing card stack (e.g. just below `coachCard`,\n  since races feed the coach), built from the existing `card`/`row`/`actionRow`\n  helpers so styling matches.\n- Empty state: a one-line explainer (\"Add a race and Buddy will tailor your\n  coaching — building toward it, then easing off as it nears.\") + an \"Add a race\"\n  `actionRow`.\n- Populated: a row per race (name, distance label, formatted date, location) with\n  edit/delete affordances. Sort upcoming-first via `RaceGoal.upcoming`; show past\n  races dimmed or omit them.\n- Add/edit presents a lightweight editor (a `.sheet`, consistent with the\n  existing `showHealthConsent` sheet pattern) with: name `TextField`, a distance\n  **capsule row of presets + a Custom stepper** (clone the `goalCard` capsule +\n  `Stepper` UI, swapping step-goal values for `RaceDistance` presets/miles), a\n  `DatePicker` (date only) writing back the ISO `date` string, a location\n  `TextField`, and an optional notes field. Save calls `model.addRace` /\n  `model.updateRace`; delete calls `model.removeRace`.\n- If settings sync is on, races are local-only for now (out of scope for account\n  sync — call this out so the editor workflow doesn't infer a backend sync\n  requirement). The daily-goal sync path is untouched.\n\n### 7. Dismissable \"add a race\" banner on Today\n\n**New file**: `Sources/AppCore/RacePromptBanner.swift`\n\n- A small `RacePromptBanner` view in Buddy's voice (\"Got a race coming up? Tell\n  Buddy and I'll tailor your training.\") with a primary tap action and an\n  explicit dismiss (✕) affordance. Style it on the brand/gold gradient card look\n  used by `WeeklyReviewFocusCallout` so it reads as a native callout, using\n  `Palette`/`Typography`/`Layout`.\n\n**File**: `Sources/AppCore/RaceGoals.swift` (or a tiny sibling enum)\n\n- Add a `RacePromptState` UserDefaults flag (`otterpaceRacePromptDismissed`),\n  modeled on `OnboardingState`: `isDismissed(_:)` / `markDismissed(_:)`, with an\n  injectable `UserDefaults` for tests.\n\n**File**: `Sources/AppCore/TodayView.swift`\n\n- Render the banner near the top of the dashboard `VStack` (e.g. just under\n  `StatsRow`), gated by `model.today.races.isEmpty && !RacePromptState.isDismissed()`\n  and `previewMode`-safe like the other Today seeds. Tapping it calls the\n  existing `onSettings` closure (opening Settings, where the Races card lives);\n  the ✕ sets `markDismissed()` and hides it with `withAnimation(Motion.overlay)`.\n- Allow a scenario seed (`rbShowRacePrompt`) to force the banner visible for\n  capture even under seeding, mirroring the `rbShow*` overlay-seed convention in\n  this file.\n\n### 8. Analytics (optional, consistent with existing events)\n\n**File**: `Sources/AppCore/SettingsView.swift` / `TodayView.swift`\n\n- Fire `Analytics.shared.capture(\"race_added\")` on save and\n  `\"race_prompt_dismissed\"` on banner dismiss, guarded by `previewMode.isEmpty`\n  the same way `strava_connected` / `app_opened` are. Keep it light; no PII in\n  properties.\n\n## Reused existing code\n\n- `TodayState` + `OtterpaceModel.readState` / `convenience init()` and the\n  `rbWorkoutsJSON` JSON-array seed pattern, plus the `setGoalSteps` mutator shape\n  (`Sources/AppCore/Model.swift`).\n- `CoachEngine` + `CoachIntent` + `CoachReply` and its \"safety bias wins\"\n  structure (`Sources/AppCore/CoachEngine.swift`, glossary entry: `CoachEngine`)\n  — races extend, never override, the existing replies.\n- `WeeklyReviewEngine` / `WeeklyReview` (`Sources/AppCore/WeeklyReviewEngine.swift`).\n- `RemoteCoach` (`Sources/AppCore/Coach/RemoteCoach.swift`) and `api/coach.ts`\n  `SYSTEM_PROMPT` + the `TodayState`-as-context contract — unchanged transport;\n  races ride the existing context.\n- `SettingsView` `card` / `row` / `actionRow` helpers, the `goalCard`\n  preset-capsule + custom `Stepper` UI, and the `.sheet` (`healthConsentSheet`)\n  presentation pattern (`Sources/AppCore/SettingsView.swift`, glossary entry:\n  `SettingsView`).\n- `UserPreferences` (glossary entry: `UserPreferences`) and `ReminderSettings`\n  (`Sources/AppCore/Notifications/MovementReminders.swift`) — the\n  UserDefaults-backed, injectable-defaults persistence pattern `RaceStore` /\n  `RacePromptState` follow.\n- The `OnboardingState`-style dismissal flag (planned in\n  `onboarding-welcome-tour.md`) — the precedent for a persisted \"shown once /\n  dismissed\" UserDefaults flag.\n- `WeeklyReviewFocusCallout` (`Sources/AppCore/WeeklyReviewFocusCallout.swift`,\n  glossary entry: `WeeklyReviewFocusCallout`) — gradient callout styling for the\n  banner.\n- `TodayDashboard` overlay/seed conventions + `onSettings` closure\n  (`Sources/AppCore/TodayView.swift`).\n- `Analytics.shared.capture` (`Sources/AppCore/Analytics/Analytics.swift`),\n  `Palette`/`Typography`/`Layout`/`Motion` (`Sources/AppCore/Theme.swift`),\n  and `Formatters` (`Sources/AppCore/Formatters.swift`) for date/distance display.\n\n## Tests\n\n- **New** `Tests/AppCoreTests/RaceGoalsTests.swift` — pure-logic tests against an\n  injected `UserDefaults` and fixed `asOf` dates: `RaceStore` round-trip\n  (add/update/remove/JSON load), `upcoming`/`next` ordering and the\n  today-or-later boundary, `daysUntil` math (including unparseable input → nil),\n  and `RaceDistance` preset↔miles round-trip + custom clamping. Mirrors\n  `ModelTests` / `ReminderSettings`-style suites.\n- **New / extend** `Tests/AppCoreTests/CoachEngineTests.swift` — race-week (taper)\n  vs building vs race-day branches with a fixed `asOf`, and a regression\n  asserting that a spiking load / injury question still produces the\n  safety-flagged reply even when a race is set (race framing never overrides\n  safety).\n- **Extend** the Weekly Review tests (if present) for the race-aware `nextWeek` /\n  `focusArea` additions, keeping the spiking-load precedence assertion.\n- The backend `api/coach.ts` change is prompt-only; if the api vitest harness has\n  a coach test, add a case asserting a `context.races` payload is accepted and the\n  response shape is unchanged (no schema regressions). Presentational views\n  (`RacePromptBanner`, the Settings races card/editor) follow the existing\n  convention of being exercised through scenarios rather than unit tests.\n\n## Scenarios to Demonstrate\n\n- **Today — race prompt banner**: no races set, banner visible\n  (`rbShowRacePrompt=1`), inviting the user to add a race.\n- **Today — banner hidden after a race exists**: `rbRacesJSON` seeded with one\n  upcoming race → banner absent, normal dashboard.\n- **Settings — empty Races card**: the explainer + \"Add a race\" action.\n- **Settings — Races list**: two seeded races (e.g. a 10K in 5 days, a marathon\n  in 10 weeks) sorted soonest-first with distance/date/location.\n- **Settings — add/edit race editor**: the sheet open with presets + custom miles\n  stepper, date picker, and location field.\n- **Ask Coach — taper week**: race in 4 days seeded; ask \"should I run today?\" →\n  Buddy gives taper guidance referencing the race.\n- **Ask Coach — building phase**: race in 10 weeks; \"am I increasing mileage too\n  fast?\" → gradual-build-toward-distance framing.\n- **Ask Coach — safety still wins**: spiking weekly load **and** a race in 5 days;\n  ask \"should I run today?\" → caution/recovery reply with the safety flag, race\n  acknowledged but not overriding.\n- **Weekly Review — race-aware**: a solid week with an upcoming race → `nextWeek`\n  / `focusArea` reflect the race phase.\n- **Race day**: a race dated today → calm race-day encouragement in the coach.",
+  "description": "Users can add optional upcoming races (name, distance, date, location) in a new Settings Races card, with a dismissable Today banner inviting no-race users to add one. Races ride on TodayState into all three coaching engines — the on-device CoachEngine, the remote AI coach (api/coach.ts), and the WeeklyReviewEngine — driving build/taper/race-day guidance that stays subordinate to the hard safety rules (pain and spiking-load caution always win). This session backfilled the CodeYam layer over the already-committed feature code: registered RaceGoal in data-structure.json and six glossary entries, fixed the Settings race-row 'past' dimming to use the app's snapshot date rather than the device clock, added SettingsView scroll anchors so scenarios land on their distinguishing card, and captured/curated the race scenarios (Ask Coach taper reply, Settings Races list, Today prompt banner) while keeping the existing today-* scenarios focused. Verified: 168 tests passing (RaceGoalsTests 10/10, including the safety-precedence regression), verify-build PASS, seeded-capture-check OK.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/data-structure.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/race-goals-coaching.md\t.codeyam/plans/completed/race-goals-coaching.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/accessibility-large-text-today.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-race-taper--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-custom-goal--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-custom-goal--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-replay-tour-row--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-replay-tour-row--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-custom-goal.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-reminders-on.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-almost-there.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-computed-nudge.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-custom-goal.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-fresh-start.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-long-content.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-midday-nudge.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-recovery-caution.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-walking-focused-nudge.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-zero-step-morning.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/provider-auth-verdict.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/SettingsView.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-races-list--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-race-prompt-banner--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-races-list.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/today-race-prompt-banner.json",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Settings",
+      "screenshotPath": "settings--iphone-16.png"
+    },
+    {
+      "name": "Settings — Account Sync",
+      "screenshotPath": "settings-account-sync--iphone-16.png"
+    },
+    {
+      "name": "Settings — Custom Goal",
+      "screenshotPath": "settings-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Settings — Health Sync On",
+      "screenshotPath": "settings-health-sync-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Races List",
+      "screenshotPath": "settings-races-list--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders On",
+      "screenshotPath": "settings-reminders-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Replay Tour Row",
+      "screenshotPath": "settings-replay-tour-row--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 168,
+    "passed": 168,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 168,
+        "passed": 168
+      }
+    ]
+  }
+}

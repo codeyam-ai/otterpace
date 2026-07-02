@@ -33,7 +33,8 @@
       "rbWeeklyMileage": 6.2,
       "rbMinutesSinceMovement": 25,
       "rbShowHistory": false,
-      "rbWorkoutType": ""
+      "rbWorkoutType": "",
+      "otterpaceRacePromptDismissed": true
     }
   },
   "scenarioType": "application",

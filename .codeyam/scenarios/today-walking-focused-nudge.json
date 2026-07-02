@@ -34,7 +34,8 @@
       "rbStartScreen": "",
       "rbAskSeedQuestion": "",
       "rbPreviewMode": "",
-      "rbCoachSafety": false
+      "rbCoachSafety": false,
+      "otterpaceRacePromptDismissed": true
     }
   },
   "scenarioType": "application",

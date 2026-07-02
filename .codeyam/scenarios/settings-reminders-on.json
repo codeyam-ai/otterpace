@@ -27,7 +27,8 @@
       "rbPreviewMode": "",
       "otterpaceRemindInactivity": true,
       "rbShowSettings": true,
-      "rbShowWeeklyReview": false
+      "rbShowWeeklyReview": false,
+      "rbSettingsScroll": "reminders"
     }
   },
   "scenarioType": "application",

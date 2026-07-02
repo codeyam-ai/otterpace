@@ -69,9 +69,9 @@ public struct SettingsView: View {
                             healthCard
                             if strava.isConfigured { stravaCard }
                             coachCard
-                            racesCard
-                            remindersCard
-                            goalCard
+                            racesCard.id("races")
+                            remindersCard.id("reminders")
+                            goalCard.id("goal")
                             privacyCard
                             aboutCard.id("about")
                         }
@@ -442,7 +442,13 @@ public struct SettingsView: View {
         d == d.rounded() ? "\(Int(d))" : String(format: "%.1f", d)
     }
 
+    // The app's notion of "today" — the current activity snapshot's date, which
+    // is the real day in production and the seeded day under a scenario. Reusing
+    // it (instead of the device clock) keeps the race-row "past" dimming
+    // consistent with how the coaching engines reason about days-until.
     private var todayISO: String {
+        let snapshot = model.today.date
+        if !snapshot.isEmpty { return snapshot }
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
         f.locale = Locale(identifier: "en_US_POSIX")

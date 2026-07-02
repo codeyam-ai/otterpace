@@ -33,7 +33,8 @@
       "rbStartTab": "today",
       "rbCoachSafety": false,
       "rbSteps": 0,
-      "rbWeeklyMileage": 5.4
+      "rbWeeklyMileage": 5.4,
+      "otterpaceRacePromptDismissed": true
     }
   },
   "scenarioType": "application",

@@ -33,7 +33,8 @@
       "rbAskSeedQuestion": "",
       "rbGoalSteps": 10000,
       "rbLongestRunMiles": 4.0,
-      "rbPreviewMode": ""
+      "rbPreviewMode": "",
+      "otterpaceRacePromptDismissed": true
     }
   },
   "scenarioType": "application",

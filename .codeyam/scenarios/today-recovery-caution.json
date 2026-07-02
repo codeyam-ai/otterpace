@@ -38,7 +38,8 @@
       "rbWeeklyMileage": 22.0,
       "rbDate": "2026-06-22",
       "rbContentSize": "",
-      "rbMinutesSinceMovement": 40
+      "rbMinutesSinceMovement": 40,
+      "otterpaceRacePromptDismissed": true
     }
   },
   "scenarioType": "application",

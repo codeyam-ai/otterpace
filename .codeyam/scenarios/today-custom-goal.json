@@ -38,7 +38,8 @@
       "rbWeeklyMileage": 12.0,
       "rbSteps": 7200,
       "rbWorkoutDistanceMiles": 2.0,
-      "rbContentSize": ""
+      "rbContentSize": "",
+      "otterpaceRacePromptDismissed": true
     }
   },
   "scenarioType": "application",

@@ -38,7 +38,8 @@
       "rbCoachHeadline": "So close — 820 to go!",
       "rbConnected": true,
       "rbMinutesSinceMovement": 18,
-      "rbWorkoutType": "walk"
+      "rbWorkoutType": "walk",
+      "otterpaceRacePromptDismissed": true
     }
   },
   "scenarioType": "application",

@@ -1,0 +1,12 @@
+{
+  "completedAt": "2026-07-02T18:02:39Z",
+  "createdAt": "2026-06-26T21:00:00Z",
+  "deliverables": [
+    "Sources/AppCore/SettingsView.swift"
+  ],
+  "journalTimestamp": "2026-07-02T18:02:39Z",
+  "mode": "ui",
+  "planFile": "completed/race-goals-coaching.md",
+  "slug": "race-goals-coaching",
+  "title": "Race Goals & Race-Aware Coaching"
+}

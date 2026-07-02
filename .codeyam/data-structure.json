@@ -91,5 +91,19 @@
       { "name": "walkTime", "type": "string", "required": false, "description": "When the user usually walks: mornings | midday | evenings | varies; nil => skipped" },
       { "name": "otherTraining", "type": "json", "required": false, "description": "Array of other training the user does: running | strength | cycling | mobility | sports; empty/absent => none" }
     ]
+  },
+  {
+    "name": "RaceGoal",
+    "description": "An optional upcoming race the user tells Otterpace about, stored entirely on-device (UserDefaults-backed JSON array under the rbRacesJSON/otterpaceRaces key via RaceStore — same pattern as workouts). Carried as a list on TodayState (default empty) so it flows with no new plumbing into all three coaching engines: the on-device CoachEngine, the remote AI coach (api/coach.ts), and the WeeklyReviewEngine. Coaching keys off the soonest race whose date is today-or-later and the whole-days-until it, branching build (>21d) / approaching / taper (<=7d) / race-day (0d) — always subordinate to the hard safety rules. Never sent to analytics; most users have none.",
+    "category": "datastore",
+    "order": 8,
+    "fields": [
+      { "name": "id", "type": "string", "isId": true, "required": true, "description": "UUID identifying the race" },
+      { "name": "name", "type": "string", "required": true, "description": "Race name, e.g. 'October Trail Half'" },
+      { "name": "distanceMiles", "type": "number", "required": true, "description": "Race distance in miles; presets 5K/10K/Half/Marathon or a custom value" },
+      { "name": "date", "type": "string", "required": true, "description": "ISO yyyy-MM-dd race date, matching workout date format; ISO strings sort lexicographically for 'soonest upcoming'" },
+      { "name": "location", "type": "string", "required": false, "description": "City / venue, e.g. 'Bend, OR'" },
+      { "name": "notes", "type": "string", "required": false, "description": "Optional site details: start area, corral, goal time" }
+    ]
   }
 ]

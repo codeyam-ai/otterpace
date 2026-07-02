@@ -24,7 +24,8 @@
       "rbGoalSteps": 9500,
       "rbShowHistory": false,
       "rbStartTab": "today",
-      "rbConnected": true
+      "rbConnected": true,
+      "rbSettingsScroll": "goal"
     }
   },
   "scenarioType": "application",

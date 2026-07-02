@@ -1,6 +1,6 @@
 {
-  "feature": "personalized-onboarding-flow",
-  "maxStep": 26,
-  "version": 179,
-  "updatedAt": "2026-07-02T02:16:05.157496+00:00"
+  "feature": "race-goals-coaching",
+  "maxStep": 24,
+  "version": 103,
+  "updatedAt": "2026-07-02T18:10:45.233849+00:00"
 }

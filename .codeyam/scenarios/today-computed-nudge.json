@@ -29,7 +29,8 @@
       "rbBuddyMood": "ready",
       "rbLoadTrend": "",
       "rbCoachType": "",
-      "rbConnected": true
+      "rbConnected": true,
+      "otterpaceRacePromptDismissed": true
     }
   },
   "scenarioType": "application",

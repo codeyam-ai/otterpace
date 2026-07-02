@@ -37,7 +37,8 @@
       "rbSteps": 7400,
       "rbWorkoutDistanceMiles": 4.2,
       "rbWorkoutDurationMinutes": 44,
-      "rbShowHistory": false
+      "rbShowHistory": false,
+      "otterpaceRacePromptDismissed": true
     }
   },
   "scenarioType": "application",

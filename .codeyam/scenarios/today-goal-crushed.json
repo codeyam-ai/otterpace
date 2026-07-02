@@ -38,7 +38,8 @@
       "rbGoalSteps": 10000,
       "rbShowHistory": false,
       "rbWorkoutDate": "2026-06-22",
-      "rbBuddyMood": "celebrating"
+      "rbBuddyMood": "celebrating",
+      "otterpaceRacePromptDismissed": true
     }
   },
   "scenarioType": "application",
