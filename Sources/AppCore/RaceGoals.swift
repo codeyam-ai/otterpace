@@ -56,6 +56,13 @@ public struct RaceGoal: Codable, Equatable, Identifiable {
         upcoming(in: races, asOf: today).first
     }
 
+    /// True when at least one race is on or after `today`. A finished (past-only)
+    /// race set returns false — the signal the Today "add a race" banner uses to
+    /// reappear once there is nothing left to train toward.
+    public static func hasUpcoming(in races: [RaceGoal], asOf today: String) -> Bool {
+        next(in: races, asOf: today) != nil
+    }
+
     /// Whole days between two ISO `yyyy-MM-dd` dates (`today` → `date`). Negative
     /// when the date is in the past; nil on unparseable input.
     public static func daysUntil(date: String, asOf today: String) -> Int? {

@@ -1,6 +1,6 @@
 {
-  "feature": "Add-a-Race Custom Distance Input",
-  "maxStep": 26,
-  "version": 1996,
-  "updatedAt": "2026-07-06T17:11:13.663809+00:00"
+  "feature": "race-dead-state-fix",
+  "maxStep": 24,
+  "version": 309,
+  "updatedAt": "2026-07-06T19:49:07.720161+00:00"
 }

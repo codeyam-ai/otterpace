@@ -1,0 +1,99 @@
+{
+  "timestamp": "2026-07-06T19:39:14Z",
+  "title": "Race Dead-State Fix",
+  "type": "feature",
+  "userRequest": "## Summary\n\nOnce a race's date passes, Otterpace falls into a **dead state around races**:\n\n1. **The Today \"add a race\" banner never comes back.** `TodayDashboard.showRacePrompt`\n   (`TodayView.swift:34-36`) gates on `model.today.races.isEmpty`. A finished\n   (past-dated) race is still *a race*, so `races.isEmpty` is false and the banner\n   stays hidden — even though the user has no *upcoming* race to train toward.\n2. **Race coaching goes quiet, correctly, but with no way back.** Both\n   `CoachEngine.raceClause` (`CoachEngine.swift:156`) and `WeeklyReviewEngine`\n   (`WeeklyReviewEngine.swift:82`) use `RaceGoal.next(in:asOf:)`, which filters to\n   `date >= today`. Once the race is past, `next` is nil and race-aware coaching\n   stops — which is right on its own, but combined with (1) the user is stuck: the\n   only remaining path to add a new race is buried in Settings, and the app gives\n   no prompt to do so.\n3. **You can create the problem yourself.** The Add/Edit Race sheet's date picker\n   (`RaceEditorView.swift:106-108`) has no minimum, so a past date is freely\n   selectable — you can save an already-expired \"upcoming\" race.\n\nThis change makes races self-healing: the Today banner reappears whenever there is\nno *upcoming* race, and the editor won't let you create a past-dated one.\n\n## Key Decisions\n\n- **Re-gate the Today banner on \"no upcoming race,\" not \"no races at all.\"**\n  `showRacePrompt` becomes `forceRacePrompt || (RaceGoal.next(in: races, asOf:\n  todayISO) == nil && !racePromptDismissed)`. A past-only race set now shows the\n  banner again, inviting the next goal. The `todayISO` value mirrors the existing\n  `SettingsView.todayISO` pattern (`SettingsView.swift:447`).\n- **Add a `hasUpcoming(in:asOf:)` helper on `RaceGoal`** (thin wrapper over the\n  existing `next`/`upcoming`) so the banner gate reads cleanly and is unit-testable\n  without a view. Keeps the pure-helper cluster that already lives in\n  `RaceGoals.swift` the single source of truth for \"is there an upcoming race?\"\n- **Enforce a minimum date of today in the race editor.** The `DatePicker` gets\n  `in: todayFloor...`, so neither adding nor editing can land a race in the past.\n  Editing a genuinely-past race therefore nudges its date forward — which is the\n  desired recovery, not a regression.\n- **Leave the coaching engines and the Settings races list untouched.** `next`'s\n  future-only filter is correct (a finished race shouldn't drive taper/build\n  coaching), and the Settings list already renders past races dimmed with\n  edit/delete plus an always-present \"Add a race\" action. The dead-state is\n  specifically the *Today discovery surface* + *past-date creation*, so the fix\n  stays scoped to those two.\n- **Goal-time (`RaceGoal.notes`) threading is explicitly OUT of scope.** It is\n  confirmed unused by both engines, but wiring it into coaching is a separable\n  feature, not part of unsticking the dead state. Noted for a future plan.\n\n## Implementation\n\n### 1. Add an `hasUpcoming` helper + tests\n\n**File**: `Sources/AppCore/RaceGoals.swift`\n\nAdd a pure static helper beside `upcoming`/`next`:\n\n```swift\n/// True when at least one race is on or after `today`.\npublic static func hasUpcoming(in races: [RaceGoal], asOf today: String) -> Bool {\n    next(in: races, asOf: today) != nil\n}\n```\n\n**File**: `Tests/AppCoreTests/RaceGoalsTests.swift`\n\nAdd cases: empty → false; only a past race → false; a future race present → true;\na mix of past + future → true. This locks the banner-gate logic at the unit level.\n\n### 2. Re-gate the Today \"add a race\" banner\n\n**File**: `Sources/AppCore/TodayView.swift`\n\n- Introduce a `todayISO` computed value (same `DateFormatter` shape as\n  `SettingsView.todayISO`, UTC `yyyy-MM-dd`).\n- Change `showRacePrompt` (lines 34-36) from `model.today.races.isEmpty` to\n  `!RaceGoal.hasUpcoming(in: model.today.races, asOf: todayISO)`.\n- Keep `forceRacePrompt` (the `rbShowRacePrompt` scenario seed) and the\n  `!racePromptDismissed` term exactly as they are.\n- Update the doc comment on `showRacePrompt` to say \"no *upcoming* race\" instead\n  of \"no races set.\"\n\n### 3. Enforce a minimum date in the race editor\n\n**File**: `Sources/AppCore/RaceEditorView.swift`\n\n- Add a `todayFloor: Date` (start of today, UTC-consistent with the existing\n  `isoFormatter`) computed once.\n- Change the `DatePicker` (lines 106-108) to\n  `DatePicker(\"\", selection: $date, in: todayFloor..., displayedComponents: .date)`.\n- When editing an existing race whose stored date is before today, clamp the\n  initial `_date` to `todayFloor` in `init` so the bounded picker opens on a valid\n  value (SwiftUI requires the selection to be inside the range).\n\n## Scenarios (data states)\n\nProduction starts empty; each scenario seeds its own race set:\n\n- **`today-race-prompt-banner`** (existing) — no races → banner shows. Day-one state.\n- **`today-upcoming-race`** (existing/near — `today-race-prompt-banner` off + a\n  future race) — banner hidden, race coaching active.\n- **`today-past-race-banner-returns`** (NEW) — seed a single *past-dated* race →\n  the banner should reappear (the bug's fix, made visible in the preview).\n- **`settings-race-editor-min-date`** (NEW or fold into existing\n  `settings-race-editor-custom-distance`) — the editor open, showing the date\n  picker floored at today.\n\nExisting `settings-races-list` continues to exercise the dimmed past-race row +\nedit/delete, unchanged.",
+  "description": "Fixed a dead state where a past-dated race silently hid the Today add-a-race banner and left no path to set a new goal. The banner now returns whenever there is no upcoming race (new RaceGoal.hasUpcoming helper gating TodayDashboard on the same today the coaching engines use), and the race editor date picker is floored at today so a past-dated race can no longer be created. Added the today-past-race-banner-returns scenario plus unit coverage (testHasUpcoming).",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/completed/race-dead-state-fix.md",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-race-editor-custom-distance--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-race-prompt-banner--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-race-editor-custom-distance.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-race-prompt-banner.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/RaceEditorView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/RaceGoals.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/TodayView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/RaceGoalsTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-past-race-banner-returns--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/today-past-race-banner-returns.json",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Settings — Race Editor Custom Distance",
+      "screenshotPath": "settings-race-editor-custom-distance--iphone-16.png"
+    },
+    {
+      "name": "Today — Past Race Banner Returns",
+      "screenshotPath": "today-past-race-banner-returns--iphone-16.png"
+    },
+    {
+      "name": "Today — Race Prompt Banner",
+      "screenshotPath": "today-race-prompt-banner--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 171,
+    "passed": 171,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 171,
+        "passed": 171
+      }
+    ]
+  }
+}

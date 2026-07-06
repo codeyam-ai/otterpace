@@ -357,7 +357,7 @@
   },
   {
     "conformsToView": false,
-    "description": "An optional upcoming race (name, distanceMiles, ISO date, location, notes, and the entered unit) carried as a list on TodayState so it flows into every coaching engine. distanceMiles stays the canonical value coaching keys off of; the optional unit records how the distance was entered (nil == miles). displayDistance formats both units honoring the entered one (a km race reads 15 km then 9.3 mi in parens; a miles race the reverse). Also carries the pure race helpers upcoming(in:asOf:), next(in:asOf:), and daysUntil(date:asOf:) for build/taper/race-day branching.",
+    "description": "An optional upcoming race (name, distanceMiles, ISO date, location, notes, and the entered unit) carried as a list on TodayState so it flows into every coaching engine. distanceMiles stays the canonical value coaching keys off of; the optional unit records how the distance was entered (nil == miles). displayDistance formats both units honoring the entered one (a km race reads 15 km then 9.3 mi in parens; a miles race the reverse). Also carries the pure race helpers upcoming(in:asOf:), next(in:asOf:), hasUpcoming(in:asOf:), and daysUntil(date:asOf:) — used for build/taper/race-day coaching branches and the Today add-a-race banner gate, which shows whenever there is no upcoming race.",
     "filePath": "Sources/AppCore/RaceGoals.swift",
     "name": "RaceGoal",
     "testFile": "Tests/AppCoreTests/RaceGoalsTests.swift"

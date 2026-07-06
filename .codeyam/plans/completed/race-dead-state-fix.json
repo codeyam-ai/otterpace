@@ -1,0 +1,27 @@
+{
+  "claimStartedAt": "2026-07-06T17:25:42Z",
+  "completedAt": "2026-07-06T19:39:14Z",
+  "completedBy": {
+    "agentProvider": "claude",
+    "codeyamEditorVersion": "0.1.0",
+    "machine": "Nadias-MacBook-Pro-2.local",
+    "pid": 73053,
+    "priority": 0,
+    "selectedPlan": "race-dead-state-fix",
+    "sessionId": "eb125037-6424-4a68-9fa3-9e434c3d6662",
+    "startedAt": "2026-07-06T17:25:42Z"
+  },
+  "createdAt": "2026-07-06T00:00:00Z",
+  "deliverables": [
+    "Sources/AppCore/RaceEditorView.swift",
+    "Sources/AppCore/RaceGoals.swift",
+    "Sources/AppCore/SettingsView.swift",
+    "Sources/AppCore/TodayView.swift",
+    "Tests/AppCoreTests/RaceGoalsTests.swift"
+  ],
+  "journalTimestamp": "2026-07-06T19:39:14Z",
+  "mode": "ui",
+  "planFile": "completed/race-dead-state-fix.md",
+  "slug": "race-dead-state-fix",
+  "title": "Race Dead-State Fix"
+}

@@ -1081,7 +1081,7 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testClassifyRaceIntent",
-      "line": 100,
+      "line": 109,
       "registeredAt": "2026-06-26T21:11:19.827313+00:00",
       "runner": "tests"
     },
@@ -1099,7 +1099,7 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testDistancePresetsAndClamp",
-      "line": 31,
+      "line": 40,
       "registeredAt": "2026-06-26T21:11:33.212876+00:00",
       "runner": "tests"
     },
@@ -1108,8 +1108,15 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testGeneralReplyIsRaceAwareForFreshUser",
-      "line": 120,
+      "line": 129,
       "registeredAt": "2026-06-26T21:11:39.873164+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "hasUpcoming returns true only when at least one race is on or after today, and false for empty or past-only race sets — the Today add-a-race banner gate.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceGoalsTests › testHasUpcoming",
+      "registeredAt": "2026-07-06T18:38:42Z",
       "runner": "tests"
     },
     {
@@ -1117,7 +1124,7 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testKmRaceRoundTripsInDisplay",
-      "line": 51,
+      "line": 60,
       "registeredAt": "2026-07-06T16:43:07.244281+00:00",
       "runner": "tests"
     },
@@ -1126,7 +1133,7 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testMilesFromUnit",
-      "line": 40,
+      "line": 49,
       "registeredAt": "2026-07-06T16:43:03.331192+00:00",
       "runner": "tests"
     },
@@ -1135,7 +1142,7 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testRaceReplyPhases",
-      "line": 108,
+      "line": 117,
       "registeredAt": "2026-06-26T21:11:46.581257+00:00",
       "runner": "tests"
     },
@@ -1144,7 +1151,7 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testReadStateDecodesSeededRaces",
-      "line": 83,
+      "line": 92,
       "registeredAt": "2026-06-26T21:11:53.327236+00:00",
       "runner": "tests"
     },
@@ -1153,7 +1160,7 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testStoreRoundTripsAndMutates",
-      "line": 64,
+      "line": 73,
       "registeredAt": "2026-06-26T21:11:59.895089+00:00",
       "runner": "tests"
     },
@@ -1171,7 +1178,7 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testWeeklyReviewFoldsInTaper",
-      "line": 129,
+      "line": 138,
       "registeredAt": "2026-06-26T21:12:13.092405+00:00",
       "runner": "tests"
     },
@@ -1180,7 +1187,7 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testWeeklyReviewSpikingKeepsPrecedenceWithRace",
-      "line": 138,
+      "line": 147,
       "registeredAt": "2026-06-26T21:12:19.799284+00:00",
       "runner": "tests"
     },

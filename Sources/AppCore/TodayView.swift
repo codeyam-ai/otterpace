@@ -29,10 +29,24 @@ public struct TodayDashboard: View {
         _racePromptDismissed = State(initialValue: RacePromptState.isDismissed())
     }
 
-    // Show the race prompt only when no races are set and it hasn't been dismissed
-    // (or when a scenario forces it).
+    // The "today" used for race math: the seeded/observed dashboard date when set
+    // (so the banner stays in lockstep with the coaching engines and the Settings
+    // race list), else the device clock. Mirrors `SettingsView.todayISO`.
+    private var todayISO: String {
+        let snapshot = model.today.date
+        if !snapshot.isEmpty { return snapshot }
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "UTC")
+        return f.string(from: Date())
+    }
+
+    // Show the race prompt when there is no *upcoming* race and it hasn't been
+    // dismissed (or when a scenario forces it). A finished (past-only) race no
+    // longer suppresses the banner, so the user is invited to set their next goal.
     private var showRacePrompt: Bool {
-        forceRacePrompt || (model.today.races.isEmpty && !racePromptDismissed)
+        forceRacePrompt || (!RaceGoal.hasUpcoming(in: model.today.races, asOf: todayISO) && !racePromptDismissed)
     }
 
     public var body: some View {

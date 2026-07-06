@@ -23,7 +23,10 @@ struct RaceEditorView: View {
         let miles = existing?.distanceMiles ?? RaceDistance.half.miles
         let preset = RaceDistance.preset(forMiles: miles)
         _name = State(initialValue: existing?.name ?? "")
-        _date = State(initialValue: Self.parseISO(existing?.date) ?? Date())
+        // Clamp the initial date to today's floor so the bounded picker (which
+        // rejects past dates) always opens on a valid selection — editing a
+        // now-past race nudges it forward rather than crashing the range.
+        _date = State(initialValue: max(Self.parseISO(existing?.date) ?? Date(), Self.startOfToday))
         _location = State(initialValue: existing?.location ?? "")
         _notes = State(initialValue: existing?.notes ?? "")
 
@@ -104,7 +107,10 @@ struct RaceEditorView: View {
                             }
                         }
                         field("Date") {
-                            DatePicker("", selection: $date, displayedComponents: .date)
+                            // Floor the picker at today: a race is an *upcoming* goal,
+                            // so a past date can't be entered (which would strand the
+                            // Today banner and race coaching in a dead state).
+                            DatePicker("", selection: $date, in: Self.startOfToday..., displayedComponents: .date)
                                 .labelsHidden()
                         }
                         field("Location") {
@@ -172,6 +178,10 @@ struct RaceEditorView: View {
             content()
         }
     }
+
+    // Start of the current day in the local calendar — the minimum selectable
+    // race date, matching the day-granularity the picker displays.
+    private static var startOfToday: Date { Calendar.current.startOfDay(for: Date()) }
 
     // Compact miles string for prefill (8.0 -> "8", 13.1 -> "13.1").
     private static func formatMiles(_ m: Double) -> String { String(format: "%g", m) }

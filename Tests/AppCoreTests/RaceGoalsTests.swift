@@ -28,6 +28,15 @@ final class RaceGoalsTests: XCTestCase {
         XCTAssertNil(RaceGoal.next(in: [race("Past", "2026-06-01")], asOf: today))
     }
 
+    func testHasUpcoming() {
+        // The Today "add a race" banner gate: true only when a race is on/after today.
+        XCTAssertFalse(RaceGoal.hasUpcoming(in: [], asOf: today))                              // no races
+        XCTAssertFalse(RaceGoal.hasUpcoming(in: [race("Past", "2026-06-01")], asOf: today))    // past-only → banner returns
+        XCTAssertTrue(RaceGoal.hasUpcoming(in: [race("Today", today)], asOf: today))           // race day counts
+        XCTAssertTrue(RaceGoal.hasUpcoming(in: [race("Soon", "2026-06-29")], asOf: today))     // future
+        XCTAssertTrue(RaceGoal.hasUpcoming(in: [race("Past", "2026-06-01"), race("Soon", "2026-06-29")], asOf: today))  // mixed
+    }
+
     func testDistancePresetsAndClamp() {
         XCTAssertEqual(RaceDistance.preset(forMiles: 13.1), .half)
         XCTAssertEqual(RaceDistance.preset(forMiles: 26.2), .marathon)

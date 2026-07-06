@@ -1,0 +1,42 @@
+{
+  "name": "Today — Past Race Banner Returns",
+  "id": "adf01f13-84fa-4b6e-a88d-fbbabb5a5b8b",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbShowWeeklyReview": false,
+      "rbRacesJSON": "[{\"id\":\"5C6E4E2A-0F2E-4E7A-9E11-0A1B2C3D4E5F\",\"name\":\"Bay Bridge 10K\",\"distanceMiles\":6.2,\"date\":\"2026-06-15\",\"location\":\"San Francisco, CA\",\"unit\":\"miles\"}]",
+      "otterpaceRacePromptDismissed": false,
+      "rbDaysRunThisWeek": 3,
+      "rbDistanceMiles": 3.9,
+      "rbCoachHeadline": "Race in the bank",
+      "rbMinutesSinceMovement": 22,
+      "rbActiveMinutes": 51,
+      "rbRestDaysThisWeek": 1,
+      "rbAskSeedQuestion": "",
+      "rbCoachBody": "Nice work wrapping the Bay Bridge 10K. Ease back today — a gentle walk keeps the legs fresh. Ready to pick your next race?",
+      "rbShowRaceEditor": false,
+      "rbGoalSteps": 10000,
+      "rbShowHistory": false,
+      "rbActiveEnergyKcal": 240,
+      "rbBuddyMood": "ready",
+      "rbCoachType": "walk",
+      "rbLongestRunMiles": 6.2,
+      "rbCoachSafety": false,
+      "rbConnected": true,
+      "rbShowSettings": false,
+      "rbStartTab": "today",
+      "rbWeeklyMileage": 18.6,
+      "rbDate": "2026-06-22",
+      "rbLoadTrend": "steady",
+      "rbSteps": 8200,
+      "rbShowRacePrompt": false
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/TodayView.swift"
+}
