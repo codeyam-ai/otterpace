@@ -1081,7 +1081,7 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testClassifyRaceIntent",
-      "line": 78,
+      "line": 100,
       "registeredAt": "2026-06-26T21:11:19.827313+00:00",
       "runner": "tests"
     },
@@ -1108,8 +1108,26 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testGeneralReplyIsRaceAwareForFreshUser",
-      "line": 98,
+      "line": 120,
       "registeredAt": "2026-06-26T21:11:39.873164+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A km-entered race stores full-precision miles and displays back as the exact km value plus its miles equivalent.",
+      "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceGoalsTests › testKmRaceRoundTripsInDisplay",
+      "line": 51,
+      "registeredAt": "2026-07-06T16:43:07.244281+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Converts a typed distance value in miles or kilometers to clamped miles, keeping km at full precision so it round-trips.",
+      "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceGoalsTests › testMilesFromUnit",
+      "line": 40,
+      "registeredAt": "2026-07-06T16:43:03.331192+00:00",
       "runner": "tests"
     },
     {
@@ -1117,7 +1135,7 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testRaceReplyPhases",
-      "line": 86,
+      "line": 108,
       "registeredAt": "2026-06-26T21:11:46.581257+00:00",
       "runner": "tests"
     },
@@ -1126,7 +1144,7 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testReadStateDecodesSeededRaces",
-      "line": 61,
+      "line": 83,
       "registeredAt": "2026-06-26T21:11:53.327236+00:00",
       "runner": "tests"
     },
@@ -1135,7 +1153,7 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testStoreRoundTripsAndMutates",
-      "line": 42,
+      "line": 64,
       "registeredAt": "2026-06-26T21:11:59.895089+00:00",
       "runner": "tests"
     },
@@ -1153,7 +1171,7 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testWeeklyReviewFoldsInTaper",
-      "line": 107,
+      "line": 129,
       "registeredAt": "2026-06-26T21:12:13.092405+00:00",
       "runner": "tests"
     },
@@ -1162,7 +1180,7 @@
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testWeeklyReviewSpikingKeepsPrecedenceWithRace",
-      "line": 116,
+      "line": 138,
       "registeredAt": "2026-06-26T21:12:19.799284+00:00",
       "runner": "tests"
     },

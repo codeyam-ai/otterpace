@@ -1,6 +1,6 @@
 {
   "name": "Settings",
-  "id": "e2c2537c-4551-48d1-a290-ae2861050c62",
+  "id": "311af550-7139-44f7-a57b-f7dac1e5d38b",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,23 +8,27 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbGoalSteps": 10000,
-      "rbConnected": true,
-      "rbDate": "2026-06-22",
-      "rbContentSize": "",
+      "rbSteps": 8000,
       "rbPreviewMode": "",
-      "otterpaceRemindGoal": false,
-      "rbSyncHealth": false,
-      "rbShowHistory": false,
-      "rbStartScreen": "",
-      "rbShowSettings": true,
+      "rbGoalSteps": 10000,
+      "rbSyncSettings": false,
+      "rbShowRaceEditor": false,
+      "otterpaceRemindDaily": false,
+      "rbRacesJSON": "",
+      "rbConnected": true,
+      "otterpaceRemindInactivity": false,
+      "rbDate": "2026-06-22",
       "rbShowWeeklyReview": false,
       "rbStartTab": "today",
-      "rbSteps": 8000,
-      "otterpaceRemindDaily": false,
-      "otterpaceRemindInactivity": false,
-      "rbSignedInUserID": "",
-      "rbSyncSettings": false
+      "rbStartScreen": "",
+      "rbShowSettings": true,
+      "rbContentSize": "",
+      "rbRaceEditorCustomValue": "",
+      "otterpaceRemindGoal": false,
+      "rbRaceEditorCustomUnit": "",
+      "rbSyncHealth": false,
+      "rbShowHistory": false,
+      "rbSignedInUserID": ""
     }
   },
   "scenarioType": "application",

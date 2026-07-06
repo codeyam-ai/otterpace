@@ -235,6 +235,13 @@
     ]
   },
   {
+    "conformsToView": false,
+    "description": "The unit a custom race distance was entered in — miles or kilometers. The canonical stored value is always miles (RaceGoal.distanceMiles); DistanceUnit records the entered unit so display can honor it and RaceDistance.miles(from:unit:) can convert km to miles losslessly. String-raw-value Codable enum with a short label (mi/km).",
+    "filePath": "Sources/AppCore/RaceGoals.swift",
+    "name": "DistanceUnit",
+    "testFile": "Tests/AppCoreTests/RaceGoalsTests.swift"
+  },
+  {
     "description": "A ViewModifier that applies the scenario-seeded Dynamic Type size to the whole app (via dynamicTypeSize) when rbContentSize is set; a no-op otherwise.",
     "filePath": "Sources/AppCore/ContentView.swift",
     "name": "DynamicTypeOverride",
@@ -333,14 +340,14 @@
   },
   {
     "conformsToView": false,
-    "description": "Distance presets (5K, 10K, Half, Marathon, Custom) for the Settings race editor, mirroring the daily-step-goal capsule + custom stepper. Provides canonical miles and display labels per preset, preset(forMiles:) to round a stored mileage back to a capsule selection within a small epsilon (falling back to Custom), and clampMiles to bound and round a custom value to the minMiles...maxMiles range at one decimal.",
+    "description": "Distance presets (5K, 10K, Half, Marathon, Custom) for the Settings race editor. Provides canonical miles and labels per preset, preset(forMiles:) to round a stored mileage back to a capsule within an epsilon (else Custom), clampMiles to bound/round to minMiles...maxMiles at one decimal, kmPerMile (1.609344), and miles(from:unit:) which converts a typed value in a DistanceUnit to clamped miles — miles rounded to one decimal, kilometers kept full-precision so the km value round-trips exactly.",
     "filePath": "Sources/AppCore/RaceGoals.swift",
     "name": "RaceDistance",
     "testFile": "Tests/AppCoreTests/RaceGoalsTests.swift"
   },
   {
     "conformsToView": true,
-    "description": "The add/edit race sheet presented from the Settings Races card: a name field, a distance capsule row of presets (5K/10K/Half/Marathon) plus a Custom miles stepper, a date picker, a location field, and optional notes. Save builds a RaceGoal (resolving/clamping the custom mileage) and calls back to add or update; Cancel dismisses.",
+    "description": "The add/edit race sheet presented from the Settings Races card: a name field, a distance capsule row of presets (5K/10K/Half/Marathon) plus a Custom option with a typed numeric field and a segmented mi/km unit toggle, a date picker, a location field, and optional notes. Custom distance is entered in the chosen unit and stored losslessly (km kept at full precision); the entered unit is persisted on the RaceGoal so editing reopens in that unit. Save builds a RaceGoal; Cancel dismisses.",
     "filePath": "Sources/AppCore/RaceEditorView.swift",
     "name": "RaceEditorView",
     "untestabilityReason": {
@@ -350,7 +357,7 @@
   },
   {
     "conformsToView": false,
-    "description": "An optional upcoming race (name, distanceMiles, ISO date, location, notes) the user tells Otterpace about, carried as a list on TodayState so it flows into every coaching engine. Beyond the data shape it carries the pure, deterministic race helpers coaching keys off of: upcoming(in:asOf:) filters/sorts races today-or-later soonest-first, next(in:asOf:) picks the soonest, and daysUntil(date:asOf:) returns whole UTC days between two ISO dates (nil on unparseable input) to drive the build/taper/race-day branching. ISO date strings sort lexicographically so comparison stays dependency-free.",
+    "description": "An optional upcoming race (name, distanceMiles, ISO date, location, notes, and the entered unit) carried as a list on TodayState so it flows into every coaching engine. distanceMiles stays the canonical value coaching keys off of; the optional unit records how the distance was entered (nil == miles). displayDistance formats both units honoring the entered one (a km race reads 15 km then 9.3 mi in parens; a miles race the reverse). Also carries the pure race helpers upcoming(in:asOf:), next(in:asOf:), and daysUntil(date:asOf:) for build/taper/race-day branching.",
     "filePath": "Sources/AppCore/RaceGoals.swift",
     "name": "RaceGoal",
     "testFile": "Tests/AppCoreTests/RaceGoalsTests.swift"

@@ -1,6 +1,6 @@
 {
   "name": "Settings — Account Sync",
-  "id": "d7695af5-36c2-4f14-b84d-a8910364f6c0",
+  "id": "ef2569d6-375a-43c9-af8f-d451f60731a2",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,15 +8,19 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbConnected": true,
-      "rbDate": "2026-06-22",
-      "rbShowSettings": true,
-      "rbSignedInUserID": "001234.abcDEF",
+      "rbSyncHealth": false,
+      "rbSteps": 8000,
       "rbSyncSettings": false,
       "rbStartTab": "today",
-      "rbSteps": 8000,
+      "rbRaceEditorCustomUnit": "",
+      "rbConnected": true,
+      "rbRacesJSON": "",
+      "rbShowRaceEditor": false,
+      "rbShowSettings": true,
+      "rbSignedInUserID": "001234.abcDEF",
+      "rbDate": "2026-06-22",
       "rbGoalSteps": 10000,
-      "rbSyncHealth": false
+      "rbRaceEditorCustomValue": ""
     }
   },
   "scenarioType": "application",

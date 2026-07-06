@@ -1,0 +1,163 @@
+{
+  "timestamp": "2026-07-06T16:46:29Z",
+  "title": "Add-a-Race Custom Distance Input",
+  "type": "feature",
+  "userRequest": "go through existing plans - audit for dupes and implement all others.",
+  "description": "The Custom race distance in the Settings race editor now uses a typed numeric field plus a segmented mi/km unit toggle, replacing the tap-only +/- stepper. The entered unit is persisted losslessly on the race (a 15 km race stays exactly 15 km), and races display both units honoring the input: a km-entered race reads '10 km (6.2 mi)', a miles-entered race '26.2 mi (42.2 km)'. Unit conversion lives in RaceDistance.miles(from:unit:) and RaceGoal.displayDistance, covered by new round-trip unit tests.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-custom-goal--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-races-list--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-races-list--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-replay-tour-row--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-account-sync.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-custom-goal.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-health-sync-on.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-races-list.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-reminders-on.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-replay-tour-row.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/provider-auth-verdict.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/RaceEditorView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/RaceGoals.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/SettingsView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/RaceGoalsTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-race-editor-custom-distance--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-race-editor-custom-distance.json",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Settings",
+      "screenshotPath": "settings--iphone-16.png"
+    },
+    {
+      "name": "Settings — Account Sync",
+      "screenshotPath": "settings-account-sync--iphone-16.png"
+    },
+    {
+      "name": "Settings — Custom Goal",
+      "screenshotPath": "settings-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Settings — Health Sync On",
+      "screenshotPath": "settings-health-sync-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Race Editor Custom Distance",
+      "screenshotPath": "settings-race-editor-custom-distance--iphone-16.png"
+    },
+    {
+      "name": "Settings — Races List",
+      "screenshotPath": "settings-races-list--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders On",
+      "screenshotPath": "settings-reminders-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Replay Tour Row",
+      "screenshotPath": "settings-replay-tour-row--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 170,
+    "passed": 170,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 170,
+        "passed": 170
+      }
+    ]
+  }
+}

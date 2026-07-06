@@ -42,7 +42,8 @@ public struct SettingsView: View {
     @State private var customGoalDraft = UserPreferences.defaultGoal
 
     // Race goals add/edit editor (sheet). `editingRace == nil` => adding.
-    @State private var showRaceEditor = false
+    // Scenario hook: seed `rbShowRaceEditor` to open the editor on the first frame.
+    @State private var showRaceEditor = UserDefaults.standard.bool(forKey: "rbShowRaceEditor")
     @State private var editingRace: RaceGoal?
 
     public init(model: OtterpaceModel, session: SessionStore, onClose: @escaping () -> Void = {},
@@ -416,7 +417,7 @@ public struct SettingsView: View {
 
     private func raceRow(_ race: RaceGoal) -> some View {
         let past = race.date < todayISO
-        let detail = "\(raceMiles(race.distanceMiles)) mi · \(prettyDate(race.date))"
+        let detail = "\(race.displayDistance) · \(prettyDate(race.date))"
             + (race.location.isEmpty ? "" : " · \(race.location)")
         return HStack(spacing: 12) {
             Image(systemName: "flag.checkered")
@@ -438,9 +439,6 @@ public struct SettingsView: View {
         .opacity(past ? 0.55 : 1)
     }
 
-    private func raceMiles(_ d: Double) -> String {
-        d == d.rounded() ? "\(Int(d))" : String(format: "%.1f", d)
-    }
 
     // The app's notion of "today" — the current activity snapshot's date, which
     // is the real day in production and the seeded day under a scenario. Reusing

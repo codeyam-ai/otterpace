@@ -1,6 +1,6 @@
 {
   "name": "Settings — Races List",
-  "id": "c0f5c60e-d8ae-45b5-aa99-be20d7adfe16",
+  "id": "38dab207-bfde-48c7-b688-e61b9c0fe62c",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,14 +8,17 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbGoalSteps": 10000,
-      "rbRacesJSON": "[{\"id\":\"22222222-2222-2222-2222-222222222222\",\"name\":\"Summer Series 10K\",\"distanceMiles\":6.2,\"date\":\"2026-06-27\",\"location\":\"Portland, OR\"},{\"id\":\"33333333-3333-3333-3333-333333333333\",\"name\":\"Cascade Marathon\",\"distanceMiles\":26.2,\"date\":\"2026-09-06\",\"location\":\"Seattle, WA\",\"notes\":\"Goal sub-4:00, corral C\"}]",
+      "rbRacesJSON": "[{\"id\":\"22222222-2222-2222-2222-222222222222\",\"name\":\"Summer Series 10K\",\"distanceMiles\":6.2137,\"date\":\"2026-06-27\",\"location\":\"Portland, OR\",\"unit\":\"kilometers\"},{\"id\":\"33333333-3333-3333-3333-333333333333\",\"name\":\"Cascade Marathon\",\"distanceMiles\":26.2,\"date\":\"2026-09-06\",\"location\":\"Seattle, WA\",\"notes\":\"Goal sub-4:00, corral C\"}]",
+      "rbShowRaceEditor": false,
       "rbConnected": true,
-      "rbStartTab": "today",
-      "rbShowSettings": true,
       "rbSettingsScroll": "races",
+      "rbStartTab": "today",
+      "rbDate": "2026-06-22",
+      "rbRaceEditorCustomUnit": "",
+      "rbRaceEditorCustomValue": "",
       "rbSteps": 8000,
-      "rbDate": "2026-06-22"
+      "rbShowSettings": true,
+      "rbGoalSteps": 10000
     }
   },
   "scenarioType": "application",

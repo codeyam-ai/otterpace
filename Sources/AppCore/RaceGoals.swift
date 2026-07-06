@@ -16,16 +16,32 @@ public struct RaceGoal: Codable, Equatable, Identifiable {
     public var date: String          // ISO yyyy-MM-dd, matching LatestWorkout.date
     public var location: String      // city / venue
     public var notes: String?        // optional: start area, corral, goal time
+    public var unit: DistanceUnit?   // the unit the distance was entered in (nil == miles, back-compat)
 
     public init(id: UUID = UUID(), name: String, distanceMiles: Double, date: String,
-                location: String = "", notes: String? = nil) {
+                location: String = "", notes: String? = nil, unit: DistanceUnit? = nil) {
         self.id = id
         self.name = name
         self.distanceMiles = distanceMiles
         self.date = date
         self.location = location
         self.notes = notes
+        self.unit = unit
     }
+
+    /// Human display honoring the entered unit, and always showing the other unit
+    /// too: a km race reads "15 km (9.3 mi)", a miles race "9.3 mi (15 km)".
+    public var displayDistance: String {
+        let miStr = RaceGoal.number(RaceGoal.oneDecimal(distanceMiles)) + " mi"
+        let kmStr = RaceGoal.number(RaceGoal.oneDecimal(distanceMiles * RaceDistance.kmPerMile)) + " km"
+        switch unit ?? .miles {
+        case .miles:      return "\(miStr) (\(kmStr))"
+        case .kilometers: return "\(kmStr) (\(miStr))"
+        }
+    }
+
+    static func oneDecimal(_ v: Double) -> Double { (v * 10).rounded() / 10 }
+    static func number(_ v: Double) -> String { v == v.rounded() ? "\(Int(v))" : String(format: "%.1f", v) }
 
     // MARK: Pure helpers (ISO date strings sort lexicographically, so plain string
     // comparison is correct for upcoming/sorting — dependency-free and testable).
@@ -104,6 +120,32 @@ public enum RaceDistance: CaseIterable, Equatable {
 
     public static func clampMiles(_ m: Double) -> Double {
         min(maxMiles, max(minMiles, (m * 10).rounded() / 10))
+    }
+
+    /// Exact conversion factor: 1 mile = 1.609344 km.
+    public static let kmPerMile = 1.609344
+
+    /// Convert a user-entered `value` in `unit` to clamped miles. Kilometers are
+    /// converted to miles; miles pass through. The result is bounded + rounded by
+    /// `clampMiles`, so the stored `RaceGoal.distanceMiles` stays canonical.
+    public static func miles(from value: Double, unit: DistanceUnit) -> Double {
+        switch unit {
+        case .miles:      return clampMiles(value)                             // 0.1-mi precision (typed in miles)
+        case .kilometers: return min(maxMiles, max(minMiles, value / kmPerMile)) // full precision so km round-trips exactly
+        }
+    }
+}
+
+/// Unit a custom race distance can be typed in. The canonical stored value is
+/// always miles (`RaceGoal.distanceMiles`); this records which unit the user
+/// entered so display can honor it (e.g. type 15, pick km → shows "15 km").
+public enum DistanceUnit: String, CaseIterable, Equatable, Codable {
+    case miles, kilometers
+    public var label: String {
+        switch self {
+        case .miles:      return "mi"
+        case .kilometers: return "km"
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "Settings — Replay Tour Row",
-  "id": "0cefb2f4-2209-4dac-900c-debe8353428e",
+  "id": "21868805-9ad5-491c-a333-549836a975f5",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,24 +8,28 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbContentSize": "",
-      "rbConnected": true,
-      "rbShowWeeklyReview": false,
-      "rbStartScreen": "",
-      "rbStartTab": "today",
-      "otterpaceRemindInactivity": false,
-      "rbShowSettings": true,
-      "rbSyncHealth": false,
-      "rbSteps": 8000,
-      "otterpaceRemindDaily": false,
       "otterpaceRemindGoal": false,
-      "rbDate": "2026-06-22",
-      "rbGoalSteps": 10000,
-      "rbSyncSettings": false,
-      "rbShowHistory": false,
-      "rbSignedInUserID": "",
+      "rbSyncHealth": false,
+      "rbConnected": true,
+      "rbContentSize": "",
+      "otterpaceRemindDaily": false,
+      "rbRaceEditorCustomValue": "",
+      "rbRaceEditorCustomUnit": "",
+      "rbShowSettings": true,
       "rbPreviewMode": "",
-      "rbSettingsScroll": "about"
+      "rbShowHistory": false,
+      "rbShowWeeklyReview": false,
+      "rbSyncSettings": false,
+      "otterpaceRemindInactivity": false,
+      "rbDate": "2026-06-22",
+      "rbSettingsScroll": "about",
+      "rbGoalSteps": 10000,
+      "rbStartScreen": "",
+      "rbSignedInUserID": "",
+      "rbSteps": 8000,
+      "rbStartTab": "today",
+      "rbRacesJSON": "",
+      "rbShowRaceEditor": false
     }
   },
   "scenarioType": "application",

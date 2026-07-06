@@ -37,6 +37,28 @@ final class RaceGoalsTests: XCTestCase {
         XCTAssertEqual(RaceDistance.clampMiles(8.04), 8.0, accuracy: 0.001)  // rounded to .1
     }
 
+    func testMilesFromUnit() {
+        // km → miles at full precision (1 mi = 1.609344 km) so the km value round-trips.
+        XCTAssertEqual(RaceDistance.miles(from: 5, unit: .kilometers), 5 / 1.609344, accuracy: 0.0001)  // 5K
+        XCTAssertEqual(RaceDistance.miles(from: 15, unit: .kilometers), 15 / 1.609344, accuracy: 0.0001)
+        // miles typed pass through, rounded to 0.1.
+        XCTAssertEqual(RaceDistance.miles(from: 13.1, unit: .miles), 13.1, accuracy: 0.001)
+        // clamp bounds apply regardless of unit.
+        XCTAssertEqual(RaceDistance.miles(from: 0.1, unit: .miles), RaceDistance.minMiles)
+        XCTAssertEqual(RaceDistance.miles(from: 500, unit: .kilometers), RaceDistance.maxMiles)
+    }
+
+    func testKmRaceRoundTripsInDisplay() {
+        // A 15 km race stored as full-precision miles displays back as exactly "15 km".
+        let miles = RaceDistance.miles(from: 15, unit: .kilometers)
+        let race = RaceGoal(name: "Trail 15K", distanceMiles: miles, date: "2026-10-01", unit: .kilometers)
+        XCTAssertTrue(race.displayDistance.hasPrefix("15 km"), race.displayDistance)
+        XCTAssertTrue(race.displayDistance.contains("9.3 mi"), race.displayDistance)
+        // A miles race leads with miles.
+        let milesRace = RaceGoal(name: "Half", distanceMiles: 13.1, date: "2026-10-01", unit: .miles)
+        XCTAssertTrue(milesRace.displayDistance.hasPrefix("13.1 mi"), milesRace.displayDistance)
+    }
+
     // MARK: store
 
     func testStoreRoundTripsAndMutates() {

@@ -1,0 +1,26 @@
+{
+  "name": "Settings — Race Editor Custom Distance",
+  "id": "868a7b46-496e-406e-a114-42dee4ad426e",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbStartTab": "today",
+      "rbShowRaceEditor": true,
+      "rbSteps": 8000,
+      "rbDate": "2026-06-22",
+      "rbRaceEditorCustomUnit": "km",
+      "rbShowSettings": true,
+      "rbConnected": true,
+      "rbRaceEditorCustomValue": "15",
+      "rbSettingsScroll": "races",
+      "rbGoalSteps": 10000,
+      "rbRacesJSON": "[{\"id\":\"22222222-2222-2222-2222-222222222222\",\"name\":\"Summer Series 10K\",\"distanceMiles\":6.2,\"date\":\"2026-06-27\",\"location\":\"Portland, OR\"}]"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/RaceEditorView.swift"
+}

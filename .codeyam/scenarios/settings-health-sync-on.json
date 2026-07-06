@@ -1,6 +1,6 @@
 {
   "name": "Settings — Health Sync On",
-  "id": "4b321266-d4e6-4235-b9d5-d28a268bcd63",
+  "id": "d77c30e5-72a4-4596-a8bb-205c7ff8b17d",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -8,15 +8,19 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbShowSettings": true,
-      "rbDate": "2026-06-22",
       "rbGoalSteps": 12000,
+      "rbSyncSettings": true,
       "rbSignedInUserID": "001234.abcDEF",
+      "rbDate": "2026-06-22",
+      "rbRacesJSON": "",
+      "rbShowRaceEditor": false,
+      "rbShowSettings": true,
+      "rbConnected": true,
+      "rbRaceEditorCustomUnit": "",
       "rbSteps": 8000,
       "rbSyncHealth": true,
-      "rbStartTab": "today",
-      "rbSyncSettings": true,
-      "rbConnected": true
+      "rbRaceEditorCustomValue": "",
+      "rbStartTab": "today"
     }
   },
   "scenarioType": "application",

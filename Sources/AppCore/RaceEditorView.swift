@@ -10,7 +10,8 @@ struct RaceEditorView: View {
 
     @State private var name: String
     @State private var distance: RaceDistance
-    @State private var customMiles: Double
+    @State private var customValue: String
+    @State private var customUnit: DistanceUnit
     @State private var date: Date
     @State private var location: String
     @State private var notes: String
@@ -20,18 +21,49 @@ struct RaceEditorView: View {
         self.onSave = onSave
         self.onCancel = onCancel
         let miles = existing?.distanceMiles ?? RaceDistance.half.miles
+        let preset = RaceDistance.preset(forMiles: miles)
         _name = State(initialValue: existing?.name ?? "")
-        _distance = State(initialValue: RaceDistance.preset(forMiles: miles))
-        _customMiles = State(initialValue: RaceDistance.clampMiles(miles))
         _date = State(initialValue: Self.parseISO(existing?.date) ?? Date())
         _location = State(initialValue: existing?.location ?? "")
         _notes = State(initialValue: existing?.notes ?? "")
+
+        // Scenario hook: when adding, a scenario can seed `rbRaceEditorCustomValue`
+        // (+ optional `rbRaceEditorCustomUnit` = "km"/"mi") to open the editor
+        // directly on the Custom option, so the typed-distance UI is capturable in
+        // the live preview. Normal use falls through to the preset selection.
+        let defs = UserDefaults.standard
+        if existing == nil, let seeded = defs.string(forKey: "rbRaceEditorCustomValue"), !seeded.isEmpty {
+            let unitStr = defs.string(forKey: "rbRaceEditorCustomUnit") ?? "mi"
+            _distance = State(initialValue: .custom)
+            _customValue = State(initialValue: seeded)
+            _customUnit = State(initialValue: (unitStr == "km" || unitStr == "kilometers") ? .kilometers : .miles)
+        } else if let existing, existing.unit == .kilometers {
+            // Editing a km-entered race: reopen on Custom in km so the entered value is honored.
+            let km = RaceGoal.oneDecimal(existing.distanceMiles * RaceDistance.kmPerMile)
+            _distance = State(initialValue: .custom)
+            _customValue = State(initialValue: RaceGoal.number(km))
+            _customUnit = State(initialValue: .kilometers)
+        } else {
+            _distance = State(initialValue: preset)
+            _customValue = State(initialValue: Self.formatMiles(RaceDistance.clampMiles(miles)))
+            _customUnit = State(initialValue: .miles)
+        }
     }
 
-    private var resolvedMiles: Double {
-        distance == .custom ? RaceDistance.clampMiles(customMiles) : distance.miles
+    /// The typed custom distance resolved to clamped miles, or nil when the field
+    /// is empty or not a positive number.
+    private var parsedCustomMiles: Double? {
+        guard let v = Double(customValue.trimmingCharacters(in: .whitespaces)), v > 0 else { return nil }
+        return RaceDistance.miles(from: v, unit: customUnit)
     }
-    private var canSave: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
+    private var resolvedMiles: Double {
+        distance == .custom ? (parsedCustomMiles ?? RaceDistance.minMiles) : distance.miles
+    }
+    private var canSave: Bool {
+        guard !name.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
+        if distance == .custom { return parsedCustomMiles != nil }
+        return true
+    }
 
     var body: some View {
         ZStack {
@@ -48,11 +80,27 @@ struct RaceEditorView: View {
                         field("Distance") {
                             distanceCapsules
                             if distance == .custom {
-                                Stepper(value: $customMiles, in: RaceDistance.minMiles...RaceDistance.maxMiles, step: 0.1) {
-                                    Text(String(format: "%.1f miles", customMiles))
-                                        .font(Typography.captionStrong).foregroundColor(Palette.ink)
+                                HStack(spacing: 10) {
+                                    TextField("Distance", text: $customValue)
+                                        #if os(iOS)
+                                        .keyboardType(.decimalPad)
+                                        #endif
+                                        .textFieldStyle(.roundedBorder)
+                                        .frame(maxWidth: .infinity)
+                                        .accessibilityLabel("Custom race distance")
+                                    Picker("Unit", selection: $customUnit) {
+                                        ForEach(DistanceUnit.allCases, id: \.self) { u in
+                                            Text(u.label).tag(u)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                    .frame(width: 108)
+                                    .accessibilityLabel("Distance unit")
                                 }
-                                .accessibilityLabel("Custom race distance")
+                                if customUnit == .kilometers, let mi = parsedCustomMiles {
+                                    Text(String(format: "≈ %.1f mi", mi))
+                                        .font(Typography.caption2).foregroundColor(Palette.subtle)
+                                }
                             }
                         }
                         field("Date") {
@@ -87,7 +135,8 @@ struct RaceEditorView: View {
                     distanceMiles: resolvedMiles,
                     date: Self.isoString(date),
                     location: location.trimmingCharacters(in: .whitespaces),
-                    notes: notes.trimmingCharacters(in: .whitespaces).isEmpty ? nil : notes
+                    notes: notes.trimmingCharacters(in: .whitespaces).isEmpty ? nil : notes,
+                    unit: distance == .custom ? customUnit : .miles
                 ))
             }
             .font(Typography.headline)
@@ -123,6 +172,9 @@ struct RaceEditorView: View {
             content()
         }
     }
+
+    // Compact miles string for prefill (8.0 -> "8", 13.1 -> "13.1").
+    private static func formatMiles(_ m: Double) -> String { String(format: "%g", m) }
 
     // ISO yyyy-MM-dd <-> Date, UTC, matching RaceGoal.date / LatestWorkout.date.
     private static func parseISO(_ s: String?) -> Date? {
