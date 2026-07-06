@@ -58,7 +58,9 @@ footer { text-align: center; color: var(--subtle); font-size: 0.88rem; padding: 
 footer a { color: var(--brand-deep); }
 
 /* Document pages (privacy) */
-.doc { padding: 56px 0 40px; }
+/* Use longhand top/bottom so .wrap's horizontal padding (0 24px) is preserved —
+   a `padding` shorthand here would reset side padding to 0 and run text to the edge. */
+.doc { padding-top: 56px; padding-bottom: 40px; }
 .doc .back { color: var(--brand-deep); text-decoration: none; font-weight: 600; font-size: 0.95rem; }
 .doc h1 { font-size: 2rem; font-weight: 800; margin: 18px 0 6px; letter-spacing: -0.02em; }
 .doc .updated { color: var(--subtle); font-size: 0.9rem; margin-bottom: 28px; }
@@ -66,3 +68,11 @@ footer a { color: var(--brand-deep); }
 .doc p, .doc li { color: var(--ink); margin-bottom: 10px; }
 .doc ul { padding-left: 1.2rem; }
 .doc strong { font-weight: 700; }
+
+/* Small screens: comfortable margins + tighter vertical rhythm */
+@media (max-width: 600px) {
+  .wrap { padding: 0 20px; }
+  .doc { padding-top: 32px; padding-bottom: 32px; }
+  .doc h1 { font-size: 1.7rem; }
+  .doc h2 { font-size: 1.1rem; }
+}
