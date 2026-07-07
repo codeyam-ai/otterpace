@@ -1,0 +1,29 @@
+{
+  "completedAt": "2026-07-07T00:49:23Z",
+  "createdAt": "2026-07-06T18:38:32Z",
+  "deliverables": [
+    "README.md",
+    "Sources/AppCore/Coach/RaceImportClient.swift",
+    "Sources/AppCore/Coach/RemoteCoach.swift",
+    "Sources/AppCore/CodeyamIsolated/CodeyamIsolationHost.swift",
+    "Sources/AppCore/CodeyamIsolated/RaceImportSheetIsolated.swift",
+    "Sources/AppCore/CodeyamIsolated/RaceSearchSheetIsolated.swift",
+    "Sources/AppCore/Model.swift",
+    "Sources/AppCore/RaceEditorView.swift",
+    "Sources/AppCore/RaceGoals.swift",
+    "Sources/AppCore/RaceImportView.swift",
+    "Sources/AppCore/SettingsView.swift",
+    "Sources/AppCore/TodayView.swift",
+    "Tests/AppCoreTests/RaceGoalsTests.swift",
+    "Tests/AppCoreTests/RaceImportPersistenceTests.swift",
+    "api/race-import.ts",
+    "api/race-search.ts",
+    "test/api/race-import.test.ts",
+    "test/api/race-search.test.ts"
+  ],
+  "journalTimestamp": "2026-07-07T00:49:23Z",
+  "mode": "ui",
+  "planFile": "completed/persist-and-import-races.md",
+  "slug": "persist-and-import-races",
+  "title": "Persist Added Races & Import Races from the Web"
+}

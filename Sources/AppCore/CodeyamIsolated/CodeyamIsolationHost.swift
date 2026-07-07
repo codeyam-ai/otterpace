@@ -17,6 +17,10 @@ public enum CodeyamIsolationHost {
         switch component {
         case "AskCoachHeader":
             return AnyView(AskCoachHeaderIsolated(scenario: scenario))
+        case "RaceImportSheet":
+            return AnyView(RaceImportSheetIsolated(scenario: scenario))
+        case "RaceSearchSheet":
+            return AnyView(RaceSearchSheetIsolated(scenario: scenario))
         default:
             return AnyView(Text("Unknown isolated component: \(component)"))
         }

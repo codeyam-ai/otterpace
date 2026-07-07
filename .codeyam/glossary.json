@@ -364,6 +364,16 @@
   },
   {
     "conformsToView": true,
+    "description": "The import-from-URL sheet opened from the Settings Races card. A URL field and Import button call the race-import backend with the user's BYO Anthropic key, then hand a prefilled RaceGoal seed plus the fields to double-check to the caller so the editor opens pre-filled. Mirrors AskCoachView's degradation: with no coach key it shows a connect-key explainer, and on any failure it surfaces a message plus an add-manually fallback, so the user is never blocked.",
+    "filePath": "Sources/AppCore/RaceImportView.swift",
+    "name": "RaceImportSheet",
+    "scenarios": [
+      "raceimportsheet-input",
+      "raceimportsheet-no-key"
+    ]
+  },
+  {
+    "conformsToView": true,
     "description": "A dismissable Today callout, in Buddy's voice, inviting the user to add a race. Shown only when the user has no races yet and hasn't dismissed it; tapping opens Settings (where the Races card lives) and the dismiss control hides it for good. Styled on the brand gradient card look so it reads as a native callout.",
     "filePath": "Sources/AppCore/RacePromptBanner.swift",
     "name": "RacePromptBanner",
@@ -381,6 +391,16 @@
       "justification": "Thin UserDefaults read/write flag with no branching logic; the storage boundary is exercised via the Today banner scenario rather than a unit test.",
       "kind": "platform-glue"
     }
+  },
+  {
+    "conformsToView": true,
+    "description": "The search-online sheet opened from the Settings Races card. A query field calls the race-search backend with the user's BYO Anthropic key and lists candidate races; tapping one hands its draft to the caller to open the editor pre-filled. Handles working, no-results, and error states, and degrades to manual entry when there is no coach key.",
+    "filePath": "Sources/AppCore/RaceImportView.swift",
+    "name": "RaceSearchSheet",
+    "scenarios": [
+      "racesearchsheet-input",
+      "racesearchsheet-no-key"
+    ]
   },
   {
     "conformsToView": false,
@@ -799,6 +819,18 @@
     "testFile": "test/api/coach.test.ts"
   },
   {
+    "description": "POST endpoint that imports a race from a URL. Validates the URL and blocks private/loopback/metadata hosts to prevent SSRF, fetches the page server-side with size and timeout caps and no redirect-following, then calls Claude with the caller's BYO Anthropic key to extract a structured race plus confidence and missingFields hints. Maps upstream 401/429 to invalid_key/rate_limited and degrades to an empty race on unparseable model output.",
+    "filePath": "api/race-import.ts",
+    "name": "handler",
+    "testFile": "test/api/race-import.test.ts"
+  },
+  {
+    "description": "POST endpoint that searches races by name. Calls Claude with the caller's BYO Anthropic key to propose up to five candidate races (name, optional date, distance, location, best-effort sourceUrl) for the user to pick from, capped and rate-limited. Degrades to an empty list on unparseable model output and maps upstream 401/429 like the coach proxy.",
+    "filePath": "api/race-search.ts",
+    "name": "handler",
+    "testFile": "test/api/race-search.test.ts"
+  },
+  {
     "description": "GET endpoint that reads a device's Strava token, refreshes it when expired, and returns recent activities mapped to the app's workout shape (not-connected with an empty list when no token).",
     "filePath": "api/strava/activities.ts",
     "name": "handler",
@@ -840,6 +872,12 @@
     "testFile": "test/api/account.test.ts"
   },
   {
+    "description": "Reduces fetched HTML to bounded readable text for extraction: strips script and style blocks and all tags, decodes a few common entities, and collapses whitespace, so the model sees the page's text without markup or token bloat.",
+    "filePath": "api/race-import.ts",
+    "name": "htmlToText",
+    "testFile": "test/api/race-import.test.ts"
+  },
+  {
     "description": "Last-write-wins decision shared by both sync streams: true when there is no stored row or the incoming updated_at is strictly newer than the stored one.",
     "filePath": "api/_lib/account.ts",
     "name": "incomingWins",
@@ -850,6 +888,12 @@
     "filePath": "Sources/AppCore/Preferences.swift",
     "name": "isPreset",
     "testFile": "Tests/AppCoreTests/ModelTests.swift"
+  },
+  {
+    "description": "SSRF guard for the race-import URL. Accepts only http/https and rejects hosts pointing at the local network: localhost, .local, loopback, and private/link-local IPv4 ranges including the cloud metadata address 169.254.169.254. Returns the parsed URL when safe, or null to reject.",
+    "filePath": "api/race-import.ts",
+    "name": "isSafePublicUrl",
+    "testFile": "test/api/race-import.test.ts"
   },
   {
     "description": "True when a device-key string matches the allowed 16–128 char [A-Za-z0-9_-] pattern.",

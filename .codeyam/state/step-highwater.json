@@ -1,6 +1,6 @@
 {
-  "feature": "race-dead-state-fix",
-  "maxStep": 26,
-  "version": 318,
-  "updatedAt": "2026-07-06T20:02:48.303884+00:00"
+  "feature": "persist-and-import-races",
+  "maxStep": 24,
+  "version": 68,
+  "updatedAt": "2026-07-07T00:58:02.668099+00:00"
 }

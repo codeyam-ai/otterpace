@@ -1,0 +1,19 @@
+{
+  "name": "RaceImportSheet - Input",
+  "id": "9c62e93b-ab87-48d2-90ac-9dfdd784bc4c",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbCoachConnected": true
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Input",
+      "CODEYAM_ISOLATE_COMPONENT": "RaceImportSheet"
+    }
+  },
+  "componentName": "RaceImportSheet",
+  "scenarioType": "component"
+}

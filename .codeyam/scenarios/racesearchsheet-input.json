@@ -1,0 +1,19 @@
+{
+  "name": "RaceSearchSheet - Input",
+  "id": "62256347-fd98-41f2-a5cd-d88d1c805994",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbCoachConnected": true
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "RaceSearchSheet",
+      "CODEYAM_ISOLATE_SCENARIO": "Input"
+    }
+  },
+  "componentName": "RaceSearchSheet",
+  "scenarioType": "component"
+}

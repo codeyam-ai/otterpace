@@ -1,0 +1,19 @@
+{
+  "name": "RaceSearchSheet - No Key",
+  "id": "9a1e4e4f-baa7-40c8-99e6-9c4ed33064f1",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbCoachConnected": false
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "No Key",
+      "CODEYAM_ISOLATE_COMPONENT": "RaceSearchSheet"
+    }
+  },
+  "componentName": "RaceSearchSheet",
+  "scenarioType": "component"
+}

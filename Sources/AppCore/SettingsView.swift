@@ -41,10 +41,35 @@ public struct SettingsView: View {
     @State private var customGoalExpanded = false
     @State private var customGoalDraft = UserPreferences.defaultGoal
 
-    // Race goals add/edit editor (sheet). `editingRace == nil` => adding.
+    // Race goals sheets: manual add/edit editor, plus import-from-URL and
+    // search-online entry points that pre-fill the editor. One enum drives which
+    // sheet is up (SwiftUI presents one at a time), so import/search can hand off
+    // to the editor by switching the value. `editingRace == nil` => adding.
     // Scenario hook: seed `rbShowRaceEditor` to open the editor on the first frame.
-    @State private var showRaceEditor = UserDefaults.standard.bool(forKey: "rbShowRaceEditor")
+    private enum RaceSheet: Int, Identifiable {
+        case editor, importURL, search
+        var id: Int { rawValue }
+    }
+    @State private var activeRaceSheet: RaceSheet? =
+        UserDefaults.standard.bool(forKey: "rbShowRaceEditor") ? .editor : nil
     @State private var editingRace: RaceGoal?
+    // Prefill + review-flags carried into the editor when it opens from import/search.
+    // Scenario hook: `rbRaceEditorSeedJSON` (a JSON RaceGoal) + `rbRaceEditorFlagged`
+    // (comma-separated field names) open the editor pre-filled from a web import, so
+    // the import-review state is capturable in the live preview without a network call.
+    @State private var raceEditorSeed: RaceGoal? = Self.seededImportSeed()
+    @State private var raceEditorFlagged: [String] = Self.seededFlaggedFields()
+
+    private static func seededImportSeed() -> RaceGoal? {
+        guard let json = UserDefaults.standard.string(forKey: "rbRaceEditorSeedJSON"), !json.isEmpty,
+              let data = json.data(using: .utf8),
+              let seed = try? JSONDecoder().decode(RaceGoal.self, from: data) else { return nil }
+        return seed
+    }
+    private static func seededFlaggedFields() -> [String] {
+        guard let raw = UserDefaults.standard.string(forKey: "rbRaceEditorFlagged"), !raw.isEmpty else { return [] }
+        return raw.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+    }
 
     public init(model: OtterpaceModel, session: SessionStore, onClose: @escaping () -> Void = {},
                 onReplayTour: @escaping () -> Void = {}) {
@@ -117,16 +142,33 @@ public struct SettingsView: View {
             Text("This removes your sign-in from this device and deletes any data synced to your account. Health data is only ever synced if you turned it on.")
         }
         .sheet(isPresented: $showHealthConsent) { healthConsentSheet }
-        .sheet(isPresented: $showRaceEditor) {
-            RaceEditorView(
-                existing: editingRace,
-                onSave: { race in
-                    if editingRace == nil { model.addRace(race) } else { model.updateRace(race) }
-                    Analytics.shared.capture("race_added")
-                    showRaceEditor = false
-                },
-                onCancel: { showRaceEditor = false }
-            )
+        .sheet(item: $activeRaceSheet) { sheet in
+            switch sheet {
+            case .editor:
+                RaceEditorView(
+                    existing: editingRace,
+                    seed: raceEditorSeed,
+                    flaggedFields: raceEditorFlagged,
+                    onSave: { race in
+                        if editingRace == nil { model.addRace(race) } else { model.updateRace(race) }
+                        Analytics.shared.capture("race_added")
+                        activeRaceSheet = nil
+                    },
+                    onCancel: { activeRaceSheet = nil }
+                )
+            case .importURL:
+                RaceImportSheet(
+                    onPrefill: { seed, flagged in openEditorPrefilled(seed: seed, flagged: flagged) },
+                    onManual: { openEditorForAdd() },
+                    onCancel: { activeRaceSheet = nil }
+                )
+            case .search:
+                RaceSearchSheet(
+                    onPrefill: { seed, flagged in openEditorPrefilled(seed: seed, flagged: flagged) },
+                    onManual: { openEditorForAdd() },
+                    onCancel: { activeRaceSheet = nil }
+                )
+            }
         }
         .confirmationDialog("Turn off health sync?", isPresented: $confirmHealthOff, titleVisibility: .visible) {
             Button("Turn off & delete synced data", role: .destructive) {
@@ -401,18 +443,39 @@ public struct SettingsView: View {
                 Text("Add a race and Buddy will tailor your coaching — building toward it, then easing off as it nears.")
                     .font(Typography.callout).foregroundColor(Palette.ink)
                     .fixedSize(horizontal: false, vertical: true)
-                actionRow("Add a race", icon: "flag.checkered", tint: Palette.brand) {
-                    editingRace = nil; showRaceEditor = true
-                }
             } else {
                 ForEach(model.today.races.sorted { $0.date < $1.date }) { race in
                     raceRow(race)
                 }
-                actionRow("Add a race", icon: "plus.circle", tint: Palette.brand) {
-                    editingRace = nil; showRaceEditor = true
-                }
             }
+            addRaceOptions
         }
+    }
+
+    // The three ways to add a race: manual entry, import from a URL, or search
+    // online. Import/search pre-fill the editor for the user to confirm; they
+    // reuse the AI coach key and fall back to manual entry if it's missing.
+    @ViewBuilder private var addRaceOptions: some View {
+        actionRow("Add manually", icon: "square.and.pencil", tint: Palette.brand) { openEditorForAdd() }
+        actionRow("Import from URL", icon: "link", tint: Palette.sky) { activeRaceSheet = .importURL }
+        actionRow("Search online", icon: "magnifyingglass", tint: Palette.sky) { activeRaceSheet = .search }
+    }
+
+    /// Open the editor to add a new, blank race (also the import/search manual fallback).
+    private func openEditorForAdd() {
+        editingRace = nil
+        raceEditorSeed = nil
+        raceEditorFlagged = []
+        activeRaceSheet = .editor
+    }
+
+    /// Open the editor pre-filled from a web import / search pick, flagging the
+    /// fields the user should double-check. Stays in add mode (new race on save).
+    private func openEditorPrefilled(seed: RaceGoal, flagged: [String]) {
+        editingRace = nil
+        raceEditorSeed = seed
+        raceEditorFlagged = flagged
+        activeRaceSheet = .editor
     }
 
     private func raceRow(_ race: RaceGoal) -> some View {
@@ -427,7 +490,7 @@ public struct SettingsView: View {
                 Text(detail).font(Typography.caption).foregroundColor(Palette.subtle).lineLimit(1)
             }
             Spacer()
-            Button { editingRace = race; showRaceEditor = true } label: {
+            Button { editingRace = race; raceEditorSeed = nil; raceEditorFlagged = []; activeRaceSheet = .editor } label: {
                 Image(systemName: "pencil").foregroundColor(Palette.sky).padding(6)
             }
             .accessibilityLabel("Edit \(race.name)")

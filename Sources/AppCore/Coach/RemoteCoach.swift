@@ -26,6 +26,10 @@ public enum CoachConfig {
     public static let keyAccount = "coach-anthropic-key"
     /// The backend coach proxy. Co-located with the marketing site on Vercel.
     public static let endpoint = URL(string: "https://otterpace.com/api/coach")!
+    /// Import a race from a URL (page -> structured race). Same host + BYO key.
+    public static let raceImportEndpoint = URL(string: "https://otterpace.com/api/race-import")!
+    /// Search for races by name (name -> candidate list). Same host + BYO key.
+    public static let raceSearchEndpoint = URL(string: "https://otterpace.com/api/race-search")!
 }
 
 /// Stores the user's own Anthropic key in the Keychain (reusing the same

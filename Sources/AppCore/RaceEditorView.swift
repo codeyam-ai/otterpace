@@ -5,6 +5,7 @@ import SwiftUI
 // pattern as the daily step goal. Reuses the app theme so it feels native.
 struct RaceEditorView: View {
     let existing: RaceGoal?
+    let flaggedFields: [String]
     var onSave: (RaceGoal) -> Void
     var onCancel: () -> Void
 
@@ -16,33 +17,44 @@ struct RaceEditorView: View {
     @State private var location: String
     @State private var notes: String
 
-    init(existing: RaceGoal?, onSave: @escaping (RaceGoal) -> Void, onCancel: @escaping () -> Void) {
+    /// - Parameters:
+    ///   - existing: the race being edited; `nil` when adding a new race.
+    ///   - seed: prefill values for an *add* (from a web import / search pick). The
+    ///     editor stays in "Add race" mode and mints a fresh id on save, so a
+    ///     machine-extracted race is only ever created after the user confirms it.
+    ///   - flaggedFields: field names ("name","date","distanceMiles","location")
+    ///     the import couldn't determine or was unsure about, hinted for review.
+    init(existing: RaceGoal?, seed: RaceGoal? = nil, flaggedFields: [String] = [],
+         onSave: @escaping (RaceGoal) -> Void, onCancel: @escaping () -> Void) {
         self.existing = existing
+        self.flaggedFields = flaggedFields
         self.onSave = onSave
         self.onCancel = onCancel
-        let miles = existing?.distanceMiles ?? RaceDistance.half.miles
+        // Prefill from the edited race, else the add-mode seed, else defaults.
+        let base = existing ?? seed
+        let miles = base?.distanceMiles ?? RaceDistance.half.miles
         let preset = RaceDistance.preset(forMiles: miles)
-        _name = State(initialValue: existing?.name ?? "")
+        _name = State(initialValue: base?.name ?? "")
         // Clamp the initial date to today's floor so the bounded picker (which
         // rejects past dates) always opens on a valid selection — editing a
         // now-past race nudges it forward rather than crashing the range.
-        _date = State(initialValue: max(Self.parseISO(existing?.date) ?? Date(), Self.startOfToday))
-        _location = State(initialValue: existing?.location ?? "")
-        _notes = State(initialValue: existing?.notes ?? "")
+        _date = State(initialValue: max(Self.parseISO(base?.date) ?? Date(), Self.startOfToday))
+        _location = State(initialValue: base?.location ?? "")
+        _notes = State(initialValue: base?.notes ?? "")
 
-        // Scenario hook: when adding, a scenario can seed `rbRaceEditorCustomValue`
-        // (+ optional `rbRaceEditorCustomUnit` = "km"/"mi") to open the editor
-        // directly on the Custom option, so the typed-distance UI is capturable in
-        // the live preview. Normal use falls through to the preset selection.
+        // Scenario hook: when adding with no prefill seed, a scenario can seed
+        // `rbRaceEditorCustomValue` (+ optional `rbRaceEditorCustomUnit` = "km"/"mi")
+        // to open the editor directly on the Custom option, so the typed-distance UI
+        // is capturable in the live preview. Normal use falls through to the preset.
         let defs = UserDefaults.standard
-        if existing == nil, let seeded = defs.string(forKey: "rbRaceEditorCustomValue"), !seeded.isEmpty {
+        if existing == nil, seed == nil, let seeded = defs.string(forKey: "rbRaceEditorCustomValue"), !seeded.isEmpty {
             let unitStr = defs.string(forKey: "rbRaceEditorCustomUnit") ?? "mi"
             _distance = State(initialValue: .custom)
             _customValue = State(initialValue: seeded)
             _customUnit = State(initialValue: (unitStr == "km" || unitStr == "kilometers") ? .kilometers : .miles)
-        } else if let existing, existing.unit == .kilometers {
-            // Editing a km-entered race: reopen on Custom in km so the entered value is honored.
-            let km = RaceGoal.oneDecimal(existing.distanceMiles * RaceDistance.kmPerMile)
+        } else if let base, base.unit == .kilometers {
+            // A km-entered race (edited or imported): reopen on Custom in km so the entered value is honored.
+            let km = RaceGoal.oneDecimal(base.distanceMiles * RaceDistance.kmPerMile)
             _distance = State(initialValue: .custom)
             _customValue = State(initialValue: RaceGoal.number(km))
             _customUnit = State(initialValue: .kilometers)
@@ -77,6 +89,9 @@ struct RaceEditorView: View {
                 Divider().opacity(0.4)
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
+                        if !flaggedFields.isEmpty {
+                            reviewHint
+                        }
                         field("Race name") {
                             TextField("e.g. October Trail Half", text: $name).textFieldStyle(.roundedBorder)
                         }
@@ -125,6 +140,27 @@ struct RaceEditorView: View {
             }
         }
     }
+
+    // Shown when a web import couldn't fully determine the race: name the fields
+    // to double-check so the user confirms them before saving.
+    private var reviewHint: some View {
+        let labels = flaggedFields.compactMap { Self.fieldLabels[$0] }
+        let list = labels.isEmpty ? "some details" : labels.joined(separator: ", ")
+        return HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "sparkles").foregroundColor(Palette.brand)
+            Text("Imported from the web. Double-check \(list) before saving.")
+                .font(Typography.caption).foregroundColor(Palette.ink)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Palette.brand.opacity(0.08)))
+    }
+
+    private static let fieldLabels = [
+        "name": "the name", "date": "the date",
+        "distanceMiles": "the distance", "location": "the location",
+    ]
 
     private var header: some View {
         HStack {

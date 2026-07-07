@@ -1,0 +1,26 @@
+{
+  "name": "Settings — Import Race Review",
+  "id": "db2df764-f650-48c5-bd29-b077ff70567c",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbSettingsScroll": "races",
+      "rbStartTab": "today",
+      "rbRacesJSON": "[{\"id\":\"22222222-2222-2222-2222-222222222222\",\"name\":\"Summer Series 10K\",\"distanceMiles\":6.2137,\"date\":\"2026-06-27\",\"location\":\"Portland, OR\",\"unit\":\"kilometers\"}]",
+      "rbRaceEditorFlagged": "location",
+      "rbDate": "2026-06-22",
+      "rbShowRaceEditor": true,
+      "rbGoalSteps": 10000,
+      "rbShowSettings": true,
+      "rbSteps": 8000,
+      "rbConnected": true,
+      "rbRaceEditorSeedJSON": "{\"id\":\"44444444-4444-4444-4444-444444444444\",\"name\":\"Portland Marathon\",\"distanceMiles\":26.2,\"date\":\"2026-10-04\",\"location\":\"\",\"unit\":\"miles\"}"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/RaceEditorView.swift"
+}

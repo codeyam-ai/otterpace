@@ -1,0 +1,19 @@
+{
+  "name": "RaceImportSheet - No Key",
+  "id": "53aaf450-59c8-4c01-bcb9-873c8611f50a",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbCoachConnected": false
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "RaceImportSheet",
+      "CODEYAM_ISOLATE_SCENARIO": "No Key"
+    }
+  },
+  "componentName": "RaceImportSheet",
+  "scenarioType": "component"
+}

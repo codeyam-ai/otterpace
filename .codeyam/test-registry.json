@@ -1192,6 +1192,55 @@
       "runner": "tests"
     },
     {
+      "description": "connect() re-merges the persisted coach profile onto the freshly loaded HealthKit snapshot.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceImportPersistenceTests › testConnectReMergesCoachProfile",
+      "registeredAt": "2026-07-06T21:02:55Z",
+      "runner": "tests"
+    },
+    {
+      "description": "connect() re-merges on-device races onto the HealthKit snapshot so added races survive a load.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceImportPersistenceTests › testConnectReMergesPersistedRaces",
+      "registeredAt": "2026-07-06T21:02:55Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A sparse import draft seeds the editor with sensible defaults for missing fields, inventing nothing.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceImportPersistenceTests › testRaceDraftSeedFillsDefaultsForMissingFields",
+      "registeredAt": "2026-07-06T21:02:55Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A full import draft preserves name, date, km unit, location and notes into the editor seed.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceImportPersistenceTests › testRaceDraftSeedPreservesKmUnitAndValues",
+      "registeredAt": "2026-07-06T21:02:55Z",
+      "runner": "tests"
+    },
+    {
+      "description": "With no on-device profile stored, the re-merge leaves today.profile nil after a load.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceImportPersistenceTests › testReMergeLeavesProfileNilWhenNoneStored",
+      "registeredAt": "2026-07-06T21:02:55Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A race added this session survives a refresh() that reloads the raceless HealthKit snapshot.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceImportPersistenceTests › testRefreshKeepsRaceAddedThisSession",
+      "registeredAt": "2026-07-06T21:02:55Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A search result maps to a draft and exposes a stable list id from name, date and location.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceImportPersistenceTests › testSearchResultMapsToDraft",
+      "registeredAt": "2026-07-06T21:02:55Z",
+      "runner": "tests"
+    },
+    {
       "description": "A fresh install has every reminder off, with sensible default times.",
       "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
       "format": "junit-xml",

@@ -1,0 +1,239 @@
+{
+  "timestamp": "2026-07-07T00:49:23Z",
+  "title": "Persist Added Races & Import Races from the Web",
+  "type": "feature",
+  "userRequest": "## Summary\n\nFix a data-loss bug where races the user adds disappear across app sessions, and\nadd two new ways to create a race without hand-typing every field: **import from a\nURL** (paste a race's web page; the AI coach extracts the details) and **search\nonline by name** (type a race name; pick from candidate results). Both new paths\nend in the existing `RaceEditorView` pre-filled, so the user always confirms and\nedits before saving. Both reuse the app's established BYO-key coach-proxy\narchitecture (Swift client → Vercel endpoint → Anthropic), so no Anthropic key\never leaves the device path already trusted by the coach.\n\n## Bug: added races don't persist across sessions\n\n**Current broken behavior.** A user adds a race in Settings → it's written to\nUserDefaults under `otterpaceRaces` and immediately shown. On the next launch (or\nany HealthKit `connect()` / Today pull-to-refresh), the race is gone from the UI,\neven though the JSON is still on disk.\n\n**Root cause.** `RaceStore` persistence is correct and round-trips\n(`RaceGoals.swift:161–194`, proven by `testStoreRoundTripsAndMutates`). The launch\nload is also correct (`Model.swift:144`, `RaceStore.load`). The defect is that the\n**live `today` snapshot is replaced wholesale** and the on-device fields are\ndropped:\n\n- `OtterpaceModel.connect()` (`Model.swift:273`) and `refresh()`\n  (`Model.swift:286`, wired to Today's `.refreshable` at `TodayView.swift:83`)\n  both do `today = await source.loadToday()`.\n- `HealthKitDataSource.loadToday()` (`HealthKitDataSource.swift:79–91`) builds a\n  fresh `TodayState` that **omits `races:` and `profile:`**, so they reset to `[]`\n  / `nil`.\n\nResult: races (and, by the same clobber, the coach `profile`) survive in\nUserDefaults but are never re-merged into `today` after a HealthKit load — \"added\nin one session, gone in a later session.\" The seeded/scenario path\n(`SeededHealthDataSource.loadToday`) does not have this bug because it goes through\n`OtterpaceModel.readState`, which repopulates from the seed key — which is why the\nbug is invisible in scenarios but hits real HealthKit users.\n\n**Expected correct behavior.** After any `loadToday()`, the on-device race list and\ncoach profile are preserved. Add a race, force-quit, relaunch (or pull-to-refresh),\nand the race is still there.\n\n## Key Decisions\n\n- **Re-merge on-device state after every `loadToday()`, in one place** — rather\n  than teaching each data source to fold in `races`/`profile`. A single\n  `applyOnDeviceState()` helper on `OtterpaceModel` called right after both\n  `today = loadToday()` sites keeps the fix DRY and covers `connect()`, `refresh()`,\n  and any future load path. This also fixes the identical latent `profile` clobber\n  in the same stroke (per chosen scope).\n- **Both import and search, funneling into the existing editor** — the user picked\n  \"Both URL + search.\" Both produce a partially-filled `RaceGoal` (or a struct the\n  editor can seed from) and open `RaceEditorView` for confirm/edit/save. We never\n  auto-save a machine-extracted race; the human confirms. This reuses all existing\n  validation, unit handling, and the `onSave → model.addRace` path.\n- **Server-side fetching & extraction via the coach-proxy pattern** — the app must\n  not fetch arbitrary HTML on-device (privacy, reliability, CSP, and to keep the\n  Anthropic prompt server-side). Two new Vercel endpoints mirror `api/coach.ts`\n  (same `x-anthropic-key` header, rate-limit, size guards, JSON-schema-constrained\n  output). Two new thin Swift clients mirror `RemoteCoach`.\n- **Graceful degradation** — like `AskCoachView`, if there's no coach key or the\n  request fails, the import/search UI shows a clear message and the user can still\n  add a race manually. No hard dependency on connectivity.\n- **Structured extraction output** — the extraction endpoint returns a strict JSON\n  shape (`name`, `date` as `yyyy-MM-dd`, `distanceMiles` or `distance`+`unit`,\n  `location`, optional `notes`, plus a `confidence`/`missingFields` hint) so the\n  editor can highlight low-confidence fields the user should double-check.\n\n## Implementation\n\n### 1. Fix the persistence clobber (the bug)\n\n**File**: `Sources/AppCore/Model.swift`\n\nAdd an internal helper that re-applies on-device state onto the current `today`\nsnapshot, and call it immediately after both `today = await source.loadToday()`\nsites:\n\n- In `connect()` (line ~273) and `refresh()` (line ~286), after assigning\n  `today = await source.loadToday()`, call `applyOnDeviceState()`.\n- `applyOnDeviceState()` sets `today.races = RaceStore.load(defaults)` and\n  `today.profile = CoachProfileStore.load(defaults)` (use whichever defaults\n  instance the model already uses at launch — see `Model.swift:134–149`), so the\n  freshly loaded HealthKit snapshot regains the persisted race list and profile.\n- Verify no double-encoding/round-trip mismatch with the seeded path: the seeded\n  source already repopulates via `readState`; guard so `applyOnDeviceState()` is\n  correct in both real and seeded environments (either always re-merge, or skip\n  when the source already carries races — prefer always re-merge from the same\n  store the mutators write to).\n\n**File**: `Sources/AppCore/HealthKitDataSource.swift`\n\nOptional belt-and-suspenders: leave `loadToday()` as-is (it legitimately doesn't\nknow about UserDefaults), since the re-merge now lives in the model. Do **not**\nduplicate the load in two places — the model helper is the single source of truth.\n\n### 2. Backend: race-import endpoint (URL → structured race)\n\n**New file**: `api/race-import.ts`\n\nMirror `api/coach.ts` structure (`handler`, method/content-type/size checks,\n`x-anthropic-key` header, `api/_lib/ratelimit.ts` `allow`/`clientIp`). Body:\n`{ url: string }`. Steps:\n\n- Validate/normalize the URL (http/https only; reject private/loopback hosts to\n  avoid SSRF; cap redirects and response size; short timeout).\n- Server-side `fetch` of the page; strip to text/relevant content (title + main\n  text) to keep tokens bounded.\n- Call Anthropic (`@anthropic-ai/sdk`, `MODEL = process.env.COACH_MODEL ||\n  \"claude-opus-4-8\"`) with a focused extraction system prompt + a\n  JSON-schema-constrained `FORMAT` returning the structured race shape above.\n- Respond `{ race: {...}, confidence, missingFields }`; map upstream 401→invalid\n  key, 429→rate limited, other→server, consistent with `coach.ts`.\n\n### 3. Backend: race-search endpoint (name → candidates)\n\n**New file**: `api/race-search.ts`\n\nSame proxy scaffolding. Body: `{ query: string }`. Returns\n`{ results: [{ name, date, location, distance, unit, sourceUrl }] }` (a small,\ncapped list). Use the model's web/tool capability (or a lightweight search step) to\nproduce candidates; each candidate carries a `sourceUrl` so the user can fall back\nto the URL-import path for full detail. Keep result count small and rate-limited.\n\n*(If a server-side web-search dependency isn't yet configured, note it here for the\neditor workflow: this endpoint may need a search API key env var; the URL-import\nendpoint has no such dependency and can ship first.)*\n\n### 4. Swift clients for the two endpoints\n\n**New file**: `Sources/AppCore/Coach/RaceImportClient.swift`\n\nModel closely on `RemoteCoach` (`Sources/AppCore/Coach/RemoteCoach.swift`):\n- Reuse `CoachConfig.keyAccount` / `CoachKeyStore` for the Anthropic key, and\n  `CoachError` for error mapping.\n- `func importRace(from url: String, apiKey: String) async throws ->\n  RaceImportResult` — POST `{ url }` to `https://otterpace.com/api/race-import`\n  with `x-anthropic-key`, decode into a `RaceImportResult` (a partial race +\n  confidence/missingFields).\n- `func searchRaces(query: String, apiKey: String) async throws ->\n  [RaceSearchResult]` — POST `{ query }` to `.../api/race-search`. (Can live in the\n  same file or a sibling `RaceSearchClient.swift`.)\n- Add small `Codable` DTOs and a mapping to `RaceGoal` (respecting\n  `RaceDistance.miles(from:unit:)` and the `date` `yyyy-MM-dd` format).\n\n### 5. UI: import & search entry points feeding the editor\n\n**File**: `Sources/AppCore/RaceEditorView.swift`\n\n- Add an initializer / seed path so the editor can be opened pre-filled from a\n  `RaceGoal` draft (reuse the existing edit-mode plumbing where possible; the view\n  already builds a `RaceGoal` and calls `onSave`).\n- Optionally surface low-confidence / missing fields (from `missingFields`) with a\n  subtle hint so the user knows what to verify.\n\n**File**: `Sources/AppCore/SettingsView.swift`\n\n- In the Races card (`racesCard`, lines ~398–408) / add-race flow, add two new\n  affordances beside \"Add manually\": **\"Import from URL\"** and **\"Search online\"**.\n- \"Import from URL\": a small sheet with a URL text field → calls\n  `RaceImportClient.importRace` → on success opens `RaceEditorView` pre-filled → on\n  save routes through the existing `onSave → model.addRace` path (which now\n  persists correctly thanks to fix #1).\n- \"Search online\": a search field → `searchRaces` → a results list → tapping a\n  result opens the editor pre-filled (using the candidate, or fetching full detail\n  from its `sourceUrl` via import).\n- Mirror `AskCoachView`'s no-key / error handling: if `keyStore.key == nil` or the\n  call fails, show a message and offer manual entry. Reuse the coach key store so\n  the user doesn't configure a second key.\n\n## Reused existing code\n\n- `RaceStore.load` / `save` / `add` / `update` / `remove` from\n  `Sources/AppCore/RaceGoals.swift` (glossary entry: `RaceStore`) — the on-device\n  race persistence the fix re-merges from.\n- `RaceGoal`, `RaceDistance`, `DistanceUnit` from `Sources/AppCore/RaceGoals.swift`\n  (glossary entries: `RaceGoal`, `RaceDistance`) — model + unit conversion\n  (`RaceDistance.miles(from:unit:)`) for mapping extracted/searched data.\n- `RaceEditorView` from `Sources/AppCore/RaceEditorView.swift` (glossary entry:\n  `RaceEditorView`) — the confirm/edit/save surface both new paths funnel into.\n- `RemoteCoach`, `CoachConfig`, `CoachKeyStore`, `CoachError` from\n  `Sources/AppCore/Coach/RemoteCoach.swift` — client template + shared Anthropic\n  key store + error taxonomy for the two new clients.\n- `AskCoachView.submit(_:)` no-key/fallback pattern from\n  `Sources/AppCore/AskCoachView.swift:121–150` — the graceful-degradation UX to\n  copy.\n- `api/coach.ts` handler + `api/_lib/ratelimit.ts` (`allow`, `clientIp`) — backend\n  scaffolding (auth header, method/size guards, rate limiting, Anthropic call,\n  JSON-schema-constrained output) for the two new endpoints.\n- `OtterpaceModel.addRace/updateRace` (`Model.swift:297–299`) and\n  `CoachProfileStore` — the mutation + profile store the re-merge helper reads.\n\n## Scenarios to Demonstrate\n\n- **Persistence fixed (happy path):** User adds a race, app does a\n  `refresh()`/relaunch, the race is still present in Settings and the Today banner\n  reflects the upcoming race.\n- **Persistence — profile too:** Coach profile set on device survives a\n  HealthKit `loadToday()` (regression guard for the same clobber).\n- **Import from URL (rich):** Paste a real race URL → editor opens pre-filled with\n  name, date, distance (km race round-tripping to display), location.\n- **Import from URL (partial/low-confidence):** A sparse page → editor opens with\n  the fields that were found and clearly flags the missing ones for the user.\n- **Search online:** Type a race name → a short list of candidates → pick one →\n  editor pre-filled → save persists.\n- **No coach key / offline:** Import and search both show a clear message and fall\n  back to manual entry; no crash, no lost input.\n- **Invalid / unreachable URL:** Graceful error, user stays in the flow.",
+  "description": "Fixed a data-loss bug where user-added races (and the coach profile) vanished after any HealthKit load: a new applyOnDeviceState() re-merge on OtterpaceModel restores the on-device race list and profile after every connect()/refresh(), scoped to the production path so seeded scenarios are untouched. Added two AI-assisted ways to create a race without hand-typing every field — Import from URL (paste a race page; a new SSRF-guarded api/race-import Vercel endpoint fetches it and Claude extracts a structured race) and Search online by name (api/race-search returns candidates) — both funneling into the existing RaceEditorView pre-filled with a review hint, reusing the BYO Anthropic key coach-proxy pattern and degrading gracefully to manual entry with no key. Covered by 7 new Swift tests (the persistence re-merge + import mapping) and 23 new backend tests (both endpoints, incl. SSRF guards).",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/persist-and-import-races.md\t.codeyam/plans/completed/persist-and-import-races.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-races-list--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-races-list--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-account-sync.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-custom-goal.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-health-sync-on.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-race-editor-custom-distance.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-reminders-on.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-replay-tour-row.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Coach/RemoteCoach.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CodeyamIsolationHost.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Model.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/RaceEditorView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/SettingsView.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/import-review-capture.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/manual-capture.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/raceimportsheet-input.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/raceimportsheet-no-key.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/racesearchsheet-input.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/racesearchsheet-no-key.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/raceimportsheet-input--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/raceimportsheet-no-key--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/racesearchsheet-input--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/racesearchsheet-no-key--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-import-race-review--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-import-race-review.json",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Coach/RaceImportClient.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/RaceImportSheetIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/RaceSearchSheetIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/RaceImportView.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/RaceImportPersistenceTests.swift",
+      "status": "added"
+    },
+    {
+      "path": "api/race-import.ts",
+      "status": "added"
+    },
+    {
+      "path": "api/race-search.ts",
+      "status": "added"
+    },
+    {
+      "path": "test/api/race-import.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "test/api/race-search.test.ts",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "RaceImportSheet - Input",
+      "screenshotPath": "raceimportsheet-input--iphone-16.png"
+    },
+    {
+      "name": "RaceImportSheet - No Key",
+      "screenshotPath": "raceimportsheet-no-key--iphone-16.png"
+    },
+    {
+      "name": "RaceSearchSheet - Input",
+      "screenshotPath": "racesearchsheet-input--iphone-16.png"
+    },
+    {
+      "name": "RaceSearchSheet - No Key",
+      "screenshotPath": "racesearchsheet-no-key--iphone-16.png"
+    },
+    {
+      "name": "Settings",
+      "screenshotPath": "settings--iphone-16.png"
+    },
+    {
+      "name": "Settings — Account Sync",
+      "screenshotPath": "settings-account-sync--iphone-16.png"
+    },
+    {
+      "name": "Settings — Custom Goal",
+      "screenshotPath": "settings-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Settings — Health Sync On",
+      "screenshotPath": "settings-health-sync-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Import Race Review",
+      "screenshotPath": "settings-import-race-review--iphone-16.png"
+    },
+    {
+      "name": "Settings — Race Editor Custom Distance",
+      "screenshotPath": "settings-race-editor-custom-distance--iphone-16.png"
+    },
+    {
+      "name": "Settings — Races List",
+      "screenshotPath": "settings-races-list--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders On",
+      "screenshotPath": "settings-reminders-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Replay Tour Row",
+      "screenshotPath": "settings-replay-tour-row--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 178,
+    "passed": 178,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 178,
+        "passed": 178
+      }
+    ]
+  }
+}

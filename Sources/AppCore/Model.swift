@@ -120,10 +120,16 @@ public final class OtterpaceModel: ObservableObject {
     @Published public var healthAuth: HealthAuthState
 
     private let source: HealthDataSource
+    /// The UserDefaults the on-device stores (races, coach profile) read/write.
+    /// Kept so `applyOnDeviceState()` and the race mutators use the same store —
+    /// `.standard` in the app, an injectable suite in tests.
+    private let defaults: UserDefaults
 
-    public init(today: TodayState, source: HealthDataSource = SeededHealthDataSource()) {
+    public init(today: TodayState, source: HealthDataSource = SeededHealthDataSource(),
+                defaults: UserDefaults = .standard) {
         self.today = today
         self.source = source
+        self.defaults = defaults
         self.healthAuth = today.healthKitConnected ? .authorized : .notDetermined
     }
 
@@ -135,9 +141,9 @@ public final class OtterpaceModel: ObservableObject {
         let defaults = UserDefaults.standard
         let source = HealthSource.make(defaults: defaults)
         if HealthSource.isScenarioSeeded(defaults) {
-            self.init(today: OtterpaceModel.readState(defaults: defaults), source: source)
+            self.init(today: OtterpaceModel.readState(defaults: defaults), source: source, defaults: defaults)
         } else {
-            self.init(today: .empty, source: source)
+            self.init(today: .empty, source: source, defaults: defaults)
             self.healthAuth = source.authorizationState()
             // Races live on-device (not in the HealthKit snapshot), so load them
             // so a real user's races reach coaching from launch.
@@ -271,6 +277,7 @@ public final class OtterpaceModel: ObservableObject {
             healthAuth = state
             if state == .authorized {
                 today = await source.loadToday()
+                applyOnDeviceState()
             }
         }
     }
@@ -284,6 +291,26 @@ public final class OtterpaceModel: ObservableObject {
     public func refresh() async {
         guard healthAuth == .authorized else { return }
         today = await source.loadToday()
+        applyOnDeviceState()
+    }
+
+    /// Re-apply the on-device race list and coach profile onto the freshly loaded
+    /// `today` snapshot. The real HealthKit `loadToday()` builds its snapshot only
+    /// from HealthKit and knows nothing about the UserDefaults where races and the
+    /// coach profile live, so without this they reset to `[]`/`nil` on every
+    /// `connect()`/`refresh()` — the "added a race, gone next session" bug.
+    ///
+    /// Scoped to the production (non-seeded) path: a seeded scenario's source
+    /// already folds races/profile in through `readState`, and its live edits write
+    /// to a different key (`rbRacesJSON`) than the mutators (`otterpaceRaces`), so
+    /// re-merging there would clobber the seeded list. In production both this and
+    /// the race mutators read/write the same `defaults`, so the persisted list is
+    /// always authoritative.
+    private func applyOnDeviceState() {
+        guard !HealthSource.isScenarioSeeded(defaults) else { return }
+        today.races = RaceStore.load(defaults)
+        let profile = CoachProfileStore.load(defaults)
+        today.profile = profile.isEmpty ? nil : profile
     }
 
     /// Set the daily step goal: persist it and apply immediately to the dashboard.
@@ -294,9 +321,9 @@ public final class OtterpaceModel: ObservableObject {
 
     // MARK: Races (persist through RaceStore + apply to the dashboard immediately)
 
-    @MainActor public func addRace(_ race: RaceGoal) { today.races = RaceStore.add(race) }
-    @MainActor public func updateRace(_ race: RaceGoal) { today.races = RaceStore.update(race) }
-    @MainActor public func removeRace(id: UUID) { today.races = RaceStore.remove(id: id) }
+    @MainActor public func addRace(_ race: RaceGoal) { today.races = RaceStore.add(race, defaults) }
+    @MainActor public func updateRace(_ race: RaceGoal) { today.races = RaceStore.update(race, defaults) }
+    @MainActor public func removeRace(id: UUID) { today.races = RaceStore.remove(id: id, defaults) }
 
     /// Ingest activities imported from Strava (an optional data source alongside
     /// Apple Health). Populates the workout history + latest workout, and flips
