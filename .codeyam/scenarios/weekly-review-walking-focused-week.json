@@ -1,0 +1,33 @@
+{
+  "name": "Weekly Review — Walking-Focused Week",
+  "id": "8d1b9645-7023-4a6e-bb03-0afa4e29856e",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbShowHistory": false,
+      "rbWeeklyMileage": 22.0,
+      "rbDaysRunThisWeek": 4,
+      "rbAskSeedQuestion": "",
+      "rbContentSize": "",
+      "rbShowWeeklyReview": true,
+      "rbWorkoutType": "",
+      "rbGoalSteps": 10000,
+      "rbSteps": 9100,
+      "rbDate": "2026-06-22",
+      "rbRestDaysThisWeek": 2,
+      "rbPreviewMode": "",
+      "rbCoachProfileJSON": "{\"walkVolume\":\"mostDays\",\"walkTime\":\"mornings\",\"otherTraining\":[]}",
+      "rbLoadTrend": "building",
+      "rbConnected": true,
+      "rbLongestRunMiles": 8.0,
+      "rbStartTab": "coach",
+      "rbShowSettings": false
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/WeeklyReviewView.swift"
+}

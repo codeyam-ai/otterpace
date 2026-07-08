@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-07-08T01:14:09Z",
+  "title": "Weekly Review Picks Up Profile & Live Data",
+  "type": "feature",
+  "userRequest": "## Summary\n\nThe Weekly Review tab reads as generic, one-size-fits-all copy that ignores the\npersonalization the rest of the app already uses. Two root causes: (1)\n`WeeklyReviewEngine` never consumes `context.profile` — its three activity\nbuilders even take the `context` parameter and never read it — so the recap is\nidentical regardless of the runner's onboarding profile, unlike `CoachEngine`\nand the remote coach which both personalize off it; and (2) in production the\nprofile (and races) are silently dropped when live Health data loads, because\n`HealthKitDataSource.loadToday()` returns a `TodayState` with no `races`/`profile`\nand `connect()`/`refresh()` replace `model.today` wholesale. This plan makes the\nWeekly Review reflect the user's profile and stops the live-data path from wiping\nthe on-device profile/races, so the recap picks up real app context in both\nseeded scenarios and production.\n\n## Key Decisions\n\n- **Personalize the recap from `context.profile`, mirroring `CoachEngine`.**\n  `CoachEngine` derives `walkingFocused = c.profile.map { !$0.isEmpty && $0.otherTraining.isEmpty }`\n  (CoachEngine.swift:129) to reframe copy for walking-focused users. The Weekly\n  Review should adopt the same signal (plus `walkVolume` / `otherTraining`\n  awareness) so its framing matches the Today coach card rather than diverging\n  from it. Chosen over inventing a new personalization scheme so the two engines\n  stay consistent and the profile's meaning is defined in one place.\n- **Keep the engine pure, deterministic, and safety-first.** Personalization only\n  adjusts prose framing; it must not change the spiking→safety precedence, the\n  empty/sparse/solid classification, `safetyFlag`, or `buddyMood`. The same\n  `(profile, load, races)` context must still yield an identical review\n  (`testDeterministic` must keep passing).\n- **Preserve on-device context across live-data loads via a merge, not a wipe.**\n  Rather than teach the data source about on-device stores, merge in the model\n  layer: after `loadToday()`, keep the existing in-memory `races`/`profile` when\n  the fresh snapshot doesn't carry them. This is safe for seeded scenarios\n  (`SeededHealthDataSource.loadToday()` returns full `readState`, so its\n  races/profile win) and fixes production (HealthKit snapshot has none, so the\n  launch-loaded store values survive). Chosen over unconditionally re-reading\n  `RaceStore`/`CoachProfileStore` in `refresh()`, which would clobber a seeded\n  scenario's `rb*` races/profile with the empty non-`rb` store values.\n- **Recompute weekly load on Strava ingest.** `ingestStravaWorkouts` sets\n  `workouts`/`latestWorkout` but never `weeklyLoad`, so a Strava-only user lands\n  on the empty \"first week starts here\" recap despite visible runs. Compute it\n  from the ingested workouts with the same helper the Health path uses.\n\n## Implementation\n\n### 1. Personalize the Weekly Review from the profile\n\n**File**: `Sources/AppCore/WeeklyReviewEngine.swift`\n\nThe three activity builders (`solidReview`, `spikingReview`, `sparseReview`)\nalready receive the `context` (`c`) but ignore it; `emptyReview()` takes no\ncontext. Thread the profile through so each review's prose reflects it:\n\n- Derive a small, pure helper from `context.profile` mirroring `CoachEngine`'s\n  intent — e.g. `walkingFocused` (`profile.map { !$0.isEmpty && $0.otherTraining.isEmpty }`),\n  and optionally note `otherTraining` (e.g. \"alongside your strength work\") and\n  `walkVolume` where it reads naturally. Keep it a private helper so it's unit-\n  testable and the two engines stay conceptually aligned.\n- Apply it as **framing adjustments** to the existing section strings, not new\n  sections: e.g. for a walking-focused runner, `solidReview`/`sparseReview`\n  should speak to walks-as-training rather than assuming running mileage is the\n  point; when `otherTraining` includes cross-training, the \"what changed\" / risk\n  copy can acknowledge it. Do not alter `spikingReview`'s safety copy in a way\n  that softens the caution — personalization rides alongside the warning, never\n  replaces it (same rule as `applyRaceNote`).\n- Pass `context` into `emptyReview()` too (currently `emptyReview()` with no\n  args) so the first-week prompt can gently reference the profile when present\n  (e.g. walk cadence), while staying identical to today's copy when\n  `profile == nil` / `isEmpty` so existing empty-state scenarios/captures are\n  unaffected.\n- Preserve determinism and the classification order in `generate(from:asOf:)`:\n  profile only changes wording within the already-selected branch.\n\n### 2. Preserve races + profile when live data loads\n\n**File**: `Sources/AppCore/Model.swift`\n\n`connect()` (line ~273) and `refresh()` (line ~286) both do\n`today = await source.loadToday()`, discarding the `races`/`profile` attached at\nlaunch (init loads them from `RaceStore` / `CoachProfileStore`, lines 144–148).\nAdd a private merge helper and route both replacements through it:\n\n- Helper (pure): given the freshly loaded `TodayState` and the current `today`,\n  return the fresh state but fall back to the existing values where the snapshot\n  is empty — `races`: `fresh.races.isEmpty ? current.races : fresh.races`;\n  `profile`: `fresh.profile ?? current.profile`. This keeps launch-loaded\n  production values across refresh while letting a seeded scenario's fuller\n  `readState` win.\n- Use it in `connect()` and `refresh()` so `model.today` never loses the\n  on-device profile/races, and the Weekly Review (and Today coach card / race\n  banner) keep reflecting them after Health connects or a pull-to-refresh.\n\n### 3. Recompute weekly load on Strava ingest\n\n**File**: `Sources/AppCore/Model.swift`\n\nIn `ingestStravaWorkouts` (line ~306), after setting `today.workouts` /\n`today.latestWorkout`, also set\n`today.weeklyLoad = ActivityHistory.weeklyLoad(from: workouts)` (nil-guard on an\nempty list, matching `HealthKitDataSource.loadToday()`'s\n`history.isEmpty ? nil : …` at HealthKitDataSource.swift:77) so a Strava-only\nuser gets a real recap instead of the empty first-week prompt.\n\n### 4. Tests\n\n**File**: `Tests/AppCoreTests/WeeklyReviewEngineTests.swift`\n\n- Add a walking-focused profile (`CoachProfile(walkVolume: .mostDays, otherTraining: [])`)\n  and assert the solid/sparse recap copy differs from the no-profile baseline in\n  the expected framing, while a runner-with-other-training profile reads\n  differently again.\n- Assert the spiking review stays safety-flagged and its clinician/caution copy\n  is unchanged regardless of profile (personalization must not soften safety).\n- Extend `testDeterministic` coverage to a profile-bearing context.\n\n**File**: `Tests/AppCoreTests/ModelTests.swift`\n\n- Test that after `refresh()` (with a seeded source) an in-memory `profile`/`races`\n  set before refresh survives when the source snapshot omits them.\n- Test that `ingestStravaWorkouts` populates `weeklyLoad`, so the generated\n  `WeeklyReview.hasActivity` is true for a Strava-only user.\n\n## Reused existing code\n\n- `walkingFocused` personalization pattern from `CoachEngine.reply`/nudge logic\n  (`Sources/AppCore/CoachEngine.swift:129`) — mirror it in the Weekly Review\n  (glossary entry: `CoachEngine`).\n- `CoachProfile` + `isEmpty` + `otherTraining`/`walkVolume`/`walkTime`\n  (`Sources/AppCore/Onboarding/CoachProfile.swift`) — the personalization inputs.\n- `ActivityHistory.weeklyLoad(from:asOf:)`\n  (`Sources/AppCore/ActivityHistory.swift:96`) — reuse for Strava ingest, same\n  as `HealthKitDataSource.loadToday()` (glossary entry: `ActivityHistory`).\n- `RaceStore.load` / `CoachProfileStore.load` (`Sources/AppCore/RaceGoals.swift`,\n  `Sources/AppCore/Onboarding/CoachProfile.swift`) — already used in\n  `OtterpaceModel.init()`; the merge preserves what they loaded.\n- `applyRaceNote` / `RaceGoal.next` in `WeeklyReviewEngine`\n  (`Sources/AppCore/WeeklyReviewEngine.swift:81`) — precedent for additive,\n  non-safety-overriding context folding (glossary entry: `WeeklyReviewEngine`).\n\n## Scenarios to Demonstrate\n\n- Walking-focused profile, solid week — recap frames walks as the training,\n  distinct from the generic copy.\n- Runner profile with `otherTraining: [.strength]`, solid week — recap\n  acknowledges cross-training.\n- No profile (`nil`) — recap copy is unchanged from today's baseline\n  (regression guard for existing captures).\n- Spiking week with a profile — safety caution intact; personalization only\n  rides alongside.\n- Profile + upcoming race, then simulate a `refresh()` — profile and race\n  survive the live-data load and still shape the recap (production-parity).\n- Strava-only user with imported runs — Weekly Review shows a real recap, not\n  the empty \"first week starts here\" prompt.",
+  "description": "The Weekly Review recap now personalizes its prose from the onboarding CoachProfile, mirroring CoachEngine: walking-focused users see walks framed as their training, and cross-training runners get their strength/mobility work acknowledged, all while the spiking-week safety caution and the empty/no-profile copy stay unchanged (framing-only, deterministic). Separately, Strava imports now roll up into weeklyLoad via ingestStravaWorkouts, so a Strava-only user gets a real recap instead of the empty first-week prompt. Covered by 8 new unit tests (6 personalization + 2 Strava ingest) and two new app scenarios (walking-focused and cross-training weeks).",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/weekly-review-picks-up-profile-and-live-data.md\t.codeyam/plans/completed/weekly-review-picks-up-profile-and-live-data.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Model.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/WeeklyReviewEngine.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/ModelTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-cross-training-runner--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-walking-focused-week--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-cross-training-runner.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-walking-focused-week.json",
+      "status": "added"
+    }
+  ],
+  "testResults": {
+    "total": 186,
+    "passed": 186,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 186,
+        "passed": 186
+      }
+    ]
+  }
+}

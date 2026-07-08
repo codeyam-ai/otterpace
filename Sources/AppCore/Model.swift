@@ -334,6 +334,10 @@ public final class OtterpaceModel: ObservableObject {
         guard !workouts.isEmpty else { return }
         today.workouts = workouts
         today.latestWorkout = workouts.first(where: { $0.type == "run" }) ?? workouts.first
+        // Roll the imported activities up into the weekly load, the same way
+        // `HealthKitDataSource.loadToday()` does, so a Strava-only user gets a real
+        // Weekly Review recap instead of the empty "first week starts here" prompt.
+        today.weeklyLoad = ActivityHistory.weeklyLoad(from: workouts)
         today.healthKitConnected = true
     }
 }

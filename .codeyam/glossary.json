@@ -539,7 +539,7 @@
     }
   },
   {
-    "description": "Pure deterministic generator that turns the weeks WeeklyLoad context into a five-section weekly recap — what went well, what changed, training risk, suggested next week, and one focus area — plus a Buddy mood and a safety flag, classifying the week as empty, spiking, sparse, or solid. Mirrors CoachEngine; honors the conservative, never-shame-based, injury-aware coaching rules.",
+    "description": "Pure deterministic generator that turns the weeks WeeklyLoad context into a five-section weekly recap — what went well, what changed, training risk, suggested next week, and one focus area — plus a Buddy mood and a safety flag, classifying the week as empty, spiking, sparse, or solid. Personalizes the prose framing from the onboarding CoachProfile (walking-focused vs. cross-training), mirroring CoachEngine, without ever altering the classification, safety flag, or mood. Honors the conservative, never-shame-based, injury-aware coaching rules.",
     "filePath": "Sources/AppCore/WeeklyReviewEngine.swift",
     "name": "WeeklyReviewEngine",
     "testFile": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift"

@@ -1,0 +1,33 @@
+{
+  "name": "Weekly Review — Cross-Training Runner",
+  "id": "ac8d863d-ecb6-4883-98df-37c31c3b701c",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbConnected": true,
+      "rbStartTab": "coach",
+      "rbSteps": 9100,
+      "rbLongestRunMiles": 8.0,
+      "rbShowHistory": false,
+      "rbRestDaysThisWeek": 2,
+      "rbAskSeedQuestion": "",
+      "rbShowWeeklyReview": true,
+      "rbWeeklyMileage": 22.0,
+      "rbGoalSteps": 10000,
+      "rbCoachProfileJSON": "{\"walkVolume\":\"someDays\",\"walkTime\":\"evenings\",\"otherTraining\":[\"strength\",\"mobility\"]}",
+      "rbContentSize": "",
+      "rbDaysRunThisWeek": 4,
+      "rbLoadTrend": "building",
+      "rbDate": "2026-06-22",
+      "rbWorkoutType": "",
+      "rbShowSettings": false,
+      "rbPreviewMode": ""
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/WeeklyReviewView.swift"
+}

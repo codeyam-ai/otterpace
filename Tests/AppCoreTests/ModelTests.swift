@@ -176,4 +176,42 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(model.today.goalSteps, 9500)
         XCTAssertEqual(UserPreferences.goalSteps(), 9500)
     }
+
+    // MARK: Strava ingest → weekly load
+
+    // Today's date in the same UTC yyyy-MM-dd form `ActivityHistory` groups by, so
+    // an ingested workout lands in the current week regardless of when this runs.
+    private func todayISO() -> String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "UTC")
+        return f.string(from: Date())
+    }
+
+    // Importing Strava runs rolls them up into the weekly load, so a Strava-only
+    // user gets a real recap instead of the empty "first week" prompt.
+    @MainActor func testIngestStravaWorkoutsPopulatesWeeklyLoad() {
+        let model = OtterpaceModel(today: .empty)
+        XCTAssertNil(model.today.weeklyLoad)
+        let runs = [
+            LatestWorkout(type: "run", distanceMiles: 4.2, durationMinutes: 43,
+                          pace: "10:15/mi", date: todayISO(), source: "strava"),
+        ]
+        model.ingestStravaWorkouts(runs)
+
+        let load = model.today.weeklyLoad
+        XCTAssertNotNil(load)
+        XCTAssertGreaterThan(load?.weeklyMileage ?? 0, 0)
+        XCTAssertGreaterThanOrEqual(load?.daysRunThisWeek ?? 0, 1)
+        // The generated Weekly Review is no longer the empty first-week prompt.
+        XCTAssertTrue(WeeklyReviewEngine.generate(from: model.today).hasActivity)
+    }
+
+    // Ingesting an empty workout list is a no-op — no weekly load is fabricated.
+    @MainActor func testIngestEmptyWorkoutsLeavesWeeklyLoadNil() {
+        let model = OtterpaceModel(today: .empty)
+        model.ingestStravaWorkouts([])
+        XCTAssertNil(model.today.weeklyLoad)
+    }
 }

@@ -56,7 +56,7 @@ public enum WeeklyReviewEngine {
         var review: WeeklyReview = {
             // No week to summarize yet → the friendly first-week prompt.
             guard let load = context.weeklyLoad, hasLoggedActivity(load) else {
-                return emptyReview()
+                return emptyReview(context)
             }
             // Spiking load is the one safety-sensitive state — it wins regardless of
             // how many runs went in, mirroring the coach's injury-aware bias.
@@ -119,26 +119,65 @@ public enum WeeklyReviewEngine {
         d == d.rounded() ? "\(Int(d))" : String(format: "%.1f", d)
     }
 
+    // MARK: Personalization (additive framing only)
+    //
+    // These fold the onboarding `CoachProfile` into the recap's *wording* — never
+    // its classification, safety flag, or mood. The signal mirrors `CoachEngine`'s
+    // `walkingFocused` (CoachEngine.swift) so the Weekly Review and the Today coach
+    // card frame a walking-focused runner the same way. With no profile (`nil` /
+    // empty) every helper is a no-op, so existing scenarios/captures are unchanged.
+
+    /// True when the user shared a profile that lists walking with no other
+    /// training — same signal as `CoachEngine`, kept in one shape across engines.
+    private static func walkingFocused(_ profile: CoachProfile?) -> Bool {
+        profile.map { !$0.isEmpty && $0.otherTraining.isEmpty } ?? false
+    }
+
+    /// A short human clause naming the user's cross-training (e.g. "your strength
+    /// and mobility work"), or nil when none is shared. `running` is dropped since
+    /// the recap is already about running; an all-`running` list yields nil.
+    private static func crossTrainingClause(_ profile: CoachProfile?) -> String? {
+        let labels = (profile?.otherTraining ?? []).filter { $0 != .running }.map { $0.label }
+        guard !labels.isEmpty else { return nil }
+        let joined: String
+        switch labels.count {
+        case 1: joined = labels[0]
+        case 2: joined = "\(labels[0]) and \(labels[1])"
+        default: joined = labels.dropLast().joined(separator: ", ") + ", and " + (labels.last ?? "")
+        }
+        return "your \(joined) work"
+    }
+
     // MARK: Reviews
 
-    private static func emptyReview() -> WeeklyReview {
-        WeeklyReview(
+    private static func emptyReview(_ c: TodayState) -> WeeklyReview {
+        // Walking-focused users get walk-first framing; with no profile the copy is
+        // byte-identical to before, so the empty-state capture is a regression guard.
+        let next = walkingFocused(c.profile)
+            ? "Aim for three short, easy walks this week — even 15–20 minutes counts as your training. Buddy will start building your recap the moment activity shows up."
+            : "Aim for three short, easy movement sessions this week — a 15–20 minute walk counts. Buddy will start building your recap the moment activity shows up."
+        return WeeklyReview(
             hasActivity: false,
             buddyMood: .ready,
             headline: "Your first week starts here",
             wentWell: "There's no run history to recap yet — and that's a perfectly good place to begin. Every consistent runner started with a single easy walk.",
             whatChanged: "",
             trainingRisk: "",
-            nextWeek: "Aim for three short, easy movement sessions this week — a 15–20 minute walk counts. Buddy will start building your recap the moment activity shows up.",
+            nextWeek: next,
             focusArea: "Take one relaxed walk today. That's the whole goal — momentum first, mileage later."
         )
     }
 
     private static func solidReview(_ l: WeeklyLoad, _ c: TodayState) -> WeeklyReview {
-        let well = "A consistent week — \(l.daysRunThisWeek) runs for \(miles(l.weeklyMileage)) miles, topped by a \(miles(l.longestRunMiles))-mile long run. That kind of rhythm is exactly what builds durable fitness."
-        let changed = l.loadTrend == "building"
+        let well = walkingFocused(c.profile)
+            ? "A consistent week — \(l.daysRunThisWeek) sessions covering \(miles(l.weeklyMileage)) miles, with a \(miles(l.longestRunMiles))-mile longest outing. Walking is real training, and this rhythm is exactly what builds durable fitness."
+            : "A consistent week — \(l.daysRunThisWeek) runs for \(miles(l.weeklyMileage)) miles, topped by a \(miles(l.longestRunMiles))-mile long run. That kind of rhythm is exactly what builds durable fitness."
+        var changed = l.loadTrend == "building"
             ? "Your load is trending up gently — more total miles than a typical week, but at a sustainable pace rather than a jump."
             : "Your load held steady, which is great: steady weeks are where the earlier work actually settles into fitness."
+        if let cross = crossTrainingClause(c.profile) {
+            changed += " Paired with \(cross), you're building well-rounded fitness."
+        }
         let risk = "Low. With \(l.restDaysThisWeek) rest \(l.restDaysThisWeek == 1 ? "day" : "days") and runs kept honest, you're building the right way. Keep most runs conversational and you'll stay clear of the injury tax."
         let next = "Repeat the pattern with one small nudge: hold the run count, add no more than ~10% to total miles, and keep one true rest day. Sustainable beats heroic."
         let focus = "Protect the easy days. The temptation after a strong week is to push every run — resist it, and the long run will keep climbing safely."
@@ -174,7 +213,10 @@ public enum WeeklyReviewEngine {
     }
 
     private static func sparseReview(_ l: WeeklyLoad, _ c: TodayState) -> WeeklyReview {
-        let runWord = l.daysRunThisWeek == 1 ? "one run" : "no runs"
+        let walking = walkingFocused(c.profile)
+        let runWord = walking
+            ? (l.daysRunThisWeek == 1 ? "one movement session" : "no sessions")
+            : (l.daysRunThisWeek == 1 ? "one run" : "no runs")
         let well = "Life happened this week — \(runWord) and \(l.restDaysThisWeek) rest \(l.restDaysThisWeek == 1 ? "day" : "days"). No guilt here: rest is part of training, and you're still showing up to check in. That counts."
         let changed = "Training volume dipped versus a fuller week. The upside is you're well-rested and at very low injury risk right now."
         let risk = "Minimal. The only real risk from here is trying to make up for it all at once. Fitness is patient — a gentle restart beats a heroic comeback every time."

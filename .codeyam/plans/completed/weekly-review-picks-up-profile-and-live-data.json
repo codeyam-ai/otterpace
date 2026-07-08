@@ -1,0 +1,32 @@
+{
+  "completedAt": "2026-07-08T01:14:09Z",
+  "createdAt": "2026-07-06T20:07:45Z",
+  "deliverables": [
+    "README.md",
+    "Sources/AppCore/Coach/RaceImportClient.swift",
+    "Sources/AppCore/Coach/RemoteCoach.swift",
+    "Sources/AppCore/CodeyamIsolated/CodeyamIsolationHost.swift",
+    "Sources/AppCore/CodeyamIsolated/RaceImportSheetIsolated.swift",
+    "Sources/AppCore/CodeyamIsolated/RaceSearchSheetIsolated.swift",
+    "Sources/AppCore/Model.swift",
+    "Sources/AppCore/RaceEditorView.swift",
+    "Sources/AppCore/RaceGoals.swift",
+    "Sources/AppCore/RaceImportView.swift",
+    "Sources/AppCore/SettingsView.swift",
+    "Sources/AppCore/TodayView.swift",
+    "Sources/AppCore/WeeklyReviewEngine.swift",
+    "Tests/AppCoreTests/ModelTests.swift",
+    "Tests/AppCoreTests/RaceGoalsTests.swift",
+    "Tests/AppCoreTests/RaceImportPersistenceTests.swift",
+    "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
+    "api/race-import.ts",
+    "api/race-search.ts",
+    "test/api/race-import.test.ts",
+    "test/api/race-search.test.ts"
+  ],
+  "journalTimestamp": "2026-07-08T01:14:09Z",
+  "mode": "ui",
+  "planFile": "completed/weekly-review-picks-up-profile-and-live-data.md",
+  "slug": "weekly-review-picks-up-profile-and-live-data",
+  "title": "Weekly Review Picks Up Profile & Live Data"
+}

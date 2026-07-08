@@ -966,6 +966,24 @@
       "runner": "tests"
     },
     {
+      "description": "Ingesting an empty workout list is a no-op and fabricates no weekly load.",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testIngestEmptyWorkoutsLeavesWeeklyLoadNil",
+      "line": 212,
+      "registeredAt": "2026-07-07T19:46:28Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Importing Strava runs rolls them into the weekly load so a Strava-only user gets a real recap instead of the empty first-week prompt.",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testIngestStravaWorkoutsPopulatesWeeklyLoad",
+      "line": 194,
+      "registeredAt": "2026-07-07T19:46:28Z",
+      "runner": "tests"
+    },
+    {
       "description": "isPreset returns true for a quick-preset goal value and false for a custom non-preset value.",
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testIsPresetMatchesOptions",
@@ -1415,7 +1433,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testActivityReviewsFillAllSections",
-      "line": 117,
+      "line": 130,
       "registeredAt": "2026-06-23T20:49:45.380008+00:00",
       "runner": "tests"
     },
@@ -1424,8 +1442,17 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testBuildingWeekIsCheeringAndUnflagged",
-      "line": 72,
+      "line": 85,
       "registeredAt": "2026-06-23T20:48:51.894104+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A cross-training runner keeps the run-oriented copy and gets the cross-training named in the what-changed section.",
+      "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WeeklyReviewEngineTests › testCrossTrainingSolidReviewAcknowledgesIt",
+      "line": 169,
+      "registeredAt": "2026-07-07T19:46:28Z",
       "runner": "tests"
     },
     {
@@ -1433,8 +1460,26 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testDeterministic",
-      "line": 111,
+      "line": 124,
       "registeredAt": "2026-06-23T20:47:35.691695+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A profile-bearing context still yields a fully deterministic review.",
+      "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WeeklyReviewEngineTests › testDeterministicWithProfile",
+      "line": 198,
+      "registeredAt": "2026-07-07T19:46:28Z",
+      "runner": "tests"
+    },
+    {
+      "description": "An empty all-skipped profile is a no-op, leaving the recap identical to the no-profile baseline.",
+      "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WeeklyReviewEngineTests › testEmptyProfileLeavesReviewUnchanged",
+      "line": 191,
+      "registeredAt": "2026-07-07T19:46:28Z",
       "runner": "tests"
     },
     {
@@ -1442,7 +1487,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testNoLoadIsEmptyReview",
-      "line": 33,
+      "line": 46,
       "registeredAt": "2026-06-23T20:48:09.252984+00:00",
       "runner": "tests"
     },
@@ -1451,7 +1496,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testSparseWeekIsGentleAndUnflagged",
-      "line": 92,
+      "line": 105,
       "registeredAt": "2026-06-23T20:49:22.451691+00:00",
       "runner": "tests"
     },
@@ -1460,8 +1505,17 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testSpikingIsSafetyFlagged",
-      "line": 52,
+      "line": 65,
       "registeredAt": "2026-06-23T20:48:30.585137+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Personalization never softens the spiking-week safety copy; the review is identical with or without a profile.",
+      "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WeeklyReviewEngineTests › testSpikingSafetyCopyUnchangedRegardlessOfProfile",
+      "line": 182,
+      "registeredAt": "2026-07-07T19:46:28Z",
       "runner": "tests"
     },
     {
@@ -1469,7 +1523,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testSpikingWinsOverHighRunCount",
-      "line": 61,
+      "line": 74,
       "registeredAt": "2026-06-23T20:48:41.279584+00:00",
       "runner": "tests"
     },
@@ -1478,8 +1532,26 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testSteadyWeekIsUnflagged",
-      "line": 82,
+      "line": 95,
       "registeredAt": "2026-06-23T20:49:03.876422+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A walking-focused profile reframes the solid-week recap toward walks-as-training while keeping mood and safety unchanged.",
+      "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WeeklyReviewEngineTests › testWalkingFocusedSolidReviewReframesCopy",
+      "line": 146,
+      "registeredAt": "2026-07-07T19:46:28Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A walking-focused profile reframes the sparse-week recap to speak of movement sessions rather than runs.",
+      "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WeeklyReviewEngineTests › testWalkingFocusedSparseReviewReframesCopy",
+      "line": 159,
+      "registeredAt": "2026-07-07T19:46:28Z",
       "runner": "tests"
     },
     {
@@ -1487,7 +1559,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testZeroActivityLoadIsEmptyReview",
-      "line": 42,
+      "line": 55,
       "registeredAt": "2026-06-23T20:48:20.024772+00:00",
       "runner": "tests"
     },
@@ -1496,7 +1568,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testZeroRunsWithMileageIsSparse",
-      "line": 100,
+      "line": 113,
       "registeredAt": "2026-06-23T20:49:34.688711+00:00",
       "runner": "tests"
     }

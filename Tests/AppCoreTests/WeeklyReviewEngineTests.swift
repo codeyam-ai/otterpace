@@ -6,10 +6,23 @@ final class WeeklyReviewEngineTests: XCTestCase {
 
     // MARK: Helpers
 
-    private func state(_ load: WeeklyLoad?) -> TodayState {
+    private func state(_ load: WeeklyLoad?, profile: CoachProfile? = nil) -> TodayState {
         var s = TodayState(healthKitConnected: true, steps: 6000, goalSteps: 10000)
         s.weeklyLoad = load
+        s.profile = profile
         return s
+    }
+
+    // A walking-first user: shared a profile that lists walking with no other
+    // training (the `walkingFocused` signal both engines key off).
+    private func walkingProfile() -> CoachProfile {
+        CoachProfile(walkVolume: .mostDays, walkTime: .mornings, otherTraining: [])
+    }
+
+    // A runner who also cross-trains — `otherTraining` is non-empty, so NOT
+    // walking-focused, but the recap should acknowledge the cross-training.
+    private func crossTrainingProfile() -> CoachProfile {
+        CoachProfile(walkVolume: .someDays, walkTime: .evenings, otherTraining: [.strength, .mobility])
     }
 
     private func solidLoad(trend: String = "building") -> WeeklyLoad {
@@ -124,5 +137,66 @@ final class WeeklyReviewEngineTests: XCTestCase {
             XCTAssertFalse(r.nextWeek.isEmpty)
             XCTAssertFalse(r.focusArea.isEmpty)
         }
+    }
+
+    // MARK: Personalization from the profile (additive framing only)
+
+    // A walking-focused profile reframes the solid-week recap toward walks-as-
+    // training — distinct from the generic no-profile copy, and naming walking.
+    func testWalkingFocusedSolidReviewReframesCopy() {
+        let baseline = WeeklyReviewEngine.generate(from: state(solidLoad()))
+        let walking = WeeklyReviewEngine.generate(from: state(solidLoad(), profile: walkingProfile()))
+        XCTAssertNotEqual(walking.wentWell, baseline.wentWell)
+        XCTAssertTrue(walking.wentWell.lowercased().contains("walking"))
+        // Classification, mood, and safety are unchanged — only the wording moves.
+        XCTAssertEqual(walking.buddyMood, baseline.buddyMood)
+        XCTAssertEqual(walking.safetyFlag, baseline.safetyFlag)
+        XCTAssertEqual(walking.headline, baseline.headline)
+    }
+
+    // A walking-focused profile also reframes the sparse-week recap to speak of
+    // movement sessions rather than runs.
+    func testWalkingFocusedSparseReviewReframesCopy() {
+        let baseline = WeeklyReviewEngine.generate(from: state(sparseLoad()))
+        let walking = WeeklyReviewEngine.generate(from: state(sparseLoad(), profile: walkingProfile()))
+        XCTAssertNotEqual(walking.wentWell, baseline.wentWell)
+        XCTAssertTrue(walking.wentWell.lowercased().contains("session"))
+        XCTAssertFalse(walking.safetyFlag)
+    }
+
+    // A runner who cross-trains gets the running-oriented "what went well" copy
+    // (NOT the walking reframing) plus an acknowledgment of the cross-training.
+    func testCrossTrainingSolidReviewAcknowledgesIt() {
+        let baseline = WeeklyReviewEngine.generate(from: state(solidLoad()))
+        let cross = WeeklyReviewEngine.generate(from: state(solidLoad(), profile: crossTrainingProfile()))
+        // Not walking-focused → the run-oriented wentWell copy is preserved.
+        XCTAssertEqual(cross.wentWell, baseline.wentWell)
+        // The cross-training is named in the "what changed" section.
+        XCTAssertNotEqual(cross.whatChanged, baseline.whatChanged)
+        XCTAssertTrue(cross.whatChanged.lowercased().contains("strength"))
+        XCTAssertTrue(cross.whatChanged.lowercased().contains("mobility"))
+    }
+
+    // Personalization must never soften the spiking-week safety copy — a
+    // walking-focused profile yields a byte-identical spiking review.
+    func testSpikingSafetyCopyUnchangedRegardlessOfProfile() {
+        let plain = WeeklyReviewEngine.generate(from: state(spikingLoad()))
+        let withProfile = WeeklyReviewEngine.generate(from: state(spikingLoad(), profile: walkingProfile()))
+        XCTAssertEqual(withProfile, plain)
+        XCTAssertTrue(withProfile.safetyFlag)
+    }
+
+    // An empty (all-skipped) profile is a no-op: the recap is identical to the
+    // no-profile baseline, so existing captures/scenarios are unaffected.
+    func testEmptyProfileLeavesReviewUnchanged() {
+        let baseline = WeeklyReviewEngine.generate(from: state(solidLoad()))
+        let empty = WeeklyReviewEngine.generate(from: state(solidLoad(), profile: CoachProfile()))
+        XCTAssertEqual(empty, baseline)
+    }
+
+    // A profile-bearing context is still fully deterministic.
+    func testDeterministicWithProfile() {
+        let s = state(solidLoad(), profile: walkingProfile())
+        XCTAssertEqual(WeeklyReviewEngine.generate(from: s), WeeklyReviewEngine.generate(from: s))
     }
 }
