@@ -22,6 +22,7 @@ final class RaceImportPersistenceTests: XCTestCase {
         func authorizationState() -> HealthAuthState { .authorized }
         func requestAuthorization() async -> HealthAuthState { .authorized }
         func loadToday() async -> TodayState { TodayState(healthKitConnected: true, steps: 4200) }
+        func lastMovementDate() async -> Date? { nil }
     }
 
     private func race(_ name: String, _ date: String) -> RaceGoal {

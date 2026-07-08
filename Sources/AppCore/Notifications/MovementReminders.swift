@@ -8,15 +8,17 @@ import Foundation
 //
 //   • daily       — a calendar reminder at a time the user picks (repeats daily)
 //   • goal        — an evening nudge worded to be step-goal-aware (repeats daily)
-//   • inactivity  — scheduled when the app backgrounds, fires after N hours of
-//                   the app staying closed (a reliable proxy for "you've been
-//                   still a while"), cancelled the moment the app reopens
+//   • inactivity  — fires N hours after the user's ACTUAL last movement. A
+//                   HealthKit background-delivery observer re-arms it whenever new
+//                   step/distance data lands, so it tracks real stillness (not how
+//                   long the app has been closed) and reopening the app no longer
+//                   silently resets the clock.
 //
 // Honest iOS limits: a *pre-scheduled* local notification can't read your live
 // step count at fire time, so the goal nudge is a daily evening reminder whose
-// copy handles the "maybe you already hit it" case, and the inactivity nudge is
-// app-backgrounded-for-N-hours rather than true HealthKit inactivity (which would
-// need background processing). Both are reliable without fragile background tasks.
+// copy handles the "maybe you already hit it" case. The inactivity nudge instead
+// leans on HealthKit background delivery to re-arm itself against your real
+// last-movement time, so it reflects genuine stillness rather than app-close time.
 //
 // Authorization is only ever requested when the user turns a reminder ON in
 // Settings. Reminder prefs default OFF, so scenarios/previews never schedule
@@ -81,6 +83,27 @@ public struct ReminderSettings: Equatable {
     public var anyEnabled: Bool { dailyEnabled || goalEnabled || inactivityEnabled }
 }
 
+/// Pure scheduling math for the real-inactivity nudge. Deliberately free of
+/// HealthKit / UserNotifications types so it unit-tests in the macOS test build
+/// without a device entitlement — the HealthKit glue that feeds it lives in
+/// `MovementActivityMonitor` (iOS-only).
+public enum InactivitySchedule {
+    /// When the ideal fire time is already past (the user last moved long ago),
+    /// fire this soon instead — an overdue nudge should still go out, and a UN
+    /// time-interval trigger needs a strictly-positive delay.
+    public static let pastDueBuffer: TimeInterval = 60
+
+    /// The `Date` the inactivity nudge should fire: `hours` after the user's last
+    /// movement. Returns `nil` when there's no movement to key off (nothing to
+    /// schedule). A time already in the past clamps to `now + pastDueBuffer` so an
+    /// overdue nudge fires promptly rather than being dropped.
+    public static func fireDate(lastMovement: Date?, hours: Int, now: Date = Date()) -> Date? {
+        guard let last = lastMovement else { return nil }
+        let candidate = last.addingTimeInterval(TimeInterval(max(1, hours) * 3600))
+        return candidate > now ? candidate : now.addingTimeInterval(pastDueBuffer)
+    }
+}
+
 /// Copy for each reminder, kept here so it's testable and consistent in Buddy's
 /// never-shame voice.
 public enum ReminderCopy {
@@ -100,11 +123,14 @@ public protocol MovementReminderScheduling {
     func requestAuthorization() async -> Bool
     /// Current permission state, without prompting.
     func isAuthorized() async -> Bool
-    /// App became active: (re)schedule the daily + goal reminders and clear the
-    /// inactivity timer (the user is clearly here).
+    /// App became active: (re)schedule the daily + goal reminders. It deliberately
+    /// does NOT touch the inactivity reminder — opening the app is not movement, so
+    /// the "have you moved" clock must not reset here (see `armInactivity`).
     func applyForeground(_ settings: ReminderSettings)
-    /// App went to background: arm the inactivity reminder if enabled.
-    func applyBackground(_ settings: ReminderSettings)
+    /// Arm (or clear) the inactivity reminder at an absolute fire date. `fireAt`
+    /// comes from `InactivitySchedule.fireDate` off the user's real last movement;
+    /// a `nil` `fireAt` (or the reminder disabled) removes any pending request.
+    func armInactivity(fireAt: Date?, settings: ReminderSettings)
     /// Remove every Otterpace reminder (used when the user turns everything off).
     func cancelAll()
 }
@@ -138,10 +164,9 @@ public struct MovementReminderScheduler: MovementReminderScheduling {
     }
 
     public func applyForeground(_ settings: ReminderSettings) {
-        // The user is active — the inactivity timer (if any) is moot; re-arm it
-        // only when we next background.
-        center.removePendingNotificationRequests(withIdentifiers: [ReminderID.inactivity])
-
+        // NOTE: the inactivity reminder is intentionally left alone here — opening
+        // the app is not movement, so it must not reset the clock. It's re-armed
+        // from the real last-movement time via `armInactivity` (see the monitor).
         if settings.dailyEnabled {
             var when = DateComponents()
             when.hour = settings.dailyHour
@@ -163,14 +188,16 @@ public struct MovementReminderScheduler: MovementReminderScheduling {
         }
     }
 
-    public func applyBackground(_ settings: ReminderSettings) {
-        guard settings.inactivityEnabled else {
+    public func armInactivity(fireAt: Date?, settings: ReminderSettings) {
+        guard settings.inactivityEnabled, let fireAt = fireAt else {
             center.removePendingNotificationRequests(withIdentifiers: [ReminderID.inactivity])
             return
         }
-        let seconds = TimeInterval(max(1, settings.inactivityHours) * 3600)
+        // Absolute fire time → a positive delay for the trigger (clamped so a
+        // just-past date still schedules rather than throwing).
+        let interval = max(1, fireAt.timeIntervalSinceNow)
         schedule(id: ReminderID.inactivity, title: ReminderCopy.inactivityTitle, body: ReminderCopy.inactivityBody,
-                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false))
+                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false))
     }
 
     public func cancelAll() {
@@ -194,7 +221,7 @@ public struct MovementReminderScheduler: MovementReminderScheduling {
     public func requestAuthorization() async -> Bool { false }
     public func isAuthorized() async -> Bool { false }
     public func applyForeground(_ settings: ReminderSettings) {}
-    public func applyBackground(_ settings: ReminderSettings) {}
+    public func armInactivity(fireAt: Date?, settings: ReminderSettings) {}
     public func cancelAll() {}
 }
 #endif

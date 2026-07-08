@@ -30,6 +30,10 @@ public protocol HealthDataSource {
     func requestAuthorization() async -> HealthAuthState
     /// Today's activity snapshot, once authorized.
     func loadToday() async -> TodayState
+    /// The timestamp of the user's most recent movement (step / distance) sample,
+    /// or `nil` when none is known. Drives the real-inactivity reminder — the nudge
+    /// fires `inactivityHours` after this moment, not after the app was last closed.
+    func lastMovementDate() async -> Date?
 }
 
 // MARK: - Seeded source (scenarios / previews / tests)
@@ -55,6 +59,17 @@ public struct SeededHealthDataSource: HealthDataSource {
         var s = OtterpaceModel.readState(defaults: defaults)
         s.healthKitConnected = true
         return s
+    }
+
+    public func lastMovementDate() async -> Date? {
+        // Scenarios drive the nudge deterministically: `rbLastMovementMinutesAgo`
+        // (preferred) or the existing `rbMinutesSinceMovement` places the last
+        // movement that many minutes before now. Neither seeded → no known movement.
+        let key = defaults.object(forKey: "rbLastMovementMinutesAgo") != nil
+            ? "rbLastMovementMinutesAgo"
+            : (defaults.object(forKey: "rbMinutesSinceMovement") != nil ? "rbMinutesSinceMovement" : nil)
+        guard let key else { return nil }
+        return Date().addingTimeInterval(-Double(defaults.integer(forKey: key)) * 60)
     }
 }
 

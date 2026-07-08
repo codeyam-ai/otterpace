@@ -91,6 +91,25 @@ public final class HealthKitDataSource: HealthDataSource {
         )
     }
 
+    public func lastMovementDate() async -> Date? {
+        // Newest step OR distance sample end-date = the last time we saw movement.
+        async let steps = mostRecentSampleDate(.stepCount)
+        async let dist = mostRecentSampleDate(.distanceWalkingRunning)
+        return [await steps, await dist].compactMap { $0 }.max()
+    }
+
+    /// End-date of the single most-recent sample of a quantity type, or nil.
+    private func mostRecentSampleDate(_ id: HKQuantityTypeIdentifier) async -> Date? {
+        guard let type = HKQuantityType.quantityType(forIdentifier: id) else { return nil }
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+        return await withCheckedContinuation { cont in
+            let q = HKSampleQuery(sampleType: type, predicate: nil, limit: 1, sortDescriptors: [sort]) { _, samples, _ in
+                cont.resume(returning: samples?.first?.endDate)
+            }
+            store.execute(q)
+        }
+    }
+
     /// Read recent workouts (last 30 days, newest-first) and map them to the app's
     /// `LatestWorkout` shape so the Today card, Weekly Load, Activity History, and
     /// Weekly Review all populate from live HealthKit data.
@@ -182,6 +201,7 @@ public final class HealthKitDataSource: HealthDataSource {
     public func authorizationState() -> HealthAuthState { .unavailable }
     public func requestAuthorization() async -> HealthAuthState { .unavailable }
     public func loadToday() async -> TodayState { .empty }
+    public func lastMovementDate() async -> Date? { nil }
 }
 
 #endif

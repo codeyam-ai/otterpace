@@ -124,6 +124,11 @@ public final class OtterpaceModel: ObservableObject {
     /// Kept so `applyOnDeviceState()` and the race mutators use the same store —
     /// `.standard` in the app, an injectable suite in tests.
     private let defaults: UserDefaults
+    #if os(iOS)
+    /// The live HealthKit movement observer, retained while the inactivity reminder
+    /// is on so its background-delivery query stays alive. iOS-only device glue.
+    private var movementMonitor: MovementActivityMonitor?
+    #endif
 
     public init(today: TodayState, source: HealthDataSource = SeededHealthDataSource(),
                 defaults: UserDefaults = .standard) {
@@ -339,5 +344,47 @@ public final class OtterpaceModel: ObservableObject {
         // Weekly Review recap instead of the empty "first week starts here" prompt.
         today.weeklyLoad = ActivityHistory.weeklyLoad(from: workouts)
         today.healthKitConnected = true
+    }
+
+    // MARK: Real-inactivity reminder
+
+    /// Re-arm the inactivity nudge from the user's ACTUAL last movement: read the
+    /// last-movement time from the health source, compute the fire date, and arm
+    /// (or clear) the notification. This is what makes the reminder fire on real
+    /// stillness rather than on app-close time, and it's what foreground/background
+    /// call instead of blindly cancelling. The scheduling decision itself is the
+    /// pure, unit-tested `InactivitySchedule.fireDate`.
+    @MainActor
+    public func rearmInactivity(_ scheduler: MovementReminderScheduling,
+                                settings: ReminderSettings, now: Date = Date()) async {
+        guard settings.inactivityEnabled else {
+            scheduler.armInactivity(fireAt: nil, settings: settings)
+            return
+        }
+        let last = await source.lastMovementDate()
+        let fireAt = InactivitySchedule.fireDate(lastMovement: last, hours: settings.inactivityHours, now: now)
+        scheduler.armInactivity(fireAt: fireAt, settings: settings)
+    }
+
+    /// Begin/refresh real-movement observation (HealthKit background delivery +
+    /// observer query) so the nudge stays correct even while the app is closed.
+    /// Owned here because the model holds the health `source`. iOS-only; a no-op in
+    /// the macOS test build. Also does an immediate re-arm from current movement.
+    @MainActor
+    public func startMovementMonitoring(_ scheduler: MovementReminderScheduling, settings: ReminderSettings) {
+        #if os(iOS)
+        let monitor = movementMonitor ?? MovementActivityMonitor(source: source, scheduler: scheduler)
+        movementMonitor = monitor
+        monitor.start(settings: settings)
+        #endif
+    }
+
+    /// Stop real-movement observation and clear any pending inactivity nudge (the
+    /// user turned the reminder off). iOS-only; a no-op elsewhere.
+    @MainActor
+    public func stopMovementMonitoring() {
+        #if os(iOS)
+        movementMonitor?.stop()
+        #endif
     }
 }

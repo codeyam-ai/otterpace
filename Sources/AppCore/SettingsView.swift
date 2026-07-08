@@ -587,10 +587,23 @@ public struct SettingsView: View {
         if enabling && !notifAuthorized {
             Task { @MainActor in
                 notifAuthorized = await reminderScheduler.requestAuthorization()
-                reminderScheduler.applyForeground(reminders)
+                applyReminders()
             }
         } else {
-            reminderScheduler.applyForeground(reminders)
+            applyReminders()
+        }
+    }
+
+    /// (Re)apply the daily + goal reminders, and start/stop real-movement
+    /// observation for the inactivity nudge so turning it on begins observing the
+    /// user's actual movement (and turning it off tears the observer down).
+    @MainActor private func applyReminders() {
+        reminderScheduler.applyForeground(reminders)
+        if reminders.inactivityEnabled {
+            model.startMovementMonitoring(reminderScheduler, settings: reminders)
+            Task { await model.rearmInactivity(reminderScheduler, settings: reminders) }
+        } else {
+            model.stopMovementMonitoring()
         }
     }
 

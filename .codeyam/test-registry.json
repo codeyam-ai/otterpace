@@ -1041,6 +1041,96 @@
       "runner": "tests"
     },
     {
+      "description": "A non-positive hours setting is floored to 1h so the nudge never fires in the past.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testFireDateClampsNonPositiveHours",
+      "line": 36,
+      "registeredAt": "2026-07-08T15:24:46Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Last movement just now with a 3h setting pushes the nudge out the full 3h.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testFireDateDefersWhenJustMoved",
+      "line": 19,
+      "registeredAt": "2026-07-08T15:24:46Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Last movement 2h ago with a 3h setting fires the nudge about 1h from now.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testFireDateFiresOneHourOut",
+      "line": 13,
+      "registeredAt": "2026-07-08T15:24:46Z",
+      "runner": "tests"
+    },
+    {
+      "description": "No known movement yields no fire date, so nothing is scheduled.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testFireDateNilWhenNoMovement",
+      "line": 31,
+      "registeredAt": "2026-07-08T15:24:46Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A last movement long enough ago that the nudge is overdue clamps to fire promptly.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testFireDatePastDueClampsToBuffer",
+      "line": 25,
+      "registeredAt": "2026-07-08T15:24:46Z",
+      "runner": "tests"
+    },
+    {
+      "description": "With the inactivity reminder off, re-arm clears any pending nudge and never schedules.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testRearmClearsWhenDisabled",
+      "line": 85,
+      "registeredAt": "2026-07-08T15:24:46Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Re-arm computes an absolute fire date from the user's real last movement rather than cancelling.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testRearmComputesFireFromLastMovement",
+      "line": 73,
+      "registeredAt": "2026-07-08T15:24:46Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Absent the explicit key, the seeded source falls back to rbMinutesSinceMovement.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testSeededLastMovementFallsBackToMinutesSinceMovement",
+      "line": 57,
+      "registeredAt": "2026-07-08T15:24:46Z",
+      "runner": "tests"
+    },
+    {
+      "description": "rbLastMovementMinutesAgo places the seeded last movement that many minutes back.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testSeededLastMovementFromExplicitKey",
+      "line": 50,
+      "registeredAt": "2026-07-08T15:24:46Z",
+      "runner": "tests"
+    },
+    {
+      "description": "With neither movement key seeded, the source reports no known movement.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testSeededLastMovementNilWhenUnseeded",
+      "line": 64,
+      "registeredAt": "2026-07-08T15:24:46Z",
+      "runner": "tests"
+    },
+    {
       "description": "First launch (nothing seen, not seeded) shows the onboarding tour.",
       "file": "Tests/AppCoreTests/OnboardingStateTests.swift",
       "format": "junit-xml",
