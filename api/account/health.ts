@@ -4,6 +4,7 @@ import {
   upsertHealth,
   deleteHealth,
   incomingWins,
+  mirrorMovement,
   type HealthRow,
 } from "../_lib/account.js";
 import { requireUser } from "../_lib/session.js";
@@ -66,6 +67,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       const row: HealthRow = { user_id: userId, health, updated_at: updatedAt };
       await upsertHealth(row);
+
+      // Movement heartbeat: if this snapshot carries a last-movement time, mirror
+      // it onto the user's push row so the nudge cron scans a single table. Only
+      // updates an existing push row (no push registration → nothing to mirror),
+      // so a health-sync user who never granted push is unaffected.
+      const lastMovementAt = health["lastMovementAt"];
+      const inactivityHours = health["inactivityHours"];
+      if (typeof lastMovementAt === "string" && typeof inactivityHours === "number") {
+        await mirrorMovement(userId, lastMovementAt, inactivityHours, updatedAt).catch(() => {});
+      }
+
       res.status(200).json({ applied: true, ...row });
       return;
     }

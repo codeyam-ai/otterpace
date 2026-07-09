@@ -26,12 +26,21 @@ public struct SyncableHealthSnapshot: Codable, Equatable {
     public var distanceMiles: Double
     public var activeMinutes: Int
     public var activeEnergyKcal: Int
+    /// Movement heartbeat for the opt-in server-driven nudge: the ISO timestamp of
+    /// the user's last real movement and their inactivity setting. Optional so a
+    /// snapshot without them round-trips unchanged (and existing callers/tests are
+    /// unaffected); the backend mirrors them onto the push row when present.
+    public var lastMovementAt: String?
+    public var inactivityHours: Int?
 
-    public init(steps: Int, distanceMiles: Double, activeMinutes: Int, activeEnergyKcal: Int) {
+    public init(steps: Int, distanceMiles: Double, activeMinutes: Int, activeEnergyKcal: Int,
+                lastMovementAt: String? = nil, inactivityHours: Int? = nil) {
         self.steps = steps
         self.distanceMiles = distanceMiles
         self.activeMinutes = activeMinutes
         self.activeEnergyKcal = activeEnergyKcal
+        self.lastMovementAt = lastMovementAt
+        self.inactivityHours = inactivityHours
     }
 }
 

@@ -340,6 +340,13 @@
   },
   {
     "conformsToView": false,
+    "description": "Registers/deregisters this device's APNs token against the persistent bearer session; a no-op without a session so server push stays strictly opt-in.",
+    "filePath": "Sources/AppCore/Account/PushRegistrationService.swift",
+    "name": "PushRegistrationService",
+    "testFile": "Tests/AppCoreTests/PushRegistrationServiceTests.swift"
+  },
+  {
+    "conformsToView": false,
     "description": "Distance presets (5K, 10K, Half, Marathon, Custom) for the Settings race editor. Provides canonical miles and labels per preset, preset(forMiles:) to round a stored mileage back to a capsule within an epsilon (else Custom), clampMiles to bound/round to minMiles...maxMiles at one decimal, kmPerMile (1.609344), and miles(from:unit:) which converts a typed value in a DistanceUnit to clamped miles — miles rounded to one decimal, kilometers kept full-precision so the km value round-trips exactly.",
     "filePath": "Sources/AppCore/RaceGoals.swift",
     "name": "RaceDistance",
@@ -414,6 +421,13 @@
     "filePath": "Sources/AppCore/Health/HealthDataSource.swift",
     "name": "SeededHealthDataSource",
     "testFile": "Tests/AppCoreTests/HealthDataSourceTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "Pure policy: the server nudge is active (and the local nudge suppressed) only when signed in, health sync on, and a push token is registered.",
+    "filePath": "Sources/AppCore/Account/PushRegistrationService.swift",
+    "name": "ServerPushGate",
+    "testFile": "Tests/AppCoreTests/PushRegistrationServiceTests.swift"
   },
   {
     "description": "Optional Sign in with Apple session state (undecided / guest / signedIn). Stores the Apple user identifier locally via an injectable TokenStoring (Keychain in prod). The session is durable: revalidate() confirms the stored Apple credential on launch/foreground (throttled per revalidationWindow), and only a genuine revocation ends it gracefully into guest via endSession() — transient/offline checks keep the user signed in. Never gates HealthKit.",
@@ -608,6 +622,12 @@
     }
   },
   {
+    "description": "Register an APNs device token for a user, idempotent and preserving any existing movement/nudge state on the row.",
+    "filePath": "api/_lib/account.ts",
+    "name": "addPushToken",
+    "testFile": "test/api/account-push.test.ts"
+  },
+  {
     "description": "Fixed-window in-memory rate-limit check: true when the key is under its limit for the current window. Best-effort, per-instance.",
     "filePath": "api/_lib/ratelimit.ts",
     "name": "allow",
@@ -637,6 +657,15 @@
     "testFile": "Tests/AppCoreTests/AppleCredentialMappingTests.swift"
   },
   {
+    "description": "Gate the cron endpoint behind a CRON_SECRET bearer so it cannot be invoked publicly.",
+    "filePath": "api/cron/movement-nudge.ts",
+    "name": "authorized",
+    "untestabilityReason": {
+      "justification": "reads process env and the request header at the Vercel cron auth boundary",
+      "kind": "platform-glue"
+    }
+  },
+  {
     "description": "Base64url-encode a buffer for the App Store Connect ES256 JWT (maintainer build-status script).",
     "filePath": "Scripts/asc-build-status.mjs",
     "name": "b64url",
@@ -650,6 +679,12 @@
     }
   },
   {
+    "description": "base64url-encode a Buffer or string with no padding — the JWT segment encoding used by the provider token.",
+    "filePath": "api/_lib/apns.ts",
+    "name": "b64url",
+    "testFile": "test/api/apns.test.ts"
+  },
+  {
     "description": "Extract the raw bearer token from a request Authorization header, or null. Case-insensitive on the scheme.",
     "filePath": "api/_lib/session.ts",
     "name": "bearerToken",
@@ -659,6 +694,12 @@
       "session"
     ],
     "testFile": "test/api/session-lib.test.ts"
+  },
+  {
+    "description": "Build the APNs alert payload (title/body + sound nested under aps).",
+    "filePath": "api/_lib/apns.ts",
+    "name": "buildAps",
+    "testFile": "test/api/apns.test.ts"
   },
   {
     "description": "Resolve the expected Apple bundle id (the identity-token audience) from env, defaulting to the app bundle.",
@@ -706,6 +747,12 @@
     "filePath": "api/_lib/account.ts",
     "name": "deleteHealth",
     "testFile": "test/api/account.test.ts"
+  },
+  {
+    "description": "Delete a user's entire push row — the sign-out / health-off / account-deletion opt-out.",
+    "filePath": "api/_lib/account.ts",
+    "name": "deletePush",
+    "testFile": "test/api/account-push.test.ts"
   },
   {
     "description": "Revoke a session by token hash (sign-out / token rotation). Idempotent — a 404 is not an error.",
@@ -784,6 +831,12 @@
     "testFile": "test/api/account.test.ts"
   },
   {
+    "description": "Read a user's account_push row (device tokens + mirrored movement + de-dup stamp), or null.",
+    "filePath": "api/_lib/account.ts",
+    "name": "getPush",
+    "testFile": "test/api/account-push.test.ts"
+  },
+  {
     "description": "Reads a device's stored Strava token row from Supabase, returning null when none exists and throwing on a failed read.",
     "filePath": "api/_lib/strava.ts",
     "name": "getToken",
@@ -794,6 +847,12 @@
     "filePath": "api/account/health.ts",
     "name": "handler",
     "testFile": "test/api/account-handlers.test.ts"
+  },
+  {
+    "description": "POST registers / DELETE deregisters this user APNs device token(s), bearer-authed via requireUser; the opt-in entry point for the server-driven nudge.",
+    "filePath": "api/account/push.ts",
+    "name": "handler",
+    "testFile": "test/api/push-handlers.test.ts"
   },
   {
     "description": "Vercel endpoint /api/account/session: POST verifies an Apple identity token and mints a bearer session; DELETE revokes the current session (idempotent sign-out).",
@@ -817,6 +876,12 @@
     "filePath": "api/coach.ts",
     "name": "handler",
     "testFile": "test/api/coach.test.ts"
+  },
+  {
+    "description": "Scheduled scan applying the tested shouldNudge policy to each opted-in user and delivering the APNs nudge, stamping de-dup and pruning dead tokens.",
+    "filePath": "api/cron/movement-nudge.ts",
+    "name": "handler",
+    "testFile": "test/api/cron-handler.test.ts"
   },
   {
     "description": "POST endpoint that imports a race from a URL. Validates the URL and blocks private/loopback/metadata hosts to prevent SSRF, fetches the page server-side with size and timeout caps and no redirect-following, then calls Claude with the caller's BYO Anthropic key to extract a structured race plus confidence and missingFields hints. Maps upstream 401/429 to invalid_key/rate_limited and degrades to an empty race on unparseable model output.",
@@ -890,6 +955,12 @@
     "testFile": "Tests/AppCoreTests/ModelTests.swift"
   },
   {
+    "description": "True when an hour falls inside the quiet window, correctly handling a window that wraps past midnight; start==end means never quiet.",
+    "filePath": "api/_lib/nudge.ts",
+    "name": "isQuietHour",
+    "testFile": "test/api/nudge.test.ts"
+  },
+  {
     "description": "SSRF guard for the race-import URL. Accepts only http/https and rejects hosts pointing at the local network: localhost, .local, loopback, and private/link-local IPv4 ranges including the cloud metadata address 169.254.169.254. Returns the parsed URL when safe, or null to reject.",
     "filePath": "api/race-import.ts",
     "name": "isSafePublicUrl",
@@ -920,10 +991,22 @@
     }
   },
   {
+    "description": "Every push row with at least one token and a known last-movement time — the cron's scan set.",
+    "filePath": "api/_lib/account.ts",
+    "name": "listNudgeCandidates",
+    "testFile": "test/api/account-push.test.ts"
+  },
+  {
     "description": "Maps a single Strava activity to a MappedWorkout, returning null when the date is missing or malformed; computes miles and pace.",
     "filePath": "api/_lib/strava.ts",
     "name": "mapActivity",
     "testFile": "test/api/strava.test.ts"
+  },
+  {
+    "description": "Mirror the latest movement heartbeat (last-movement time + inactivity setting) onto an existing push row so the cron scans one table; no-ops when the user has no push registration.",
+    "filePath": "api/_lib/account.ts",
+    "name": "mirrorMovement",
+    "testFile": "test/api/account-push.test.ts"
   },
   {
     "description": "Renders minutes-since-last-movement as a compact label: now at or below zero, bare minutes under an hour, and hours-plus-minutes above, dropping the minutes part when it is zero.",
@@ -956,6 +1039,24 @@
     "testFile": "Tests/AppCoreTests/FormattersTests.swift"
   },
   {
+    "description": "Build and ES256-sign the APNs provider JWT from the key id, team id, and .p8 signing key.",
+    "filePath": "api/_lib/apns.ts",
+    "name": "providerToken",
+    "testFile": "test/api/apns.test.ts"
+  },
+  {
+    "description": "Build the account_push Supabase table endpoint from SUPABASE_URL.",
+    "filePath": "api/_lib/account.ts",
+    "name": "pushEndpoint",
+    "testFile": "test/api/account-push.test.ts"
+  },
+  {
+    "description": "Remove one device token; drops the whole row when it was the last token so a signed-out user leaves no push footprint.",
+    "filePath": "api/_lib/account.ts",
+    "name": "removePushToken",
+    "testFile": "test/api/account-push.test.ts"
+  },
+  {
     "description": "Authenticate a request from its bearer session token, returning the verified user id or null (handlers map null to 401). User id derives only from the token, never the request body.",
     "filePath": "api/_lib/session.ts",
     "name": "requireUser",
@@ -984,6 +1085,15 @@
     "testFile": "test/api/account.test.ts"
   },
   {
+    "description": "Deliver one alert to a device token over HTTP/2, best-effort, surfacing a prunable reason on an unregistered token.",
+    "filePath": "api/_lib/apns.ts",
+    "name": "sendPush",
+    "untestabilityReason": {
+      "justification": "APNs HTTP/2 network delivery, verified against Apple's sandbox not in CI",
+      "kind": "platform-glue"
+    }
+  },
+  {
     "description": "Supabase REST URL for the account_sessions table, derived from SUPABASE_URL.",
     "filePath": "api/_lib/session.ts",
     "name": "sessionsEndpoint",
@@ -992,6 +1102,18 @@
       "session"
     ],
     "testFile": "test/api/session-lib.test.ts"
+  },
+  {
+    "description": "Pure policy deciding whether to send a movement nudge to one user now: idle past their threshold, once per idle window (de-dup on last-nudge vs last-movement), and never during quiet hours.",
+    "filePath": "api/_lib/nudge.ts",
+    "name": "shouldNudge",
+    "testFile": "test/api/nudge.test.ts"
+  },
+  {
+    "description": "Stamp the last-nudge time after a successful send, for one-per-idle-window de-dup.",
+    "filePath": "api/_lib/account.ts",
+    "name": "stampNudgeSent",
+    "testFile": "test/api/account-push.test.ts"
   },
   {
     "description": "Builds the VoiceOver spoken summary for the step-goal ring, mirroring the three caption states with whole-number step, goal, and remaining counts; never shame-based.",
@@ -1034,6 +1156,12 @@
     "filePath": "api/_lib/account.ts",
     "name": "upsertPrefs",
     "testFile": "test/api/account.test.ts"
+  },
+  {
+    "description": "Merge-upsert a user's account_push row (tokens + mirrored movement + de-dup stamp) into Supabase.",
+    "filePath": "api/_lib/account.ts",
+    "name": "upsertPush",
+    "testFile": "test/api/account-push.test.ts"
   },
   {
     "description": "Upserts a device's Strava token row into Supabase using merge-duplicates, throwing on a non-OK response.",

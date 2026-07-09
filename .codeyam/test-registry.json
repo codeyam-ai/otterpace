@@ -1185,6 +1185,60 @@
       "runner": "tests"
     },
     {
+      "description": "deregisterAll issues a DELETE to /account/push (the sign-out / health-off opt-out).",
+      "file": "Tests/AppCoreTests/PushRegistrationServiceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.PushRegistrationServiceTests › testDeregisterAllDeletes",
+      "line": 57,
+      "registeredAt": "2026-07-09T13:56:52Z",
+      "runner": "tests"
+    },
+    {
+      "description": "The movement heartbeat fields round-trip through Codable and default to nil.",
+      "file": "Tests/AppCoreTests/PushRegistrationServiceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.PushRegistrationServiceTests › testHealthSnapshotHeartbeatRoundTrips",
+      "line": 79,
+      "registeredAt": "2026-07-09T13:56:52Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Without a bearer session, register is a no-op that fires no request (opt-in gate).",
+      "file": "Tests/AppCoreTests/PushRegistrationServiceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.PushRegistrationServiceTests › testRegisterNoOpsWithoutSession",
+      "line": 28,
+      "registeredAt": "2026-07-09T13:56:52Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A signed-in register POSTs to /account/push with the bearer and reports success on 2xx.",
+      "file": "Tests/AppCoreTests/PushRegistrationServiceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.PushRegistrationServiceTests › testRegisterPostsWithBearer",
+      "line": 39,
+      "registeredAt": "2026-07-09T13:56:52Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A non-2xx response is a soft failure returning false, leaving the app functional.",
+      "file": "Tests/AppCoreTests/PushRegistrationServiceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.PushRegistrationServiceTests › testRegisterReportsFailureOnNon2xx",
+      "line": 50,
+      "registeredAt": "2026-07-09T13:56:52Z",
+      "runner": "tests"
+    },
+    {
+      "description": "The local nudge is suppressed only when signed in, health sync on, and push registered all hold.",
+      "file": "Tests/AppCoreTests/PushRegistrationServiceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.PushRegistrationServiceTests › testServerPushGateRequiresAllThreeConditions",
+      "line": 68,
+      "registeredAt": "2026-07-09T13:56:52Z",
+      "runner": "tests"
+    },
+    {
       "description": "Classifies whether a chat message expresses race intent.",
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",

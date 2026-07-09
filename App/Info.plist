@@ -22,6 +22,12 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- Wake the app for the opt-in server-driven movement nudge (APNs). Only used
+	     when the user is signed in, has health sync on, and granted push. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<!-- Otterpace uses only standard HTTPS/TLS (export-exempt), so App Store
 	     uploads skip the export-compliance prompt. -->
 	<key>ITSAppUsesNonExemptEncryption</key>

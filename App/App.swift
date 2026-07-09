@@ -1,6 +1,7 @@
 import SwiftUI
 import AppCore
 import UIKit
+import UserNotifications
 
 /// App delegate whose only job is the background-relaunch case: when iOS wakes the
 /// app in the background to deliver new HealthKit data (no SwiftUI scene becomes
@@ -9,6 +10,7 @@ import UIKit
 /// driven by `OtterpaceModel` via `ContentView`; this covers the closed-app case.
 final class AppDelegate: NSObject, UIApplicationDelegate {
     private var monitor: MovementActivityMonitor?
+    private let pushRegistration = PushRegistrationService()
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
@@ -16,11 +18,37 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         // turned the inactivity reminder on.
         guard !HealthSource.isScenarioSeeded() else { return true }
         let settings = ReminderSettings.load()
-        guard settings.inactivityEnabled else { return true }
-        let monitor = MovementActivityMonitor(source: HealthSource.make(), scheduler: MovementReminderScheduler())
-        monitor.start(settings: settings)
-        self.monitor = monitor
+        if settings.inactivityEnabled {
+            let monitor = MovementActivityMonitor(source: HealthSource.make(), scheduler: MovementReminderScheduler())
+            monitor.start(settings: settings)
+            self.monitor = monitor
+        }
+        registerForPushIfEligible()
         return true
+    }
+
+    /// Ask iOS for an APNs token only when server push is opted into: signed in,
+    /// health sync on, and the OS notification permission already granted. The
+    /// token lands in `didRegisterForRemoteNotificationsWithDeviceToken` below,
+    /// which registers it with the backend. Any gate off → we never register, so
+    /// the on-device nudge (prerequisite plan) stays the only reminder.
+    func registerForPushIfEligible() {
+        guard AccountSessionStore().token() != nil, SyncConsentStore().healthSyncEnabled else { return }
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            guard settings.authorizationStatus == .authorized else { return }
+            DispatchQueue.main.async { UIApplication.shared.registerForRemoteNotifications() }
+        }
+    }
+
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        let hex = deviceToken.map { String(format: "%02x", $0) }.joined()
+        Task { await pushRegistration.register(deviceToken: hex) }
+    }
+
+    func application(_ application: UIApplication,
+                     didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        // Best-effort: leave server push off; the on-device nudge still works.
     }
 }
 

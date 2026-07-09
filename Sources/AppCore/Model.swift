@@ -366,6 +366,16 @@ public final class OtterpaceModel: ObservableObject {
         scheduler.armInactivity(fireAt: fireAt, settings: settings)
     }
 
+    /// The ISO-8601 timestamp of the user's last real movement, or nil when none
+    /// is known — the movement heartbeat the server-driven nudge (opt-in) uploads
+    /// so the backend can decide when to push. Reads the same `lastMovementDate()`
+    /// the local nudge uses, so device and server share one idle baseline.
+    @MainActor
+    public func lastMovementISO() async -> String? {
+        guard let date = await source.lastMovementDate() else { return nil }
+        return ISO8601DateFormatter().string(from: date)
+    }
+
     /// Begin/refresh real-movement observation (HealthKit background delivery +
     /// observer query) so the nudge stays correct even while the app is closed.
     /// Owned here because the model holds the health `source`. iOS-only; a no-op in

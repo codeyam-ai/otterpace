@@ -1,6 +1,6 @@
 {
-  "feature": "movement-nudge-fires-on-real-inactivity",
-  "maxStep": 24,
-  "version": 241,
-  "updatedAt": "2026-07-08T21:27:42.827267+00:00"
+  "feature": "movement-nudge-server-push",
+  "maxStep": 17,
+  "version": 55,
+  "updatedAt": "2026-07-09T14:50:45.066212+00:00"
 }

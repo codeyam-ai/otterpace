@@ -1,0 +1,155 @@
+{
+  "timestamp": "2026-07-09T14:36:23Z",
+  "title": "Opt-In Server-Driven Movement Push",
+  "type": "feature",
+  "userRequest": "## Summary\n\nFor users who want it, add an **optional, account-backed** server-driven movement\nnudge on top of the on-device fix (`movement-nudge-fires-on-real-inactivity`).\nWhen a user is signed in with Apple, has enabled health sync, and grants push\npermission, the app registers an APNs device token against their persistent\nbackend session, keeps the backend's view of their last-movement time fresh, and\na scheduled job sends a \"time to move\" push after `inactivityHours` of real\ninactivity — reliably, even if the device never wakes the on-device observer. It\nstays strictly opt-in: guests and privacy-minded (health-off) users keep the\non-device behavior from the prerequisite plan and never register a token or upload\nmovement times. This leans on the persistent login that already exists (the\nSign-in-with-Apple → bearer session established at `SignInView.swift:63`); the\nmissing pieces are APNs registration, a movement heartbeat, and the server job.\n\n## Key Decisions\n\n- **Reuse the existing persistent backend session; don't build a new login.**\n  `AccountSessionService.establish(identityToken:)` already exchanges Apple's\n  identity token for a long-lived Keychain-stored bearer at sign-in. Push-token\n  registration and the movement heartbeat ride on that same bearer — the \"more\n  persistent login\" is really \"use the session we already have to key\n  server-side push.\"\n- **Strictly opt-in and gated three ways.** A push is only ever sent when\n  `session == .signedIn` AND `SyncConsentStore.healthSyncEnabled` (off by default,\n  behind the one-time consent moment) AND the OS notification permission is\n  granted. No token is registered and no movement time is uploaded otherwise, so\n  the change is invisible to guests and health-off users.\n- **Server is authoritative for the push; on-device stays the baseline.** The\n  device uploads last-movement timestamps (a tiny heartbeat, piggybacked on the\n  existing health-sync stream) and the backend decides when to push. The\n  prerequisite plan's local nudge remains the fallback so a user with sync off,\n  or offline, still gets a correct local reminder. Both are de-duplicated by id\n  so a user never gets two nudges for the same idle period (server suppresses when\n  it knows the local one is armed; simplest: server nudge only for health-sync\n  users, who suppress the local inactivity notification while sync is active).\n- **Least-sensitive payload.** The heartbeat carries only a `lastMovementAt`\n  timestamp and the chosen `inactivityHours`, not raw health samples — extending\n  the existing `SyncableHealthSnapshot` contract rather than opening a new data\n  category.\n\n## Implementation\n\n### 1. Register for remote notifications at sign-in\n\n**File**: `App/App.swift`\n\nExtend the `@UIApplicationDelegateAdaptor` added in the prerequisite plan to\nimplement `application(_:didRegisterForRemoteNotificationsWithDeviceToken:)` and\n`…didFailToRegisterForRemoteNotificationsWithError:`. Call\n`UIApplication.shared.registerForRemoteNotifications()` only after the user is\nsigned in, has health sync on, and notifications are authorized.\n\n**File**: `App/App.entitlements`\n\nAdd `aps-environment` (development/production via build config).\n\n**File**: `App/Info.plist`\n\nAdd `UIBackgroundModes` → `remote-notification`.\n\n### 2. Push-token registration client\n\n**New file**: `Sources/AppCore/Account/PushRegistrationService.swift`\n\nA small service that POSTs the APNs device token (hex) to a new backend endpoint\nwith the bearer session attached (same pattern as `URLSessionAccountSyncTransport`\n/ `AccountSessionService`). Best-effort: any failure leaves push simply off, app\nstays fully functional. Injectable URLSession + token provider for tests.\nAlso expose a `deregister()` used on sign-out / health-sync-off / account deletion\n(wire into `SessionStore.signOut/endSession/deleteAccount` and the Settings\nhealth-sync toggle).\n\n### 3. Movement heartbeat\n\n**File**: `Sources/AppCore/Account/AccountSyncService.swift`\n\nWhen `healthSyncEnabled`, include `lastMovementAt` (from the prerequisite plan's\n`lastMovementDate()`) and the user's `inactivityHours` in the health push so the\nbackend always has a fresh idle baseline. Extend `SyncableHealthSnapshot`\n(`AccountSyncTransport` contract) with those fields.\n\n**File**: `Sources/AppCore/Notifications/MovementActivityMonitor.swift`\n\nOn each background HealthKit wake (already added in the prerequisite plan), also\nfire the heartbeat when health sync is on — so the server's last-movement view\nupdates without requiring a foreground.\n\n### 4. Backend: token store, endpoint, and scheduler\n\n**New file**: `api/account/push.ts`\n\n`POST` registers `{ deviceToken, platform }` for the bearer's user;\n`DELETE` removes it. Authenticated via the existing `api/_lib/session.ts` bearer\nverification.\n\n**File**: `api/_lib/account.ts`\n\nExtend the per-user account record with `pushTokens[]`, `lastMovementAt`,\n`inactivityHours`, and `lastNudgeSentAt` (for de-dup). The health `PUT`\n(`api/account/health.ts`) writes `lastMovementAt` / `inactivityHours` from the\nheartbeat.\n\n**New file**: `api/_lib/apns.ts`\n\nMinimal APNs HTTP/2 sender (token-based auth: key id, team id, `.p8`) reading\ncredentials from environment variables. Sends the \"Stretch your legs?\" payload\nmirroring `ReminderCopy.inactivity*`.\n\n**New file**: `api/cron/movement-nudge.ts` + **File**: `vercel.json`\n\nA scheduled function (Vercel cron, e.g. every 15–30 min) that scans users with a\npush token + health sync on, computes `now - lastMovementAt >= inactivityHours`,\nskips anyone nudged within the current idle window (`lastNudgeSentAt`), sends the\nAPNs push, and stamps `lastNudgeSentAt`. Respects a quiet-hours guard so no nudge\nfires overnight.\n\n### 5. Suppress the double nudge\n\n**File**: `Sources/AppCore/Notifications/MovementReminders.swift` /\n`MovementActivityMonitor.swift`\n\nWhen server push is active for this user (signed in + health sync on + token\nregistered), skip arming the *local* inactivity notification so the user gets one\nnudge, not two. If sync later turns off, fall back to the local nudge from the\nprerequisite plan.\n\n### 6. Tests\n\n**File**: `Tests/AppCoreTests/PushRegistrationServiceTests.swift` (new)\n\nToken register/deregister hits the right path with the bearer; failures are\nswallowed; deregister is triggered on sign-out / health-off.\n\n**File**: `api/_lib/*.test.ts` (vitest, per the backend harness)\n\nIdle detection + de-dup: a user idle past threshold gets exactly one push per idle\nwindow; a user who moved recently gets none; quiet-hours suppresses; health-off /\ntokenless users are skipped.\n\n## Reused existing code\n\n- `AccountSessionService` + `AccountSessionStore` (`Sources/AppCore/Account/AccountSession.swift`)\n  — the persistent bearer session the push registration authenticates against.\n- `URLSessionAccountSyncTransport` auth pattern (`Sources/AppCore/Account/AccountSyncTransport.swift`)\n  — mirror its `authorize(_:)` bearer attachment for the push endpoint.\n- `SyncConsentStore.healthSyncEnabled` + consent gating (`Sources/AppCore/Account/SyncConsent.swift`)\n  — the opt-in gate; no push without it.\n- `AccountSyncService` health push (`Sources/AppCore/Account/AccountSyncService.swift:135`)\n  — extend for the movement heartbeat rather than adding a new stream.\n- `ReminderCopy.inactivityTitle/Body` (`Sources/AppCore/Notifications/MovementReminders.swift`)\n  — reuse verbatim for the server payload so local + server nudges read identically.\n- `api/_lib/session.ts` bearer verification + `api/account/health.ts` shape — the\n  server-side handshake and per-user record to extend.\n- `lastMovementDate()` from the prerequisite plan — the single source of the idle\n  baseline on both device and server.\n\n## Scenarios to Demonstrate\n\n- Signed-in + health sync on + push granted, idle past threshold — a server push\n  is sent, and the local nudge is suppressed (exactly one nudge).\n- Same user, moved 5 minutes ago — no push (server sees a fresh `lastMovementAt`).\n- Guest / health-sync off — no token registered, no upload, local on-device nudge\n  from the prerequisite plan still works.\n- Quiet hours — idle user gets no overnight push.\n- Health sync turned off in Settings — token deregisters and behavior reverts to\n  the on-device nudge.\n- Sign out / delete account — push token is removed server-side and locally.",
+  "description": "An account-backed, strictly opt-in server nudge on top of the on-device inactivity reminder. When a user is signed in, has health sync on, and grants push, the app registers its APNs token (PushRegistrationService) and uploads a movement heartbeat (lastMovementAt + inactivityHours) on the existing bearer-authed health stream; a Vercel cron (api/cron/movement-nudge.ts every 20 min) applies the pure shouldNudge policy (idle past threshold, once per idle window, never during quiet hours) and sends the APNs push, mirroring ReminderCopy.inactivity. The local nudge is suppressed when server push is active (ServerPushGate) so users get exactly one, and everything reverts to the on-device reminder if any opt-in gate drops. Backend: nudge policy, account_push store, register/deregister endpoint, APNs sender, cron; iOS: PushRegistrationService, ServerPushGate, heartbeat, App-delegate APNs registration, deregister-all opt-out, aps-environment + remote-notification. Covered by 19 backend vitest tests + 6 Swift tests.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/movement-nudge-server-push.md\t.codeyam/plans/completed/movement-nudge-server-push.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "App/App.entitlements",
+      "status": "modified"
+    },
+    {
+      "path": "App/App.swift",
+      "status": "modified"
+    },
+    {
+      "path": "App/Info.plist",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Account/AccountSyncService.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Model.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/SettingsView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "api/_lib/account.ts",
+      "status": "modified"
+    },
+    {
+      "path": "api/account/health.ts",
+      "status": "modified"
+    },
+    {
+      "path": "vercel.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Account/PushRegistrationService.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/PushRegistrationServiceTests.swift",
+      "status": "added"
+    },
+    {
+      "path": "api/_lib/apns.ts",
+      "status": "added"
+    },
+    {
+      "path": "api/_lib/nudge.ts",
+      "status": "added"
+    },
+    {
+      "path": "api/account/push.ts",
+      "status": "added"
+    },
+    {
+      "path": "api/cron/movement-nudge.ts",
+      "status": "added"
+    },
+    {
+      "path": "test/api/account-push.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "test/api/apns.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "test/api/cron-handler.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "test/api/nudge.test.ts",
+      "status": "added"
+    },
+    {
+      "path": "test/api/push-handlers.test.ts",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Settings",
+      "screenshotPath": "settings--iphone-16.png"
+    },
+    {
+      "name": "Settings — Account Sync",
+      "screenshotPath": "settings-account-sync--iphone-16.png"
+    },
+    {
+      "name": "Settings — Custom Goal",
+      "screenshotPath": "settings-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Settings — Health Sync On",
+      "screenshotPath": "settings-health-sync-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Races List",
+      "screenshotPath": "settings-races-list--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders On",
+      "screenshotPath": "settings-reminders-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Replay Tour Row",
+      "screenshotPath": "settings-replay-tour-row--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 202,
+    "passed": 202,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 202,
+        "passed": 202
+      }
+    ]
+  }
+}

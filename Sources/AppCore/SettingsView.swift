@@ -31,6 +31,7 @@ public struct SettingsView: View {
 
     // Local movement reminders.
     private let reminderScheduler: MovementReminderScheduling = MovementReminderScheduler()
+    private let pushRegistration = PushRegistrationService()
     @State private var reminders = ReminderSettings()
     @State private var notifAuthorized = false
 
@@ -133,6 +134,7 @@ public struct SettingsView: View {
                 // Delete synced data with the bearer still valid, THEN revoke it.
                 Task {
                     await accountSync.purgeOnAccountDeletion(session: session.state)
+                    await pushRegistration.deregisterAll()   // stop any server nudge
                     await accountSession.revoke()
                 }
                 session.deleteAccount()
@@ -173,11 +175,19 @@ public struct SettingsView: View {
         .confirmationDialog("Turn off health sync?", isPresented: $confirmHealthOff, titleVisibility: .visible) {
             Button("Turn off & delete synced data", role: .destructive) {
                 healthSyncOn = false
-                Task { await accountSync.disableHealthSync(deleteRemote: true, session: session.state) }
+                // Health sync gates server push, so turning it off deregisters the
+                // token — the nudge reverts to the on-device reminder.
+                Task {
+                    await accountSync.disableHealthSync(deleteRemote: true, session: session.state)
+                    await pushRegistration.deregisterAll()
+                }
             }
             Button("Turn off, keep synced data") {
                 healthSyncOn = false
-                Task { await accountSync.disableHealthSync(deleteRemote: false, session: session.state) }
+                Task {
+                    await accountSync.disableHealthSync(deleteRemote: false, session: session.state)
+                    await pushRegistration.deregisterAll()
+                }
             }
             Button("Cancel", role: .cancel) { healthSyncOn = true }
         } message: {
@@ -286,13 +296,22 @@ public struct SettingsView: View {
         consent.acknowledgeHealthConsent()
         consent.setHealthSyncEnabled(true)
         healthSyncOn = true
-        let snapshot = SyncableHealthSnapshot(
-            steps: model.today.steps,
-            distanceMiles: model.today.distanceMiles,
-            activeMinutes: model.today.activeMinutes,
-            activeEnergyKcal: model.today.activeEnergyKcal
-        )
-        Task { await accountSync.pushHealth(snapshot, session: session.state) }
+        Task {
+            // Include the movement heartbeat (last-movement time + inactivity
+            // setting) so a user who also has push registered gets the opt-in
+            // server-driven nudge; harmless for everyone else (the backend only
+            // mirrors it onto an existing push row).
+            let lastMovement = await model.lastMovementISO()
+            let snapshot = SyncableHealthSnapshot(
+                steps: model.today.steps,
+                distanceMiles: model.today.distanceMiles,
+                activeMinutes: model.today.activeMinutes,
+                activeEnergyKcal: model.today.activeEnergyKcal,
+                lastMovementAt: lastMovement,
+                inactivityHours: ReminderSettings.load().inactivityHours
+            )
+            await accountSync.pushHealth(snapshot, session: session.state)
+        }
     }
 
     // One-time explainer shown before the first health upload: what's uploaded,
