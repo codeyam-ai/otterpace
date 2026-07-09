@@ -1,6 +1,6 @@
 {
   "feature": "movement-nudge-server-push",
-  "maxStep": 17,
-  "version": 55,
-  "updatedAt": "2026-07-09T14:50:45.066212+00:00"
+  "maxStep": 18,
+  "version": 57,
+  "updatedAt": "2026-07-09T14:57:34.833008+00:00"
 }
