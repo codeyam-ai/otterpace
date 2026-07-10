@@ -73,8 +73,13 @@ run,steps,fitness,jog,training,5k,10k,walk,marathon,race,pace,habit,rest,goal,tr
 ```
 
 **Description** (≤4000):
+
+> ⚠️ **No emoji in this field.** App Store Connect rejects emoji in the Description
+> with "This field contains one or more invalid characters." Bullets (`•`, U+2022)
+> are fine and intentional. (Emoji are OK in Promotional Text and What's New.)
+
 ```
-Meet Buddy, your friendly running coach. 🐾
+Meet Buddy, your friendly running coach.
 
 Otterpace turns daily movement into steady, guilt-free progress. Buddy reads your activity from Apple Health and gives simple, encouraging guidance every day. No pressure, no guilt, just a coach in your corner.
 
