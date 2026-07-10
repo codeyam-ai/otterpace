@@ -1,0 +1,24 @@
+{
+  "claimStartedAt": "2026-07-10T19:20:15Z",
+  "completedAt": "2026-07-10T20:02:15Z",
+  "completedBy": {
+    "agentProvider": "claude",
+    "codeyamEditorVersion": "0.1.0",
+    "machine": "Nadias-MacBook-Pro-2.local",
+    "pid": 70356,
+    "priority": 0,
+    "selectedPlan": "app-store-submission",
+    "sessionId": "5b80444b-471a-4943-b431-8755193e6cd5",
+    "startedAt": "2026-07-10T19:20:15Z"
+  },
+  "createdAt": "2026-07-08T20:20:38Z",
+  "deliverables": [
+    "docs/app-store-submission.md",
+    "docs/go-live-runbook.md"
+  ],
+  "journalTimestamp": "2026-07-10T20:02:15Z",
+  "mode": "ui",
+  "planFile": "completed/app-store-submission.md",
+  "slug": "app-store-submission",
+  "title": "App Store Submission (Public v1 Release)"
+}

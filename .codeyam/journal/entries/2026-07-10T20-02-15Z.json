@@ -1,0 +1,6 @@
+{
+  "timestamp": "2026-07-10T20:02:15Z",
+  "title": "App Store Submission Runbook",
+  "type": "docs",
+  "description": "Added docs/app-store-submission.md, a consolidated 8-phase runbook operationalizing the public v1 App Store submission (Preconditions -> build the submission binary via Scripts/testflight-upload.sh -> App Privacy = Data Not Collected -> version 1.0 metadata -> screenshots -> age rating/pricing/build/release -> App Review Information notes + Submit -> after submission), each phase tagged terminal/portal with a Verify, pasting from docs/app-store-listing.md. Baked in the v1 decisions: analytics off + Strava hidden + HealthKit on-device => Data Not Collected privacy label, and auto-release on approval. Made the three review-risk mitigations first-class (no-key coach, optional Sign in with Apple/no demo account, sparse HealthKit on a fresh device). Corrected the App Review contact email to nseldeib@gmail.com (hello@otterpace.com is a not-yet-created alias). Updated docs/go-live-runbook.md: reconciled Phase 7 from the stale analytics-on 'declare collection' wording to the actual v1 'Data Not Collected' answer (keeping the Usage-Data mapping as the 'if you enable analytics later' branch), and added Phase 10 handing off to the submission runbook. Docs-only; no Swift or API source changes."
+}

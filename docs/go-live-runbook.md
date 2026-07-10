@@ -111,13 +111,20 @@ On a real device, confirm each integration end-to-end:
 ---
 
 ## Phase 7 — App Store privacy label  ⚠️ REQUIRED
-Analytics-on + server-stored Strava tokens mean you **must** declare data
-collection in App Store Connect → **App Privacy**:
-- ☐ **Usage Data → Product Interaction** — collected, *not linked* to identity,
-  for **Analytics** / **App Functionality** (PostHog).
-- ☐ **Identifiers** — the anonymous analytics/device id (not linked to the user).
-- ☐ **Health & Fitness / Strava activity** (if Strava enabled) — App Functionality.
-Keep this in sync with `site/privacy.html`. Ref: `docs/strava-and-analytics.md`.
+**v1 ships analytics OFF and Strava hidden**, so the App Store Connect → **App
+Privacy** answer is a clean **Data Not Collected**:
+- ☐ Answer **"We do not collect data from this app."** Rationale: analytics is off
+  (`PostHogProjectKey` empty), Strava import is hidden (`StravaClientID` empty), and
+  HealthKit data is read **on-device only** (never leaves the device → not
+  "collected"). Keep this in sync with `site/privacy.html`.
+
+> **If you enable analytics later** (or Strava with server-stored tokens), switch to
+> a **Usage Data** declaration and update `site/privacy.html` in lockstep:
+> - **Usage Data → Product Interaction** — collected, *not linked* to identity, for
+>   **Analytics** / **App Functionality** (PostHog).
+> - **Identifiers** — the anonymous analytics/device id (not linked to the user).
+> - **Health & Fitness / Strava activity** (if Strava enabled) — App Functionality.
+> Ref: `docs/strava-and-analytics.md`.
 
 ---
 
@@ -128,6 +135,19 @@ Keep this in sync with `site/privacy.html`. Ref: `docs/strava-and-analytics.md`.
 4. ☐ Add internal testers; install via TestFlight and re-run the Phase 6 smoke test
    on the TestFlight build.
 Ref: `docs/testflight-prep.md`.
+
+---
+
+## Phase 10 — App Store submission (go public)
+TestFlight (Phase 8) is not the finish line — the public 1.0 submission is. The
+full ordered sequence lives in **`docs/app-store-submission.md`**: build the
+submission binary (`Scripts/testflight-upload.sh`) → App Privacy = **Data Not
+Collected** (Phase 7) → paste metadata + upload the six screenshots from
+`docs/app-store-listing.md` → age rating **4+** / pricing **Free** → App Review
+Information notes (no-key coach, optional sign-in, sparse HealthKit) → attach build,
+**Automatically release on approval**, **Submit for Review**.
+
+**Verify:** the 1.0 version reaches **Waiting for Review**, then **Ready for Sale**.
 
 ---
 
