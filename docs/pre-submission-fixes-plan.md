@@ -12,7 +12,7 @@ Legend: 👤 = you (portal/DNS) · 🤖 = code/terminal · Status: ☐ todo · �
 
 ---
 
-## Fix 1 — Privacy policy ↔ submission alignment  🤖  ☑ (done, awaiting deploy)
+## Fix 1 — Privacy policy ↔ submission alignment  🤖  ☑ DONE & LIVE (deployed 2026-07-10)
 
 **Problem.** The live `site/privacy.html` was written in the "analytics ON" era
 (2026-06-24 rewrite). It describes PostHog app analytics, Strava backend token
@@ -49,7 +49,14 @@ with the "Data Not Collected" label and the App Store description.
 
 ---
 
-## Fix 2 — Wire up hello@otterpace.com via free forwarding  👤  ☐ todo
+## Fix 2 — Wire up hello@otterpace.com via free forwarding  👤  ☑ DONE (2026-07-10)
+
+**Resolved via Namecheap Email Forwarding** — added a single forwarder
+`hello@ → nseldeib@gmail.com` (no catch-all, to keep spam down) and accepted
+Namecheap's MX records. A test email to `hello@otterpace.com` was received in
+Gmail — confirmed working.
+
+<details><summary>Original plan (for reference)</summary>
 
 **Problem.** The Privacy Policy's Contact line and (after Fix 3) the homepage point
 at `hello@otterpace.com`, which has **no mailbox** — mail bounces. The App Store
@@ -78,14 +85,11 @@ add their MX + a TXT). Namecheap-native is the least-moving-parts choice here.
 
 **Verify:** a test email to `hello@otterpace.com` is received at
 `nseldeib@gmail.com`.
-
-> ⚠️ **Sequencing:** finish Fix 2 **before** deploying Fix 3 (or immediately
-> after), so the homepage's new Contact link doesn't point at a bouncing address
-> when a reviewer clicks it.
+</details>
 
 ---
 
-## Fix 3 — Add a contact/support path to the homepage  🤖  ☑ (done, awaiting deploy)
+## Fix 3 — Add a contact/support path to the homepage  🤖  ☑ DONE & LIVE (deployed 2026-07-10)
 
 **Problem.** Apple's **Support URL** (`https://otterpace.com`) must give users a way
 to get help. The homepage had only "View on GitHub" and "Privacy" links — no
@@ -104,13 +108,33 @@ it opens a mail composer to a deliverable address.
 
 ---
 
-## Deploy (gated on your OK)  👤/🤖  ☐ todo
+## Deploy  👤/🤖  ☑ DONE & LIVE (2026-07-10)
 
-The site auto-deploys on push to `main` (Vercel, Git-connected — see
-`docs/site-and-dns.md`). Publishing these edits is an outward-facing change, so it
-waits for your go-ahead. Recommended order:
+Deployed to Vercel production and verified live over HTTPS: `privacy.html` shows
+"Last updated: July 10, 2026" with no PostHog/Strava/health-sync terms, and the
+homepage Contact `mailto:` link is present.
 
-1. Fix 2 (email forwarding) live + tested.
-2. Commit + push the `site/` changes → Vercel auto-deploys.
-3. Re-verify `https://otterpace.com` and `https://otterpace.com/privacy` render the
-   updated content over HTTPS, and the Contact link works.
+> **Gotcha discovered during deploy:** Git-push auto-deploy was **silently
+> broken** — the every-20-min movement-nudge cron (`fa50187`, 2026-07-09) exceeds
+> the Vercel **Hobby** plan's daily-cron limit, so every deploy since it landed
+> was rejected. Fix: removed the `crons` block from `vercel.json` (commit on
+> 2026-07-10) and deployed via `vercel --prod --yes`. `api/cron/movement-nudge.ts`
+> stays in the repo; re-add the schedule after a **Pro** upgrade. See the
+> follow-up note below.
+
+---
+
+## Follow-ups (not blocking submission)
+
+- **Server-driven movement push is inert** until Vercel Pro + the cron is
+  re-added. Client code (`fa50187`) ships in the app build but no server push
+  fires; **local** movement reminders are unaffected. Decide later: upgrade to
+  Pro, or move the nudge to an external scheduler.
+- **App Store Connect build is stale.** ASC has build 3 (1.0/3, TestFlight-
+  Approved, 2026-07-06), but **7 app-source feature commits** landed after it
+  (intent-aware coaching, weekly-review live data, race persistence/import, race
+  dead-state fix, movement nudges). The listing + screenshots advertise these, so
+  submit a **fresh build (1.0/4)** from current HEAD via
+  `Scripts/testflight-upload.sh` (runbook Phase 1) before attaching in ASC.
+- **Homepage still says "Coming soon to the App Store."** Flip to a real App Store
+  link once live.

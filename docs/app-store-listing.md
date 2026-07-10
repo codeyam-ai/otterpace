@@ -30,7 +30,7 @@ pastes from.
 - **Primary category**: Health & Fitness · **Secondary**: Lifestyle
 - **Age rating**: 4+ (no objectionable content)
 - **Version**: `1.0`
-- **Copyright**: `2026 Otterpace`
+- **Copyright**: `2026 Nadia Eldeib`
 
 ## Privacy "nutrition label" (App Privacy section)
 For **v1**, the answer is **Data Not Collected**: analytics is off, Strava import
@@ -100,8 +100,11 @@ Otterpace offers general fitness guidance, not medical advice.
 
 **Copyright** (≤200):
 ```
-2026 Otterpace
+2026 Nadia Eldeib
 ```
+> No incorporated "Otterpace" entity exists yet, so the exclusive rights are held
+> by the individual. Rights may later be assigned to CodeYam; update this field if
+> that happens.
 
 **App Review Information → Notes** (≤4000):
 ```

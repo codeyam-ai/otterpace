@@ -109,7 +109,8 @@ In the **1.0** version, paste each field **verbatim** from
 - **Support URL** / **Marketing URL** / **Privacy Policy URL** →
   `https://otterpace.com`, `https://otterpace.com`, `https://otterpace.com/privacy`
 - **Primary category**: Health & Fitness · **Secondary**: Lifestyle
-- **Copyright**: `2026 Otterpace`
+- **Copyright**: `2026 Nadia Eldeib` (no incorporated entity yet; may reassign to
+  CodeYam later)
 
 **Verify:** every required text field is filled and none exceeds its character
 limit (ASC flags overflow inline).
