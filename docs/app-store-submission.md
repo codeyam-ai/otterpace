@@ -142,8 +142,13 @@ raises no missing-display-size error.
 
 ## Phase 5 — Age rating, pricing, build, release option  👤
 
-**5a. Age rating questionnaire** — every answer **None** → resulting rating **4+**
-(matches `docs/app-store-listing.md`).
+**5a. Age rating questionnaire** — on Apple's **2025+ questionnaire**, answer
+honestly: **Health or Wellness Topics = Yes** (Otterpace gives self-care/lifestyle
+fitness recommendations), **Medical or Treatment-Focused Content = No** (it is
+"general fitness guidance, not medical advice"), and every objectionable-content
+category = **None**. The computed rating may be **4+ or 12+** — take whatever ASC
+returns; do not answer No just to preserve 4+. (The legacy "all None → 4+" no
+longer applies.)
 
 **5b. Pricing & Availability** — **Free**; all territories (or your chosen set).
 

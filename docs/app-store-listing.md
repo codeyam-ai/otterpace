@@ -28,7 +28,10 @@ pastes from.
 - **Support URL**: `https://otterpace.com` (must resolve when a reviewer clicks it)
 - **Marketing URL**: `https://otterpace.com`
 - **Primary category**: Health & Fitness · **Secondary**: Lifestyle
-- **Age rating**: 4+ (no objectionable content)
+- **Age rating**: no objectionable content. On Apple's 2025+ questionnaire answer
+  **Health or Wellness Topics = Yes** (self-care/lifestyle recs), **Medical or
+  Treatment-Focused = No** ("not medical advice"); resulting rating may be 4+ to
+  12+ — take whatever ASC computes. **For the v1 submission ASC returned 9+.**
 - **Version**: `1.0`
 - **Copyright**: `2026 Nadia Eldeib`
 
