@@ -43,6 +43,21 @@ public struct WeeklyLoad: Codable, Equatable {
     }
 }
 
+/// One week's mileage rollup in the coach-facing `loadHistory` series. Small on
+/// purpose (week start, miles, run days) so several weeks fit comfortably under
+/// the backend context byte cap. Derived from `ActivityHistory.groupByWeek`.
+public struct WeeklyLoadPoint: Codable, Equatable {
+    public var weekStartISO: String   // ISO Monday that starts the week
+    public var miles: Double
+    public var daysRun: Int
+
+    public init(weekStartISO: String, miles: Double, daysRun: Int) {
+        self.weekStartISO = weekStartISO
+        self.miles = miles
+        self.daysRun = daysRun
+    }
+}
+
 public struct CoachRecommendation: Codable, Equatable {
     public var buddyMood: String        // resting|ready|jogging|cheering|concerned|celebrating|recovery
     public var headline: String
@@ -72,6 +87,7 @@ public struct TodayState: Codable, Equatable {
     public var weeklyLoad: WeeklyLoad?
     public var coach: CoachRecommendation?
     public var workouts: [LatestWorkout]   // recent history, newest-first; [] => day-one empty
+    public var loadHistory: [WeeklyLoadPoint] // coach-facing weekly mileage series, newest-first; [] => none
     public var races: [RaceGoal]           // optional upcoming races; [] => none set
     public var profile: CoachProfile?      // optional onboarding personalization; nil => not shared
 
@@ -88,6 +104,7 @@ public struct TodayState: Codable, Equatable {
         weeklyLoad: WeeklyLoad? = nil,
         coach: CoachRecommendation? = nil,
         workouts: [LatestWorkout] = [],
+        loadHistory: [WeeklyLoadPoint] = [],
         races: [RaceGoal] = [],
         profile: CoachProfile? = nil
     ) {
@@ -103,8 +120,33 @@ public struct TodayState: Codable, Equatable {
         self.weeklyLoad = weeklyLoad
         self.coach = coach
         self.workouts = workouts
+        self.loadHistory = loadHistory
         self.races = races
         self.profile = profile
+    }
+
+    // Tolerant decode: TodayState is encode-only in production (assembled via the
+    // memberwise init, then shipped to the backend), so the only real decode is of
+    // hand-written / older JSON. Default every collection and optional field so a
+    // payload written before a field existed — e.g. `loadHistory` or `profile` —
+    // still decodes cleanly instead of throwing on the missing key.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        healthKitConnected = try c.decode(Bool.self, forKey: .healthKitConnected)
+        date = try c.decodeIfPresent(String.self, forKey: .date) ?? ""
+        steps = try c.decodeIfPresent(Int.self, forKey: .steps) ?? 0
+        goalSteps = try c.decodeIfPresent(Int.self, forKey: .goalSteps) ?? 10000
+        activeMinutes = try c.decodeIfPresent(Int.self, forKey: .activeMinutes) ?? 0
+        distanceMiles = try c.decodeIfPresent(Double.self, forKey: .distanceMiles) ?? 0
+        activeEnergyKcal = try c.decodeIfPresent(Int.self, forKey: .activeEnergyKcal) ?? 0
+        minutesSinceLastMovement = try c.decodeIfPresent(Int.self, forKey: .minutesSinceLastMovement) ?? 0
+        latestWorkout = try c.decodeIfPresent(LatestWorkout.self, forKey: .latestWorkout)
+        weeklyLoad = try c.decodeIfPresent(WeeklyLoad.self, forKey: .weeklyLoad)
+        coach = try c.decodeIfPresent(CoachRecommendation.self, forKey: .coach)
+        workouts = try c.decodeIfPresent([LatestWorkout].self, forKey: .workouts) ?? []
+        loadHistory = try c.decodeIfPresent([WeeklyLoadPoint].self, forKey: .loadHistory) ?? []
+        races = try c.decodeIfPresent([RaceGoal].self, forKey: .races) ?? []
+        profile = try c.decodeIfPresent(CoachProfile.self, forKey: .profile)
     }
 
     // Production default: nothing connected yet, blank day-one state.
@@ -201,6 +243,19 @@ public final class OtterpaceModel: ObservableObject {
             workouts = decoded
         }
 
+        // Coach-facing weekly mileage series. A scenario can seed it explicitly
+        // via rbLoadHistoryJSON (mirroring rbWorkoutsJSON); otherwise, when the
+        // scenario seeded a workout list, derive the series from it so a rich
+        // multi-week scenario gets a real trajectory for free. [] => not shared.
+        var loadHistory: [WeeklyLoadPoint] = []
+        if let json = d.string(forKey: "rbLoadHistoryJSON"), !json.isEmpty,
+           let data = json.data(using: .utf8),
+           let decoded = try? JSONDecoder().decode([WeeklyLoadPoint].self, from: data) {
+            loadHistory = decoded
+        } else if !workouts.isEmpty {
+            loadHistory = ActivityHistory.loadHistory(from: workouts)
+        }
+
         // Races: a JSON-encoded array under one key (same shape as rbWorkoutsJSON),
         // so a scenario can seed upcoming races for capture.
         var races: [RaceGoal] = []
@@ -244,6 +299,7 @@ public final class OtterpaceModel: ObservableObject {
             weeklyLoad: load,
             coach: coach,
             workouts: workouts,
+            loadHistory: loadHistory,
             races: races,
             profile: profile
         )
@@ -343,7 +399,24 @@ public final class OtterpaceModel: ObservableObject {
         // `HealthKitDataSource.loadToday()` does, so a Strava-only user gets a real
         // Weekly Review recap instead of the empty "first week starts here" prompt.
         today.weeklyLoad = ActivityHistory.weeklyLoad(from: workouts)
+        // Carry the multi-week series too, so the coach can reason from the shape
+        // of the imported trajectory rather than a single trend flag.
+        today.loadHistory = ActivityHistory.loadHistory(from: workouts)
         today.healthKitConnected = true
+    }
+
+    // MARK: Training phase (persist through CoachProfileStore + apply immediately)
+
+    /// Set (or clear, with `nil`) the user's declared training phase. Persists it
+    /// onto the on-device `CoachProfile` and refreshes `today.profile` so it
+    /// reaches coaching immediately — mirroring how `addRace` refreshes state.
+    /// Builds on the current in-memory profile so a seeded scenario's other fields
+    /// (walk habits, other training) are preserved.
+    @MainActor public func setTrainingPhase(_ phase: TrainingPhase?) {
+        var profile = today.profile ?? CoachProfileStore.load(defaults)
+        profile.trainingPhase = phase
+        CoachProfileStore.save(profile, defaults)
+        today.profile = profile.isEmpty ? nil : profile
     }
 
     // MARK: Real-inactivity reminder

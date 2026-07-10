@@ -34,6 +34,7 @@ struct OnboardingFlowView: View {
     @State private var walkVolume: WalkVolume?
     @State private var walkTime: WalkTime?
     @State private var otherTraining: [TrainingKind]
+    @State private var trainingPhase: TrainingPhase?
     @State private var keyDraft: String = ""
     @State private var keyConnected: Bool
 
@@ -56,6 +57,7 @@ struct OnboardingFlowView: View {
         _walkVolume = State(initialValue: profile.walkVolume)
         _walkTime = State(initialValue: profile.walkTime)
         _otherTraining = State(initialValue: profile.otherTraining)
+        _trainingPhase = State(initialValue: profile.trainingPhase)
         _keyConnected = State(initialValue: CoachKeyStore().isConnected
                               || defaults.bool(forKey: "rbCoachConnected"))
     }
@@ -97,7 +99,7 @@ struct OnboardingFlowView: View {
     // MARK: Personalization steps
 
     private enum Step: Int, CaseIterable {
-        case goal, walkHabits, otherTraining, aiKey
+        case goal, walkHabits, otherTraining, trainingPhase, aiKey
 
         /// Analytics-safe step name (no PII).
         var name: String {
@@ -105,6 +107,7 @@ struct OnboardingFlowView: View {
             case .goal:          return "goal"
             case .walkHabits:    return "walk_habits"
             case .otherTraining: return "other_training"
+            case .trainingPhase: return "training_phase"
             case .aiKey:         return "ai_key"
             }
         }
@@ -204,6 +207,7 @@ struct OnboardingFlowView: View {
         case .goal:          goalStep
         case .walkHabits:    walkHabitsStep
         case .otherTraining: otherTrainingStep
+        case .trainingPhase: trainingPhaseStep
         case .aiKey:         aiKeyStep
         }
     }
@@ -285,6 +289,28 @@ struct OnboardingFlowView: View {
             }
         } skip: {
             skipButton(step: .otherTraining)
+        }
+    }
+
+    private var trainingPhaseStep: some View {
+        stepScaffold(
+            mood: .ready,
+            title: "Where are you in training?",
+            subtitle: "Tell Buddy your current phase so coaching matches your intent. A build is meant to climb; recovery is meant to ease off. Skip it and Buddy reads your trend from the data."
+        ) {
+            chipGroup(TrainingPhase.allCases.map { p in
+                ChipData(label: p.label.capitalizedFirst, selected: trainingPhase == p) {
+                    trainingPhase = (trainingPhase == p) ? nil : p
+                }
+            }, perRow: 2)
+        } primary: {
+            primaryButton("Continue") {
+                saveProfile()
+                Analytics.shared.capture("onboarding_profile_saved", ["step": Step.trainingPhase.name])
+                advance()
+            }
+        } skip: {
+            skipButton(step: .trainingPhase)
         }
     }
 
@@ -492,7 +518,8 @@ struct OnboardingFlowView: View {
 
     private func saveProfile() {
         CoachProfileStore.save(
-            CoachProfile(walkVolume: walkVolume, walkTime: walkTime, otherTraining: otherTraining),
+            CoachProfile(walkVolume: walkVolume, walkTime: walkTime,
+                         otherTraining: otherTraining, trainingPhase: trainingPhase),
             defaults
         )
     }

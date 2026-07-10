@@ -1,0 +1,29 @@
+{
+  "name": "Settings — Training Phase (Building)",
+  "id": "2dbcfd88-acc3-4d76-b9e6-13f1e5138c2b",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbShowSettings": true,
+      "rbContentSize": "",
+      "rbShowRaceEditor": false,
+      "rbSteps": 8200,
+      "rbShowWeeklyReview": false,
+      "rbShowHistory": false,
+      "rbCoachConnected": true,
+      "rbGoalSteps": 10000,
+      "rbConnected": true,
+      "rbCoachProfileJSON": "{\"walkVolume\":\"mostDays\",\"walkTime\":\"mornings\",\"otherTraining\":[\"running\"],\"trainingPhase\":\"building\"}",
+      "rbPreviewMode": "",
+      "rbSettingsScroll": "training",
+      "rbDate": "2026-06-22",
+      "rbShowRacePrompt": false
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/SettingsView.swift"
+}

@@ -1,0 +1,34 @@
+{
+  "name": "Weekly Review — Gathering Baseline",
+  "id": "d313f27f-26cc-4f49-9fee-532ca591b28e",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbShowSettings": false,
+      "rbSteps": 7400,
+      "rbRestDaysThisWeek": 4,
+      "rbShowRacePrompt": false,
+      "rbConnected": true,
+      "rbStartTab": "coach",
+      "rbWeeklyMileage": 12.0,
+      "rbShowWeeklyReview": true,
+      "rbContentSize": "",
+      "rbGoalSteps": 10000,
+      "rbAskSeedQuestion": "",
+      "rbLoadHistoryJSON": "[{\"weekStartISO\":\"2026-06-22\",\"miles\":12.0,\"daysRun\":3}]",
+      "rbPreviewMode": "",
+      "rbShowRaceEditor": false,
+      "rbDaysRunThisWeek": 3,
+      "rbLoadTrend": "insufficient",
+      "rbShowHistory": false,
+      "rbLongestRunMiles": 4.5,
+      "rbDate": "2026-06-22"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/WeeklyReviewView.swift"
+}

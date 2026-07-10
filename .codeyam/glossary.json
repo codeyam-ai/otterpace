@@ -6,7 +6,7 @@
     "testFile": "Tests/AppCoreTests/AccountSyncTests.swift"
   },
   {
-    "description": "Pure deterministic grouping behind the Activity History screen: rolls a newest-first workout list into per-week groups (Monday-start, POSIX calendar) with training-load basics — weekly mileage, run count, and rest days. Drops workouts with unparseable dates.",
+    "description": "Pure deterministic training-history logic. groupByWeek rolls a newest-first workout list into per-week groups with weekly mileage, run count, and rest days. weeklyLoad classifies the current week via classifyTrend against a trailing multi-week baseline rather than a single prior week, so a steady progressive build reads as building not spiking, a true one-week jump reads spiking, a deliberate down week reads recovering with a mid-week guard, and too little history reads insufficient. loadHistory derives a compact newest-first weekly mileage series for the coach context. Monday-start POSIX calendar; drops unparseable dates.",
     "filePath": "Sources/AppCore/ActivityHistory.swift",
     "name": "ActivityHistory",
     "testFile": "Tests/AppCoreTests/ActivityHistoryTests.swift"
@@ -189,7 +189,7 @@
     }
   },
   {
-    "description": "Buddy's mock AI coach. Given a free-text question and the day's TodayState, it routes through CoachIntent and builds a curated, context-aware, safety-aware CoachReply (text + Buddy mood + safetyFlag). Pure and deterministic: a recent hard run or spiking weekly load tilts every recommendation toward recovery, and injury/mileage answers carry the safety flag. This is Milestone 2's mock mode; Milestone 3 swaps the reply body for a real model.",
+    "description": "Buddy mock AI coach. Given a free-text question and the days TodayState it routes through CoachIntent and builds a curated, context-aware, safety-aware CoachReply. Pure and deterministic. A recent hard run or a genuine load spike still tilts every recommendation toward recovery and carries the safety flag. It also respects the declared CoachProfile trainingPhase, affirming an intentional build instead of advising rest, and abstains honestly when the load trend is insufficient rather than inventing a confident verdict. Real safety signals always win over the build framing.",
     "filePath": "Sources/AppCore/CoachEngine.swift",
     "name": "CoachEngine",
     "testFile": "Tests/AppCoreTests/CoachEngineTests.swift"
@@ -202,7 +202,7 @@
   },
   {
     "conformsToView": false,
-    "description": "Optional on-device personalization profile collected during the onboarding flow: usual walking volume (WalkVolume), usual walking time (WalkTime), and other training (TrainingKind array). Every field is optional so a skipped onboarding step is representable as nil/empty. Carried as an optional field on TodayState and threaded into the coach context (CoachEngine + api/coach.ts); it leaves the device only on connected-coach requests and is never sent to analytics. isEmpty is the predicate the model uses to keep an all-skipped profile off TodayState.",
+    "description": "Optional on-device personalization profile collected during onboarding: usual walking volume, usual walking time, other training, and a declared trainingPhase the coach respects as ground-truth intent. Every field is optional so a skipped step is nil or empty; trainingPhase makes an otherwise-empty profile non-empty and a legacy blob without it decodes as nil. Carried on TodayState into both coaches; leaves the device only on connected-coach requests, never analytics. isEmpty keeps an all-skipped profile off TodayState.",
     "filePath": "Sources/AppCore/Onboarding/CoachProfile.swift",
     "name": "CoachProfile",
     "testFile": "Tests/AppCoreTests/CoachProfileTests.swift"
@@ -306,7 +306,7 @@
     "testFile": "Tests/AppCoreTests/OnboardingStateTests.swift"
   },
   {
-    "description": "Observable model for the Today dashboard. Reads the day's TodayState from flat rb-prefixed UserDefaults keys seeded at launch, and exposes derived values: goalProgress clamped to 1.0, stepsRemaining, goalReached, and a connect action that flips the day-one hero into the dashboard.",
+    "description": "Observable model for the Today dashboard. Reads the days TodayState from flat rb-prefixed UserDefaults keys seeded at launch, including a multi-week loadHistory series, and exposes derived values goalProgress clamped to 1.0, stepsRemaining, goalReached, plus a connect action. setTrainingPhase persists the declared training phase through CoachProfileStore and applies it to today.profile immediately so it reaches coaching, preserving the profiles other fields. ingestStravaWorkouts also populates loadHistory.",
     "filePath": "Sources/AppCore/Model.swift",
     "name": "OtterpaceModel",
     "testFile": "Tests/AppCoreTests/ModelTests.swift"
@@ -511,7 +511,7 @@
     }
   },
   {
-    "description": "Colored pill describing the week's training-load trend, with distinct colors for spiking, recovering, building, and steady.",
+    "description": "Colored pill describing the weeks training-load trend, with distinct colors for spiking, recovering, building, and steady, and a neutral Baseline label for the insufficient case when there is not yet enough history to judge.",
     "filePath": "Sources/AppCore/TrendBadge.swift",
     "name": "TrendBadge",
     "untestabilityReason": {
@@ -553,7 +553,7 @@
     }
   },
   {
-    "description": "Pure deterministic generator that turns the weeks WeeklyLoad context into a five-section weekly recap — what went well, what changed, training risk, suggested next week, and one focus area — plus a Buddy mood and a safety flag, classifying the week as empty, spiking, sparse, or solid. Personalizes the prose framing from the onboarding CoachProfile (walking-focused vs. cross-training), mirroring CoachEngine, without ever altering the classification, safety flag, or mood. Honors the conservative, never-shame-based, injury-aware coaching rules.",
+    "description": "Pure deterministic generator that turns the weeks WeeklyLoad context into a five-section weekly recap plus a Buddy mood and safety flag, classifying the week as empty, spiking, insufficient, sparse, or solid. The insufficient case recaps the week warmly but withholds a confident training-risk verdict, saying it is still gathering the baseline. Personalizes prose framing from the onboarding CoachProfile without altering classification, safety flag, or mood. Honors the conservative, never-shame-based, injury-aware rules.",
     "filePath": "Sources/AppCore/WeeklyReviewEngine.swift",
     "name": "WeeklyReviewEngine",
     "testFile": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift"

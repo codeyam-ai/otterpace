@@ -1,6 +1,6 @@
 {
   "name": "Onboarding — Add AI Coaching (Skip)",
-  "id": "688e5d3b-f50f-411b-9921-193ea07fc1c0",
+  "id": "a2f0fca3-c188-41c8-9400-e0616ab13dd3",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -9,7 +9,7 @@
   "deviceState": {
     "preferences": {
       "rbCoachConnected": false,
-      "rbOnboardingPage": 6,
+      "rbOnboardingPage": 7,
       "rbStartScreen": "onboarding"
     }
   },

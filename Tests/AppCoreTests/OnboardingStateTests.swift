@@ -53,12 +53,13 @@ final class OnboardingStateTests: XCTestCase {
         XCTAssertEqual(OnboardingState.startPage(d), OnboardingState.stepCount - 1) // beyond last -> last step
     }
 
-    // The flow models the intro carousel plus the four personalization steps, so
-    // scenario seeding can target any step in the range.
+    // The flow models the intro carousel plus the five personalization steps (goal,
+    // walk habits, other training, training phase, AI key), so scenario seeding can
+    // target any step in the range.
     func testStepCountCoversIntroPlusPersonalization() {
         XCTAssertEqual(OnboardingState.introPageCount, 3)
-        XCTAssertEqual(OnboardingState.personalizationStepCount, 4)
-        XCTAssertEqual(OnboardingState.stepCount, 7)
+        XCTAssertEqual(OnboardingState.personalizationStepCount, 5)
+        XCTAssertEqual(OnboardingState.stepCount, 8)
         XCTAssertEqual(OnboardingState.pageCount, OnboardingState.introPageCount) // back-compat alias
     }
 }

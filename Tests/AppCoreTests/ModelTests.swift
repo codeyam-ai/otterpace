@@ -112,6 +112,61 @@ final class ModelTests: XCTestCase {
         XCTAssertNil(OtterpaceModel.readState(defaults: defaults).profile)
     }
 
+    // The declared training phase seeds through rbCoachProfileJSON alongside the
+    // other fields, so it reaches the coach context from launch.
+    func testReadStateDecodesSeededTrainingPhase() {
+        let defaults = UserDefaults(suiteName: "runbuddy.tests.phase")!
+        defaults.removePersistentDomain(forName: "runbuddy.tests.phase")
+        defaults.set(true, forKey: "rbConnected")
+        defaults.set(#"{"otherTraining":[],"trainingPhase":"building"}"#, forKey: "rbCoachProfileJSON")
+        XCTAssertEqual(OtterpaceModel.readState(defaults: defaults).profile?.trainingPhase, .building)
+    }
+
+    // An explicit rbLoadHistoryJSON seeds the coach-facing weekly series verbatim,
+    // newest week first.
+    func testReadStateDecodesSeededLoadHistory() {
+        let defaults = UserDefaults(suiteName: "runbuddy.tests.loadhist")!
+        defaults.removePersistentDomain(forName: "runbuddy.tests.loadhist")
+        defaults.set(true, forKey: "rbConnected")
+        defaults.set(#"[{"weekStartISO":"2026-06-22","miles":22.0,"daysRun":4},{"weekStartISO":"2026-06-15","miles":20.0,"daysRun":4}]"#,
+                     forKey: "rbLoadHistoryJSON")
+        let state = OtterpaceModel.readState(defaults: defaults)
+        XCTAssertEqual(state.loadHistory.count, 2)
+        XCTAssertEqual(state.loadHistory.first?.weekStartISO, "2026-06-22")
+        XCTAssertEqual(state.loadHistory.first?.miles ?? 0, 22.0, accuracy: 0.001)
+    }
+
+    // With no explicit series but a seeded workout list, loadHistory is DERIVED
+    // from the workouts, so a rich multi-week scenario gets a real trajectory.
+    func testReadStateDerivesLoadHistoryFromWorkouts() {
+        let defaults = UserDefaults(suiteName: "runbuddy.tests.loadhist.derive")!
+        defaults.removePersistentDomain(forName: "runbuddy.tests.loadhist.derive")
+        defaults.set(true, forKey: "rbConnected")
+        defaults.set(#"[{"type":"run","distanceMiles":5.0,"durationMinutes":50,"pace":"10:00/mi","date":"2026-06-22","source":"strava"},{"type":"run","distanceMiles":6.0,"durationMinutes":60,"pace":"10:00/mi","date":"2026-06-15","source":"strava"}]"#,
+                     forKey: "rbWorkoutsJSON")
+        XCTAssertEqual(OtterpaceModel.readState(defaults: defaults).loadHistory.count, 2)
+    }
+
+    // With neither key seeded, loadHistory is empty (not shared with the coach).
+    func testReadStateLoadHistoryEmptyWhenUnseeded() {
+        let defaults = UserDefaults(suiteName: "runbuddy.tests.loadhist.empty")!
+        defaults.removePersistentDomain(forName: "runbuddy.tests.loadhist.empty")
+        XCTAssertTrue(OtterpaceModel.readState(defaults: defaults).loadHistory.isEmpty)
+    }
+
+    // A TodayState JSON written before loadHistory existed still decodes, with the
+    // series defaulting to empty (tolerant decode).
+    func testTodayStateDecodesLegacyJSONWithoutLoadHistory() throws {
+        let legacy = """
+        {"healthKitConnected":true,"date":"2026-06-22","steps":8200,"goalSteps":10000,
+         "activeMinutes":30,"distanceMiles":3.4,"activeEnergyKcal":210,
+         "minutesSinceLastMovement":40,"workouts":[],"races":[]}
+        """
+        let state = try JSONDecoder().decode(TodayState.self, from: Data(legacy.utf8))
+        XCTAssertTrue(state.loadHistory.isEmpty)
+        XCTAssertEqual(state.steps, 8200)
+    }
+
     // With no keys seeded (production day one) the reader yields the empty,
     // disconnected state — goal defaults to 10k and the Connect hero shows.
     func testReadStateEmptyDefaultsToDisconnected() {
@@ -213,5 +268,45 @@ final class ModelTests: XCTestCase {
         let model = OtterpaceModel(today: .empty)
         model.ingestStravaWorkouts([])
         XCTAssertNil(model.today.weeklyLoad)
+    }
+
+    // Importing Strava runs also populates the multi-week loadHistory series the
+    // coaches reason from, not just the single weekly-load flag.
+    @MainActor func testIngestStravaWorkoutsPopulatesLoadHistory() {
+        let model = OtterpaceModel(today: .empty)
+        XCTAssertTrue(model.today.loadHistory.isEmpty)
+        model.ingestStravaWorkouts([
+            LatestWorkout(type: "run", distanceMiles: 4.2, durationMinutes: 43,
+                          pace: "10:15/mi", date: todayISO(), source: "strava"),
+        ])
+        XCTAssertFalse(model.today.loadHistory.isEmpty)
+    }
+
+    // MARK: Training phase mutator
+
+    // Setting the phase persists it through CoachProfileStore and applies it to the
+    // dashboard immediately; clearing with nil removes it.
+    @MainActor func testSetTrainingPhasePersistsAndApplies() {
+        let d = UserDefaults(suiteName: "ModelTests.phase.\(UUID().uuidString)")!
+        let model = OtterpaceModel(today: TodayState(healthKitConnected: true, steps: 5000, goalSteps: 10000), defaults: d)
+        model.setTrainingPhase(.building)
+        XCTAssertEqual(model.today.profile?.trainingPhase, .building)
+        XCTAssertEqual(CoachProfileStore.load(d).trainingPhase, .building)
+
+        model.setTrainingPhase(nil)
+        XCTAssertNil(model.today.profile?.trainingPhase)
+    }
+
+    // Setting the phase preserves the profile's other fields (walk habits, other
+    // training) rather than clobbering them.
+    @MainActor func testSetTrainingPhasePreservesOtherProfileFields() {
+        let d = UserDefaults(suiteName: "ModelTests.phase2.\(UUID().uuidString)")!
+        var today = TodayState(healthKitConnected: true, steps: 5000, goalSteps: 10000)
+        today.profile = CoachProfile(walkVolume: .mostDays, otherTraining: [.running])
+        let model = OtterpaceModel(today: today, defaults: d)
+        model.setTrainingPhase(.recovering)
+        XCTAssertEqual(model.today.profile?.walkVolume, .mostDays)
+        XCTAssertEqual(model.today.profile?.otherTraining, [.running])
+        XCTAssertEqual(model.today.profile?.trainingPhase, .recovering)
     }
 }

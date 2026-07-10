@@ -1,0 +1,39 @@
+{
+  "name": "Ask Coach — Still Learning (Thin Data)",
+  "id": "699bd346-e4ee-4501-bc23-98f3aaa9b766",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbShowRacePrompt": false,
+      "rbConnected": true,
+      "rbAskSeedQuestion": "Am I increasing mileage too fast?",
+      "rbLongestRunMiles": 3.5,
+      "rbActiveMinutes": 22,
+      "rbLoadHistoryJSON": "[{\"weekStartISO\":\"2026-06-22\",\"miles\":9.0,\"daysRun\":2}]",
+      "rbSteps": 6100,
+      "rbDate": "2026-06-22",
+      "rbShowHistory": false,
+      "rbDistanceMiles": 2.0,
+      "rbContentSize": "",
+      "rbDaysRunThisWeek": 2,
+      "rbMinutesSinceMovement": 40,
+      "rbShowRaceEditor": false,
+      "rbPreviewMode": "",
+      "rbActiveEnergyKcal": 150,
+      "rbRestDaysThisWeek": 5,
+      "rbLoadTrend": "insufficient",
+      "rbShowSettings": false,
+      "rbCoachConnected": true,
+      "rbShowWeeklyReview": false,
+      "rbGoalSteps": 10000,
+      "rbStartTab": "coach",
+      "rbWeeklyMileage": 9.0
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/AskCoachView.swift"
+}

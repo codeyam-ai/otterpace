@@ -63,6 +63,11 @@ public enum WeeklyReviewEngine {
             if load.loadTrend == "spiking" {
                 return spikingReview(load, context)
             }
+            // Too little history to judge the trend honestly: recap the week without
+            // a confident risk verdict, and say we're still gathering the baseline.
+            if load.loadTrend == "insufficient" {
+                return gatheringReview(load, context)
+            }
             if isSparse(load) {
                 return sparseReview(load, context)
             }
@@ -209,6 +214,28 @@ public enum WeeklyReviewEngine {
             nextWeek: next,
             focusArea: focus,
             safetyFlag: true
+        )
+    }
+
+    /// Honest recap when there isn't enough history to form a baseline yet. Recaps
+    /// the week warmly but withholds a training-risk verdict rather than inventing
+    /// one — the Weekly Review face of "no coaching over bad coaching."
+    private static func gatheringReview(_ l: WeeklyLoad, _ c: TodayState) -> WeeklyReview {
+        let sessionWord = walkingFocused(c.profile) ? "sessions" : "runs"
+        let well = "You're logging real activity — \(l.daysRunThisWeek) \(sessionWord) for \(miles(l.weeklyMileage)) miles, with a \(miles(l.longestRunMiles))-mile longest. That's exactly the input I need to start coaching you well."
+        let changed = "I'm still gathering your baseline. A couple more weeks like this and I'll be able to tell a healthy build from too much, too fast with real confidence."
+        let risk = "I won't guess at your injury risk on this little history. Nothing here looks alarming. Keep runs easy and let the picture fill in."
+        let next = "Keep the rhythm going with easy, consistent movement. Grow total miles by no more than about 10% and keep one true rest day, and your trends will come into focus."
+        let focus = "Consistency this week. The more regularly you move, the sooner I can give you a real read on your training."
+        return WeeklyReview(
+            hasActivity: true,
+            buddyMood: .ready,
+            headline: "Getting to know your training",
+            wentWell: well,
+            whatChanged: changed,
+            trainingRisk: risk,
+            nextWeek: next,
+            focusArea: focus
         )
     }
 

@@ -1,6 +1,6 @@
 {
-  "name": "Onboarding — AI Coaching Connected",
-  "id": "505014a2-d208-4139-a2ae-c78ba3caab86",
+  "name": "Onboarding — Training Phase",
+  "id": "0445eddb-1209-4c85-8f08-05f762b407ba",
   "url": "/",
   "dimensions": [
     "iPhone 16"
@@ -9,8 +9,8 @@
   "deviceState": {
     "preferences": {
       "rbStartScreen": "onboarding",
-      "rbCoachConnected": true,
-      "rbOnboardingPage": 7
+      "rbCoachProfileJSON": "{\"otherTraining\":[],\"trainingPhase\":\"building\"}",
+      "rbOnboardingPage": 6
     }
   },
   "scenarioType": "application",

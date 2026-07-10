@@ -62,6 +62,40 @@ final class CoachProfileTests: XCTestCase {
         XCTAssertFalse(CoachProfile(otherTraining: [.cycling]).isEmpty)
     }
 
+    // A declared training phase alone makes the profile non-empty, so a user who
+    // only sets their phase still reaches the coach context.
+    func testTrainingPhaseMakesProfileNonEmpty() {
+        XCTAssertFalse(CoachProfile(trainingPhase: .building).isEmpty)
+        XCTAssertTrue(CoachProfile(trainingPhase: nil).isEmpty)
+    }
+
+    // The training phase survives save -> load unchanged alongside the other fields.
+    func testTrainingPhaseRoundTrip() {
+        let (d, name) = freshDefaults(); defer { d.removePersistentDomain(forName: name) }
+        let profile = CoachProfile(walkVolume: .mostDays, otherTraining: [.running],
+                                   trainingPhase: .building)
+        CoachProfileStore.save(profile, d)
+        let loaded = CoachProfileStore.load(d)
+        XCTAssertEqual(loaded, profile)
+        XCTAssertEqual(loaded.trainingPhase, .building)
+    }
+
+    // Back-compat: a profile JSON written before trainingPhase existed (no such
+    // key) decodes with trainingPhase == nil rather than failing.
+    func testDecodesLegacyJSONWithoutTrainingPhase() throws {
+        let legacy = "{\"walkVolume\":\"daily\",\"otherTraining\":[\"running\"]}"
+        let profile = try JSONDecoder().decode(CoachProfile.self, from: Data(legacy.utf8))
+        XCTAssertNil(profile.trainingPhase)
+        XCTAssertEqual(profile.walkVolume, .daily)
+    }
+
+    // The encoded payload carries the phase as its raw value for the backend coach.
+    func testEncodesTrainingPhaseRawValue() throws {
+        let data = try JSONEncoder().encode(CoachProfile(trainingPhase: .recovering))
+        let json = String(data: data, encoding: .utf8)!
+        XCTAssertTrue(json.contains("\"recovering\""))
+    }
+
     // Encoded JSON uses the enum raw values and omits skipped (nil) fields, which
     // is the shape the coach backend (api/coach.ts) reasons over.
     func testEncodesRawValuesAndOmitsNil() throws {

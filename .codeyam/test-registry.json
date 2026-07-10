@@ -183,6 +183,42 @@
       "runner": "tests"
     },
     {
+      "description": "The series is capped to maxWeeks (most recent weeks kept).",
+      "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testLoadHistoryCapsToMaxWeeks",
+      "line": 242,
+      "registeredAt": "2026-07-10T15:15:02.793924+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "daysRun counts DISTINCT run days, not run workouts, and ignores non-runs.",
+      "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testLoadHistoryDaysRunDistinct",
+      "line": 232,
+      "registeredAt": "2026-07-10T15:15:02.796360+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "No workouts yields an empty series (not shared with the coach).",
+      "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testLoadHistoryEmpty",
+      "line": 251,
+      "registeredAt": "2026-07-10T15:15:02.798566+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The series has one point per week, newest week first, with summed mileage.",
+      "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testLoadHistoryNewestFirstPerWeek",
+      "line": 219,
+      "registeredAt": "2026-07-10T15:15:02.801218+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "The model decodes a seeded rbWorkoutsJSON list into the today state.",
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
@@ -246,30 +282,57 @@
       "runner": "tests"
     },
     {
-      "description": "weeklyLoad reads as 'building' when there is activity this week but no prior-week mileage.",
-      "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
-      "format": "junit-xml",
-      "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadBuildingFromZeroBase",
-      "line": 137,
-      "registeredAt": "2026-06-26T21:09:59.173247+00:00",
-      "runner": "tests"
-    },
-    {
       "description": "weeklyLoad with no workouts is an all-rest, steady week with nothing logged.",
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadEmptyIsRestWeek",
-      "line": 143,
+      "line": 208,
       "registeredAt": "2026-06-26T21:10:05.699781+00:00",
       "runner": "tests"
     },
     {
-      "description": "weeklyLoad reads as 'recovering' when mileage pulls back versus the previous week.",
+      "description": "Activity this week with NO prior history is also \"insufficient\" — we don't know the user's baseline yet, so we abstain instead of calling it \"building\".",
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
-      "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadRecoveringTrend",
-      "line": 128,
-      "registeredAt": "2026-06-26T21:10:12.708461+00:00",
+      "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadInsufficientFromFirstWeek",
+      "line": 202,
+      "registeredAt": "2026-07-10T15:15:02.803972+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Too little history to form a baseline (one prior week) is honest \"insufficient\" rather than a guessed verdict.",
+      "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadInsufficientWithThinHistory",
+      "line": 192,
+      "registeredAt": "2026-07-10T15:15:02.806766+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The SAME down-week data early in the week (asOf Wed) is NOT called \"recovering\" — the partial week just hasn't accumulated yet (mid-week guard).",
+      "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadMidWeekGuardSuppressesRecovering",
+      "line": 180,
+      "registeredAt": "2026-07-10T15:15:02.809435+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A normal week following a deliberate CUTBACK week is NOT a false spike. The old 2-week ratio (18/12 = 1.5) tripped \"spiking\"; the multi-week baseline (18 vs ~17.3 avg) correctly reads it as steady. This is the reported bug.",
+      "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadNormalWeekAfterCutbackIsNotSpike",
+      "line": 155,
+      "registeredAt": "2026-07-10T15:15:02.811879+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A deliberate down week vs. a solid baseline reads \"recovering\" — but only once the week is mostly elapsed (asOf Sunday).",
+      "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadRecoveringWhenWeekMostlyElapsed",
+      "line": 168,
+      "registeredAt": "2026-07-10T15:15:02.814351+00:00",
       "runner": "tests"
     },
     {
@@ -282,12 +345,21 @@
       "runner": "tests"
     },
     {
-      "description": "weeklyLoad flags a big jump over the prior week as 'spiking' (the safety signal).",
+      "description": "Three prior weeks at a flat baseline, then a sudden 2x jump this week, is a GENUINE spike against the multi-week baseline.",
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
-      "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadSpikingTrend",
-      "line": 119,
-      "registeredAt": "2026-06-26T21:10:26.351096+00:00",
+      "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadSpikingVsBaseline",
+      "line": 130,
+      "registeredAt": "2026-07-10T15:15:02.816582+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A steady, progressive climb reads as \"building\", NOT \"spiking\" — the core trustworthy-coaching fix (a ~10-25% rise above the baseline is the plan working).",
+      "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadSteadyClimbIsBuilding",
+      "line": 142,
+      "registeredAt": "2026-07-10T15:15:02.818923+00:00",
       "runner": "tests"
     },
     {
@@ -435,12 +507,30 @@
       "runner": "tests"
     },
     {
+      "description": "dailyNudge in a declared, progressing build affirms the trajectory (a run-day \"on track\" nudge), not a rest nudge, and is not flagged.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testDailyNudgeBuildingPhaseAffirms",
+      "line": 279,
+      "registeredAt": "2026-07-10T15:15:02.821710+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "When the step goal is met, dailyNudge returns a celebratory, non-safety-flagged nudge (buddyMood celebrating).",
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testDailyNudgeGoalMetCelebrates",
       "line": 142,
       "registeredAt": "2026-07-01T18:01:53.472520+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "dailyNudge under thin history is an honest \"still learning\" nudge, never flagged.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testDailyNudgeInsufficientIsHonest",
+      "line": 271,
+      "registeredAt": "2026-07-10T15:15:02.823982+00:00",
       "runner": "tests"
     },
     {
@@ -480,12 +570,48 @@
       "runner": "tests"
     },
     {
+      "description": "The general \"what should I do\" answer under thin history keeps it simple and safe.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testGeneralReplyInsufficientKeepsSafe",
+      "line": 264,
+      "registeredAt": "2026-07-10T15:15:02.826325+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "An injury question is always safety-flagged, concerned, and never diagnoses.",
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testInjuryReplyIsSafetyFlagged",
       "line": 64,
       "registeredAt": "2026-06-22T23:51:14.947478+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A declared build with a modest rise affirms the build instead of advising rest — the reported bug fixed — and is not safety-flagged.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testMileageReplyBuildingPhaseAffirms",
+      "line": 231,
+      "registeredAt": "2026-07-10T15:15:02.828647+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A genuine spike overrides the declared build: caution and the safety flag win.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testMileageReplyBuildingPhaseYieldsToSpike",
+      "line": 240,
+      "registeredAt": "2026-07-10T15:15:02.831077+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "With thin history the mileage answer abstains honestly rather than guessing, and is not safety-flagged.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testMileageReplyInsufficientAbstains",
+      "line": 248,
+      "registeredAt": "2026-07-10T15:15:02.833401+00:00",
       "runner": "tests"
     },
     {
@@ -522,6 +648,15 @@
       "key": "AppCoreTests.CoachEngineTests › testRunOrRestAfterHardRunIsRecovery",
       "line": 91,
       "registeredAt": "2026-06-22T23:51:14.953655+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Run-or-rest under thin history defers to how the user feels, not a hard verdict.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testRunOrRestInsufficientDefers",
+      "line": 256,
+      "registeredAt": "2026-07-10T15:15:02.835564+00:00",
       "runner": "tests"
     },
     {
@@ -597,6 +732,15 @@
       "runner": "tests"
     },
     {
+      "description": "Back-compat: a profile JSON written before trainingPhase existed (no such key) decodes with trainingPhase == nil rather than failing.",
+      "file": "Tests/AppCoreTests/CoachProfileTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProfileTests › testDecodesLegacyJSONWithoutTrainingPhase",
+      "line": 85,
+      "registeredAt": "2026-07-10T15:15:02.838052+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "A never-stored CoachProfile loads as the empty default (walkVolume/walkTime nil, otherTraining empty).",
       "file": "Tests/AppCoreTests/CoachProfileTests.swift",
       "format": "junit-xml",
@@ -610,8 +754,17 @@
       "file": "Tests/AppCoreTests/CoachProfileTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachProfileTests › testEncodesRawValuesAndOmitsNil",
-      "line": 67,
+      "line": 101,
       "registeredAt": "2026-07-02T00:12:20.036238+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The encoded payload carries the phase as its raw value for the backend coach.",
+      "file": "Tests/AppCoreTests/CoachProfileTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProfileTests › testEncodesTrainingPhaseRawValue",
+      "line": 93,
+      "registeredAt": "2026-07-10T15:15:02.840126+00:00",
       "runner": "tests"
     },
     {
@@ -639,6 +792,24 @@
       "key": "AppCoreTests.CoachProfileTests › testPartialRoundTrip",
       "line": 36,
       "registeredAt": "2026-07-02T00:12:45.888848+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A declared training phase alone makes the profile non-empty, so a user who only sets their phase still reaches the coach context.",
+      "file": "Tests/AppCoreTests/CoachProfileTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProfileTests › testTrainingPhaseMakesProfileNonEmpty",
+      "line": 67,
+      "registeredAt": "2026-07-10T15:15:02.842260+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The training phase survives save -> load unchanged alongside the other fields.",
+      "file": "Tests/AppCoreTests/CoachProfileTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProfileTests › testTrainingPhaseRoundTrip",
+      "line": 73,
+      "registeredAt": "2026-07-10T15:15:02.844082+00:00",
       "runner": "tests"
     },
     {
@@ -927,7 +1098,7 @@
       "file": "Tests/AppCoreTests/ModelTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testConnectFlipsState",
-      "line": 129,
+      "line": 184,
       "registeredAt": "2026-06-22T19:41:43.406519+00:00",
       "runner": "tests"
     },
@@ -970,8 +1141,17 @@
       "file": "Tests/AppCoreTests/ModelTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testIngestEmptyWorkoutsLeavesWeeklyLoadNil",
-      "line": 212,
+      "line": 267,
       "registeredAt": "2026-07-07T19:46:28Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Importing Strava runs also populates the multi-week loadHistory series the coaches reason from, not just the single weekly-load flag.",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testIngestStravaWorkoutsPopulatesLoadHistory",
+      "line": 275,
+      "registeredAt": "2026-07-10T15:15:02.846883+00:00",
       "runner": "tests"
     },
     {
@@ -979,7 +1159,7 @@
       "file": "Tests/AppCoreTests/ModelTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testIngestStravaWorkoutsPopulatesWeeklyLoad",
-      "line": 194,
+      "line": 249,
       "registeredAt": "2026-07-07T19:46:28Z",
       "runner": "tests"
     },
@@ -988,6 +1168,15 @@
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testIsPresetMatchesOptions",
       "registeredAt": "2026-06-25T20:47:45Z",
+      "runner": "tests"
+    },
+    {
+      "description": "An explicit rbLoadHistoryJSON seeds the coach-facing weekly series verbatim, newest week first.",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testReadStateDecodesSeededLoadHistory",
+      "line": 127,
+      "registeredAt": "2026-07-10T15:15:02.849132+00:00",
       "runner": "tests"
     },
     {
@@ -1000,11 +1189,29 @@
       "runner": "tests"
     },
     {
+      "description": "The declared training phase seeds through rbCoachProfileJSON alongside the other fields, so it reaches the coach context from launch.",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testReadStateDecodesSeededTrainingPhase",
+      "line": 117,
+      "registeredAt": "2026-07-10T15:15:02.851415+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "With no explicit series but a seeded workout list, loadHistory is DERIVED from the workouts, so a rich multi-week scenario gets a real trajectory.",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testReadStateDerivesLoadHistoryFromWorkouts",
+      "line": 141,
+      "registeredAt": "2026-07-10T15:15:02.853950+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "With no keys seeded the reader yields the empty disconnected state with a default 10k goal.",
       "file": "Tests/AppCoreTests/ModelTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testReadStateEmptyDefaultsToDisconnected",
-      "line": 117,
+      "line": 172,
       "registeredAt": "2026-06-22T19:41:43.404808+00:00",
       "runner": "tests"
     },
@@ -1015,6 +1222,15 @@
       "key": "AppCoreTests.ModelTests › testReadStateFromFlatDefaults",
       "line": 57,
       "registeredAt": "2026-06-22T19:41:43.402746+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "With neither key seeded, loadHistory is empty (not shared with the coach).",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testReadStateLoadHistoryEmptyWhenUnseeded",
+      "line": 151,
+      "registeredAt": "2026-07-10T15:15:02.856393+00:00",
       "runner": "tests"
     },
     {
@@ -1029,6 +1245,33 @@
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testSetGoalStepsApplies",
       "registeredAt": "2026-06-25T15:49:35Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Setting the phase persists it through CoachProfileStore and applies it to the dashboard immediately; clearing with nil removes it.",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testSetTrainingPhasePersistsAndApplies",
+      "line": 289,
+      "registeredAt": "2026-07-10T15:15:02.858617+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Setting the phase preserves the profile's other fields (walk habits, other training) rather than clobbering them.",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testSetTrainingPhasePreservesOtherProfileFields",
+      "line": 302,
+      "registeredAt": "2026-07-10T15:15:02.861139+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A TodayState JSON written before loadHistory existed still decodes, with the series defaulting to empty (tolerant decode).",
+      "file": "Tests/AppCoreTests/ModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelTests › testTodayStateDecodesLegacyJSONWithoutLoadHistory",
+      "line": 159,
+      "registeredAt": "2026-07-10T15:15:02.863706+00:00",
       "runner": "tests"
     },
     {
@@ -1180,7 +1423,7 @@
       "file": "Tests/AppCoreTests/OnboardingStateTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.OnboardingStateTests › testStepCountCoversIntroPlusPersonalization",
-      "line": 58,
+      "line": 59,
       "registeredAt": "2026-07-02T00:13:12.941458+00:00",
       "runner": "tests"
     },
@@ -1577,7 +1820,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testActivityReviewsFillAllSections",
-      "line": 130,
+      "line": 156,
       "registeredAt": "2026-06-23T20:49:45.380008+00:00",
       "runner": "tests"
     },
@@ -1586,7 +1829,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testBuildingWeekIsCheeringAndUnflagged",
-      "line": 85,
+      "line": 111,
       "registeredAt": "2026-06-23T20:48:51.894104+00:00",
       "runner": "tests"
     },
@@ -1595,7 +1838,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testCrossTrainingSolidReviewAcknowledgesIt",
-      "line": 169,
+      "line": 195,
       "registeredAt": "2026-07-07T19:46:28Z",
       "runner": "tests"
     },
@@ -1604,7 +1847,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testDeterministic",
-      "line": 124,
+      "line": 150,
       "registeredAt": "2026-06-23T20:47:35.691695+00:00",
       "runner": "tests"
     },
@@ -1613,7 +1856,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testDeterministicWithProfile",
-      "line": 198,
+      "line": 224,
       "registeredAt": "2026-07-07T19:46:28Z",
       "runner": "tests"
     },
@@ -1622,8 +1865,26 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testEmptyProfileLeavesReviewUnchanged",
-      "line": 191,
+      "line": 217,
       "registeredAt": "2026-07-07T19:46:28Z",
+      "runner": "tests"
+    },
+    {
+      "description": "With too little history to judge, the review recaps the week but WITHHOLDS a confident training-risk verdict and is not safety-flagged (\"no coaching over bad coaching\"). It is distinct from the spiking/sparse/solid classifications.",
+      "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WeeklyReviewEngineTests › testInsufficientIsGatheringReview",
+      "line": 53,
+      "registeredAt": "2026-07-10T15:15:02.866144+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The gathering review still recaps the actual mileage/run count that was logged.",
+      "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WeeklyReviewEngineTests › testInsufficientRecapsLoggedActivity",
+      "line": 63,
+      "registeredAt": "2026-07-10T15:15:02.868268+00:00",
       "runner": "tests"
     },
     {
@@ -1631,7 +1892,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testNoLoadIsEmptyReview",
-      "line": 46,
+      "line": 72,
       "registeredAt": "2026-06-23T20:48:09.252984+00:00",
       "runner": "tests"
     },
@@ -1640,7 +1901,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testSparseWeekIsGentleAndUnflagged",
-      "line": 105,
+      "line": 131,
       "registeredAt": "2026-06-23T20:49:22.451691+00:00",
       "runner": "tests"
     },
@@ -1649,7 +1910,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testSpikingIsSafetyFlagged",
-      "line": 65,
+      "line": 91,
       "registeredAt": "2026-06-23T20:48:30.585137+00:00",
       "runner": "tests"
     },
@@ -1658,7 +1919,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testSpikingSafetyCopyUnchangedRegardlessOfProfile",
-      "line": 182,
+      "line": 208,
       "registeredAt": "2026-07-07T19:46:28Z",
       "runner": "tests"
     },
@@ -1667,7 +1928,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testSpikingWinsOverHighRunCount",
-      "line": 74,
+      "line": 100,
       "registeredAt": "2026-06-23T20:48:41.279584+00:00",
       "runner": "tests"
     },
@@ -1676,7 +1937,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testSteadyWeekIsUnflagged",
-      "line": 95,
+      "line": 121,
       "registeredAt": "2026-06-23T20:49:03.876422+00:00",
       "runner": "tests"
     },
@@ -1685,7 +1946,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testWalkingFocusedSolidReviewReframesCopy",
-      "line": 146,
+      "line": 172,
       "registeredAt": "2026-07-07T19:46:28Z",
       "runner": "tests"
     },
@@ -1694,7 +1955,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testWalkingFocusedSparseReviewReframesCopy",
-      "line": 159,
+      "line": 185,
       "registeredAt": "2026-07-07T19:46:28Z",
       "runner": "tests"
     },
@@ -1703,7 +1964,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testZeroActivityLoadIsEmptyReview",
-      "line": 55,
+      "line": 81,
       "registeredAt": "2026-06-23T20:48:20.024772+00:00",
       "runner": "tests"
     },
@@ -1712,7 +1973,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testZeroRunsWithMileageIsSparse",
-      "line": 113,
+      "line": 139,
       "registeredAt": "2026-06-23T20:49:34.688711+00:00",
       "runner": "tests"
     }

@@ -1,0 +1,40 @@
+{
+  "name": "Ask Coach — Building On Track",
+  "id": "4c54a119-a068-4335-bb9d-80567b604753",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbLoadTrend": "building",
+      "rbLongestRunMiles": 8.0,
+      "rbMinutesSinceMovement": 25,
+      "rbShowRaceEditor": false,
+      "rbShowRacePrompt": false,
+      "rbConnected": true,
+      "rbRestDaysThisWeek": 2,
+      "rbStartTab": "coach",
+      "rbPreviewMode": "",
+      "rbAskSeedQuestion": "Am I increasing mileage too fast?",
+      "rbGoalSteps": 10000,
+      "rbDistanceMiles": 3.1,
+      "rbDaysRunThisWeek": 4,
+      "rbActiveMinutes": 38,
+      "rbSteps": 8200,
+      "rbDate": "2026-06-22",
+      "rbShowWeeklyReview": false,
+      "rbActiveEnergyKcal": 240,
+      "rbShowHistory": false,
+      "rbLoadHistoryJSON": "[{\"weekStartISO\":\"2026-06-22\",\"miles\":22.0,\"daysRun\":4},{\"weekStartISO\":\"2026-06-15\",\"miles\":20.0,\"daysRun\":4},{\"weekStartISO\":\"2026-06-08\",\"miles\":18.5,\"daysRun\":4},{\"weekStartISO\":\"2026-06-01\",\"miles\":17.0,\"daysRun\":3},{\"weekStartISO\":\"2026-05-25\",\"miles\":15.5,\"daysRun\":3}]",
+      "rbWeeklyMileage": 22.0,
+      "rbShowSettings": false,
+      "rbCoachConnected": true,
+      "rbCoachProfileJSON": "{\"walkVolume\":\"mostDays\",\"walkTime\":\"mornings\",\"otherTraining\":[\"running\"],\"trainingPhase\":\"building\"}",
+      "rbContentSize": ""
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/AskCoachView.swift"
+}

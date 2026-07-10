@@ -59,24 +59,47 @@ public enum TrainingKind: String, Codable, CaseIterable, Equatable {
     }
 }
 
+/// The user's current, self-declared training phase — optional ground truth the
+/// coach respects. A deliberate build is invisible in week-to-week numbers alone
+/// (a healthy ramp and an over-reach look identical), so an explicit phase lets
+/// the coach tell an intentional progression from a red flag. `nil` => not shared,
+/// and the coach falls back to inferring from the data. It NEVER overrides the
+/// hard safety rules or a genuine load spike.
+public enum TrainingPhase: String, Codable, CaseIterable, Equatable {
+    case base, building, maintaining, recovering
+
+    public var label: String {
+        switch self {
+        case .base:        return "base building"
+        case .building:    return "building"
+        case .maintaining: return "maintaining"
+        case .recovering:  return "recovering"
+        }
+    }
+}
+
 public struct CoachProfile: Codable, Equatable {
     public var walkVolume: WalkVolume?     // nil => not shared
     public var walkTime: WalkTime?         // nil => not shared
     public var otherTraining: [TrainingKind] // empty => none / not shared
+    public var trainingPhase: TrainingPhase? // nil => not shared
 
     public init(walkVolume: WalkVolume? = nil,
                 walkTime: WalkTime? = nil,
-                otherTraining: [TrainingKind] = []) {
+                otherTraining: [TrainingKind] = [],
+                trainingPhase: TrainingPhase? = nil) {
         self.walkVolume = walkVolume
         self.walkTime = walkTime
         self.otherTraining = otherTraining
+        self.trainingPhase = trainingPhase
     }
 
     /// True when the user shared nothing — used to keep an all-skipped profile
     /// out of the coach context (so existing scenarios and captures are
-    /// unaffected).
+    /// unaffected). A stored profile written before `trainingPhase` existed
+    /// decodes with `trainingPhase == nil`, so this stays back-compatible.
     public var isEmpty: Bool {
-        walkVolume == nil && walkTime == nil && otherTraining.isEmpty
+        walkVolume == nil && walkTime == nil && otherTraining.isEmpty && trainingPhase == nil
     }
 }
 

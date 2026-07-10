@@ -114,12 +114,30 @@ public enum CoachEngine {
                 body: "You cleared \(formatted(c.goalSteps)) steps today. Anything more is a bonus, so a gentle walk to loosen up is plenty.",
                 recommendationType: "celebrate")
         }
+        // Not enough history to read the load yet — be honest and keep it safe
+        // rather than emitting a confident verdict. "No coaching over bad coaching."
+        if historyThin(c) {
+            return CoachRecommendation(
+                buddyMood: "ready",
+                headline: "Still learning your week",
+                body: "I'm still gathering enough history to read your training trend, so no strong verdict today. Easy movement is always a safe call, so a relaxed walk or gentle jog fits nicely. A couple more weeks and I'll have a real read.",
+                recommendationType: "walk")
+        }
         // A race on the calendar frames the day.
         if let clause = raceClause(c, asOf: day) {
             return CoachRecommendation(
                 buddyMood: "ready",
                 headline: "Eyes on race day",
                 body: clause,
+                recommendationType: "run")
+        }
+        // A declared build that's progressing (not a true spike, caught above) is
+        // the plan working — affirm it instead of nudging toward rest.
+        if isBuilding(c) && (trend(c) == "building" || trend(c) == "steady") {
+            return CoachRecommendation(
+                buddyMood: "ready",
+                headline: "Your build is on track",
+                body: "You're building, and it's climbing the right way. Keep today's movement easy and consistent, that steady progression is exactly how the fitness comes without the injury tax.",
                 recommendationType: "run")
         }
         // Otherwise, a gentle nudge toward the step goal. For a walking-focused
@@ -183,6 +201,24 @@ public enum CoachEngine {
         return false
     }
 
+    // MARK: Intent + trend awareness
+    //
+    // The declared training phase and the honest "insufficient history" trend let
+    // the offline coach mirror the LLM: affirm an intentional build instead of
+    // reflexively advising rest, and abstain plainly when the data is too thin to
+    // judge. A TRUE spike (new baseline classifier) or a recent hard effort always
+    // wins over the build framing — real safety signals are unchanged.
+
+    /// The current weekly-load trend, or "" when no weekly load is present.
+    private static func trend(_ c: TodayState) -> String { c.weeklyLoad?.loadTrend ?? "" }
+
+    /// True when the user declared they're in a build. Ground truth the numbers
+    /// alone can't supply.
+    private static func isBuilding(_ c: TodayState) -> Bool { c.profile?.trainingPhase == .building }
+
+    /// True when there isn't enough history to judge the load trend honestly.
+    private static func historyThin(_ c: TodayState) -> Bool { trend(c) == "insufficient" }
+
     // MARK: Intent replies
 
     private static func injuryReply(_ c: TodayState) -> CoachReply {
@@ -191,9 +227,21 @@ public enum CoachEngine {
     }
 
     private static func mileageReply(_ c: TodayState) -> CoachReply {
+        // A genuine spike (baseline classifier) still wins, phase or not.
         if let l = c.weeklyLoad, l.loadTrend == "spiking" {
             let text = "Your weekly load is climbing fast, about \(miles(l.weeklyMileage)) mi this week. That's where injury risk creeps in, so let's hold steady or pull back about 10% next week and keep most runs easy. How's recovery feeling right now?"
             return CoachReply(intent: .mileageTooFast, text: text, mood: .concerned, safetyFlag: true)
+        }
+        // Not enough weeks logged to judge honestly. Say so instead of guessing.
+        if historyThin(c) {
+            let text = "Honest answer: I don't have enough weeks logged yet to tell if you're ramping too fast. I'm still learning your normal week. Keep recent runs easy and add mileage gradually, and once we've got a few weeks in I'll flag it clearly if anything climbs too quickly. How many days a week are you running right now?"
+            return CoachReply(intent: .mileageTooFast, text: text, mood: .ready)
+        }
+        // A declared build with a modest, non-spiking rise is the plan working, not
+        // a warning. Affirm it rather than nudging toward rest.
+        if isBuilding(c) {
+            let text = "You're in a build, and the numbers back it up. A steady climb of around 10% a week is the plan working, not a red flag. Keep most runs easy and let only the hard days be hard, and this is exactly how fitness comes without the injury tax. How are the legs handling the load?"
+            return CoachReply(intent: .mileageTooFast, text: text, mood: .ready)
         }
         let text = "Good instinct to check. Keep weekly mileage growth under about 10%, with an easier week every few weeks. You're in a reasonable range right now, so keep most runs conversational and the fitness builds without the injury tax. What's the goal for this block?"
         return CoachReply(intent: .mileageTooFast, text: text, mood: .ready)
@@ -215,6 +263,16 @@ public enum CoachEngine {
             let text = "Take today easy. You put in a solid effort recently, so an easy 20 to 40 minute walk or some light mobility will help that work settle into fitness. How do the legs feel today?"
             return CoachReply(intent: .runOrRest, text: text, mood: .recovery)
         }
+        // Thin history: don't hand out a confident yes/no. Defer to how they feel.
+        if historyThin(c) {
+            let text = "I'm still learning your training pattern, so I won't give you a hard yes or no. If you slept well and feel good, an easy run is fine. If you're at all unsure, a brisk walk is never the wrong call. How are the legs today?"
+            return CoachReply(intent: .runOrRest, text: text, mood: .ready)
+        }
+        // In a build, today's easy run fits the plan — frame it that way.
+        if isBuilding(c) {
+            let text = "Since you're building, today's easy run fits the plan. Keep it conversational and controlled, not a test of fitness. If the legs feel heavy or sleep was short, swap in a brisk walk with no guilt. How are they feeling?"
+            return CoachReply(intent: .runOrRest, text: text, mood: .ready)
+        }
         let text = "An easy run is on the table today. Keep it conversational, nothing heroic, and if your legs feel heavy or sleep was rough a brisk walk is a perfectly good substitute. How do the legs feel?"
         return CoachReply(intent: .runOrRest, text: text, mood: .ready)
     }
@@ -233,10 +291,20 @@ public enum CoachEngine {
             let text = "After that recent effort, today is an easy movement day. Go for 30 to 45 minutes of walking and some light mobility. That's how hard work turns into fitness instead of soreness. How are you feeling after it?"
             return CoachReply(intent: .general, text: text, mood: .recovery)
         }
+        // Thin history: keep it simple and safe rather than inventing a verdict.
+        if historyThin(c) {
+            let text = "We're still early in your data, so I'll keep it simple and safe. Get some easy movement in today, a relaxed walk or gentle jog, nothing that leaves you wiped. Give it a couple weeks and I'll have a real read on your trends. What feels doable today?"
+            return CoachReply(intent: .general, text: text, mood: .ready)
+        }
         // A fresh user with a race on the calendar gets race-phase framing as their
         // "what should I do today" answer. Safety (recovery, above) still wins.
         if let clause = raceClause(c, asOf: today) {
             return CoachReply(intent: .general, text: clause, mood: .ready)
+        }
+        // In a declared build with no warning signs, affirm the trajectory.
+        if isBuilding(c) {
+            let text = "You're building, and it's going the right way. Today is about easy, consistent movement that supports the work, a relaxed walk or easy run with something left in the tank. Steady beats heroic every time. What are you leaning toward today?"
+            return CoachReply(intent: .general, text: text, mood: .ready)
         }
         let remaining = max(0, c.goalSteps - c.steps)
         if remaining > 0 {

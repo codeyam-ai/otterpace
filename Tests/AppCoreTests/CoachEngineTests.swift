@@ -196,4 +196,90 @@ final class CoachEngineTests: XCTestCase {
         let n = CoachEngine.dailyNudge(for: withRunning)
         XCTAssertFalse(n.body.lowercased().contains("walking is your training"))
     }
+
+    // MARK: intent-awareness + honest abstention (trustworthy coaching)
+
+    // A declared build with a modest, non-spiking rise. No hard run and no spike,
+    // so the phase-affirming branch is reached.
+    private func buildingState() -> TodayState {
+        var s = TodayState(healthKitConnected: true, steps: 7000, goalSteps: 10000)
+        s.weeklyLoad = WeeklyLoad(weeklyMileage: 22, daysRunThisWeek: 4, longestRunMiles: 8,
+                                  restDaysThisWeek: 2, loadTrend: "building")
+        s.profile = CoachProfile(trainingPhase: .building)
+        return s
+    }
+
+    // Too little history to judge: the honest "insufficient" trend, no hard run.
+    private func insufficientState() -> TodayState {
+        var s = TodayState(healthKitConnected: true, steps: 6000, goalSteps: 10000)
+        s.weeklyLoad = WeeklyLoad(weeklyMileage: 9, daysRunThisWeek: 2, longestRunMiles: 3.5,
+                                  restDaysThisWeek: 5, loadTrend: "insufficient")
+        return s
+    }
+
+    // A declared build that is ALSO a genuine spike — safety must still win.
+    private func buildingButSpikingState() -> TodayState {
+        var s = TodayState(healthKitConnected: true, steps: 6000, goalSteps: 10000)
+        s.weeklyLoad = WeeklyLoad(weeklyMileage: 34, daysRunThisWeek: 5, longestRunMiles: 12,
+                                  restDaysThisWeek: 0, loadTrend: "spiking")
+        s.profile = CoachProfile(trainingPhase: .building)
+        return s
+    }
+
+    // A declared build with a modest rise affirms the build instead of advising
+    // rest — the reported bug fixed — and is not safety-flagged.
+    func testMileageReplyBuildingPhaseAffirms() {
+        let r = CoachEngine.reply(to: "am I ramping too fast?", context: buildingState())
+        XCTAssertEqual(r.intent, .mileageTooFast)
+        XCTAssertFalse(r.safetyFlag)
+        XCTAssertEqual(r.mood, .ready)
+        XCTAssertTrue(r.text.lowercased().contains("build"))
+    }
+
+    // A genuine spike overrides the declared build: caution and the safety flag win.
+    func testMileageReplyBuildingPhaseYieldsToSpike() {
+        let r = CoachEngine.reply(to: "am I ramping too fast?", context: buildingButSpikingState())
+        XCTAssertTrue(r.safetyFlag)
+        XCTAssertEqual(r.mood, .concerned)
+    }
+
+    // With thin history the mileage answer abstains honestly rather than guessing,
+    // and is not safety-flagged.
+    func testMileageReplyInsufficientAbstains() {
+        let r = CoachEngine.reply(to: "am I ramping too fast?", context: insufficientState())
+        XCTAssertEqual(r.intent, .mileageTooFast)
+        XCTAssertFalse(r.safetyFlag)
+        XCTAssertTrue(r.text.lowercased().contains("enough"))
+    }
+
+    // Run-or-rest under thin history defers to how the user feels, not a hard verdict.
+    func testRunOrRestInsufficientDefers() {
+        let r = CoachEngine.reply(to: "should I run or rest?", context: insufficientState())
+        XCTAssertEqual(r.intent, .runOrRest)
+        XCTAssertEqual(r.mood, .ready)
+        XCTAssertTrue(r.text.lowercased().contains("still learning"))
+    }
+
+    // The general "what should I do" answer under thin history keeps it simple and safe.
+    func testGeneralReplyInsufficientKeepsSafe() {
+        let r = CoachEngine.reply(to: "what should I do today?", context: insufficientState())
+        XCTAssertEqual(r.intent, .general)
+        XCTAssertEqual(r.mood, .ready)
+    }
+
+    // dailyNudge under thin history is an honest "still learning" nudge, never flagged.
+    func testDailyNudgeInsufficientIsHonest() {
+        let n = CoachEngine.dailyNudge(for: insufficientState())
+        XCTAssertFalse(n.safetyFlag)
+        XCTAssertTrue(n.headline.lowercased().contains("still learning"))
+    }
+
+    // dailyNudge in a declared, progressing build affirms the trajectory (a run-day
+    // "on track" nudge), not a rest nudge, and is not flagged.
+    func testDailyNudgeBuildingPhaseAffirms() {
+        let n = CoachEngine.dailyNudge(for: buildingState())
+        XCTAssertEqual(n.recommendationType, "run")
+        XCTAssertFalse(n.safetyFlag)
+        XCTAssertTrue(n.headline.lowercased().contains("build"))
+    }
 }

@@ -208,6 +208,40 @@ describe("coach handler", () => {
     expect(system).toContain("Personalization");
   });
 
+  // The multi-week load series and the declared training phase ride inside
+  // `context` (TodayState) and reach the model, and the rewritten system prompt
+  // teaches the model to reason from the trajectory, respect the phase, and
+  // abstain honestly on thin data (the trustworthy-coaching change).
+  it("passes loadHistory and trainingPhase to the model and teaches trajectory reasoning", async () => {
+    createMock.mockResolvedValue(textReply(JSON.stringify({ text: "ok", mood: "ready", safetyFlag: false })));
+    const context = {
+      steps: 8200,
+      goalSteps: 10000,
+      weeklyLoad: { loadTrend: "building" },
+      loadHistory: [
+        { weekStartISO: "2026-06-22", miles: 22, daysRun: 4 },
+        { weekStartISO: "2026-06-15", miles: 20, daysRun: 4 },
+      ],
+      profile: { otherTraining: [], trainingPhase: "building" },
+    };
+    const { res, done } = call({
+      method: "POST",
+      headers: { "x-anthropic-key": "sk-ant-xyz" },
+      body: { question: "am I ramping too fast?", context },
+    });
+    await done;
+    expect(res.statusCode).toBe(200);
+    const sentContent = createMock.mock.calls[0][0].messages[0].content as string;
+    // The whole TodayState (series + phase) is serialized into the user turn.
+    expect(sentContent).toContain("loadHistory");
+    expect(sentContent).toContain("trainingPhase");
+    // The system prompt reasons from the trajectory, respects the phase, and abstains.
+    const system = createMock.mock.calls[0][0].system as string;
+    expect(system).toContain("Load trajectory");
+    expect(system).toContain("Training phase");
+    expect(system).toMatch(/no coaching over bad coaching/i);
+  });
+
   // Behavior is unchanged when no profile is present — the call still succeeds and
   // the prompt simply carries no profile fields.
   it("works unchanged when the context has no profile", async () => {

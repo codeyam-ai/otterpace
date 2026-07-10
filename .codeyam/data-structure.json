@@ -42,7 +42,7 @@
       { "name": "daysRunThisWeek", "type": "number", "required": true },
       { "name": "longestRunMiles", "type": "number", "required": true },
       { "name": "restDaysThisWeek", "type": "number", "required": true },
-      { "name": "loadTrend", "type": "string", "required": true, "description": "building | steady | spiking | recovering" }
+      { "name": "loadTrend", "type": "string", "required": true, "description": "building | steady | spiking | recovering | insufficient. Classified against a trailing multi-week baseline (acute-vs-chronic), not a 2-week ratio: 'spiking' means a genuine deviation above the recent baseline; 'insufficient' means too little history (< ~2-3 prior weeks) to judge, so coaching abstains instead of guessing." }
     ]
   },
   {
@@ -89,7 +89,8 @@
     "fields": [
       { "name": "walkVolume", "type": "string", "required": false, "description": "How much the user usually walks: rarely | someDays | mostDays | daily; nil => skipped" },
       { "name": "walkTime", "type": "string", "required": false, "description": "When the user usually walks: mornings | midday | evenings | varies; nil => skipped" },
-      { "name": "otherTraining", "type": "json", "required": false, "description": "Array of other training the user does: running | strength | cycling | mobility | sports; empty/absent => none" }
+      { "name": "otherTraining", "type": "json", "required": false, "description": "Array of other training the user does: running | strength | cycling | mobility | sports; empty/absent => none" },
+      { "name": "trainingPhase", "type": "string", "required": false, "description": "User-declared training phase the coach respects as ground truth: base | building | maintaining | recovering; nil => not shared (coach falls back to data inference). Editable in Settings and onboarding; a declared 'building' phase tells the coach a modest progressive rise is intentional, not a red flag." }
     ]
   },
   {

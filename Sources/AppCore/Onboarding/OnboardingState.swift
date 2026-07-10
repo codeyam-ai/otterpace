@@ -16,8 +16,9 @@ public enum OnboardingState {
     public static let introPageCount = 3
 
     /// Personalization steps that follow the intro carousel: set goal, walking
-    /// habits, other training, add AI coaching. Each is individually skippable.
-    public static let personalizationStepCount = 4
+    /// habits, other training, training phase, add AI coaching. Each is
+    /// individually skippable.
+    public static let personalizationStepCount = 5
 
     /// Total steps in the personalized onboarding flow (intro pages +
     /// personalization steps). `startPage` clamps into `0..<stepCount` so a

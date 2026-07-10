@@ -75,6 +75,8 @@ public final class HealthKitDataSource: HealthDataSource {
         let latest = history.first(where: { $0.type == "run" }) ?? history.first
         // Weekly Load / Activity History derive from the same workout list.
         let load = history.isEmpty ? nil : ActivityHistory.weeklyLoad(from: history, asOf: now)
+        // The multi-week series the coaches reason from (empty when no history).
+        let loadHistory = history.isEmpty ? [] : ActivityHistory.loadHistory(from: history)
 
         return TodayState(
             healthKitConnected: true,
@@ -87,7 +89,8 @@ public final class HealthKitDataSource: HealthDataSource {
             minutesSinceLastMovement: 0,
             latestWorkout: latest,
             weeklyLoad: load,
-            workouts: history
+            workouts: history,
+            loadHistory: loadHistory
         )
     }
 

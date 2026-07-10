@@ -29,6 +29,10 @@ public struct SettingsView: View {
     @State private var coachConnected = false
     @State private var coachKeyDraft = ""
 
+    // Declared training phase (optional) — ground truth the coach respects. Seeded
+    // from the current profile so a scenario/replay reflects the stored choice.
+    @State private var trainingPhase: TrainingPhase?
+
     // Local movement reminders.
     private let reminderScheduler: MovementReminderScheduling = MovementReminderScheduler()
     private let pushRegistration = PushRegistrationService()
@@ -96,6 +100,7 @@ public struct SettingsView: View {
                             healthCard
                             if strava.isConfigured { stravaCard }
                             coachCard
+                            trainingCard.id("training")
                             racesCard.id("races")
                             remindersCard.id("reminders")
                             goalCard.id("goal")
@@ -120,6 +125,7 @@ public struct SettingsView: View {
         }
         .onAppear {
             coachConnected = coachKeys.isConnected
+            trainingPhase = model.today.profile?.trainingPhase
             reminders = ReminderSettings.load()
             consent.applySeededPreviewIfPresent()
             settingsSyncOn = consent.settingsSyncEnabled
@@ -452,6 +458,58 @@ public struct SettingsView: View {
                 }
             }
         }
+    }
+
+    // MARK: Training phase (optional, feeds the coach as declared intent)
+
+    // The phases the user can pick, plus a leading "Not set". Order and copy follow
+    // the onboarding step so the two surfaces read the same.
+    private static let phaseOptions: [(phase: TrainingPhase?, title: String, detail: String)] = [
+        (nil, "Not set", "Let Buddy read your trend from the data"),
+        (.base, "Base", "Easy, steady mileage, laying a foundation"),
+        (.building, "Building", "Progressively adding mileage toward a goal"),
+        (.maintaining, "Maintaining", "Holding steady fitness, no big changes"),
+        (.recovering, "Recovering", "A deliberate down block to absorb the work"),
+    ]
+
+    @ViewBuilder private var trainingCard: some View {
+        card("Training phase") {
+            Text("Tell Buddy where you are in your training so coaching matches your intent. A build is meant to climb; a recovery block is meant to ease off. Leave it unset and Buddy reads your trend from the data.")
+                .font(Typography.callout).foregroundColor(Palette.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            VStack(spacing: 0) {
+                ForEach(Array(Self.phaseOptions.enumerated()), id: \.offset) { idx, option in
+                    if idx > 0 { Divider().opacity(0.25) }
+                    phaseRow(option.phase, title: option.title, detail: option.detail)
+                }
+            }
+        }
+    }
+
+    private func phaseRow(_ phase: TrainingPhase?, title: String, detail: String) -> some View {
+        let selected = trainingPhase == phase
+        return Button {
+            trainingPhase = phase
+            model.setTrainingPhase(phase)
+            Analytics.shared.capture("training_phase_set", ["phase": phase?.rawValue ?? "none"])
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(selected ? Palette.brand : Palette.subtle).frame(width: 24)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(Typography.body).foregroundColor(Palette.ink)
+                    Text(detail).font(Typography.caption).foregroundColor(Palette.subtle)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+            }
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(selected ? [.isSelected] : [])
+        .accessibilityLabel("Training phase: \(title)")
     }
 
     // MARK: Races (optional, feed the coach)

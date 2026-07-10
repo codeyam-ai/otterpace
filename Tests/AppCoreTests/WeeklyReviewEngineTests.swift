@@ -40,6 +40,32 @@ final class WeeklyReviewEngineTests: XCTestCase {
                    restDaysThisWeek: 5, loadTrend: "recovering")
     }
 
+    private func insufficientLoad() -> WeeklyLoad {
+        WeeklyLoad(weeklyMileage: 12, daysRunThisWeek: 3, longestRunMiles: 4.5,
+                   restDaysThisWeek: 4, loadTrend: "insufficient")
+    }
+
+    // MARK: Insufficient — honest "still gathering baseline"
+
+    // With too little history to judge, the review recaps the week but WITHHOLDS a
+    // confident training-risk verdict and is not safety-flagged ("no coaching over
+    // bad coaching"). It is distinct from the spiking/sparse/solid classifications.
+    func testInsufficientIsGatheringReview() {
+        let r = WeeklyReviewEngine.generate(from: state(insufficientLoad()))
+        XCTAssertTrue(r.hasActivity)
+        XCTAssertFalse(r.safetyFlag)
+        XCTAssertEqual(r.buddyMood, .ready)
+        XCTAssertTrue(r.whatChanged.lowercased().contains("baseline"))
+        XCTAssertFalse(r.trainingRisk.lowercased().contains("clinician"))
+    }
+
+    // The gathering review still recaps the actual mileage/run count that was logged.
+    func testInsufficientRecapsLoggedActivity() {
+        let r = WeeklyReviewEngine.generate(from: state(insufficientLoad()))
+        XCTAssertTrue(r.wentWell.contains("12"))
+        XCTAssertTrue(r.wentWell.contains("3"))
+    }
+
     // MARK: Empty
 
     // With no weekly load at all, the review is the encouraging first-week prompt.
