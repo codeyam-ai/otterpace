@@ -21,11 +21,22 @@ final class CoachEngineTests: XCTestCase {
 
     // MARK: classify
 
-    // Pain/injury wording routes to the injury intent regardless of other words.
+    // Genuine pain/injury wording routes to the injury intent regardless of other
+    // words. Mild soreness is handled separately (see testClassifySorenessVsPain).
     func testClassifyInjuryWins() {
         XCTAssertEqual(CoachIntent.classify("My knee hurts after my run"), .injuryPain)
-        XCTAssertEqual(CoachIntent.classify("should I run? my shin is sore"), .injuryPain)
+        XCTAssertEqual(CoachIntent.classify("sharp pain in my shin"), .injuryPain)
         XCTAssertEqual(CoachIntent.classify("I tweaked my ankle"), .injuryPain)
+    }
+
+    // Ordinary post-run soreness is normal training feedback, split out from real
+    // pain: "sore/tight/stiff" routes to the calm soreness intent, while sharp or
+    // worsening pain still routes to the full injury lockdown.
+    func testClassifySorenessVsPain() {
+        XCTAssertEqual(CoachIntent.classify("my legs are a little sore after Sunday's run"), .postRunSoreness)
+        XCTAssertEqual(CoachIntent.classify("calves feel tight today"), .postRunSoreness)
+        XCTAssertEqual(CoachIntent.classify("my shin is sore"), .postRunSoreness)
+        XCTAssertEqual(CoachIntent.classify("sharp pain in my knee that's getting worse"), .injuryPain)
     }
 
     // Mileage-ramp wording routes to the mileage intent.
@@ -68,6 +79,25 @@ final class CoachEngineTests: XCTestCase {
         XCTAssertEqual(r.mood, .concerned)
         XCTAssertTrue(r.text.lowercased().contains("clinician"))
         XCTAssertFalse(r.text.lowercased().contains("diagnos") && !r.text.lowercased().contains("can't"))
+    }
+
+    // Mild post-run soreness gets calm, normal-training reassurance: no safety
+    // flag and not the concerned mood (the "too much safety mode" fix).
+    func testSorenessReplyIsCalmNotFlagged() {
+        let r = CoachEngine.reply(to: "my legs are a little sore after my run", context: freshState())
+        XCTAssertEqual(r.intent, .postRunSoreness)
+        XCTAssertFalse(r.safetyFlag)
+        XCTAssertNotEqual(r.mood, .concerned)
+        XCTAssertTrue(r.text.lowercased().contains("normal"))
+    }
+
+    // Genuine, worsening pain still triggers the full clinician-caution lockdown.
+    func testRealPainStillLocksDown() {
+        let r = CoachEngine.reply(to: "sharp pain in my knee, getting worse", context: freshState())
+        XCTAssertEqual(r.intent, .injuryPain)
+        XCTAssertTrue(r.safetyFlag)
+        XCTAssertEqual(r.mood, .concerned)
+        XCTAssertTrue(r.text.lowercased().contains("clinician"))
     }
 
     // A spiking weekly load makes the mileage answer cautionary and safety-flagged.
@@ -129,12 +159,22 @@ final class CoachEngineTests: XCTestCase {
 
     // MARK: dailyNudge — the computed Today-dashboard nudge (no key required)
 
-    // A recent hard run with no weekly-load spike, so the recovery branch is
-    // reached without the spiking-load caution short-circuiting it first.
+    // A recent GENUINELY hard run (a long effort) with no weekly-load spike, so
+    // the recovery branch is reached without the spiking-load caution
+    // short-circuiting it first. Distance clears the raised hard-effort bar.
     private func recentHardRunState() -> TodayState {
         var s = TodayState(healthKitConnected: true, steps: 5200, goalSteps: 10000)
-        s.latestWorkout = LatestWorkout(type: "run", distanceMiles: 6.0, durationMinutes: 55,
+        s.latestWorkout = LatestWorkout(type: "run", distanceMiles: 10.5, durationMinutes: 95,
                                         pace: "9:10/mi", date: "2026-06-21", source: "healthkit")
+        return s
+    }
+
+    // An easy mid-distance run with no spike. Under the raised hard-effort bar
+    // this is NOT "hard", so it must not force a recovery day.
+    private func easyFiveMilerState() -> TodayState {
+        var s = TodayState(healthKitConnected: true, steps: 6000, goalSteps: 10000)
+        s.latestWorkout = LatestWorkout(type: "run", distanceMiles: 5.0, durationMinutes: 52,
+                                        pace: "10:20/mi", date: "2026-06-21", source: "healthkit")
         return s
     }
 
@@ -281,5 +321,38 @@ final class CoachEngineTests: XCTestCase {
         XCTAssertEqual(n.recommendationType, "run")
         XCTAssertFalse(n.safetyFlag)
         XCTAssertTrue(n.headline.lowercased().contains("build"))
+    }
+
+    // MARK: raised hard-run bar + turn-aware check-in (conversational coaching)
+
+    // A routine easy 5-miler is no longer treated as a hard effort, so the general
+    // answer stays go-ahead coaching instead of a forced recovery day.
+    func testEasyFiveMilerIsNotHard() {
+        let r = CoachEngine.reply(to: "what should I do today?", context: easyFiveMilerState())
+        XCTAssertEqual(r.intent, .general)
+        XCTAssertNotEqual(r.mood, .recovery)
+    }
+
+    // A genuinely hard (long) run with no spike still steers to recovery, so the
+    // guardrail is dialed back, not removed.
+    func testGenuinelyHardRunStillRecovers() {
+        let r = CoachEngine.reply(to: "what should I do today?", context: recentHardRunState())
+        XCTAssertEqual(r.intent, .general)
+        XCTAssertEqual(r.mood, .recovery)
+    }
+
+    // The closing check-in question rotates across turns: a follow-up where the
+    // coach already asked its first check-in must not repeat that same question.
+    func testCheckInRotatesAcrossTurns() {
+        let fresh = freshState()
+        let first = CoachEngine.reply(to: "should I run or rest?", context: fresh)
+        XCTAssertTrue(first.text.contains("How are the legs feeling?"))
+
+        let history = [
+            CoachTurn(role: .user, text: "should I run or rest?"),
+            CoachTurn(role: .coach, text: first.text),
+        ]
+        let second = CoachEngine.reply(to: "and what about tomorrow?", context: fresh, history: history)
+        XCTAssertFalse(second.text.contains("How are the legs feeling?"))
     }
 }

@@ -189,7 +189,7 @@
     }
   },
   {
-    "description": "Buddy mock AI coach. Given a free-text question and the days TodayState it routes through CoachIntent and builds a curated, context-aware, safety-aware CoachReply. Pure and deterministic. A recent hard run or a genuine load spike still tilts every recommendation toward recovery and carries the safety flag. It also respects the declared CoachProfile trainingPhase, affirming an intentional build instead of advising rest, and abstains honestly when the load trend is insufficient rather than inventing a confident verdict. Real safety signals always win over the build framing.",
+    "description": "Buddy mock AI coach. Given a free-text question, the current TodayState, and the recent conversation history, it routes through CoachIntent and builds a curated, context-aware, safety-aware CoachReply. Pure and deterministic. Genuine safety signals still win: a genuinely hard run or a true load spike tilts recovery-ward with the safety flag, and sharp or worsening pain triggers the clinician-caution lockdown. But it trusts the athlete by default: ordinary post-run soreness gets calm reassurance without a flag, a routine easy run is no longer treated as hard, and a declared build is affirmed rather than rested. It threads conversation history to vary and de-repeat the closing check-in question, and abstains honestly when the load trend is insufficient.",
     "filePath": "Sources/AppCore/CoachEngine.swift",
     "name": "CoachEngine",
     "testFile": "Tests/AppCoreTests/CoachEngineTests.swift"
@@ -213,6 +213,13 @@
     "filePath": "Sources/AppCore/Onboarding/CoachProfile.swift",
     "name": "CoachProfileStore",
     "testFile": "Tests/AppCoreTests/CoachProfileTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "A single prior conversation turn threaded back to the coach, carrying only role and text. Lets both the remote LLM coach and the offline CoachEngine build on the exchange instead of restarting each message, which is what stops the chat from repeating the same check-in question.",
+    "filePath": "Sources/AppCore/CoachEngine.swift",
+    "name": "CoachTurn",
+    "testFile": "Tests/AppCoreTests/CoachEngineTests.swift"
   },
   {
     "description": "The day-one empty state shown before Apple Health is connected: Buddy waving, a warm explainer, the connect call-to-action, and a privacy reassurance.",
@@ -872,10 +879,10 @@
     "testFile": "test/api/account-handlers.test.ts"
   },
   {
-    "description": "Vercel serverless endpoint for the AI coach: validates the BYO Anthropic key and question, calls Claude with the injury-aware system prompt and structured output, and returns a CoachReply, degrading gracefully on refusal or malformed output and mapping 401/429 upstream errors.",
+    "description": "Stateless BYO-key coach API proxy. Accepts a question, the TodayState context, and optional conversation history, validates and bounds every input, then calls Claude with the curated injury-aware system prompt and returns a structured CoachReply. It rebuilds the history into a real multi-turn conversation so the coach stops repeating itself, and the prompt trusts the athlete by default while keeping genuine injury and load-spike caution. The key is used per request and never stored or logged.",
     "filePath": "api/coach.ts",
     "name": "handler",
-    "testFile": "test/api/coach.test.ts"
+    "testFile": "test/api/account-handlers.test.ts"
   },
   {
     "description": "Scheduled scan applying the tested shouldNudge policy to each opted-in user and delivering the APNs nudge, stamping de-dup and pruning dead tokens.",
@@ -1013,6 +1020,12 @@
     "filePath": "Sources/AppCore/Formatters.swift",
     "name": "movementLabel",
     "testFile": "Tests/AppCoreTests/FormattersTests.swift"
+  },
+  {
+    "description": "Validates and bounds the optional conversation history in the coach API. Keeps only well-formed user or coach turns, maps coach to assistant, drops malformed or oversized entries, and caps to the most recent turns so the multi-turn prompt stays small and the user's token spend stays bounded.",
+    "filePath": "api/coach.ts",
+    "name": "normalizeHistory",
+    "testFile": "test/api/coach.test.ts"
   },
   {
     "description": "Formats a speed in meters per second as a mm:ss/mi pace string with zero-padded seconds.",

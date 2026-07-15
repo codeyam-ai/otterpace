@@ -51,6 +51,10 @@ public struct AskCoachView: View {
     private let remote = RemoteCoach()
     private let onOpenSettings: () -> Void
 
+    /// The transient coach bubble shown while a real reply is in flight. Kept as a
+    /// constant so the history snapshot can exclude it (a placeholder is not a turn).
+    private static let thinkingPlaceholder = "Buddy is thinking…"
+
     /// The chat is available when the user has connected a key, or when a scenario
     /// opts in via `rbCoachConnected` (so a populated conversation is capturable
     /// offline without a real key). Otherwise the tab shows the connect-key CTA.
@@ -119,23 +123,27 @@ public struct AskCoachView: View {
     /// deterministic mock so the chat always answers. Scenario seeding never comes
     /// through here (it calls `ask` directly), so captures stay network-free.
     private func submit(_ question: String) {
+        // Snapshot the conversation so far (before this question and any
+        // "thinking…" placeholder) so the coach sees what it already said and
+        // stops repeating itself. Captured up front, then the user turn is added.
+        let history = recentTurns()
         append(ChatMessage(id: takeId(), role: .user, text: question))
 
         // Seeded/preview chat without a real key (rbCoachConnected): answer
         // deterministically offline so captures render without a network call.
         guard let apiKey = keyStore.key else {
-            ask(question, appendUser: false)
+            ask(question, appendUser: false, history: history)
             return
         }
 
         let placeholderId = takeId()
-        append(ChatMessage(id: placeholderId, role: .coach, text: "Buddy is thinking…", mood: .ready))
+        append(ChatMessage(id: placeholderId, role: .coach, text: Self.thinkingPlaceholder, mood: .ready))
         let context = model.today
 
         Task { @MainActor in
             let reply: CoachReply
             do {
-                reply = try await remote.reply(to: question, context: context, apiKey: apiKey)
+                reply = try await remote.reply(to: question, context: context, history: history, apiKey: apiKey)
             } catch CoachError.invalidKey {
                 reply = CoachReply(intent: .general,
                     text: "Your AI coach key was rejected. Reconnect it in Settings, then ask again.",
@@ -151,14 +159,25 @@ public struct AskCoachView: View {
 
     /// Deterministic offline exchange. Used by scenario seeding and the seeded-
     /// preview send path (a connected scenario carrying no real key). `appendUser`
-    /// is false when the caller already appended the question.
-    private func ask(_ question: String, appendUser: Bool = true) {
+    /// is false when the caller already appended the question. `history` threads
+    /// the prior turns so the offline coach also stops repeating its check-in.
+    private func ask(_ question: String, appendUser: Bool = true, history: [CoachTurn] = []) {
         if appendUser {
             append(ChatMessage(id: takeId(), role: .user, text: question))
         }
-        let reply = CoachEngine.reply(to: question, context: model.today)
+        let reply = CoachEngine.reply(to: question, context: model.today, history: history)
         append(ChatMessage(id: takeId(), role: .coach, text: reply.text,
                            mood: reply.mood, safetyFlag: reply.safetyFlag))
+    }
+
+    /// The recent conversation mapped for the coach, excluding any in-flight
+    /// "thinking…" placeholder, and capped to the last few turns so we bound the
+    /// user's own token spend (they pay on their BYO key).
+    private func recentTurns(limit: Int = 8) -> [CoachTurn] {
+        messages
+            .filter { $0.text != Self.thinkingPlaceholder }
+            .suffix(limit)
+            .map { CoachTurn(role: $0.role == .user ? .user : .coach, text: $0.text) }
     }
 
     /// Swap a "thinking…" placeholder for the finished coach reply.

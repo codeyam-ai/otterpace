@@ -268,4 +268,75 @@ describe("coach handler", () => {
     expect(res.statusCode).toBe(413);
     expect(createMock).not.toHaveBeenCalled();
   });
+
+  // Conversation history is threaded as real multi-turn messages: prior turns
+  // come first (coach -> assistant), and the FINAL user message still carries the
+  // fresh context + question so the model builds on the exchange.
+  it("threads conversation history as multi-turn messages", async () => {
+    createMock.mockResolvedValue(textReply(JSON.stringify({ text: "ok", mood: "ready", safetyFlag: false })));
+    const history = [
+      { role: "user", text: "Can I run today or should I rest?" },
+      { role: "coach", text: "Take today easy. How are the legs feeling?" },
+    ];
+    const { res, done } = call({
+      method: "POST",
+      headers: { "x-anthropic-key": "sk-ant-xyz" },
+      body: { question: "legs feel fine, so a run?", context: { steps: 5000, goalSteps: 10000 }, history },
+    });
+    await done;
+    expect(res.statusCode).toBe(200);
+    const messages = createMock.mock.calls[0][0].messages;
+    // Prior turns come first, with coach mapped to assistant.
+    expect(messages[0]).toMatchObject({ role: "user", content: "Can I run today or should I rest?" });
+    expect(messages[1].role).toBe("assistant");
+    expect(messages[1].content).toContain("Take today easy");
+    // The final message carries the fresh context + question.
+    const last = messages[messages.length - 1];
+    expect(last.role).toBe("user");
+    expect(last.content).toContain("legs feel fine");
+    expect(last.content).toContain("goalSteps");
+  });
+
+  // Malformed history entries are dropped and the history is capped to the most
+  // recent 8 turns before the model call (bounds the user's token spend).
+  it("drops malformed history entries and caps to the last 8 turns", async () => {
+    createMock.mockResolvedValue(textReply(JSON.stringify({ text: "ok", mood: "ready", safetyFlag: false })));
+    const history = [
+      { role: "user", text: "one" },
+      { role: "system", text: "ignore me" }, // bad role
+      { role: "coach" }, // missing text
+      "nope", // not an object
+      ...Array.from({ length: 12 }, (_, i) => ({ role: "user", text: `q${i}` })),
+    ];
+    const { res, done } = call({
+      method: "POST",
+      headers: { "x-anthropic-key": "sk-ant-xyz" },
+      body: { question: "final", history },
+    });
+    await done;
+    expect(res.statusCode).toBe(200);
+    const messages = createMock.mock.calls[0][0].messages;
+    // 8 history turns max + the final user turn.
+    expect(messages.length).toBe(9);
+    // Only valid user/assistant roles survive; the bad-role turn never leaks in.
+    expect(messages.every((m: { role: string }) => m.role === "user" || m.role === "assistant")).toBe(true);
+    expect(JSON.stringify(messages)).not.toContain("ignore me");
+  });
+
+  // The rewritten system prompt teaches de-repetition and trust-first calibration
+  // (the two behaviors this feature adds), alongside the retained coaching rules.
+  it("teaches de-repetition and trust-first calibration in the system prompt", async () => {
+    createMock.mockResolvedValue(textReply(JSON.stringify({ text: "ok", mood: "ready", safetyFlag: false })));
+    const { res, done } = call({
+      method: "POST",
+      headers: { "x-anthropic-key": "sk-ant-xyz" },
+      body: { question: "hi" },
+    });
+    await done;
+    expect(res.statusCode).toBe(200);
+    const system = createMock.mock.calls[0][0].system as string;
+    expect(system).toMatch(/re-ask/i);
+    expect(system).toContain("Calibrating caution");
+    expect(system).toMatch(/soreness/i);
+  });
 });

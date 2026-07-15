@@ -22,15 +22,18 @@ const MODEL = process.env.COACH_MODEL || "claude-opus-4-8";
 const SYSTEM_PROMPT = `You are Buddy, a warm, encouraging otter running coach inside the Otterpace app. You give short, practical, daily running and movement guidance.
 
 Hard rules — never break these:
-- You are NOT a medical professional. Never diagnose injuries or conditions. If the user describes pain, soreness, or a possible injury, set safetyFlag true, advise rest and gentle movement, and tell them to see a clinician if pain is sharp, persistent, or worsening.
+- You are NOT a medical professional. Never diagnose injuries or conditions. If the user describes genuine pain, or an injury that is sharp, persistent, or worsening, set safetyFlag true, advise rest and gentle movement, and tell them to see a clinician. But ordinary post-run soreness, aches, tightness, or stiffness is normal training feedback, NOT an injury: reassure them, suggest easy movement and light mobility, keep safetyFlag false, and tell them to treat it as pain only if it turns sharp, one-sided, or keeps worsening.
 - When the user ran hard recently, or their load is a GENUINE spike relative to their multi-week baseline (a real one-week jump, not a steady progressive climb), bias toward rest and easy days over more hard running. Set safetyFlag true when you steer them off hard effort for safety reasons. Do NOT treat merely being above an average week, or a planned ~10%/week build, as a spike.
 - Never shame the user or use guilt. No "you should have", no scolding. Meet them where they are and nudge gently.
 - Keep weekly mileage growth modest (~10% rule of thumb). Most runs should be easy/conversational.
 
+Calibrating caution — trust the athlete by default:
+- safetyFlag and steering toward rest are for GENUINE signals only: sharp, persistent, or worsening pain; a true one-week load spike well above baseline; or a recent, genuinely hard effort. Normal post-run soreness, being modestly above an average week, and a declared roughly 10% per week build are NOT safety events. Default to trusting the athlete and affirming good, consistent training. Over-flagging erodes trust, so do not raise caution or set safetyFlag unless a real signal is present.
+
 Style:
 - Sound like a real, experienced human running coach, not an AI. Never say you are an AI and never narrate your own process.
 - Do NOT use em dashes. Use periods or commas, and keep sentences short and declarative.
-- Lead with a clear, direct recommendation. Then give a short reason. Then usually end with one genuine check-in question (how the legs feel, how sleep was, what this week's goal is). Skip the question when the moment calls for caution: on pain or injury, stay calm and directive, no question.
+- Lead with a clear, direct recommendation. Then give a short reason. You can see the conversation so far in the prior turns: NEVER re-ask a question the user already answered or that you asked in a recent turn, and only end with a check-in question when it genuinely moves the coaching forward. When you do ask, vary what you ask about (how sleep was, this week's goal, how a specific workout felt) instead of defaulting to the legs every time. Skip the question entirely when the moment calls for caution: on pain or injury, stay calm and directive, no question.
 - Be kind and constructive, never hedgy or filler-heavy. Cut softeners and apologies.
 - Keep it to 2 to 4 sentences and make it specific using the provided context (steps, goal, recent workouts, weekly load).
 - Pick a mood that matches the message: "concerned" or "recovery" for caution/rest, "celebrating"/"cheering" for wins, "ready" for go-ahead, "jogging"/"resting" otherwise.
@@ -83,6 +86,41 @@ const FORMAT = {
 // (which also protects the user's own token spend on their key).
 const MAX_QUESTION_LEN = 2000;
 const MAX_CONTEXT_BYTES = 16 * 1024;
+// Conversation memory bounds: send only the recent tail so a long thread can't
+// balloon the prompt (the user pays on their own key), and drop any single
+// oversized turn. Roles arrive as the app's "user" | "coach" and map to the
+// Messages API's "user" | "assistant".
+const MAX_HISTORY_TURNS = 8;
+const MAX_TURN_BYTES = 4 * 1024;
+
+type ChatTurn = { role: "user" | "assistant"; content: string };
+
+// Validate and normalize the optional conversation history: keep only
+// well-formed { role: "user"|"coach", text: string } entries, cap to the most
+// recent turns, and bound the total bytes so the prompt stays small.
+function normalizeHistory(raw: unknown): ChatTurn[] {
+  if (!Array.isArray(raw)) return [];
+  const turns: ChatTurn[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== "object") continue;
+    const role = (entry as { role?: unknown }).role;
+    const text = (entry as { text?: unknown }).text;
+    if ((role !== "user" && role !== "coach") || typeof text !== "string") continue;
+    const trimmed = text.trim();
+    if (!trimmed || Buffer.byteLength(trimmed, "utf8") > MAX_TURN_BYTES) continue;
+    turns.push({ role: role === "coach" ? "assistant" : "user", content: trimmed });
+  }
+  // Keep the most recent turns, then bound total size from the newest backward.
+  const recent = turns.slice(-MAX_HISTORY_TURNS);
+  const bounded: ChatTurn[] = [];
+  let total = 0;
+  for (let i = recent.length - 1; i >= 0; i--) {
+    total += Buffer.byteLength(recent[i].content, "utf8");
+    if (total > MAX_CONTEXT_BYTES) break;
+    bounded.unshift(recent[i]);
+  }
+  return bounded;
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
@@ -110,7 +148,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const body = (req.body ?? {}) as { question?: string; context?: unknown };
+  const body = (req.body ?? {}) as { question?: string; context?: unknown; history?: unknown };
   const question = (body.question ?? "").toString().trim();
   if (!question) {
     res.status(400).json({ error: "missing_question" });
@@ -138,6 +176,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
+  // Prior turns become real conversation, so the model can see what it already
+  // said and stop repeating itself. The FINAL user turn always carries the fresh
+  // context + question, so context-serialization stays in the last message.
+  const history = normalizeHistory(body.history);
+
   const client = new Anthropic({ apiKey });
 
   try {
@@ -147,6 +190,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       system: SYSTEM_PROMPT,
       output_config: { format: FORMAT },
       messages: [
+        ...history.map((t) => ({ role: t.role, content: t.content })),
         {
           role: "user",
           content: `Today's context (JSON):\n${context}\n\nUser's question:\n${question}`,

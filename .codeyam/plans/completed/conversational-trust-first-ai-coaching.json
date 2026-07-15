@@ -1,0 +1,17 @@
+{
+  "completedAt": "2026-07-15T15:14:31Z",
+  "createdAt": "2026-07-10T20:15:00Z",
+  "deliverables": [
+    "Sources/AppCore/AskCoachView.swift",
+    "Sources/AppCore/Coach/RemoteCoach.swift",
+    "Sources/AppCore/CoachEngine.swift",
+    "Tests/AppCoreTests/CoachEngineTests.swift",
+    "api/coach.ts",
+    "test/api/coach.test.ts"
+  ],
+  "journalTimestamp": "2026-07-15T15:14:31Z",
+  "mode": "ui",
+  "planFile": "completed/conversational-trust-first-ai-coaching.md",
+  "slug": "conversational-trust-first-ai-coaching",
+  "title": "Conversational, Trust-First AI Coaching"
+}

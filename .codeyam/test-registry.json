@@ -444,11 +444,20 @@
       "runner": "tests"
     },
     {
+      "description": "The closing check-in question rotates across turns and does not repeat the question the coach just asked.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testCheckInRotatesAcrossTurns",
+      "line": 346,
+      "registeredAt": "2026-07-15T15:07:02.209715+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "Anything unrecognized falls back to the general intent.",
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testClassifyGeneralFallback",
-      "line": 56,
+      "line": 67,
       "registeredAt": "2026-06-22T23:51:14.945442+00:00",
       "runner": "tests"
     },
@@ -457,7 +466,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testClassifyInjuryWins",
-      "line": 25,
+      "line": 26,
       "registeredAt": "2026-06-22T23:51:14.935941+00:00",
       "runner": "tests"
     },
@@ -466,7 +475,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testClassifyMileage",
-      "line": 32,
+      "line": 43,
       "registeredAt": "2026-06-22T23:51:14.938005+00:00",
       "runner": "tests"
     },
@@ -475,7 +484,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testClassifyReflection",
-      "line": 50,
+      "line": 61,
       "registeredAt": "2026-06-22T23:51:14.943549+00:00",
       "runner": "tests"
     },
@@ -484,8 +493,17 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testClassifyRunOrRest",
-      "line": 44,
+      "line": 55,
       "registeredAt": "2026-06-22T23:51:14.941676+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Mild post-run soreness routes to the calm soreness intent while sharp or worsening pain still routes to the injury lockdown.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testClassifySorenessVsPain",
+      "line": 35,
+      "registeredAt": "2026-07-15T15:06:13.405666+00:00",
       "runner": "tests"
     },
     {
@@ -493,7 +511,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testClassifySteps",
-      "line": 38,
+      "line": 49,
       "registeredAt": "2026-06-22T23:51:14.939868+00:00",
       "runner": "tests"
     },
@@ -502,7 +520,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testDailyNudgeBelowGoalNudgesWalk",
-      "line": 168,
+      "line": 208,
       "registeredAt": "2026-07-01T18:02:05.234694+00:00",
       "runner": "tests"
     },
@@ -511,7 +529,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testDailyNudgeBuildingPhaseAffirms",
-      "line": 279,
+      "line": 319,
       "registeredAt": "2026-07-10T15:15:02.821710+00:00",
       "runner": "tests"
     },
@@ -520,7 +538,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testDailyNudgeGoalMetCelebrates",
-      "line": 142,
+      "line": 182,
       "registeredAt": "2026-07-01T18:01:53.472520+00:00",
       "runner": "tests"
     },
@@ -529,7 +547,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testDailyNudgeInsufficientIsHonest",
-      "line": 271,
+      "line": 311,
       "registeredAt": "2026-07-10T15:15:02.823982+00:00",
       "runner": "tests"
     },
@@ -538,7 +556,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testDailyNudgeRecentHardRunIsRest",
-      "line": 159,
+      "line": 199,
       "registeredAt": "2026-07-01T18:02:01.329499+00:00",
       "runner": "tests"
     },
@@ -547,7 +565,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testDailyNudgeSpikingLoadIsCaution",
-      "line": 151,
+      "line": 191,
       "registeredAt": "2026-07-01T18:01:57.399554+00:00",
       "runner": "tests"
     },
@@ -556,7 +574,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testDailyNudgeWalkingFocusedProfilePersonalizes",
-      "line": 178,
+      "line": 218,
       "registeredAt": "2026-07-02T00:11:44.974838+00:00",
       "runner": "tests"
     },
@@ -565,8 +583,17 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testDailyNudgeWithoutWalkingFocusKeepsGenericCopy",
-      "line": 190,
+      "line": 230,
       "registeredAt": "2026-07-02T00:11:53.436943+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A routine easy 5-mile run is no longer treated as hard, so the reply stays go-ahead rather than forcing recovery.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testEasyFiveMilerIsNotHard",
+      "line": 330,
+      "registeredAt": "2026-07-15T15:06:46.108002+00:00",
       "runner": "tests"
     },
     {
@@ -574,8 +601,17 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testGeneralReplyInsufficientKeepsSafe",
-      "line": 264,
+      "line": 304,
       "registeredAt": "2026-07-10T15:15:02.826325+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A genuinely hard long run with no spike still steers the reply to recovery, so the guardrail is dialed back not removed.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testGenuinelyHardRunStillRecovers",
+      "line": 338,
+      "registeredAt": "2026-07-15T15:06:54.155132+00:00",
       "runner": "tests"
     },
     {
@@ -583,7 +619,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testInjuryReplyIsSafetyFlagged",
-      "line": 64,
+      "line": 75,
       "registeredAt": "2026-06-22T23:51:14.947478+00:00",
       "runner": "tests"
     },
@@ -592,7 +628,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testMileageReplyBuildingPhaseAffirms",
-      "line": 231,
+      "line": 271,
       "registeredAt": "2026-07-10T15:15:02.828647+00:00",
       "runner": "tests"
     },
@@ -601,7 +637,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testMileageReplyBuildingPhaseYieldsToSpike",
-      "line": 240,
+      "line": 280,
       "registeredAt": "2026-07-10T15:15:02.831077+00:00",
       "runner": "tests"
     },
@@ -610,7 +646,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testMileageReplyInsufficientAbstains",
-      "line": 248,
+      "line": 288,
       "registeredAt": "2026-07-10T15:15:02.833401+00:00",
       "runner": "tests"
     },
@@ -619,7 +655,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testMileageReplySpikingIsCaution",
-      "line": 74,
+      "line": 104,
       "registeredAt": "2026-06-22T23:51:14.949554+00:00",
       "runner": "tests"
     },
@@ -628,8 +664,17 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testMileageReplySteadyIsReassuring",
-      "line": 82,
+      "line": 112,
       "registeredAt": "2026-06-22T23:51:14.951651+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Genuine, worsening pain still triggers the clinician-caution lockdown with the safety flag.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testRealPainStillLocksDown",
+      "line": 95,
+      "registeredAt": "2026-07-15T15:06:31.596221+00:00",
       "runner": "tests"
     },
     {
@@ -637,7 +682,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testReflectionWithWorkout",
-      "line": 123,
+      "line": 153,
       "registeredAt": "2026-06-22T23:51:14.961360+00:00",
       "runner": "tests"
     },
@@ -646,7 +691,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testRunOrRestAfterHardRunIsRecovery",
-      "line": 91,
+      "line": 121,
       "registeredAt": "2026-06-22T23:51:14.953655+00:00",
       "runner": "tests"
     },
@@ -655,7 +700,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testRunOrRestInsufficientDefers",
-      "line": 256,
+      "line": 296,
       "registeredAt": "2026-07-10T15:15:02.835564+00:00",
       "runner": "tests"
     },
@@ -664,8 +709,17 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testRunOrRestWhenFreshAllowsRun",
-      "line": 99,
+      "line": 129,
       "registeredAt": "2026-06-22T23:51:14.955681+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Mild post-run soreness gets calm reassurance with no safety flag and a non-concerned mood.",
+      "file": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachEngineTests › testSorenessReplyIsCalmNotFlagged",
+      "line": 86,
+      "registeredAt": "2026-07-15T15:06:21.270334+00:00",
       "runner": "tests"
     },
     {
@@ -673,7 +727,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testStepsReplyBelowGoal",
-      "line": 107,
+      "line": 137,
       "registeredAt": "2026-06-22T23:51:14.957469+00:00",
       "runner": "tests"
     },
@@ -682,7 +736,7 @@
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachEngineTests › testStepsReplyGoalReachedCelebrates",
-      "line": 115,
+      "line": 145,
       "registeredAt": "2026-06-22T23:51:14.959549+00:00",
       "runner": "tests"
     },

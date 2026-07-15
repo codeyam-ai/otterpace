@@ -1,0 +1,41 @@
+{
+  "name": "Ask Coach — Sore Not Hurt",
+  "id": "efa0a346-c21a-4426-9ee3-d92d1b196232",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbConnected": true,
+      "rbAskSeedQuestion": "My legs are a little sore after Sunday's run",
+      "rbRestDaysThisWeek": 2,
+      "rbWorkoutDate": "2026-06-21",
+      "rbStartTab": "coach",
+      "rbSteps": 6200,
+      "rbDaysRunThisWeek": 3,
+      "rbMinutesSinceMovement": 30,
+      "rbActiveMinutes": 38,
+      "rbDate": "2026-06-22",
+      "rbLoadTrend": "building",
+      "rbShowWeeklyReview": false,
+      "rbWorkoutSource": "strava",
+      "rbContentSize": "",
+      "rbLongestRunMiles": 6.0,
+      "rbWorkoutType": "run",
+      "rbPreviewMode": "",
+      "rbWeeklyMileage": 16.0,
+      "rbWorkoutDistanceMiles": 4.2,
+      "rbCoachConnected": true,
+      "rbActiveEnergyKcal": 260,
+      "rbDistanceMiles": 3.0,
+      "rbGoalSteps": 10000,
+      "rbShowHistory": false,
+      "rbWorkoutDurationMinutes": 42,
+      "rbWorkoutPace": "10:00/mi"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/AskCoachView.swift"
+}

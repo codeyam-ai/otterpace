@@ -1,0 +1,163 @@
+{
+  "timestamp": "2026-07-15T15:14:31Z",
+  "title": "Conversational, Trust-First AI Coaching",
+  "type": "feature",
+  "userRequest": "## Summary\n\nThe Ask Coach chat feels annoying in two specific ways: it repeats the same\ncheck-in question (\"How are the legs?\") turn after turn, and it drops into\n\"safety mode\" (rest, see-a-clinician, shield-flagged bubbles) far too readily.\nBoth trace to concrete causes. The chat is **stateless per message** — the app\nsends only `{question, context}` with no conversation history, so every reply is\ngenerated as if it were the first, and the prompt's \"usually end with a check-in\nquestion\" defaults to the same question forever. And the safety triggers are\nblunt: any run ≥5 mi counts as \"hard,\" the word \"sore\" routes to a full injury\nlockdown, and the prompt biases hard toward rest. This plan gives the coach\n**conversation memory** end-to-end (client → API → multi-turn prompt),\n**de-repeats** the check-in question, and **rebalances safety** to trust the\nathlete by default while keeping genuine injury/spike caution intact — across\nboth the real LLM coach and the offline deterministic engine.\n\n## Key Decisions\n\n- **Thread real conversation history, don't just tweak the prompt** — The root\n  cause of repetition is that the model never sees what it already said. We add a\n  `history` array to the request and rebuild the API's `messages` as proper\n  multi-turn user/assistant turns. This is the single highest-leverage change; a\n  prompt-only fix can't make a stateless call \"remember.\"\n- **Cap and bound the history** — Send only the last ~8 turns (client-trimmed)\n  and validate/cap server-side, so we protect the user's own token spend (they\n  pay on their BYO key) and stay within the existing `MAX_CONTEXT_BYTES` spirit.\n- **Suppress, don't just rotate, the check-in question** — The prompt already\n  says \"usually end with one check-in question.\" The fix is an explicit rule:\n  never repeat a question the user already answered, and only ask when it\n  genuinely advances the conversation. The offline engine, which has no LLM to\n  reason, gets a deterministic turn-aware suppression + rotation instead.\n- **Split mild soreness from real pain** — \"sore/ache/tight\" after a run is\n  normal training feedback, not an injury event. Only sharp/persistent/worsening\n  pain should trigger the clinician lockdown and `safetyFlag`. This is the\n  biggest driver of the \"too much safety mode\" feeling.\n- **Raise the \"hard run\" bar** — `ranHardRecently` currently flags any run ≥5 mi.\n  A routine easy 5-miler is not a hard effort. Gate on distance *and* effort\n  signal (pace/intensity when available), and require a higher distance floor.\n- **Keep genuine safety intact** — A true load spike (baseline classifier),\n  sharp/persistent pain, and taper-week race caution still win and still set\n  `safetyFlag`. We are dialing back false positives, not removing the guardrails.\n\n## Implementation\n\n### 1. Add conversation history to the request contract\n\n**File**: `Sources/AppCore/Coach/RemoteCoach.swift`\n\nExtend `RemoteCoach.RequestBody` with a `history` field: an array of\n`{role, text}` turns (`role` ∈ `\"user\" | \"coach\"`). Change\n`RemoteCoach.reply(to:context:apiKey:)` to `reply(to:context:history:apiKey:)`,\nencoding the trimmed history alongside `question` and `context`. Define a small\n`Encodable` turn struct local to `RemoteCoach` (mirrors `ChatMessage` but carries\nonly role + text — no mood/id). Keep the response shape unchanged.\n\n### 2. Pass the running thread from the chat view\n\n**File**: `Sources/AppCore/AskCoachView.swift`\n\nIn `submit(_:)`, before appending the placeholder, snapshot the current\n`messages` (excluding the just-appended user question and any \"thinking…\"\nplaceholder), map them to the new turn type, and trim to the last ~8 turns.\nPass that to `remote.reply(to:context:history:apiKey:)`. The deterministic\n`ask(_:)` path (offline/seeded) should likewise thread the prior `messages` into\n`CoachEngine.reply` (see step 4) so the offline coach also stops repeating.\n\n### 3. Rebuild the API as a real multi-turn conversation + rebalance safety\n\n**File**: `api/coach.ts`\n\n- **History intake**: accept `body.history` (optional array). Validate each entry\n  is `{role: \"user\"|\"coach\", text: string}`, drop malformed entries, cap to the\n  last ~8 turns, and enforce a per-turn and total byte bound consistent with\n  `MAX_CONTEXT_BYTES`. Map `coach` → `assistant`, `user` → `user`.\n- **Message construction**: build `messages` as `[...historyTurns, finalUserTurn]`\n  instead of a single stuffed user message. The final user turn keeps the\n  `Today's context (JSON):\\n…\\n\\nUser's question:\\n…` framing so the context test\n  (`sentContent` assertions in `test/api/coach.test.ts`) still finds the payload\n  in the *last* message. Prior coach turns are plain assistant text.\n- **De-repeat rule** (SYSTEM_PROMPT, Style section): replace \"Then usually end\n  with one genuine check-in question…\" with guidance that (a) you can now see the\n  conversation so far, (b) never re-ask a question the user already answered or\n  that you asked recently, (c) only ask a check-in when it genuinely moves the\n  coaching forward, and (d) when you do ask, vary what you ask about (sleep,\n  weekly goal, how a specific workout felt) rather than defaulting to the legs.\n- **Trust-first rebalance** (SYSTEM_PROMPT, Hard rules + a new \"Calibrating\n  caution\" note): keep the injury/spike/no-shame rules, but clarify that\n  `safetyFlag` and rest-steering are for *genuine* signals only — sharp,\n  persistent, or worsening pain; a true one-week spike vs. baseline; a recent\n  genuinely hard effort. Normal post-run soreness, being modestly above an\n  average week, and a declared ~10%/week build are NOT safety events; default to\n  trusting the athlete and affirming good training. State plainly that\n  over-flagging erodes trust.\n\n### 4. Make the offline engine conversational and less trigger-happy\n\n**File**: `Sources/AppCore/CoachEngine.swift`\n\n- **Signature**: add an optional `history: [CoachTurn]` (or reuse `ChatMessage`\n  role/text) parameter to `reply(to:context:asOf:)`, defaulting to empty so\n  existing callers/tests compile. Use it to decide whether to append or suppress\n  the closing check-in question, and to rotate which check-in is asked\n  (legs → sleep → weekly goal → how a workout felt) based on how many coach turns\n  have already happened. Never emit the same closing question twice in a row.\n- **Soreness vs. pain split**: in `CoachIntent.classify`, separate mild soreness\n  (\"sore\", \"ache\", \"tight\", \"stiff\") from injury signals (\"sharp\", \"pain\",\n  \"hurt\", \"injur\", \"strain\", \"sprain\", plus persistent/worsening phrasing). Add a\n  lighter intent (e.g. `.postRunSoreness`) that gives normal-training-feedback\n  reassurance with `safetyFlag = false` and a non-`concerned` mood, reserving the\n  full `injuryReply` lockdown + `safetyFlag` for genuine pain.\n- **Hard-run threshold**: in `ranHardRecently`, raise the distance floor and,\n  when the workout carries an effort/pace signal, require it to indicate a real\n  effort — so a routine easy 5-miler no longer forces a recovery day. A true load\n  spike still returns true unchanged.\n\n### 5. Update tests to the new contract\n\n**File**: `test/api/coach.test.ts`\n\nAdd cases: history is passed through as multi-turn `messages` (assert the first\nmessages carry the prior turns and the final message carries the fresh\ncontext+question); malformed/oversized history is dropped/capped before the model\ncall; the de-repeat and trust-first rules are present in the system prompt (assert\non the new phrasings). Keep all existing status-code, key-safety, and\ncontext-serialization assertions green (the final user message must still contain\nthe stringified context).\n\n**File**: `Tests/AppCoreTests/CoachEngineTests.swift`\n\nAdd cases for the soreness-vs-pain split (soreness → no `safetyFlag`, calm mood;\nsharp pain → `safetyFlag` + `concerned`), the raised hard-run threshold (an easy\n5-mile run no longer forces recovery framing), and the turn-aware check-in\nquestion (same question not repeated across consecutive coach turns; rotates).\nUpdate any existing assertions that hardcoded the \"How are the legs?\" tail.\n\n## Reused existing code\n\n- `CoachEngine.reply(to:context:asOf:)` and the `CoachIntent` classifier from\n  `Sources/AppCore/CoachEngine.swift` (glossary entry: `CoachEngine`) — extended,\n  not rewritten; the pure/deterministic contract and safety-wins-over-build\n  behavior are preserved.\n- `RemoteCoach.reply` + `RequestBody`/`ResponseBody` from\n  `Sources/AppCore/Coach/RemoteCoach.swift` — the request shape gains `history`;\n  the response contract and `CoachError` fallback semantics are unchanged.\n- `ChatMessage` (role/text/mood/safetyFlag) from\n  `Sources/AppCore/AskCoachView.swift` — the existing thread state is the source\n  of the history we now forward; the turn type mirrors its role/text.\n- `SYSTEM_PROMPT` + `FORMAT` structured-output schema in `api/coach.ts` — the\n  prompt is edited in place; the `{text, mood, safetyFlag}` JSON schema and the\n  refusal/malformed-JSON graceful-degrade paths stay as-is.\n- `TodayState` context serialization and the `MAX_CONTEXT_BYTES` bound in\n  `api/coach.ts` — reused as the model for bounding the new `history` payload.\n\n## Scenarios to Demonstrate\n\n- **Multi-turn chat that builds instead of repeating** — user asks \"run or\n  rest?\", answers a follow-up, asks again; the coach references the earlier\n  answer and does NOT re-ask \"how are the legs?\".\n- **Mild soreness, no lockdown** — \"my legs are a little sore after Sunday's run\"\n  gets calm normal-training reassurance, no shield flag, upbeat/steady mood.\n- **Real pain, caution holds** — \"sharp pain in my knee that's getting worse\"\n  still triggers the clinician advice, rest, and `safetyFlag`.\n- **Easy 5-miler is not \"hard\"** — an easy 5-mile run in context; asking \"what\n  should I do today?\" gets normal go-ahead coaching, not a forced recovery day.\n- **Genuine load spike still steers to rest** — a true one-week spike vs.\n  baseline still yields caution + `safetyFlag` (guardrail intact).\n- **Declared build affirmed, not flagged** — `trainingPhase: building` with a\n  steady ~10%/week climb gets affirmation, no rest nudge, no safety flag.\n- **Rotating check-in** — across several turns, the closing question varies\n  (legs → sleep → weekly goal) or is omitted when it wouldn't add anything.\n- **Empty chat state** — first-open prompt with no history renders unchanged.",
+  "description": "Made the Ask Coach chat conversational and less trigger-happy. The app now threads recent conversation history end-to-end (AskCoachView snapshots the last ~8 turns, RemoteCoach sends them, and api/coach.ts rebuilds them into a real multi-turn Claude conversation), so the coach builds on the exchange instead of repeating the same check-in question. It rebalances safety to trust the athlete by default: a new postRunSoreness intent gives calm reassurance for ordinary soreness (no safetyFlag) while sharp or worsening pain still triggers the clinician lockdown, the hard-run bar is raised so a routine easy run no longer forces recovery, and the offline CoachEngine rotates its closing check-in. Genuine injury and load-spike caution are preserved. Verified by 237 Swift + 20 API tests.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/completed/conversational-trust-first-ai-coaching.md",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/state/provider-auth-verdict.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/AskCoachView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Coach/RemoteCoach.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CoachEngine.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/CoachEngineTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": "api/coach.ts",
+      "status": "modified"
+    },
+    {
+      "path": "test/api/coach.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/design/project_mockups/01-default-mockup.html",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/design/project_mockups/02-sport-mockup.html",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/design/project_mockups/03-midnight-mockup.html",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/design/project_mockups/04-trail-mockup.html",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/design/project_mockups/05-arcade-mockup.html",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/design/project_mockups/06-editorial-mockup.html",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/design/project_mockups/index.html",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/design/project_mockups/target.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/manual-capture.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-sore-not-hurt.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-sore-not-hurt--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/ask-coach-sore-not-hurt--iphone-16.png.hash",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Ask Coach — Building On Track",
+      "screenshotPath": "ask-coach-building-on-track--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Empty Chat",
+      "screenshotPath": "ask-coach-empty-chat--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Hit 10K",
+      "screenshotPath": "ask-coach-hit-10k--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Knee Pain",
+      "screenshotPath": "ask-coach-knee-pain--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Mileage Spike",
+      "screenshotPath": "ask-coach-mileage-spike--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — No Key (Connect Prompt)",
+      "screenshotPath": "ask-coach-no-key-connect-prompt--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Race Taper",
+      "screenshotPath": "ask-coach-race-taper--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Run or Rest",
+      "screenshotPath": "ask-coach-run-or-rest--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Sore Not Hurt",
+      "screenshotPath": "ask-coach-sore-not-hurt--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Still Learning (Thin Data)",
+      "screenshotPath": "ask-coach-still-learning-thin-data--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 237,
+    "passed": 237,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 237,
+        "passed": 237
+      }
+    ]
+  }
+}

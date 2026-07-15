@@ -77,9 +77,18 @@ public struct RemoteCoach {
         self.session = session
     }
 
+    /// One prior turn on the wire. Mirrors `CoachTurn` (role + text only) — the
+    /// backend rebuilds these into a real multi-turn conversation so the model
+    /// can see what it already said and stop repeating itself.
+    private struct Turn: Encodable {
+        let role: String   // "user" | "coach" (backend maps coach -> assistant)
+        let text: String
+    }
+
     private struct RequestBody: Encodable {
         let question: String
         let context: TodayState
+        let history: [Turn]
     }
 
     private struct ResponseBody: Decodable {
@@ -90,13 +99,16 @@ public struct RemoteCoach {
 
     /// Ask the real coach. Throws `CoachError` so the caller can decide whether to
     /// fall back to `CoachEngine` (network/server) or surface the problem (bad key).
-    public func reply(to question: String, context: TodayState, apiKey: String) async throws -> CoachReply {
+    /// `history` is the recent conversation (oldest first); pass it so the model
+    /// builds on the exchange instead of answering each message from scratch.
+    public func reply(to question: String, context: TodayState, history: [CoachTurn] = [], apiKey: String) async throws -> CoachReply {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(apiKey, forHTTPHeaderField: "x-anthropic-key")
         do {
-            request.httpBody = try JSONEncoder().encode(RequestBody(question: question, context: context))
+            let turns = history.map { Turn(role: $0.role.rawValue, text: $0.text) }
+            request.httpBody = try JSONEncoder().encode(RequestBody(question: question, context: context, history: turns))
         } catch {
             throw CoachError.server
         }

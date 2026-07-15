@@ -1,0 +1,130 @@
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{--paper:#FBFAF6;--card:#FFFFFF;--line:#E8E4D9;--rule:#1C1A15;
+    --ink:#1C1A15;--mut:#8A8577;--burnt:#CE531C;--olive:#5E6B3A;}
+  body{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    background:#e6e3da;display:flex;justify-content:center;padding:26px 0;-webkit-font-smoothing:antialiased;}
+  .sans{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+  .phone{width:390px;border-radius:46px;overflow:hidden;position:relative;background:var(--paper);box-shadow:0 30px 70px rgba(60,55,40,.24);}
+  .statusbar{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 30px;position:relative;}
+  .sb-time{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:.3px;font-family:-apple-system,sans-serif;}
+  .island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:118px;height:33px;background:#000;border-radius:20px;}
+  .sb-right{display:flex;align-items:center;gap:7px;}
+  .screen{padding:4px 24px 0;}
+  .masthead{text-align:center;border-bottom:2px solid var(--rule);padding-bottom:9px;margin:6px 0 0;}
+  .masthead .wm{font-size:14px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:var(--ink);}
+  .kicker{display:flex;justify-content:space-between;font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);padding:7px 0 16px;font-family:-apple-system,sans-serif;font-weight:600;}
+  .h-title{font-size:42px;font-weight:700;color:var(--ink);letter-spacing:-1px;line-height:.95;}
+  .h-sub{font-size:14px;color:var(--mut);margin-top:6px;font-style:italic;}
+  .lead{display:flex;align-items:center;gap:16px;padding:16px 0 14px;margin-top:13px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .lead .num{font-size:48px;font-weight:700;color:var(--ink);line-height:.9;letter-spacing:-2px;}
+  .lead .num sup{font-size:14px;color:var(--burnt);font-weight:700;vertical-align:super;}
+  .lead .meta{flex:1;}
+  .lead .meta .k{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--burnt);font-weight:700;font-family:-apple-system,sans-serif;}
+  .lead .meta p{font-size:13px;color:#4A463C;line-height:1.5;margin-top:5px;}
+  .badge{flex-shrink:0;}
+  .stats{display:flex;padding:15px 0;border-bottom:1px solid var(--line);}
+  .st{flex:1;text-align:center;}
+  .st .v{font-size:26px;font-weight:700;color:var(--ink);}
+  .st .l{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-top:5px;font-family:-apple-system,sans-serif;font-weight:600;}
+  .st+.st{border-left:1px solid var(--line);}
+  .feature{padding:18px 0;border-bottom:1px solid var(--line);}
+  .feature .tag{display:flex;align-items:center;gap:6px;font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--burnt);font-weight:700;font-family:-apple-system,sans-serif;}
+  .feature h2{font-size:24px;font-weight:700;color:var(--ink);margin:8px 0 9px;letter-spacing:-.5px;line-height:1.1;}
+  .feature p{font-size:15.5px;line-height:1.6;color:#3A362C;}
+  .feature p:first-letter{font-size:39px;font-weight:700;float:left;line-height:.82;padding:5px 9px 0 0;color:var(--burnt);}
+  .byline{font-size:11px;color:var(--mut);margin-top:13px;font-style:italic;}
+  .ask{display:inline-block;margin-top:6px;font-size:10.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink);border-bottom:2px solid var(--burnt);padding-bottom:2px;font-family:-apple-system,sans-serif;}
+  .brief{display:flex;align-items:center;gap:14px;padding:15px 0;border-bottom:1px solid var(--line);}
+  .brief .lbl{font-size:9px;letter-spacing:1.8px;text-transform:uppercase;color:var(--mut);width:58px;flex-shrink:0;font-family:-apple-system,sans-serif;font-weight:600;}
+  .brief .body h3{font-size:18px;font-weight:700;color:var(--ink);}
+  .brief .body p{font-size:12px;color:var(--mut);margin-top:2px;font-family:-apple-system,sans-serif;}
+  .week{padding:15px 0 8px;}
+  .week .lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);font-family:-apple-system,sans-serif;font-weight:600;margin-bottom:12px;display:flex;justify-content:space-between;}
+  .week .trend{color:var(--olive);font-weight:700;}
+  .wgrid{display:flex;}
+  .wm{flex:1;text-align:center;}
+  .wm .v{font-size:20px;font-weight:700;color:var(--ink);}
+  .wm .l{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);margin-top:4px;font-family:-apple-system,sans-serif;font-weight:600;}
+  .wm+.wm{border-left:1px solid var(--line);}
+  .tabbar{margin-top:6px;height:80px;display:flex;align-items:flex-start;justify-content:space-around;padding:10px 40px 0;
+    border-top:1px solid var(--rule);background:rgba(251,250,246,.85);backdrop-filter:blur(20px);}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:5px;font-family:-apple-system,sans-serif;}
+  .tab .lbl{font-size:11px;font-weight:700;}
+  .home-ind{height:24px;display:flex;align-items:center;justify-content:center;background:rgba(251,250,246,.85);}
+  .home-bar{width:135px;height:5px;border-radius:3px;background:#1C1A15;opacity:.8;}
+</style>
+
+<div class="phone">
+  <div class="statusbar">
+    <span class="sb-time">9:41</span><div class="island"></div>
+    <span class="sb-right">
+      <svg width="19" height="12" viewBox="0 0 19 12"><rect x="0" y="7" width="3" height="5" rx="1" fill="#1C1A15"/><rect x="5" y="5" width="3" height="7" rx="1" fill="#1C1A15"/><rect x="10" y="2.5" width="3" height="9.5" rx="1" fill="#1C1A15"/><rect x="15" y="0" width="3" height="12" rx="1" fill="#1C1A15"/></svg>
+      <svg width="17" height="12" viewBox="0 0 17 12"><path d="M8.5 11.2l2-2.5a3 3 0 00-4 0zM8.5 7.7a5.4 5.4 0 013.9 1.7l1.3-1.6a7.4 7.4 0 00-10.4 0l1.3 1.6A5.4 5.4 0 018.5 7.7zM8.5 4.4a8.6 8.6 0 016.3 2.8l1.2-1.5a10.6 10.6 0 00-15 0l1.2 1.5A8.6 8.6 0 018.5 4.4z" fill="#1C1A15"/></svg>
+      <svg width="26" height="13" viewBox="0 0 26 13"><rect x="1" y="1" width="21" height="11" rx="3" fill="none" stroke="#1C1A15" stroke-opacity=".4" stroke-width="1"/><rect x="2.5" y="2.5" width="16" height="8" rx="1.5" fill="#1C1A15"/><rect x="23.5" y="4.5" width="2" height="4" rx="1" fill="#1C1A15" opacity=".5"/></svg>
+    </span>
+  </div>
+
+  <div class="screen">
+    <div class="masthead"><span class="wm">Otterpace</span></div>
+    <div class="kicker"><span>The Daily Brief</span><span>Monday · June 22</span></div>
+
+    <div class="h-title">Today</div>
+    <div class="h-sub">A strong finish, and room to recover.</div>
+
+    <div class="lead">
+      <div class="num">11,240<sup>112%</sup></div>
+      <div class="meta">
+        <div class="k">Steps · goal crushed</div>
+        <p>You cleared 10,000 with 1,240 to spare — your best in four days.</p>
+      </div>
+      <div class="badge">
+        <!-- matured otter: refined line-art engraving -->
+        <svg width="50" height="60" viewBox="0 0 100 120" fill="none" stroke="#1C1A15" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M44 92 C36 102 27 107 20 109 C25 98 32 91 42 85"/>
+          <ellipse cx="52" cy="66" rx="23" ry="30"/>
+          <circle cx="52" cy="30" r="18"/>
+          <circle cx="38" cy="18" r="5.5"/><circle cx="66" cy="18" r="5.5"/>
+          <path d="M34 62 C34 72 43 79 52 79 C61 79 70 72 70 62" stroke-width="1.6"/>
+          <circle cx="46" cy="29" r="1.6" fill="#1C1A15" stroke="none"/><circle cx="58" cy="29" r="1.6" fill="#1C1A15" stroke="none"/>
+          <ellipse cx="52" cy="35" rx="3" ry="2.2" fill="#CE531C" stroke="none"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="st"><div class="v">68</div><div class="l">Active min</div></div>
+      <div class="st"><div class="v">5.1</div><div class="l">Miles</div></div>
+      <div class="st"><div class="v">14m</div><div class="l">Since moving</div></div>
+    </div>
+
+    <div class="feature">
+      <div class="tag"><svg width="13" height="13" viewBox="0 0 24 24" fill="#CE531C"><path d="M12 2l1.7 5.1L19 9l-5.3 1.9L12 16l-1.7-5.1L5 9l5.3-1.9z"/></svg>From the Coach</div>
+      <h2>10K crushed — nice work!</h2>
+      <p>You blew past your step goal and logged a solid 4.2-mile run. Tomorrow, keep it easy: a relaxed walk or mobility work lets today settle in.</p>
+      <div class="byline">— Coach Buddy · recommendation: celebrate</div>
+      <span class="ask">Ask Buddy →</span>
+    </div>
+
+    <div class="brief">
+      <div class="lbl">Latest<br>run</div>
+      <div class="body"><h3>4.2 mi · 10:15/mi</h3><p>43 minutes · imported from Strava</p></div>
+    </div>
+
+    <div class="week">
+      <div class="lbl"><span>This week</span><span class="trend">Building ↗</span></div>
+      <div class="wgrid">
+        <div class="wm"><div class="v">14.6</div><div class="l">Miles</div></div>
+        <div class="wm"><div class="v">3</div><div class="l">Run days</div></div>
+        <div class="wm"><div class="v">6.1</div><div class="l">Longest</div></div>
+        <div class="wm"><div class="v">2</div><div class="l">Rest days</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <div class="tab"><svg width="26" height="26" viewBox="0 0 24 24" fill="#CE531C"><circle cx="12" cy="12" r="4.5"/><g stroke="#CE531C" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/></g></svg><span class="lbl" style="color:#CE531C;">Today</span></div>
+    <div class="tab"><svg width="26" height="26" viewBox="0 0 24 24" fill="#A29C8C"><path d="M4 5h16v10H9l-4 4v-4H4z"/></svg><span class="lbl" style="color:#A29C8C;">Coach</span></div>
+  </div>
+  <div class="home-ind"><div class="home-bar"></div></div>
+</div>
