@@ -1,0 +1,115 @@
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  .bt{
+    --bg:#000000;--card:#1B1B1D;--card2:#242426;--hair:rgba(255,255,255,.09);
+    --ink:#F5F5F7;--dim:#AEAEB4;--mute:#7C7C82;--aqua:#2FE3D0;--aquaD:#17B7A6;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;
+  }
+  .bt .num{font-feature-settings:"tnum";font-variant-numeric:tabular-nums;}
+  .bt .phone{width:390px;border-radius:44px;overflow:hidden;position:relative;background:var(--bg);}
+  .bt .statusbar{height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 30px;position:relative;}
+  .bt .sb-time{font-size:15px;font-weight:600;color:var(--ink);}
+  .bt .island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:112px;height:31px;background:#000;border-radius:18px;}
+  .bt .screen{padding:6px 18px 0;}
+  .bt .nav{display:flex;align-items:flex-end;justify-content:space-between;margin:6px 2px 6px;}
+  .bt .lt{font-size:34px;font-weight:700;letter-spacing:.37px;color:var(--ink);line-height:1.05;}
+  .bt .subt{font-size:14px;color:var(--mute);margin-top:2px;}
+  .bt .avatar{width:36px;height:36px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;}
+  .bt .card{background:var(--card);border-radius:20px;margin-top:14px;}
+  .bt .hero{padding:20px 18px 18px;}
+  .bt .heroTop{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+  .bt .heroTop .k{font-size:13px;color:var(--dim);}
+  .bt .live{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--aqua);}
+  .bt .live i{width:7px;height:7px;border-radius:50%;background:var(--aqua);box-shadow:0 0 8px var(--aqua);}
+  .bt .big{font-size:62px;font-weight:700;letter-spacing:-2px;color:var(--ink);line-height:1;margin-top:6px;}
+  .bt .big u{color:var(--mute);text-decoration:none;font-size:22px;font-weight:600;letter-spacing:0;margin-left:8px;}
+  .bt .track{margin-top:16px;height:8px;border-radius:4px;background:#2C2C2E;overflow:hidden;}
+  .bt .track i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--aquaD),var(--aqua));border-radius:4px;}
+  .bt .trackm{display:flex;justify-content:space-between;margin-top:9px;font-size:12px;color:var(--dim);}
+  .bt .trackm b{color:var(--aqua);font-weight:600;}
+  .bt .statsgroup{margin-top:14px;background:var(--card);border-radius:20px;display:flex;overflow:hidden;}
+  .bt .stat{flex:1;padding:15px 12px;position:relative;}
+  .bt .stat+.stat:before{content:"";position:absolute;left:0;top:15px;bottom:15px;width:1px;background:var(--hair);}
+  .bt .stat .l{font-size:12px;color:var(--mute);}
+  .bt .stat .v{font-size:26px;font-weight:700;letter-spacing:-1px;color:var(--ink);margin-top:7px;}
+  .bt .stat .v small{font-size:14px;color:var(--dim);font-weight:600;}
+  .bt .stat .d{font-size:12px;font-weight:600;color:var(--aqua);margin-top:3px;}
+  .bt .coach{padding:18px;}
+  .bt .ch{display:flex;align-items:center;gap:9px;margin-bottom:10px;}
+  .bt .ch .ic{width:26px;height:26px;border-radius:50%;background:rgba(47,227,208,.14);display:flex;align-items:center;justify-content:center;}
+  .bt .ch b{flex:1;font-size:14px;font-weight:600;color:var(--ink);}
+  .bt .tag{font-size:12px;font-weight:600;color:#04100E;background:var(--aqua);padding:3px 10px;border-radius:20px;}
+  .bt .ctitle{font-size:18px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+  .bt .cbody{font-size:14px;line-height:1.5;color:var(--dim);}
+  .bt .ask{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:14px;font-weight:600;color:#04100E;background:var(--aqua);border-radius:12px;padding:10px 16px;}
+  .bt .lrow{padding:14px 18px;display:flex;align-items:center;gap:13px;}
+  .bt .ric{width:38px;height:38px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;}
+  .bt .rl{font-size:12px;color:var(--mute);}
+  .bt .rt{font-size:15px;font-weight:600;color:var(--ink);margin-top:2px;}
+  .bt .chev{margin-left:auto;color:var(--mute);}
+  .bt .wk{padding:16px 18px;}
+  .bt .wh{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;}
+  .bt .wh b{font-size:14px;font-weight:600;color:var(--ink);}
+  .bt .wh .t{font-size:12px;font-weight:600;color:var(--aqua);}
+  .bt .wg{display:flex;}.bt .w{flex:1;text-align:center;position:relative;}
+  .bt .w+.w:before{content:"";position:absolute;left:0;top:2px;bottom:2px;width:1px;background:var(--hair);}
+  .bt .w .v{font-size:19px;font-weight:700;letter-spacing:-.5px;color:var(--ink);}
+  .bt .w .l{font-size:11px;color:var(--mute);margin-top:3px;}
+  .bt .tabbar{margin-top:14px;height:80px;display:flex;justify-content:space-around;padding:11px 44px 0;background:rgba(0,0,0,.6);backdrop-filter:blur(20px);border-top:1px solid var(--hair);}
+  .bt .tab{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;font-weight:500;}
+  .bt .homeind{height:24px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);}
+  .bt .hb{width:130px;height:5px;border-radius:3px;background:#fff;opacity:.6;}
+</style>
+
+<div class="bt"><div class="phone">
+  <div class="statusbar"><span class="sb-time">9:41</span><div class="island"></div>
+    <span style="display:flex;gap:6px;align-items:center"><svg width="17" height="11" viewBox="0 0 19 12"><rect x="0" y="7" width="3" height="5" rx="1" fill="#F5F5F7"/><rect x="5" y="5" width="3" height="7" rx="1" fill="#F5F5F7"/><rect x="10" y="2.5" width="3" height="9.5" rx="1" fill="#F5F5F7"/><rect x="15" y="0" width="3" height="12" rx="1" fill="#F5F5F7"/></svg><svg width="23" height="12" viewBox="0 0 26 13"><rect x="1" y="1" width="21" height="11" rx="3" fill="none" stroke="#F5F5F7" stroke-opacity=".4"/><rect x="2.5" y="2.5" width="16" height="8" rx="1.5" fill="#F5F5F7"/></svg></span></div>
+  <div class="screen">
+    <div class="nav">
+      <div><div class="lt">Today</div><div class="subt">Monday, June 22</div></div>
+      <div class="avatar"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M14 2 L5 13 h6 l-2 9 L19 10 h-6 z" fill="#2FE3D0"/></svg></div>
+    </div>
+
+    <div class="card hero">
+      <div class="heroTop"><span class="k">Step goal</span><span class="live"><i></i>Live</span></div>
+      <div class="big num">11,240<u>steps</u></div>
+      <div class="track"><i></i></div>
+      <div class="trackm num"><span><b>112%</b> of 10,000 goal</span><span>+1,240</span></div>
+    </div>
+
+    <div class="statsgroup">
+      <div class="stat"><div class="l">Active</div><div class="v num">68<small>m</small></div><div class="d">↑ 12</div></div>
+      <div class="stat"><div class="l">Distance</div><div class="v num">5.1<small>mi</small></div><div class="d">↑ 0.9</div></div>
+      <div class="stat"><div class="l">Idle</div><div class="v num">14<small>m</small></div><div class="d" style="color:#7C7C82">hold</div></div>
+    </div>
+
+    <div class="card coach">
+      <div class="ch"><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="#2FE3D0"><path d="M12 2l1.7 5.1L19 9l-5.3 1.9L12 16l-1.7-5.1L5 9l5.3-1.9z"/></svg></span><b>Coach Buddy</b><span class="tag">Celebrate</span></div>
+      <div class="ctitle">10K crushed — nice work.</div>
+      <div class="cbody">You blew past your step goal and logged a solid 4.2-mile run. Tomorrow, keep it easy: a relaxed walk or mobility work lets today settle in.</div>
+      <div class="ask">Ask Buddy</div>
+    </div>
+
+    <div class="card lrow">
+      <div class="ric"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2FE3D0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="4.5" r="1.8" fill="#2FE3D0" stroke="none"/><path d="M13 8.5l-3.2 2-1.8 3M13 8.5l2 3 3 1M12.6 8.5l-.6 5 2.2 4M9.8 13.5l-2.8 4"/></svg></div>
+      <div style="flex:1"><div class="rl">Latest run · Strava</div><div class="rt num">4.2 mi · 10:15/mi · 43 min</div></div>
+      <span class="chev"><svg width="8" height="14" viewBox="0 0 9 16" fill="none" stroke="#7C7C82" stroke-width="2" stroke-linecap="round"><path d="M1 1l6 7-6 7"/></svg></span>
+    </div>
+
+    <div class="card wk">
+      <div class="wh"><b>This week</b><span class="t">Building ↗</span></div>
+      <div class="wg">
+        <div class="w"><div class="v num">14.6</div><div class="l">miles</div></div>
+        <div class="w"><div class="v num">3</div><div class="l">runs</div></div>
+        <div class="w"><div class="v num">6.1</div><div class="l">longest</div></div>
+        <div class="w"><div class="v num">2</div><div class="l">rest</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <div class="tab" style="color:#2FE3D0"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#2FE3D0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v9h14v-9"/></svg>Today</div>
+    <div class="tab" style="color:#7C7C82"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#7C7C82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a8.5 8.5 0 01-12.5 7.5L3 21l1.5-4.5A8.5 8.5 0 1120 11.5z"/></svg>Coach</div>
+  </div>
+  <div class="homeind"><div class="hb"></div></div>
+</div></div>
