@@ -9,7 +9,7 @@ struct AskCoachLockedState: View {
     var body: some View {
         VStack(spacing: 14) {
             Spacer()
-            PuffyBuddy(mood: .ready, size: 96)
+            BuddyView(mood: .ready, size: 96)
             Text("Chat with Buddy")
                 .font(Typography.title2)
                 .foregroundColor(Palette.ink)

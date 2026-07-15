@@ -58,8 +58,8 @@ final class OnboardingStateTests: XCTestCase {
     // target any step in the range.
     func testStepCountCoversIntroPlusPersonalization() {
         XCTAssertEqual(OnboardingState.introPageCount, 3)
-        XCTAssertEqual(OnboardingState.personalizationStepCount, 5)
-        XCTAssertEqual(OnboardingState.stepCount, 8)
+        XCTAssertEqual(OnboardingState.personalizationStepCount, 6)   // + "Choose your look"
+        XCTAssertEqual(OnboardingState.stepCount, 9)
         XCTAssertEqual(OnboardingState.pageCount, OnboardingState.introPageCount) // back-compat alias
     }
 }

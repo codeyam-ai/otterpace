@@ -8,7 +8,7 @@ struct WeeklyReviewHeader: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            PuffyBuddy(mood: .ready, size: 34)
+            BuddyView(mood: .ready, size: 34)
             VStack(alignment: .leading, spacing: 1) {
                 Text("Weekly Review")
                     .font(.system(size: 18, weight: .heavy, design: .rounded))

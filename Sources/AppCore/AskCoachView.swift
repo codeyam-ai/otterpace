@@ -37,6 +37,8 @@ public struct ChatMessage: Identifiable, Equatable {
 }
 
 public struct AskCoachView: View {
+    // Re-render this screen when the theme changes so Palette retints live.
+    @ObservedObject private var themeStore = ThemeStore.shared
     @ObservedObject var model: OtterpaceModel
 
     @State private var messages: [ChatMessage] = []

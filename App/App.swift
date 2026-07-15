@@ -64,8 +64,12 @@ struct SwiftUIApp: App {
             //
             // In component-isolation captures the launch env selects a single
             // view via CodeyamIsolationHost; otherwise the app boots normally.
-            (CodeyamIsolationHost.root() ?? AnyView(ContentView()))
-                .preferredColorScheme(.light)
+            // ThemedAppRoot owns the selected theme, injects it, and pins the
+            // color scheme to the theme (light for Default/Fieldnote/Garden,
+            // dark for Bolt/Orbit) so system chrome matches the painted surfaces.
+            ThemedAppRoot {
+                CodeyamIsolationHost.root() ?? AnyView(ContentView())
+            }
         }
     }
 }

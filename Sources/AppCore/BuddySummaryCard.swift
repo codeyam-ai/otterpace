@@ -11,7 +11,7 @@ struct BuddySummaryCard: View {
     var body: some View {
         HStack(spacing: 14) {
             VStack(spacing: 6) {
-                PuffyBuddy(mood: mood, size: 92)
+                BuddyView(mood: mood, size: 92)
                 MoodChip(mood: mood)
             }
             .accessibilityElement(children: .ignore)

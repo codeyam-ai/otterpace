@@ -23,7 +23,7 @@ struct HealthDeniedView: View {
     private var deniedContent: some View {
         VStack(spacing: 22) {
             Spacer()
-            PuffyBuddy(mood: .resting, size: 120).accessibilityHidden(true)
+            BuddyView(mood: .resting, size: 120).accessibilityHidden(true)
             VStack(spacing: 10) {
                 Text("Health access is off")
                     .font(Typography.title)

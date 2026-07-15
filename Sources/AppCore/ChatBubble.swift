@@ -23,7 +23,7 @@ struct ChatBubble: View {
             }
         case .coach:
             HStack(alignment: .top, spacing: 8) {
-                PuffyBuddy(mood: message.mood, size: 30)
+                BuddyView(mood: message.mood, size: 30)
                 VStack(alignment: .leading, spacing: 6) {
                     if message.safetyFlag {
                         HStack(spacing: 5) {

@@ -1870,6 +1870,60 @@
       "runner": "tests"
     },
     {
+      "description": "Picking a theme persists it to UserDefaults until the user changes it again.",
+      "file": "Tests/AppCoreTests/ThemeStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ThemeStoreTests › testChangingThemePersists",
+      "line": 34,
+      "registeredAt": "2026-07-15T21:12:55.193012+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "With nothing saved and no scenario seed, the store opens on the Default theme.",
+      "file": "Tests/AppCoreTests/ThemeStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ThemeStoreTests › testDefaultsToDefaultTheme",
+      "line": 12,
+      "registeredAt": "2026-07-15T21:12:29.661397+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Every ThemeID resolves to a matching token set with a name, blurb, and correct isDark.",
+      "file": "Tests/AppCoreTests/ThemeStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ThemeStoreTests › testEveryThemeResolves",
+      "line": 51,
+      "registeredAt": "2026-07-15T21:13:13.927346+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A returning user loads the theme they last chose as their personal default.",
+      "file": "Tests/AppCoreTests/ThemeStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ThemeStoreTests › testLoadsSavedTheme",
+      "line": 18,
+      "registeredAt": "2026-07-15T21:12:39.154800+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The rbTheme scenario seed wins over the saved value so any theme is capturable.",
+      "file": "Tests/AppCoreTests/ThemeStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ThemeStoreTests › testRbThemeSeedOverridesSaved",
+      "line": 26,
+      "registeredAt": "2026-07-15T21:12:47.512620+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An unrecognized saved theme value degrades to Default rather than crashing.",
+      "file": "Tests/AppCoreTests/ThemeStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ThemeStoreTests › testUnknownSavedValueFallsBackToDefault",
+      "line": 43,
+      "registeredAt": "2026-07-15T21:13:03.737681+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "Every activity review fills all five sections plus a focus area.",
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",

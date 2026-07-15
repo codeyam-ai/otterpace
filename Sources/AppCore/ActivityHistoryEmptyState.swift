@@ -5,7 +5,7 @@ import SwiftUI
 struct ActivityHistoryEmptyState: View {
     var body: some View {
         VStack(spacing: 14) {
-            PuffyBuddy(mood: .ready, size: 96)
+            BuddyView(mood: .ready, size: 96)
             Text("No workouts yet")
                 .font(.system(size: 22, weight: .heavy, design: .rounded))
                 .foregroundColor(Palette.ink)

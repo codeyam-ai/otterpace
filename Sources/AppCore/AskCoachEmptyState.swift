@@ -6,7 +6,7 @@ struct AskCoachEmptyState: View {
     var body: some View {
         VStack(spacing: 14) {
             Spacer()
-            PuffyBuddy(mood: .ready, size: 96)
+            BuddyView(mood: .ready, size: 96)
             Text("What should we do today?")
                 .font(Typography.title2)
                 .foregroundColor(Palette.ink)

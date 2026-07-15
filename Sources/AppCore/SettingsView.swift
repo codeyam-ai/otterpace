@@ -7,6 +7,8 @@ import SwiftUI
 // account — the App Store-required account-deletion path), Health access, the
 // editable daily step goal, a privacy explainer + policy link, and About.
 public struct SettingsView: View {
+    // Re-render this screen when the theme changes so Palette retints live.
+    @ObservedObject private var themeStore = ThemeStore.shared
     @ObservedObject var model: OtterpaceModel
     @ObservedObject var session: SessionStore
     var onClose: () -> Void
@@ -97,6 +99,7 @@ public struct SettingsView: View {
                     ScrollView {
                         VStack(spacing: 16) {
                             accountCard
+                            appearanceCard.id("appearance")
                             healthCard
                             if strava.isConfigured { stravaCard }
                             coachCard
@@ -205,7 +208,7 @@ public struct SettingsView: View {
 
     private var header: some View {
         HStack(spacing: 10) {
-            PuffyBuddy(mood: .ready, size: 34)
+            BuddyView(mood: .ready, size: 34)
             Text("Settings")
                 .font(Typography.title3)
                 .foregroundColor(Palette.ink)
@@ -328,7 +331,7 @@ public struct SettingsView: View {
                 .ignoresSafeArea()
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 10) {
-                    PuffyBuddy(mood: .ready, size: 34)
+                    BuddyView(mood: .ready, size: 34)
                     Text("Sync health data?").font(Typography.title3).foregroundColor(Palette.ink)
                 }
                 Text("If you turn this on, a snapshot of your activity — steps, distance, active minutes and energy — is uploaded to your Otterpace account, tied to your Apple sign-in, so it follows you across devices.")
@@ -783,6 +786,50 @@ public struct SettingsView: View {
     }
 
     // MARK: Building blocks
+
+    // Appearance — pick one of the five whole-app themes. Applies live (this
+    // screen observes ThemeStore) and persists as the personal default.
+    @ViewBuilder private var appearanceCard: some View {
+        card("Appearance") {
+            VStack(spacing: 6) {
+                ForEach(ThemeID.allCases) { id in themeRow(id) }
+            }
+        }
+    }
+
+    private func themeRow(_ id: ThemeID) -> some View {
+        let t = id.theme
+        let selected = themeStore.themeID == id
+        return Button {
+            themeStore.themeID = id
+            Analytics.shared.capture("theme_changed", ["theme": id.rawValue])
+        } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10).fill(t.bgTop)
+                    RoundedRectangle(cornerRadius: 10).strokeBorder(t.subtle.opacity(0.25), lineWidth: 1)
+                    if id == .default {
+                        PuffyBuddy(mood: .ready, size: 28, showHalo: false)
+                    } else {
+                        ThemeMark(theme: t, size: 26)
+                    }
+                }
+                .frame(width: 46, height: 46)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(id.displayName).font(Typography.body).foregroundColor(Palette.ink)
+                    Text(id.blurb).font(Typography.caption).foregroundColor(Palette.subtle)
+                }
+                Spacer()
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(selected ? Palette.brand : Palette.subtle.opacity(0.4))
+            }
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(id.displayName) theme. \(id.blurb)")
+        .accessibilityAddTraits(selected ? [.isSelected] : [])
+    }
 
     private func card<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {

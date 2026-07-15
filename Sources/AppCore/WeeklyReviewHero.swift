@@ -8,7 +8,7 @@ struct WeeklyReviewHero: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            PuffyBuddy(mood: mood, size: 96)
+            BuddyView(mood: mood, size: 96)
             MoodChip(mood: mood)
             Text(headline)
                 .font(.system(size: 22, weight: .heavy, design: .rounded))

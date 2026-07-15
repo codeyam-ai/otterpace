@@ -500,6 +500,27 @@
     "testFile": "Tests/AppCoreTests/AccountSyncTests.swift"
   },
   {
+    "conformsToView": false,
+    "description": "The flat design-token set for one app look — brand + semantic accents, ink/subtle text, card and background colors, and isDark. Five instances exist (Default, Bolt, Orbit, Fieldnote, Garden); the theme-resolved Palette reads the selected one so every screen retints.",
+    "filePath": "Sources/AppCore/Theming/ThemeSystem.swift",
+    "name": "Theme",
+    "testFile": "Tests/AppCoreTests/ThemeStoreTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "The five selectable looks (default, bolt, orbit, fieldnote, garden). Each maps to its resolved Theme token set plus a display name and one-line education blurb shown in the onboarding step and the Settings picker. Default is the shipping identity and the default.",
+    "filePath": "Sources/AppCore/Theming/ThemeSystem.swift",
+    "name": "ThemeID",
+    "testFile": "Tests/AppCoreTests/ThemeStoreTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "Owns the selected theme, persists it as the user's personal default in UserDefaults, and re-seeds from the rbTheme key for scenario previews (mirrors CoachProfileStore). A shared instance backs the theme-resolved Palette; screen roots observe it so switching re-themes the whole app live.",
+    "filePath": "Sources/AppCore/Theming/ThemeSystem.swift",
+    "name": "ThemeStore",
+    "testFile": "Tests/AppCoreTests/ThemeStoreTests.swift"
+  },
+  {
     "description": "The full Today surface composed from the header, Buddy summary, stats row, and the coach, latest-activity, and weekly-load cards. Exercised by the Today dashboard application scenarios.",
     "filePath": "Sources/AppCore/TodayView.swift",
     "name": "TodayDashboard",

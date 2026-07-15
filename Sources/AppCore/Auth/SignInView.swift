@@ -10,12 +10,14 @@ import AuthenticationServices
 // and everything (including HealthKit) works as a guest. Scenarios skip this
 // screen unless one seeds `rbStartScreen = "signin"` to preview it.
 struct SignInView: View {
+    // Re-render this screen when the theme changes so Palette retints live.
+    @ObservedObject private var themeStore = ThemeStore.shared
     @ObservedObject var session: SessionStore
 
     var body: some View {
         VStack(spacing: 22) {
             Spacer()
-            PuffyBuddy(mood: .ready, size: 130).accessibilityHidden(true)
+            BuddyView(mood: .ready, size: 130).accessibilityHidden(true)
             VStack(spacing: 10) {
                 Text("Welcome to Otterpace")
                     .font(Typography.title)

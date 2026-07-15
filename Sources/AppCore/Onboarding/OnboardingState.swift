@@ -15,10 +15,10 @@ public enum OnboardingState {
     /// with the view's pager.
     public static let introPageCount = 3
 
-    /// Personalization steps that follow the intro carousel: set goal, walking
-    /// habits, other training, training phase, add AI coaching. Each is
-    /// individually skippable.
-    public static let personalizationStepCount = 5
+    /// Personalization steps that follow the intro carousel: choose your look, set
+    /// goal, walking habits, other training, training phase, add AI coaching. Each
+    /// is individually skippable.
+    public static let personalizationStepCount = 6
 
     /// Total steps in the personalized onboarding flow (intro pages +
     /// personalization steps). `startPage` clamps into `0..<stepCount` so a

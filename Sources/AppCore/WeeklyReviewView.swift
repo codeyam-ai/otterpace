@@ -16,6 +16,8 @@ import SwiftUI
 // branches between the activity recap and the empty first-week prompt.
 
 public struct WeeklyReviewView: View {
+    // Re-render this screen when the theme changes so Palette retints live.
+    @ObservedObject private var themeStore = ThemeStore.shared
     let review: WeeklyReview
     var onClose: () -> Void
 

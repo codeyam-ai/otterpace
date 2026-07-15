@@ -20,6 +20,8 @@ import SwiftUI
 // gradient capsule button from `ConnectHero`. Presented by `ContentView` as a
 // top-of-`ZStack` overlay, the same way Settings/Sign-in are gated.
 struct OnboardingFlowView: View {
+    // Re-render this screen when the theme changes so Palette retints live.
+    @ObservedObject private var themeStore = ThemeStore.shared
     var onFinish: () -> Void
     private let defaults: UserDefaults
 
@@ -99,11 +101,12 @@ struct OnboardingFlowView: View {
     // MARK: Personalization steps
 
     private enum Step: Int, CaseIterable {
-        case goal, walkHabits, otherTraining, trainingPhase, aiKey
+        case chooseLook, goal, walkHabits, otherTraining, trainingPhase, aiKey
 
         /// Analytics-safe step name (no PII).
         var name: String {
             switch self {
+            case .chooseLook:    return "choose_look"
             case .goal:          return "goal"
             case .walkHabits:    return "walk_habits"
             case .otherTraining: return "other_training"
@@ -182,7 +185,7 @@ struct OnboardingFlowView: View {
     private func introPageView(_ p: IntroPage) -> some View {
         VStack(spacing: 22) {
             Spacer()
-            PuffyBuddy(mood: p.mood, size: 140).accessibilityHidden(true)
+            BuddyView(mood: p.mood, size: 140).accessibilityHidden(true)
             VStack(spacing: 12) {
                 Text(p.title)
                     .font(Typography.title)
@@ -204,12 +207,70 @@ struct OnboardingFlowView: View {
 
     @ViewBuilder private func stepView(_ step: Step) -> some View {
         switch step {
+        case .chooseLook:    chooseLookStep
         case .goal:          goalStep
         case .walkHabits:    walkHabitsStep
         case .otherTraining: otherTrainingStep
         case .trainingPhase: trainingPhaseStep
         case .aiKey:         aiKeyStep
         }
+    }
+
+    // A quick "pick your look" step: choose one of the five whole-app themes.
+    // Selecting applies it live (the flow observes ThemeStore, so it retints in
+    // place); skipping leaves Default. Each swatch previews its own theme's colors.
+    private var chooseLookStep: some View {
+        stepScaffold(
+            mood: .ready,
+            title: "Choose your look",
+            subtitle: "Pick a design for the whole app. You can change it anytime in Settings."
+        ) {
+            VStack(spacing: 10) {
+                ForEach(ThemeID.allCases) { id in themeOptionRow(id) }
+            }
+        } primary: {
+            primaryButton("Continue") {
+                Analytics.shared.capture("onboarding_theme_selected", ["theme": themeStore.themeID.rawValue])
+                advance()
+            }
+        } skip: {
+            skipButton(step: .chooseLook)
+        }
+    }
+
+    private func themeOptionRow(_ id: ThemeID) -> some View {
+        let t = id.theme
+        let selected = themeStore.themeID == id
+        return Button {
+            themeStore.themeID = id
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12).fill(t.bgTop)
+                    RoundedRectangle(cornerRadius: 12).strokeBorder(t.subtle.opacity(0.25), lineWidth: 1)
+                    if id == .default {
+                        PuffyBuddy(mood: .ready, size: 34, showHalo: false)
+                    } else {
+                        ThemeMark(theme: t, size: 30)
+                    }
+                }
+                .frame(width: 56, height: 56)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(id.displayName).font(Typography.headline).foregroundColor(Palette.ink)
+                    Text(id.blurb).font(Typography.caption).foregroundColor(Palette.subtle)
+                }
+                Spacer()
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(selected ? Palette.brand : Palette.subtle.opacity(0.45))
+            }
+            .padding(12)
+            .background(RoundedRectangle(cornerRadius: 16).fill(Palette.card))
+            .overlay(RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(selected ? Palette.brand : Color.clear, lineWidth: 2))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(id.displayName) theme. \(id.blurb)")
+        .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
     private var goalStep: some View {
@@ -393,7 +454,7 @@ struct OnboardingFlowView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 20) {
-                    PuffyBuddy(mood: mood, size: 96).accessibilityHidden(true)
+                    BuddyView(mood: mood, size: 96).accessibilityHidden(true)
                         .padding(.top, 44)
                     VStack(spacing: 10) {
                         Text(title)

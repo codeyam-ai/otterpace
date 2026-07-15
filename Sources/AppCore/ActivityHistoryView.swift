@@ -13,6 +13,8 @@ import SwiftUI
 // them and branches between the populated history and the empty prompt.
 
 public struct ActivityHistoryView: View {
+    // Re-render this screen when the theme changes so Palette retints live.
+    @ObservedObject private var themeStore = ThemeStore.shared
     @ObservedObject var model: OtterpaceModel
     var onClose: () -> Void
 

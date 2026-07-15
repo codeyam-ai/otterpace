@@ -22,7 +22,7 @@ struct ConnectHero: View {
     private var heroContent: some View {
         VStack(spacing: 24) {
             Spacer()
-            PuffyBuddy(mood: .ready, size: 140)
+            BuddyView(mood: .ready, size: 140)
                 .accessibilityHidden(true)
             VStack(spacing: 10) {
                 Text("Hi, I'm Buddy! 🐾")

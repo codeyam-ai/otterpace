@@ -5,6 +5,8 @@ import SwiftUI
 // full Today dashboard once activity data is available.
 
 public struct ContentView: View {
+    // Re-render this screen when the theme changes so Palette retints live.
+    @ObservedObject private var themeStore = ThemeStore.shared
     @StateObject private var model = OtterpaceModel()
     @StateObject private var session = SessionStore()
 
