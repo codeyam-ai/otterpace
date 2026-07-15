@@ -22,6 +22,8 @@ pastes from.
     create the app record.
 - **Subtitle** (≤30): `Your friendly running coach` (27)
   - Alt: `Your daily running coach` (24)
+  - ⚠️ **Include the subtitle this time** — it was accidentally omitted at the 1.0
+    submission. Fill the Subtitle field on the 1.0.1 version.
 
 ## URLs & metadata
 - **Privacy Policy URL**: `https://otterpace.com/privacy` (matches `site/privacy.html`)
@@ -32,7 +34,8 @@ pastes from.
   **Health or Wellness Topics = Yes** (self-care/lifestyle recs), **Medical or
   Treatment-Focused = No** ("not medical advice"); resulting rating may be 4+ to
   12+ — take whatever ASC computes. **For the v1 submission ASC returned 9+.**
-- **Version**: `1.0`
+- **Version**: `1.0` submitted (Waiting for Review). Next: **`1.0.1`** update with
+  **build 5** (conversational coaching + five themes), to submit once 1.0 is live.
 - **Copyright**: `2026 Nadia Eldeib`
 
 ## Privacy "nutrition label" (App Privacy section)
@@ -41,6 +44,12 @@ is hidden, and Apple Health data is read on-device only (it never leaves the
 device, so it is not "collected" in App Store terms). See the
 `app-store-submission` runbook plan for the full label-completion flow; the two
 docs agree on **Data Not Collected** for this release.
+
+> **1.0.1 keeps Data Not Collected.** The theme feature stores the chosen look in
+> on-device UserDefaults only, and its analytics events (`theme_changed`,
+> `onboarding_theme_selected`) are no-ops while `PostHogProjectKey` is empty —
+> nothing leaves the device. The conversational-coaching change also collects
+> nothing new (BYO-key requests still go straight to Anthropic, never stored).
 
 > If analytics is enabled in a later release, the mapping becomes (kept here so
 > nothing is lost — see `docs/strava-and-analytics.md` for the full version):
@@ -93,10 +102,11 @@ Otterpace turns daily movement into steady, guilt-free progress. Buddy reads you
 • Weekly review: what went well, and one focus for next week.
 • Activity history: your recent runs and walks, week by week.
 • Gentle reminders: optional nudges to move, on your schedule.
+• Make it yours: choose from five app themes, from warm and friendly to dark and focused, in onboarding or Settings.
 
 Private by design: your Apple Health data stays on your device and is never uploaded. No account is required to use Otterpace. Sign in with Apple only if you want your goal and preferences to sync across devices. Otterpace is open source.
 
-Optional: connect your own AI key for richer, conversational coaching, or use the built-in coach offline. No key required.
+Ask Buddy holds a real conversation now: it remembers what you already said and builds on it instead of repeating itself. Connect your own AI key for richer replies, or use the built-in coach offline. No key required.
 
 Otterpace offers general fitness guidance, not medical advice.
 ```
@@ -135,24 +145,51 @@ usable signed out, so no username/password is provided.
 **App Store Version Release**: select **Automatically release this version** (auto
 on approval). Manual release is the one-line alternative.
 
-## What's New (version 1.0)
+## What's New (version 1.0.1 — the pending update, build 5)
+
+> Submit this as a **1.0.1 update** once **1.0 is live** (App Store versions are
+> sequential — you can't create 1.0.1 while 1.0 is still Waiting for Review).
+> Attach **build 5**, which carries the conversational-coaching upgrade and the
+> five-theme system. Metadata below is otherwise unchanged from 1.0 (subtitle now
+> included — it was accidentally omitted at the 1.0 submission).
+
+```
+Buddy holds a real conversation now: Ask Buddy remembers what you already said and builds on it, gives calmer, more trusting guidance, and no longer over-flags rest. New: choose from five app themes — from warm and friendly to dark and focused — in onboarding or Settings. Plus fixes and polish.
+```
+
+## What's New (version 1.0 — first release, build 3)
 ```
 First release: meet Buddy, your friendly running coach. Daily step goal, Ask Buddy chat, smart run/rest tips, race-goal coaching, weekly review, activity history, and gentle reminders.
 ```
 
-## Screenshots (raw 6.5" set, captured and ready to upload)
-A 6-shot raw set is committed at `appstore/screenshots/6.5-inch/` (1284×2778,
-the size App Store Connect's 6.5" slot accepts; ASC reuses one set for all
-display sizes). Captured from the seeded CodeYam scenarios on an iPhone 13 Pro
-Max simulator with a clean 9:41 status bar. Upload order (first 3 show on the
-install sheet):
+## Screenshots
+
+### For 1.0.1
+The committed 6.5" set below (build 3, Default theme) **still represents the app**
+— the core screens are unchanged — so 1.0.1 can ship with it unchanged if you want
+to submit fast. But the update's two headline features are visual, so a refresh is
+worth it when the capture pipeline is healthy:
+
+- **Add a themes showcase** — the Settings › Appearance picker (all five looks), or
+  a couple of themed Today screens (e.g. Bolt dark + Orbit) side by side. This is
+  the single most valuable new shot.
+- **Refresh Ask Coach** to a multi-turn exchange (shows the conversational upgrade).
+- Keep the rest (Today, Weekly Review, onboarding, Settings).
+
+**Capture caveat (blocked right now):** the editor's automated capture races the
+coral LaunchScreen, so a clean set can't be regenerated reliably this session (see
+the `theme-scenarios-need-recapture` note). The manual `simctl` fallback works but
+the current sim is **iPhone 16 Pro (1206×2622)** — *not* an App Store size. Capture
+the App-Store set on an **iPhone 16 Pro Max** sim at **1320×2868 (6.9")**, or the
+legacy 6.5" **1284×2778** on an iPhone 11/13 Pro Max, with a clean 9:41 status bar.
+Verify which display sizes ASC requires before uploading (it may now mandate 6.9").
+
+### Existing committed set (6.5", 1284×2778, Default theme)
+A 6-shot raw set is committed at `appstore/screenshots/6.5-inch/`. Upload order
+(first 3 show on the install sheet):
 1. `01-today-goal-crushed.png`: Today dashboard, goal crushed
 2. `02-ask-coach-knee-pain.png`: injury-aware "Safety First" coaching
 3. `03-weekly-review-solid-week.png`: Weekly Review
 4. `04-welcome-meet-buddy.png`: Meet Buddy onboarding
 5. `05-today-fresh-start.png`: day-one dashboard
 6. `06-settings.png`: Settings (privacy / BYO key)
-
-**Verify** ASC still accepts the 6.5" set alone before submitting; if it now
-requires 6.9", recapture at 1320×2868 on an iPhone 16 Pro Max sim. Regenerate
-with `scratchpad/appstore-capture.mjs`.
