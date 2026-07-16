@@ -195,10 +195,12 @@ final class ModelTests: XCTestCase {
 
     // Setting the daily step goal applies it to the dashboard immediately.
     @MainActor func testSetGoalStepsApplies() {
-        let model = OtterpaceModel(today: TodayState(healthKitConnected: true, steps: 5000, goalSteps: 10000))
+        // Isolated store so parallel goal-writing tests don't contaminate the read.
+        let d = UserDefaults(suiteName: "ModelTests.goal.\(UUID().uuidString)")!
+        let model = OtterpaceModel(today: TodayState(healthKitConnected: true, steps: 5000, goalSteps: 10000), defaults: d)
         model.setGoalSteps(12000)
         XCTAssertEqual(model.today.goalSteps, 12000)
-        XCTAssertEqual(UserPreferences.goalSteps(), 12000)
+        XCTAssertEqual(UserPreferences.goalSteps(d), 12000)
     }
 
     // UserPreferences falls back to the default goal when nothing is set.
@@ -226,10 +228,12 @@ final class ModelTests: XCTestCase {
 
     // A non-preset custom goal persists and applies just like a preset.
     @MainActor func testSetCustomGoalPersistsAndApplies() {
-        let model = OtterpaceModel(today: TodayState(healthKitConnected: true, steps: 5000, goalSteps: 10000))
+        // Isolated store so parallel goal-writing tests don't contaminate the read.
+        let d = UserDefaults(suiteName: "ModelTests.goal.\(UUID().uuidString)")!
+        let model = OtterpaceModel(today: TodayState(healthKitConnected: true, steps: 5000, goalSteps: 10000), defaults: d)
         model.setGoalSteps(9500)
         XCTAssertEqual(model.today.goalSteps, 9500)
-        XCTAssertEqual(UserPreferences.goalSteps(), 9500)
+        XCTAssertEqual(UserPreferences.goalSteps(d), 9500)
     }
 
     // MARK: Strava ingest → weekly load

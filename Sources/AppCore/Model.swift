@@ -375,8 +375,10 @@ public final class OtterpaceModel: ObservableObject {
     }
 
     /// Set the daily step goal: persist it and apply immediately to the dashboard.
+    /// Persists through the model's own `defaults` (like the race mutators) so a
+    /// seeded/isolated store is honored rather than always hitting `.standard`.
     public func setGoalSteps(_ goal: Int) {
-        UserPreferences.setGoalSteps(goal)
+        UserPreferences.setGoalSteps(goal, defaults)
         today.goalSteps = goal
     }
 
