@@ -1,50 +1,234 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Otterpace — a friendly AI running coach</title>
-  <meta name="description" content="Otterpace is an open-source, privacy-first AI running coach for iOS. Buddy the otter keeps you moving with injury-aware, never-shame-based coaching, with your privacy in mind." />
-  <meta property="og:title" content="Otterpace" />
-  <meta property="og:description" content="A friendly, privacy-first AI running coach for iOS. Your Apple Health data is read on your device and never uploaded." />
-  <meta property="og:image" content="otterpace-icon.png" />
-  <link rel="icon" href="otterpace-icon.png" />
-  <link rel="stylesheet" href="style.css" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Otterpace — a friendly running companion</title>
+<style>
+  :root{--paper:#FBF6EF;--ink:#20202a;--coral:#FF5A3C;--coral2:#ED4C36;--go:#2FA968;--gold:#F3B430;--sky:#5B9EED;--muted:#7a7480;--line:#EADFCF;--card:#fff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--paper);color:var(--ink);font-family:-apple-system,"SF Pro Display",system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .mono{font-family:"SF Mono",ui-monospace,monospace}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 28px}
+  a{color:inherit;text-decoration:none}
+
+  nav{position:sticky;top:0;z-index:40;background:rgba(251,246,239,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:16px;height:66px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.02em}
+  .brand img{width:32px;height:32px;border-radius:9px}
+  nav .sp{flex:1}
+  .nl{font-family:"SF Mono",monospace;color:var(--muted);font-size:13px}.nl:hover{color:var(--coral)}
+  .btn{background:var(--ink);color:var(--paper);font-weight:800;font-size:14px;padding:10px 18px;border-radius:100px}
+
+  .mq{background:var(--ink);color:var(--paper);overflow:hidden;padding:11px 0;white-space:nowrap}
+  .mq .track{display:inline-block;animation:scroll 34s linear infinite;font-weight:800;font-size:14px;letter-spacing:.02em;text-transform:uppercase}
+  .mq .track span{margin:0 14px}.mq .track .d{color:var(--gold)}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  header{padding:60px 0 20px}
+  .hero-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:44px;align-items:center}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--coral2);color:var(--coral2);
+    font-family:"SF Mono",monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;border-radius:100px}
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--go);box-shadow:0 0 8px var(--go)}
+  h1{font-size:clamp(52px,8.5vw,104px);line-height:.9;letter-spacing:-.045em;font-weight:900;margin:20px 0 0;text-transform:uppercase}
+  h1 .o{color:var(--coral)}
+  .lead{font-size:20px;color:#4a4653;max-width:36ch;margin-top:20px;font-weight:500}
+  .cta-row{display:flex;gap:14px;margin-top:26px;flex-wrap:wrap;align-items:center}
+  .cta-row img{height:50px;width:auto;display:block}
+  .fine{margin-top:14px;font-family:"SF Mono",monospace;font-size:12px;color:var(--muted);letter-spacing:.02em}
+
+  .hero-device{position:relative;justify-self:center}
+  .hero-device img{width:min(272px,74vw);border-radius:36px;border:8px solid var(--ink);background:var(--ink);display:block;box-shadow:0 30px 60px rgba(32,32,42,.22)}
+  .hero-device .ring-bg{position:absolute;inset:-26px;border:2px dashed var(--line);border-radius:44px;z-index:-1}
+
+  .pace{height:16px;background-image:repeating-linear-gradient(90deg,var(--ink) 0 20px,transparent 20px 38px);opacity:.14;margin:0}
+  .pace.thin{opacity:.09;height:11px;background-image:repeating-linear-gradient(90deg,var(--muted) 0 9px,transparent 9px 20px)}
+
+  section{padding:62px 0}
+  .k{font-family:"SF Mono",monospace;color:var(--coral2);font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+  .h2{font-size:clamp(32px,5.2vw,54px);letter-spacing:-.035em;font-weight:900;margin:10px 0 8px;line-height:.98}
+  .sub{color:#4a4653;font-size:18px;max-width:54ch}
+
+  /* theme multiview — accent-differentiated */
+  .gallery{margin-top:34px;background:#16161d;border-radius:26px;padding:38px 28px 18px;overflow:hidden;position:relative}
+  .gallery .cap{position:absolute;top:20px;right:24px;font-family:"SF Mono",monospace;font-size:11px;color:#7d786f;letter-spacing:.1em}
+  .devs{display:flex;gap:20px;justify-content:center;align-items:flex-end;flex-wrap:wrap}
+  .devs figure{position:relative;text-align:center;--ac:#fff}
+  .devs .halo{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:132px;height:200px;
+    background:radial-gradient(closest-side,var(--ac),transparent 72%);opacity:.55;filter:blur(22px);z-index:0}
+  .devs img{position:relative;z-index:1;width:150px;border-radius:22px;border:4px solid #000;background:#000;display:block;
+    box-shadow:0 0 0 2px var(--ac),0 16px 34px rgba(0,0,0,.5)}
+  .devs figcaption{position:relative;z-index:1;margin-top:14px}
+  .devs .nm{font-family:"SF Mono",monospace;font-size:14px;color:#fff;font-weight:700;display:inline-flex;align-items:center;gap:7px}
+  .devs .nm .sw{width:11px;height:11px;border-radius:50%;background:var(--ac);box-shadow:0 0 9px var(--ac)}
+  .devs .h{color:#8f897f;font-size:11px;margin-top:3px}
+  .devs figure.mid img{width:172px}
+
+  /* weekly recap */
+  .week{background:var(--ink);color:var(--paper);border-radius:20px;padding:24px 26px;margin-top:26px;display:grid;grid-template-columns:auto repeat(4,1fr);gap:20px;align-items:center}
+  .week .title{font-family:"SF Mono",monospace;font-size:12px;color:#d8d2c6;max-width:11ch;line-height:1.4}
+  .week .title b{display:block;font-family:-apple-system,sans-serif;font-size:16px;color:var(--paper)}
+  .stat .v{font-size:28px;font-weight:900;letter-spacing:-.02em}
+  .stat .v.c{color:#ff8a72}.stat .v.g{color:#57d597}.stat .v.s{color:#7fb4ff}.stat .v.y{color:var(--gold)}
+  .stat .l{font-family:"SF Mono",monospace;font-size:10px;color:#a49e93;letter-spacing:.06em;margin-top:2px}
+  .review{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px}
+  .rc{background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:20px;box-shadow:4px 4px 0 var(--ink)}
+  .rc .lab{font-family:"SF Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .rc .lab .dot{width:9px;height:9px;border-radius:50%}
+  .rc h3{font-size:20px;margin:7px 0 5px;letter-spacing:-.01em}
+  .rc p{color:#4a4653;font-size:15px}
+
+  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+  .fc{border:1.5px solid var(--line);border-radius:18px;padding:24px;background:var(--card)}
+  .fc .e{font-size:24px;width:50px;height:50px;border-radius:14px;display:grid;place-items:center;background:#FFF0EB;margin-bottom:12px}
+  .fc h3{font-size:19px;margin-bottom:5px;letter-spacing:-.01em}
+  .fc p{color:var(--muted);font-size:15px}
+
+  .made{background:#1b1b23;color:#eceef2;border-radius:28px;padding:44px 34px;margin-top:6px;position:relative;overflow:hidden}
+  .made::before{content:"";position:absolute;inset:0;background:
+    radial-gradient(700px 300px at 90% -10%,rgba(255,90,60,.14),transparent 60%),
+    linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
+    background-size:auto,44px 44px,44px 44px;pointer-events:none}
+  .made .in{position:relative;z-index:1}
+  .made .k{color:#ff8a72}
+  .made h2{font-size:clamp(30px,4.5vw,48px);letter-spacing:-.03em;font-weight:900;margin:10px 0 10px}
+  .made p{color:#b7b9c6;font-size:17px;max-width:62ch}
+  .made p b{color:#fff}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:28px 0 6px}
+  .step{border:1px solid #33333f;border-radius:16px;padding:20px;background:rgba(255,255,255,.02)}
+  .step .n{font-family:"SF Mono",monospace;color:#ff8a72;font-size:13px}
+  .step h4{font-size:16px;margin:8px 0 5px}
+  .step p{color:#9a9caa;font-size:14px}
+  .made .cta-row{margin-top:24px}
+  .lnk{display:inline-flex;align-items:center;gap:9px;font-weight:800;font-size:15px;padding:12px 20px;border-radius:100px;transition:.15s}
+  .lnk.primary{background:#ff6a4d;color:#1b1b23}
+  .lnk.ghost{border:1.5px solid #40404c;color:#eceef2}
+  .lnk:hover{transform:translateY(-2px)}
+
+  .final{text-align:center;padding:62px 24px}
+  .final h2{font-size:clamp(34px,6vw,68px);font-weight:900;letter-spacing:-.04em;text-transform:uppercase;line-height:.92}
+  .final h2 .o{color:var(--coral)}
+  .final .cta-row{justify-content:center;margin-top:26px}
+
+  footer{border-top:1px solid var(--line);padding:32px 0 60px}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-family:"SF Mono",monospace;font-size:13px;color:var(--muted);align-items:center}
+  footer b{color:#4a4653}
+  footer a:hover{color:var(--coral)}
+  footer .disc{width:100%;text-align:center;color:#a49e93;font-size:12px;margin-top:6px}
+  @media(max-width:880px){.hero-grid,.feat,.review,.steps{grid-template-columns:1fr}.week{grid-template-columns:1fr 1fr}.feat{grid-template-columns:1fr}.nl{display:none}}
+</style>
 </head>
 <body>
-  <header class="hero">
-    <img class="icon" src="otterpace-icon.png" alt="Otterpace app icon — Buddy the otter on coral" />
-    <h1>Otterpace</h1>
-    <p class="tag">A friendly AI running coach in your pocket — meet Buddy, your injury-aware, never-shame-based otter coach.</p>
-    <div class="badge">🐾 Available now on the App Store</div>
-  </header>
+<nav><div class="wrap">
+  <a class="brand"><img src="app-shots/icon.png" alt="">Otterpace</a>
+  <span class="sp"></span>
+  <a class="nl" href="#themes">/themes</a><a class="nl" href="#recap">/weekly-recap</a><a class="nl" href="#made">/open-source</a>
+  <a class="btn" href="#get">Get the app</a>
+</div></nav>
 
-  <main class="wrap">
-    <ul class="features">
-      <li><span class="emoji">👟</span><div><b>Daily movement, made gentle</b><span>A quick, skippable setup lets you pick your step goal and tell Buddy how you move, so coaching feels personal from day one — nudging you toward your goal, never nagging.</span></div></li>
-      <li><span class="emoji">🩺</span><div><b>Injury-aware coaching</b><span>Practical run/rest guidance that backs off when your training load spikes. No diagnoses, just sensible advice.</span></div></li>
-      <li><span class="emoji">📅</span><div><b>Weekly review &amp; history</b><span>See what went well, what changed, and your weekly mileage — at a glance.</span></div></li>
-      <li><span class="emoji">🔒</span><div><b>Your health data stays on-device</b><span>Apple Health is read on your device and never uploaded. No accounts required, no ads, no data sold. Open source, so you can check.</span></div></li>
-    </ul>
+<div class="mq"><div class="track">
+  <span>Available on the App Store</span><span class="d">🐾</span><span>Android coming soon</span><span class="d">🐾</span><span>Five whole-app themes</span><span class="d">🐾</span><span>On-device &amp; private</span><span class="d">🐾</span><span>Open source</span><span class="d">🐾</span>
+  <span>Available on the App Store</span><span class="d">🐾</span><span>Android coming soon</span><span class="d">🐾</span><span>Five whole-app themes</span><span class="d">🐾</span><span>On-device &amp; private</span><span class="d">🐾</span><span>Open source</span><span class="d">🐾</span>
+</div></div>
 
-    <div class="cta appstore-cta">
-      <a class="appstore-badge" href="https://apps.apple.com/us/app/otterpace/id6784287408" aria-label="Download Otterpace on the App Store">
-        <img src="app-store-badge.svg" alt="Download on the App Store" width="144" height="48" />
-      </a>
+<header><div class="wrap"><div class="hero-grid">
+  <div>
+    <span class="eyebrow"><span class="dot"></span>Now live on the App Store</span>
+    <h1>Run happy.<br><span class="o">Coach kind.</span></h1>
+    <p class="lead">A friendly running companion. Otterpace reads your steps and runs from Apple Health and turns them into gentle, day-by-day encouragement — from Buddy, your otter coach.</p>
+    <div class="cta-row" id="get">
+      <a href="https://apps.apple.com/us/app/otterpace/id6784287408"><img src="app-store-badge.svg" alt="Download on the App Store"></a>
+      <a style="cursor:not-allowed"><img src="play-badge-soon.svg" alt="Coming soon to Google Play"></a>
     </div>
+    <div class="fine">Free · No accounts · Apple Health stays on your device</div>
+  </div>
+  <div class="hero-device">
+    <div class="ring-bg"></div>
+    <img src="app-shots/shot-otter.png" alt="Otterpace Today screen">
+  </div>
+</div></div></header>
 
-    <div class="cta">
-      <a href="https://github.com/nseldeib/otterpace">View on GitHub</a>
-      <a class="secondary" href="mailto:hello@otterpace.com">Contact</a>
-      <a class="secondary" href="privacy.html">Privacy</a>
+<div class="pace"></div>
+
+<section id="themes"><div class="wrap">
+  <div class="k">// the theme system</div>
+  <div class="h2">One app. Five complete looks.</div>
+  <p class="sub">Not just light and dark — five full themes. Each one changes the colors, the type, the backgrounds, and Buddy’s mark. Set yours in onboarding, or switch anytime in Settings. Here’s the same Today screen, five ways.</p>
+  <div class="gallery">
+    <span class="cap">// Today · five themes</span>
+    <div class="devs">
+      <figure style="--ac:#2FE3D0"><div class="halo"></div><img src="app-shots/shot-bolt.png" alt="Bolt theme"><figcaption><span class="nm"><span class="sw"></span>Bolt</span><div class="h">true-black · electric aqua</div></figcaption></figure>
+      <figure style="--ac:#E0562F"><div class="halo"></div><img src="app-shots/shot-fieldnote.png" alt="Fieldnote theme"><figcaption><span class="nm"><span class="sw"></span>Fieldnote</span><div class="h">risograph paper · teal</div></figcaption></figure>
+      <figure class="mid" style="--ac:#FF7357"><div class="halo"></div><img src="app-shots/shot-otter.png" alt="Otter theme"><figcaption><span class="nm"><span class="sw"></span>Otter</span><div class="h">warm coral · Buddy</div></figcaption></figure>
+      <figure style="--ac:#74D6FF"><div class="halo"></div><img src="app-shots/shot-orbit.png" alt="Orbit theme"><figcaption><span class="nm"><span class="sw"></span>Orbit</span><div class="h">cosmic navy · ice blue</div></figcaption></figure>
+      <figure style="--ac:#7FA37A"><div class="halo"></div><img src="app-shots/shot-garden.png" alt="Garden theme"><figcaption><span class="nm"><span class="sw"></span>Garden</span><div class="h">sage · water-lily</div></figcaption></figure>
     </div>
-  </main>
+  </div>
+</div></section>
 
-  <footer>
-    Open source · Built with 💛 and <a href="https://codeyam.com">CodeYam</a>.<br />
-    <a href="https://github.com/nseldeib/otterpace">github.com/nseldeib/otterpace</a> · <a href="mailto:hello@otterpace.com">Contact</a> · <a href="privacy.html">Privacy Policy</a>
-  </footer>
-  <!-- Vercel Web Analytics -->
-  <script defer src="/_vercel/insights/script.js"></script>
-</body>
-</html>
+<div class="pace thin"></div>
+
+<section id="recap"><div class="wrap">
+  <div class="k">// your week, in plain words</div>
+  <div class="h2">A weekly recap<br>you’ll actually read.</div>
+  <p class="sub">Otterpace summarizes the steps and runs already in your Apple Health — in plain language, not charts to decode. Here’s what a week looks like.</p>
+  <div class="week">
+    <div class="title"><b>This week</b>with Buddy</div>
+    <div class="stat"><div class="v c">11,240</div><div class="l">STEPS TODAY</div></div>
+    <div class="stat"><div class="v g">4.2 mi</div><div class="l">LAST RUN</div></div>
+    <div class="stat"><div class="v s">3</div><div class="l">RUN DAYS</div></div>
+    <div class="stat"><div class="v y">68</div><div class="l">ACTIVE MIN</div></div>
+  </div>
+  <div class="review">
+    <div class="rc"><div class="lab"><span class="dot" style="background:var(--go)"></span>What went well</div><h3>A steady week</h3><p>4 runs for 22 miles, with your longest — 8 miles — on Sunday.</p></div>
+    <div class="rc"><div class="lab"><span class="dot" style="background:var(--sky)"></span>What changed</div><h3>A little more movement</h3><p>Slightly more mileage than your usual week, spread across the days.</p></div>
+    <div class="rc"><div class="lab"><span class="dot" style="background:var(--gold)"></span>This week’s high</div><h3>Your longest run yet this month</h3><p>Sunday’s 8-miler was your farthest in four weeks.</p></div>
+    <div class="rc"><div class="lab"><span class="dot" style="background:var(--coral)"></span>A note from Buddy</div><h3>Nice rhythm this week 🐾</h3><p>You showed up on the days you planned to. That’s the whole thing.</p></div>
+  </div>
+</div></section>
+
+<div class="pace thin"></div>
+
+<section><div class="wrap">
+  <div class="k">// what’s inside</div>
+  <div class="h2">Everything Otterpace does.</div>
+  <div class="feat">
+    <div class="fc"><div class="e">🎯</div><h3>Daily step goal</h3><p>Track your progress toward your goal, with a gentle reminder to move.</p></div>
+    <div class="fc"><div class="e">💬</div><h3>Ask Buddy</h3><p>Ask about your activity in plain language. Works offline; connect your own AI key for more.</p></div>
+    <div class="fc"><div class="e">📅</div><h3>Weekly recap</h3><p>A short, human summary of your week — no charts to decode.</p></div>
+    <div class="fc"><div class="e">🎨</div><h3>Five whole-app themes</h3><p>The entire app re-skins — colors, type, and mascot.</p></div>
+    <div class="fc"><div class="e">🔒</div><h3>On-device &amp; private</h3><p>Apple Health is read on your phone and never uploaded. No accounts, no ads, no data sold.</p></div>
+    <div class="fc"><div class="e">💛</div><h3>Open source</h3><p>Built in the open — read every line on GitHub.</p></div>
+  </div>
+</div></section>
+
+<section id="made"><div class="wrap"><div class="made"><div class="in">
+  <div class="k">// how it’s made</div>
+  <h2>Built in the open, with CodeYam.</h2>
+  <p>Otterpace is <b>open source</b>, and it was built with <b>CodeYam</b> — a way to build apps as living, testable scenarios. Every screen here, including all five themes, is a real captured scenario: <b>real data, real states, screenshotted exactly as they render.</b> It’s how the whole app stays verifiable — and how you can read every line yourself.</p>
+  <div class="steps">
+    <div class="step"><div class="n">01</div><h4>Build screens as scenarios</h4><p>Each state — a crushed goal, a quiet day, every theme — is defined with real data, not lorem ipsum.</p></div>
+    <div class="step"><div class="n">02</div><h4>Preview &amp; capture live</h4><p>Every scenario renders in a real simulator and is screenshotted — the exact shots on this page.</p></div>
+    <div class="step"><div class="n">03</div><h4>Ship with tests, in the open</h4><p>Logic is unit-tested, screens are visually covered, and the whole repo is public.</p></div>
+  </div>
+  <div class="cta-row">
+    <a class="lnk primary" href="https://codeyam.com">See how it’s built with CodeYam →</a>
+    <a class="lnk ghost" href="https://github.com/nseldeib/otterpace">Read the code on GitHub →</a>
+  </div>
+</div></div></div></section>
+
+<div class="final"><div class="wrap">
+  <h2>Lace up<br>with <span class="o">Buddy.</span></h2>
+  <div class="cta-row">
+    <a href="https://apps.apple.com/us/app/otterpace/id6784287408"><img src="app-store-badge.svg" alt="Download on the App Store"></a>
+    <a style="cursor:not-allowed"><img src="play-badge-soon.svg" alt="Coming soon to Google Play"></a>
+  </div>
+</div></div>
+
+<footer><div class="wrap">
+  <div><b>Otterpace</b> — a friendly running companion · Open source · Built with 💛 and CodeYam</div>
+  <div><a href="https://github.com/nseldeib/otterpace">github</a> · <a href="mailto:hello@otterpace.com">contact</a> · <a href="privacy.html">privacy</a></div>
+  <div class="disc">Otterpace offers friendly encouragement to keep you moving — it isn’t medical or training advice.</div>
+</div></footer>
+</body></html>
