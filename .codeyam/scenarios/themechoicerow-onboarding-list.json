@@ -1,0 +1,16 @@
+{
+  "name": "ThemeChoiceRow - Onboarding List",
+  "id": "26b31152-50e8-4211-8667-b644b5541b30",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Onboarding List",
+      "CODEYAM_ISOLATE_COMPONENT": "ThemeChoiceRow"
+    }
+  },
+  "componentName": "ThemeChoiceRow",
+  "scenarioType": "component"
+}

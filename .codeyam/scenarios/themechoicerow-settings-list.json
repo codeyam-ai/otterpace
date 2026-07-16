@@ -1,0 +1,16 @@
+{
+  "name": "ThemeChoiceRow - Settings List",
+  "id": "4caecc48-de95-4d1c-8982-ff869fc0b5d5",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "ThemeChoiceRow",
+      "CODEYAM_ISOLATE_SCENARIO": "Settings List"
+    }
+  },
+  "componentName": "ThemeChoiceRow",
+  "scenarioType": "component"
+}

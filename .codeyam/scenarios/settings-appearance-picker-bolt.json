@@ -1,0 +1,39 @@
+{
+  "name": "Settings - Appearance Picker - Bolt",
+  "id": "d1395fe4-d547-47c8-b119-0d798966f61d",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbSignedInUserID": "",
+      "otterpaceRemindGoal": false,
+      "rbRaceEditorCustomUnit": "",
+      "rbTheme": "bolt",
+      "rbShowHistory": false,
+      "rbContentSize": "",
+      "rbOnboardingPage": 0,
+      "rbShowWeeklyReview": false,
+      "rbStartTab": "today",
+      "rbSteps": 8000,
+      "otterpaceRemindInactivity": false,
+      "rbShowSettings": true,
+      "rbSyncHealth": false,
+      "rbPreviewMode": "",
+      "rbSyncSettings": false,
+      "rbDate": "2026-06-22",
+      "rbRacesJSON": "",
+      "rbGoalSteps": 10000,
+      "rbStartScreen": "",
+      "rbSettingsScroll": "appearance",
+      "rbRaceEditorCustomValue": "",
+      "otterpaceRemindDaily": false,
+      "rbShowRaceEditor": false,
+      "rbConnected": true
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/SettingsView.swift"
+}

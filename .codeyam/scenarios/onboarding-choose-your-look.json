@@ -1,0 +1,20 @@
+{
+  "name": "Onboarding - Choose Your Look",
+  "id": "f0f6dbfc-12e3-4e03-8e69-b5c50bb4964e",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbDate": "2026-06-22",
+      "rbTheme": "bolt",
+      "rbStartScreen": "onboarding",
+      "rbConnected": true,
+      "rbOnboardingPage": 3
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/Onboarding/OnboardingFlowView.swift"
+}

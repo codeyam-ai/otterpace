@@ -1,0 +1,77 @@
+Building Rust binary...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.22s
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+━━━ BEGIN STEP 21: Journal ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 21: 'Journal' and move on to step 22: 'Pre-Commit Sync'
+
+# UI Flow 21 / 26: Journal
+
+**Feature:** Choose a Design — App Theme System
+
+Create or update the journal entry documenting what was built.
+
+## Instructions
+
+RESUMING this step. Check what was already done before repeating work.
+  (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
+
+Create or update the journal entry for this feature.
+
+Checklist:
+[ ] Write a concise description of what was built (2-3 sentences)
+[ ] First time entering this slug — create journal entry with ALL session screenshots:
+    codeyam-editor-dev editor journal '{"title":"...","type":"feature","description":"...","includeSessionScenarios":true}'
+    Do NOT include a timestamp — it is auto-generated from the current time.
+    includeSessionScenarios auto-discovers component + app + user persona screenshots
+[ ] Returning to this slug (before commit) — update the existing journal entry:
+    codeyam-editor-dev editor journal-update '{"time":"<journal entry time>","description":"<updated>","includeSessionScenarios":true}'
+    Note: PATCH only works before the entry is committed. After commit, use POST to create a new entry.
+
+Focus on creating or updating the journal entry. Summary and presentation happen in the `ui-present` slug.
+
+When done, move to the next step: `codeyam-editor-dev editor 22`
+
+━━━ TASK ━━━
+If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
+
+Hand off from the previous step's task to this step's task. Procedure:
+  1. Run TaskList
+  2. If a task titled exactly `Complete codeyam editor step 20: 'Reconcile' and move on to step 21: 'Journal'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  3. Run TaskCreate with the EXACT title below and set it to in_progress:
+
+EXACT_TASK_TITLE: Complete codeyam editor step 21: 'Journal' and move on to step 22: 'Pre-Commit Sync'
+
+When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
+Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
+
+━━━ END OF STEP ━━━
+
+This is a non-gate step. Do NOT wait for user confirmation.
+Do NOT write a recap. Do NOT ask the user "ready to advance?" — they did
+not opt into a checkpoint. Recaps belong at gate steps, not here.
+
+If the checklist surfaces a finding that requires a user decision (unrelated test failures, surprising state, ambiguous next action), use AskUserQuestion with 2-4 concrete options — never an inline numbered list. If AskUserQuestion is not loaded, call `ToolSearch` with `select:AskUserQuestion` first.
+
+When you have finished the checklist AND marked the task completed, run:
+
+  Bash: codeyam-editor-dev editor advance
+
+━━━ BEGIN STEP 21: Journal ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 21: 'Journal' and move on to step 22: 'Pre-Commit Sync'
+
+  1. TaskCreate with the EXACT title above, status in_progress
+  2. Run the step 21 checklist (printed above this trailer)
+  3. TaskUpdate completed
+  4. Run `codeyam-editor editor advance`
+
+Tail-truncated this output? Re-run without piping: codeyam-editor editor advance
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+Partitions needing attention: stale=1 red=0 untested=0 — pass --verbose for names
+Staleness sweep: 2 non-blocking finding(s) (DEPENDENCY_GRAPH_STALE, PARTITION_NEEDS_REFRESH) — pass --verbose to list. Recovery: codeyam-editor editor sweep-staleness
+

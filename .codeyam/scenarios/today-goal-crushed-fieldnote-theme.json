@@ -1,0 +1,50 @@
+{
+  "name": "Today - Goal Crushed - Fieldnote Theme",
+  "id": "f80786e7-6381-436e-902f-d042a9d8002e",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbWorkoutPace": "10:15/mi",
+      "otterpaceRacePromptDismissed": true,
+      "rbBuddyMood": "celebrating",
+      "rbWorkoutType": "run",
+      "rbActiveEnergyKcal": 612,
+      "rbContentSize": "",
+      "rbWorkoutDurationMinutes": 43,
+      "rbOnboardingPage": 0,
+      "rbDistanceMiles": 5.1,
+      "rbCoachSafety": false,
+      "rbCoachType": "celebrate",
+      "rbActiveMinutes": 68,
+      "rbMinutesSinceMovement": 14,
+      "rbSteps": 11240,
+      "rbWeeklyMileage": 14.6,
+      "rbAskSeedQuestion": "",
+      "rbLoadTrend": "building",
+      "rbShowWeeklyReview": false,
+      "rbWorkoutDate": "2026-06-22",
+      "rbDate": "2026-06-22",
+      "rbGoalSteps": 10000,
+      "rbRestDaysThisWeek": 2,
+      "rbConnected": true,
+      "rbShowHistory": false,
+      "rbShowSettings": false,
+      "rbStartScreen": "",
+      "rbStartTab": "today",
+      "rbWorkoutSource": "strava",
+      "rbLongestRunMiles": 6.1,
+      "rbCoachHeadline": "10K crushed — nice work!",
+      "rbPreviewMode": "",
+      "rbDaysRunThisWeek": 3,
+      "rbTheme": "fieldnote",
+      "rbCoachBody": "You blew past your step goal and logged a solid 4.2-mile run. Tomorrow, keep it easy: a relaxed walk or mobility work lets today settle in.",
+      "rbWorkoutDistanceMiles": 4.2
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/ContentView.swift"
+}

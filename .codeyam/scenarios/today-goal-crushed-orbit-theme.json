@@ -1,0 +1,50 @@
+{
+  "name": "Today - Goal Crushed - Orbit Theme",
+  "id": "5c2ec8ad-0419-44f4-9786-1c3846206c18",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbCoachType": "celebrate",
+      "rbLoadTrend": "building",
+      "rbDate": "2026-06-22",
+      "rbTheme": "orbit",
+      "rbWorkoutPace": "10:15/mi",
+      "rbConnected": true,
+      "rbWorkoutSource": "strava",
+      "otterpaceRacePromptDismissed": true,
+      "rbLongestRunMiles": 6.1,
+      "rbContentSize": "",
+      "rbDistanceMiles": 5.1,
+      "rbShowHistory": false,
+      "rbWorkoutType": "run",
+      "rbStartTab": "today",
+      "rbCoachSafety": false,
+      "rbWorkoutDate": "2026-06-22",
+      "rbWorkoutDistanceMiles": 4.2,
+      "rbRestDaysThisWeek": 2,
+      "rbShowWeeklyReview": false,
+      "rbAskSeedQuestion": "",
+      "rbPreviewMode": "",
+      "rbCoachBody": "You blew past your step goal and logged a solid 4.2-mile run. Tomorrow, keep it easy: a relaxed walk or mobility work lets today settle in.",
+      "rbSteps": 11240,
+      "rbOnboardingPage": 0,
+      "rbShowSettings": false,
+      "rbStartScreen": "",
+      "rbCoachHeadline": "10K crushed — nice work!",
+      "rbMinutesSinceMovement": 14,
+      "rbGoalSteps": 10000,
+      "rbDaysRunThisWeek": 3,
+      "rbActiveEnergyKcal": 612,
+      "rbActiveMinutes": 68,
+      "rbBuddyMood": "celebrating",
+      "rbWeeklyMileage": 14.6,
+      "rbWorkoutDurationMinutes": 43
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/ContentView.swift"
+}

@@ -798,37 +798,10 @@ public struct SettingsView: View {
     }
 
     private func themeRow(_ id: ThemeID) -> some View {
-        let t = id.theme
-        let selected = themeStore.themeID == id
-        return Button {
+        ThemeChoiceRow(id: id, selected: themeStore.themeID == id, style: .settings) {
             themeStore.themeID = id
             Analytics.shared.capture("theme_changed", ["theme": id.rawValue])
-        } label: {
-            HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10).fill(t.bgTop)
-                    RoundedRectangle(cornerRadius: 10).strokeBorder(t.subtle.opacity(0.25), lineWidth: 1)
-                    if id == .default {
-                        PuffyBuddy(mood: .ready, size: 28, showHalo: false)
-                    } else {
-                        ThemeMark(theme: t, size: 26)
-                    }
-                }
-                .frame(width: 46, height: 46)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(id.displayName).font(Typography.body).foregroundColor(Palette.ink)
-                    Text(id.blurb).font(Typography.caption).foregroundColor(Palette.subtle)
-                }
-                Spacer()
-                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(selected ? Palette.brand : Palette.subtle.opacity(0.4))
-            }
-            .padding(.vertical, 4)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("\(id.displayName) theme. \(id.blurb)")
-        .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
     private func card<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {

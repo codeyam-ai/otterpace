@@ -1,0 +1,177 @@
+Building Rust binary...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.87s
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+━━━ BEGIN STEP 13: Glossary ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 13: 'Glossary' and move on to step 14: 'Dependency Graph'
+
+# UI Flow 13 / 26: Glossary
+
+**Feature:** Choose a Design — App Theme System
+
+Register every new test and glossary entry produced in the prior step.
+
+## Instructions
+
+RESUMING this step. Check what was already done before repeating work.
+  Tip: Check if a journal entry already exists for this feature.
+  (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
+
+Register every test and glossary entry produced in the prior extract step. NO audit invocation here — that's the next slug (`reconcile`).
+
+**Why now, not at audit time.** The audit at `reconcile`
+hard-fails on `RUNNER_HAS_UNREGISTERED_TEST` and `SOURCE_HAS_UNREGISTERED_ENTITY`.
+Registering incrementally — alongside the test/entity creation — keeps the
+audit gate fast and surfaces drift at write-time, not after a long run.
+
+Checklist:
+[ ] Register every test you wrote, in the same order they were created
+    **Prerequisite:** Run `codeyam-editor-dev editor refresh-tests --changed` (or rely on the audit's recent run) so the runner has emitted the new tests. Without this, the diff has nothing to add.
+
+    *   **Default branch (≥2 new tests):** Run `codeyam-editor-dev editor reconcile-registry --auto-apply`. It walks runner output, diffs against the registry, and adds every new test. Descriptions come from the `//` (or `///`) comment above each `it()`/`test()`/`#[test]`, and file/line are auto-resolved. Exit code 2 means some entries (e.g. Cargo) landed in `skipped`; follow the printed commands for those.
+    *   **Single-test branch:** `codeyam-editor-dev editor register-test --file <file> --key "<key>" --runner <runner> --description "<summary>"`. Use this for one-offs, or when you want a description that differs from the source comment.
+    *   **Explicit-JSON branch (advanced):** `codeyam-editor-dev editor register-test-batch '[{"key": "...", "runner": "...", "description": "..."}, ...]'`. Use this when tests aren't yet runnable so `reconcile-registry` has nothing to diff against. If any `description` contains parentheses or other shell metacharacters (e.g. `(BlogPost/NotFound case)`), do NOT inline the JSON — write it to `.codeyam/tmp/<tag>.json` and pass `@.codeyam/tmp/<tag>.json`, or pipe it via stdin with `-`. Both keep the payload off the shell's `eval` path.
+
+    `<canonical-key>` uses the runner's separator: vitest emits `<describe> › <it>` (the `›` is U+203A, NOT `.` or `>`); cargo emits `module_path::test_name`. If you are unsure of the exact shape, run `codeyam-editor-dev editor test-naming --runner <runner>` first. Pass `--accept-derived` to opt into "fix my separator" auto-correction.
+
+    **Cargo carve-out:** `reconcile-registry --auto-apply` lands Cargo entries in `skipped` because Cargo output contains no file paths. For these, run the `register-test` commands printed in the skip list.
+
+    When you delete a test, unregister it: `codeyam-editor-dev editor remove-test --key "<exact-key>"`. If you renamed a test, use `codeyam-editor-dev editor rename-test --from <old> --to <new>` (preserves metadata). For batch merge cleanup, run `codeyam-editor-dev editor reconcile-registry` to diff registry against runner output in one pass.
+
+    There is no suppression escape hatch — fix the naming or the test now.
+[ ] Register every new function / component / hook / helper in the glossary
+    Register every logic-bearing entity you author in the glossary —
+    functions, methods, classes, components, route handlers, hooks. The audit's `SOURCE_HAS_UNREGISTERED_ENTITY` invariant prints every miss on every `editor audit` run as informational output — it does NOT block the gate; the printed list is the worklist.
+
+    For each new entity, supply `name`, `filePath`, `description`,
+    AND **one of** `testFile`, `untestabilityReason`, or a `scenarios`
+    reference — all in the single `glossary-add` call. `glossary-add`
+    rejects payloads missing the satisfier. Avoid the two-call shape
+    (`glossary-add` first, then patch `testFile` via `glossary-update`)
+    — it was session 28fa021c's failure mode: the follow-up landed on
+    the wrong field (`tests`, not `testFile`) and the half-formed
+    entry slipped past the audit.
+
+    *   **Single-entry branch:** inline JSON for short, metacharacter-free one-offs.
+        `codeyam-editor-dev editor glossary-add '{"name":"<Name>","filePath":"<path>","description":"<prose>","testFile":"<test-file>","feature":"<feature-name>"}'`
+        If the `description` contains parentheses or other shell
+        metacharacters, do NOT inline it (bash fails with `syntax error
+        near unexpected token (`) — use the `@file` or stdin (`-`) form
+        below instead.
+
+    *   **Batch branch (>=3 entries):** write the array to
+        `.codeyam/tmp/<feature-slug>-glossary.json` and pass with `@`.
+        ONE editor invocation registers the whole batch — same payload
+        shape per entry as the single-entry branch.
+        Example payload:
+        ```
+        [
+          {"name":"FormatScore","filePath":"app/lib/format.ts","description":"...","testFile":"app/lib/format.test.ts","feature":"Drinks Library"},
+          {"name":"DrinkCard","filePath":"app/library/DrinkCard.tsx","description":"...","scenarios":["drink-card-default","drink-card-featured"],"feature":"Drinks Library"}
+        ]
+        ```
+        Run: `codeyam-editor-dev editor glossary-add @.codeyam/tmp/<feature-slug>-glossary.json`
+        The handler validates every entry's satisfier and renames; one
+        invalid entry rejects the whole batch with a clear per-entry
+        error, so payloads stay atomic.
+
+    **Rendering components — DEFER classification to the Isolation
+    Routes step.** At the Glossary step, register only (a) logic /
+    data entities with a `testFile` satisfier and (b) genuinely
+    non-rendering untestables (`type-only`, `platform-glue`,
+    `generated`, `scaffold`, `test-fixture`). Do NOT classify or
+    register rendering components (PascalCase `.tsx`/`.jsx`) here —
+    their isolate-vs-`trivial-wrapper` decision belongs to the
+    Isolation Routes step, made against the live component, not
+    pre-emptively to satisfy `glossary-add`. The
+    `SOURCE_HAS_UNREGISTERED_ENTITY` notice for those components is
+    expected and non-blocking at this step. Failure mode this
+    prevents: classifying a visual component `trivial-wrapper` here
+    (the only satisfier available at the `register-incremental` step
+    when no scenario yet exists) buries it from the `isolation-routes`
+    coverage gate and the Components results panel. `glossary-add` itself now rejects a
+    `trivial-wrapper` classification on a visual component whose
+    source shows real render complexity (`.map`, conditional JSX,
+    multi-prop surface, too many distinct tags), so the deferred
+    workflow is the only path that works for non-passthrough
+    components.
+
+    For Rust co-located `#[cfg(test)] mod tests`, set `testFile = filePath`.
+    For TS/JS, the sibling `.test.<ext>`. For pure-data / trivial /
+    generated, use `untestabilityReason` (e.g. `{"kind":"trivial-wrapper","justification":"presentation only"}`).
+    Accepted `kind` values (closed set — anything else is rejected): `trivial-wrapper` (re-export / constant / no branching), `type-only` (interface / pure-data shape), `platform-glue` (OS / network / filesystem boundary), `generated` (derive macro / build-script output), `scaffold` (template shell, e.g. `app/isolated-components/`), `test-fixture` (mock declared inside a `*.test.*` file). For
+    visual components covered by a scenario, pass `scenarios`. Set
+    `"isEntryPoint": true` on the feature's entry-point.
+
+    **Visual components defer to the Isolation Routes step** (see the
+    DEFER note above). Their `scenarios` satisfier is cited there —
+    after the slug exists in `scenarios.json` — citing the EMITTED slug
+    that `register` prints, never a guess. Don't register them here.
+    Pure-data definitions (structs/enums/type aliases/interfaces/constants) are NOT tracked.
+
+    `glossary-update` patches existing entries (only supplied fields
+    replaced). It can derive `testFile`: pass `tests` (registry keys)
+    and when they all resolve to one file, `testFile` is inferred and
+    the path prints on stderr. For batches, `codeyam-editor-dev editor reconcile-glossary --auto-apply` auto-derives `testFile` from
+    co-located / sibling `.test.<ext>` files; entries it can't derive
+    are skipped for manual handling.
+
+    Deletion: `codeyam-editor-dev editor glossary-remove "<name>"`. Rename:
+    `codeyam-editor-dev editor glossary-rename --from "<old>" --to "<new>" [--file-path <new-path>]` (preserves description, tags, tests).
+    Entities that legitimately don't owe a glossary entry: `codeyam-editor-dev editor glossary-skip-add --file <path> --name <Name> --reason <local-helper|test-fixture|derive-generated>`. Classification is
+    permanent — no expiry, no "later". Never silence the invariant by
+    editing `editor.json` by hand.
+
+Read the glossary through the CLI, never with the `Read` tool.
+  `.codeyam/glossary.json` exceeds the Read tool's token limit. Use
+  `codeyam-editor-dev editor glossary-find <name>` for single lookups
+  (flags: `--prefix`, `--substring`, `--feature`, `--format`). Use
+  `codeyam-editor-dev editor glossary-list` for a projection across the
+  whole table.
+
+
+When done, move to the next step: `codeyam-editor-dev editor 14`
+
+━━━ TASK ━━━
+If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
+
+Hand off from the previous step's task to this step's task. Procedure:
+  1. Run TaskList
+  2. If a task titled exactly `Complete codeyam editor step 12: 'Extract TDD' and move on to step 13: 'Glossary'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  3. Run TaskCreate with the EXACT title below and set it to in_progress:
+
+EXACT_TASK_TITLE: Complete codeyam editor step 13: 'Glossary' and move on to step 14: 'Dependency Graph'
+
+When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
+Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
+
+━━━ END OF STEP ━━━
+
+This is a non-gate step. Do NOT wait for user confirmation.
+Do NOT write a recap. Do NOT ask the user "ready to advance?" — they did
+not opt into a checkpoint. Recaps belong at gate steps, not here.
+
+If the checklist surfaces a finding that requires a user decision (unrelated test failures, surprising state, ambiguous next action), use AskUserQuestion with 2-4 concrete options — never an inline numbered list. If AskUserQuestion is not loaded, call `ToolSearch` with `select:AskUserQuestion` first.
+
+When you have finished the checklist AND marked the task completed, run:
+
+  Bash: codeyam-editor-dev editor advance
+
+━━━ BEGIN STEP 13: Glossary ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 13: 'Glossary' and move on to step 14: 'Dependency Graph'
+
+  1. TaskCreate with the EXACT title above, status in_progress
+  2. Run the step 13 checklist (printed above this trailer)
+  3. TaskUpdate completed
+  4. Run `codeyam-editor editor advance`
+
+Tail-truncated this output? Re-run without piping: codeyam-editor editor advance
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+Partitions needing attention: stale=1 red=0 untested=0 — pass --verbose for names
+Staleness sweep: 2 non-blocking finding(s) (DEPENDENCY_GRAPH_STALE, PARTITION_NEEDS_REFRESH) — pass --verbose to list. Recovery: codeyam-editor editor sweep-staleness
+

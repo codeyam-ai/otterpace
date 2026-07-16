@@ -1,0 +1,17 @@
+Building Rust binary...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.91s
+Error: Cannot advance the Demo step: this plan's "Scenarios to Demonstrate" describe BEHAVIOR (open), but no DRIVEN capture exists for this feature.
+
+A static `preview-verify` render does not demonstrate an interaction — the reviewer must see the behavior actually fire. Drive it in the live preview:
+  codeyam-editor editor preview-interact '{"action":"click","text":"<the control to open>","dimension":"<Dimension>"}'
+
+That records a driven capture (interacted=true), which satisfies this gate.
+
+If — and ONLY if — there is a genuine STRUCTURAL reason the behavior cannot be driven (e.g. a real editor-route recursion limit), record it explicitly, naming WHY:
+  codeyam-editor editor demo-skip --reason "<why the behavior can't be driven>"
+  "tests cover it" is not a structural reason.
+
+Recommended demos for this change:
+  - today-goal-crushed-bolt-theme (scenario definition .codeyam/scenarios/today-goal-crushed-bolt-theme.json changed)
+  - today-goal-crushed-garden-theme (scenario definition .codeyam/scenarios/today-goal-crushed-garden-theme.json changed)
+

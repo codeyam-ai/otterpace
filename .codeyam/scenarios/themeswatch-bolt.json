@@ -1,0 +1,16 @@
+{
+  "name": "ThemeSwatch - Bolt",
+  "id": "51ee87d6-064a-435c-8076-5741a858fc0f",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "ThemeSwatch",
+      "CODEYAM_ISOLATE_SCENARIO": "Bolt"
+    }
+  },
+  "componentName": "ThemeSwatch",
+  "scenarioType": "component"
+}

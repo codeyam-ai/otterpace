@@ -1,0 +1,207 @@
+Building Rust binary...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.73s
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+━━━ BEGIN STEP 22: Pre-Commit Sync ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 22: 'Pre-Commit Sync' and move on to step 23: 'Finalize'
+
+# UI Flow 22 / 26: Pre-Commit Sync
+
+**Feature:** Choose a Design — App Theme System
+
+Sync local state with the remote so the next commit lands on a merged tree.
+
+## Instructions
+
+RESUMING this step. Check what was already done before repeating work.
+  (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
+
+Sync local state with the remote so the next commit lands on a tree
+that already includes any upstream work. The command runs once,
+end-to-end, with no agent loop:
+
+1. `git fetch` the upstream.
+2. If the remote is ahead, `git pull --rebase`. The custom CodeYam
+   merge drivers (verified BEFORE the rebase) merge state files
+   cleanly; source-file conflicts surface as a hard `RESOLVE NOW:`
+   bail.
+3. After a successful rebase, the inline auto-recovery sequence runs:
+   `reconcile-registry --auto-apply --allow-removes` →
+   `reconcile-glossary --auto-apply` → `analyze-imports` →
+   `verify-test-cache --partial` (informational). Any failure surfaces
+   as a structured `recoveryError: { step, message, suggestedAction }`
+   in the JSON output — no agent loop, no second command.
+
+Checklist:
+[ ] Run `codeyam-editor-dev editor pre-commit-sync`.
+
+    Running `pre-commit-sync` ALWAYS blocks until this session reaches the
+    head of the commit queue — there is no fleet-vs-solo judgment call to
+    make, and no flag to add. On a deep queue this can take a while; that
+    is EXPECTED, not a hang.
+    - Run it EXACTLY ONCE and let it block. Do NOT poll `branch-queue
+      status` in a loop, do NOT re-run it repeatedly, and do NOT ask the
+      operator whether to wait or skip.
+    - The periodic `Commit queue: still waiting — position N of M …` lines
+      are normal progress, not errors.
+    - An abandoned head ahead of you (a crashed or wedged session) is
+      reclaimed AUTOMATICALLY by the lease sweep — you do not need to do
+      anything to clear it; the queue self-heals and your wait advances.
+    - When the command RETURNS, head is acquired and the sync has run —
+      proceed to the next step. The command returning IS the signal.
+    - Run it in the FOREGROUND, blocking. Do NOT use `run_in_background`,
+      do NOT pipe it into a background task, do NOT wrap it so you can keep
+      working while it runs. Being blocked IS the mechanism — the moment
+      the command returns you hold the head and the sync has run.
+      Backgrounding it severs that return-as-signal contract and is exactly
+      what leads to the confused "queue looks empty, go commit manually"
+      misread.
+    - Do NOT run `branch-queue status` to "check progress" while the wait
+      is in flight. If you ever do, an empty `entries` list does NOT mean
+      "go" — read the `selfHoldsHead` / `selfPosition` / `selfInQueue`
+      fields: `selfInQueue: false` (empty + no tenure) means you are not
+      enqueued, NOT that the coast is clear.
+    - The periodic `Commit queue: still waiting — position N of M …` lines
+      and the final `✅ Commit queue: HEAD ACQUIRED after Ns …` line are the
+      only progress signals you need.
+    - The operator can interrupt the command to force a skip; you do not
+      need to offer that.
+    - If the harness auto-backgrounds the command anyway, do NOT guess a
+      success-string regex (`HEAD ACQUIRED`, `recovered`, `pulled`) and do
+      NOT spin a `sleep` / `until grep "CODEYAM_CMD_COMPLETE" … sleep` poll
+      loop. The harness re-invokes you automatically when the task exits —
+      that re-invocation IS your completion signal. If you must check in the
+      same turn, run the printed `codeyam-editor-dev editor wait-for <task-id>`
+      line BARE (no `| tail`, no pipe — piping only block-buffers and hides the
+      heartbeat). It now BLOCKS to completion in ONE call and returns a single
+      `WAIT_FOR COMPLETE` block (carrying the terminal `status` of `ok` |
+      `error` plus the output tail) — you do NOT re-issue it repeatedly.
+      Re-issue ONLY if it reports `WAIT_FOR LIKELY_WEDGED` (a stale heartbeat;
+      it names a `pid-status <pid>` command to confirm the process is dead
+      before killing). Do NOT hand-roll an `until grep` loop around it.
+    Only `--skip-queue` (or `git.commitQueue.enabled = false`) bypasses the
+    queue. `--wait-for-head` is still accepted as a no-op alias for muscle
+    memory, but it is redundant now that blocking is the default.
+
+    If a stale-binary bail fires here naming only a queue-position flag
+    (e.g. an "unexpected argument" parse error when an older cloud binary
+    that predates `--wait-for-head` rejects it), you usually do NOT need to
+    rebuild: re-run the BARE command (`pre-commit-sync` with no flag) and
+    reach the head of the queue naturally — block-until-head is the default,
+    so the older binary gets there on its own. Reserve `rebuild-self
+    --force-in-container` (a multi-minute recompile that reverts on
+    container restart) for when genuinely-new behavior is required, not a
+    convenience flag with a no-flag fallback.
+
+    If the output reports `"mustResolveBeforeContinuing": true`, STOP.
+    Open each path in `conflictedSourcePaths`, resolve manually, `git
+    add` each resolved file, and re-run `pre-commit-sync`. Do NOT advance
+    while this flag is set.
+
+    If `pre-commit-sync` bails with a dirty-tree rebase refusal OR a
+    duplicate plan slug, the one-shot recovery does the whole sequence for
+    you and re-attempts the sync in a single command:
+
+        codeyam-editor-dev editor pre-commit-sync --recover
+
+    `--recover` runs `git pull --rebase --autostash` →
+    `post-merge-drift-sweep` → `plan-cleanup-duplicates`, then re-runs the
+    sync — replacing the three manual iterations you would otherwise stitch
+    together from the bail messages. It is a safe no-op when there is nothing
+    to recover. Prefer it over hand-running the steps. (You can still run the
+    steps individually if you need to inspect between them.)
+
+    NOTE on the underlying mechanics: `git stash` / `git pull --rebase
+    --autostash` does NOT run the CodeYam merge drivers — `git stash pop`
+    performs git's default three-way merge, which ignores `.gitattributes`
+    `merge=` assignments, so union state files (glossary, test registry,
+    dependency graph) carried through an autostash silently resolve to upstream
+    and your session's adds are dropped. That is exactly why `--recover` (and
+    the hand recovery) run `post-merge-drift-sweep` after the autostash rebase
+    to re-apply that union state before re-running `pre-commit-sync`.
+
+    The duplicate-slug case is the post-rebase shape where the queue copy was
+    already deleted in the worktree but the deletion is unstaged.
+    `plan-cleanup-duplicates` now stages that deletion for you — you do NOT
+    need to `git add` the deleted queue copy by hand.
+
+    If `"recovered": false`, read `recoveryError.suggestedAction`,
+    follow it, and re-run `pre-commit-sync` until `"recovered":
+    true` (or a `"skipped": true` / `"pulled": false` no-op response).
+
+    When `recoveryError.step` is `reconcile-registry`, the message
+    typically points at a runner whose output carries no file path
+    (cargo today). The `suggestedAction` will include a complete
+    `register-test` command to run for each skipped entry — run it,
+    then re-run `pre-commit-sync`. Do NOT retry `pre-commit-sync`
+    or `reconcile-registry --auto-apply` for those entries hoping
+    they auto-resolve; they cannot, and looping wastes turns. Do
+    NOT `git checkout .codeyam/test-registry.json` to "start fresh"
+    after a rebase conflict — resolve the conflict in place, then
+    re-run `pre-commit-sync`. See the reconcile slug's instructions
+    for the full skip-by-runner-shape breakdown.
+
+    If `"pulled": false` (or `"skipped": true` for no-remote /
+    no-upstream projects), proceed to the next step. The fast path is
+    a sub-second `git ls-remote` probe — `git fetch` only runs when
+    the remote is actually ahead.
+
+    Fast Commit branches still CLAIM the commit queue here (you will
+    see `Commit queue: head acquired ...`) and hold it through commit
+    and push — Fast Commit defers heavy work, not serialization, and
+    claiming the head just before the fetch/rebase is what stops a
+    concurrent session from racing the merge/push window. Only an
+    explicit `--skip-queue` (or `git.commitQueue.enabled = false`)
+    bypasses. Under Fast Commit the post-merge auto-recovery sweep is
+    skipped — a clean merge reports `"recoveryDeferred": true` (the
+    reconcile/glossary/analyze-imports/verify-test-cache work is owed
+    to the eventual `session-finalize`); the hard `RESOLVE NOW:`
+    source-conflict bail still fires and still stops the flow.
+    Verify: codeyam-editor-dev editor pre-commit-sync
+
+
+When done, move to the next step: `codeyam-editor-dev editor 23`
+
+━━━ TASK ━━━
+If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
+
+Hand off from the previous step's task to this step's task. Procedure:
+  1. Run TaskList
+  2. If a task titled exactly `Complete codeyam editor step 21: 'Journal' and move on to step 22: 'Pre-Commit Sync'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  3. Run TaskCreate with the EXACT title below and set it to in_progress:
+
+EXACT_TASK_TITLE: Complete codeyam editor step 22: 'Pre-Commit Sync' and move on to step 23: 'Finalize'
+
+When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
+Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
+
+━━━ END OF STEP ━━━
+
+This is a non-gate step. Do NOT wait for user confirmation.
+Do NOT write a recap. Do NOT ask the user "ready to advance?" — they did
+not opt into a checkpoint. Recaps belong at gate steps, not here.
+
+If the checklist surfaces a finding that requires a user decision (unrelated test failures, surprising state, ambiguous next action), use AskUserQuestion with 2-4 concrete options — never an inline numbered list. If AskUserQuestion is not loaded, call `ToolSearch` with `select:AskUserQuestion` first.
+
+When you have finished the checklist AND marked the task completed, run:
+
+  Bash: codeyam-editor-dev editor advance
+
+━━━ BEGIN STEP 22: Pre-Commit Sync ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 22: 'Pre-Commit Sync' and move on to step 23: 'Finalize'
+
+  1. TaskCreate with the EXACT title above, status in_progress
+  2. Run the step 22 checklist (printed above this trailer)
+  3. TaskUpdate completed
+  4. Run `codeyam-editor editor advance`
+
+Tail-truncated this output? Re-run without piping: codeyam-editor editor advance
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+Partitions needing attention: stale=1 red=0 untested=0 — pass --verbose for names
+Staleness sweep: 2 non-blocking finding(s) (DEPENDENCY_GRAPH_STALE, PARTITION_NEEDS_REFRESH) — pass --verbose to list. Recovery: codeyam-editor editor sweep-staleness
+

@@ -1,0 +1,87 @@
+Building Rust binary...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.74s
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+━━━ BEGIN STEP 10: Interactive Test ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 10: 'Interactive Test' and move on to step 11: 'Deconstruct'
+
+# UI Flow 10 / 26: Interactive Test
+
+**Feature:** Choose a Design — App Theme System
+
+Hand the live preview to the user for interactive testing and get approval.
+
+## Instructions
+
+RESUMING this step. Check what was already done before repeating work.
+  Tip: Run `codeyam-editor-dev editor scenarios` and `scenario-coverage` to see current state.
+  (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
+
+The verified demo from the previous step is on screen. Now hand the controls to
+the user and confirm the change holds up under real interaction — not just in the
+static capture you already showed.
+
+Guide the user through interactive testing:
+[ ] Tell the user: "The preview is fully interactive — click around to test!"
+[ ] Prompt the user to try the key interactions for what you built: forms,
+    navigation, buttons, whatever the change touches.
+[ ] Ask the user: "Does everything work as expected?"
+
+    If the page renders but interactive elements don't respond (buttons dead,
+    client features dead), run:
+      codeyam-editor-dev editor diagnose-preview --path /your-page
+    It compares proxy vs. direct dev-port responses and identifies proxy HTML
+    mutation (injected scripts, buffering) as the hydration blocker. Do NOT write
+    ad-hoc diagnostic scripts to .codeyam/tmp/ — this command replaces that.
+
+Present a selection menu to the user using AskUserQuestion with these EXACT option labels. If AskUserQuestion is not loaded yet, call `ToolSearch` with `select:AskUserQuestion` first, then call AskUserQuestion:
+    Option 1 label: "The live preview is displaying what I expected" — proceed to the next step
+    Option 2 label: "I'd like some changes" — make changes, refresh the preview, and re-render the demo with `codeyam-editor-dev editor step --slug present-live`
+
+Wait for user approval before moving on. Refactoring and scenarios happen in later steps.
+
+
+When done, move to the next step: `codeyam-editor-dev editor 11`
+
+━━━ TASK ━━━
+If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
+
+Hand off from the previous step's task to this step's task. Procedure:
+  1. Run TaskList
+  2. If a task titled exactly `Complete codeyam editor step 9: 'Demo' and move on to step 10: 'Interactive Test'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  3. Run TaskCreate with the EXACT title below and set it to in_progress:
+
+EXACT_TASK_TITLE: Complete codeyam editor step 10: 'Interactive Test' and move on to step 11: 'Deconstruct'
+
+When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
+Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
+
+━━━ END OF STEP ━━━
+
+This is a non-gate step. Do NOT wait for user confirmation.
+Do NOT write a recap. Do NOT ask the user "ready to advance?" — they did
+not opt into a checkpoint. Recaps belong at gate steps, not here.
+
+If the checklist surfaces a finding that requires a user decision (unrelated test failures, surprising state, ambiguous next action), use AskUserQuestion with 2-4 concrete options — never an inline numbered list. If AskUserQuestion is not loaded, call `ToolSearch` with `select:AskUserQuestion` first.
+
+When you have finished the checklist AND marked the task completed, run:
+
+  Bash: codeyam-editor-dev editor advance
+
+━━━ BEGIN STEP 10: Interactive Test ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 10: 'Interactive Test' and move on to step 11: 'Deconstruct'
+
+  1. TaskCreate with the EXACT title above, status in_progress
+  2. Run the step 10 checklist (printed above this trailer)
+  3. TaskUpdate completed
+  4. Run `codeyam-editor editor advance`
+
+Tail-truncated this output? Re-run without piping: codeyam-editor editor advance
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+Staleness sweep: 1 non-blocking finding(s) (DEPENDENCY_GRAPH_STALE) — pass --verbose to list. Recovery: codeyam-editor editor analyze-imports
+

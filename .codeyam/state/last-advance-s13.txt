@@ -1,0 +1,100 @@
+Building Rust binary...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.83s
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+━━━ BEGIN STEP 14: Dependency Graph ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 14: 'Dependency Graph' and move on to step 15: 'Isolation Routes'
+
+# UI Flow 14 / 26: Dependency Graph
+
+**Feature:** Choose a Design — App Theme System
+
+Rebuild the dependency graph after extraction.
+
+## Instructions
+
+RESUMING this step. Check what was already done before repeating work.
+  Tip: Run audit and client-errors to see what still needs attention.
+  (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
+
+Rebuild the dependency graph after extraction.
+
+[ ] Run `codeyam-editor-dev editor analyze-imports` to rebuild the import graph
+    This MUST run after extraction (the `ui-extract-tdd` slug) so the
+    graph includes all new/modified files.
+    The graph is used by scenario-coverage (staleness detection) and show-results (impact analysis).
+    It is also what makes `refresh-tests --changed` AUTHORITATIVE: `--changed`
+    maps changed source files to affected tests through this graph. BEFORE this
+    step a brand-new test file isn't in the graph yet, so `--changed` falls back
+    to discovering it by test-file pattern and prints a "not yet in the
+    dependency graph" note — an expected near-miss, not a failure. AFTER this
+    rebuild, `--changed` maps those tests precisely.
+    Verify: test -f .codeyam/dependency-graph.json
+
+Read the glossary through the CLI, never with the `Read` tool.
+  `.codeyam/glossary.json` exceeds the Read tool's token limit. Use
+  `codeyam-editor-dev editor glossary-find <name>` (flags: `--prefix`,
+  `--substring`, `--feature`, `--format`) for a single lookup. Use
+  `codeyam-editor-dev editor glossary-list`,
+  `codeyam-editor-dev editor glossary-untested`, or
+  `codeyam-editor-dev editor glossary-by-tag <tag>` for projections across the
+  whole table. If you need to grep the table directly, read
+  `.codeyam/glossary-index.txt` (a regenerated, line-oriented sidecar — see
+  the `glossary_index_file` glossary entry).
+
+Read the dependency graph through the CLI, never with the `Read` tool.
+  `.codeyam/dependency-graph.json` exceeds the Read tool's token limit. Use
+  `codeyam-editor-dev editor deps-imports <file>` and
+  `codeyam-editor-dev editor deps-imported-by <file>` for direct edges, and
+  `codeyam-editor-dev editor deps-transitive-dependents <file>` /
+  `codeyam-editor-dev editor deps-transitive-imports <file>` for blast radius.
+  For a fan-in/fan-out signpost across the whole graph, read
+  `.codeyam/deps-index.txt` (a regenerated, line-oriented sidecar — see
+  the `dep_index_file` glossary entry).
+
+
+When done, move to the next step: `codeyam-editor-dev editor 15`
+
+━━━ TASK ━━━
+If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
+
+Hand off from the previous step's task to this step's task. Procedure:
+  1. Run TaskList
+  2. If a task titled exactly `Complete codeyam editor step 13: 'Glossary' and move on to step 14: 'Dependency Graph'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  3. Run TaskCreate with the EXACT title below and set it to in_progress:
+
+EXACT_TASK_TITLE: Complete codeyam editor step 14: 'Dependency Graph' and move on to step 15: 'Isolation Routes'
+
+When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
+Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
+
+━━━ END OF STEP ━━━
+
+This is a non-gate step. Do NOT wait for user confirmation.
+Do NOT write a recap. Do NOT ask the user "ready to advance?" — they did
+not opt into a checkpoint. Recaps belong at gate steps, not here.
+
+If the checklist surfaces a finding that requires a user decision (unrelated test failures, surprising state, ambiguous next action), use AskUserQuestion with 2-4 concrete options — never an inline numbered list. If AskUserQuestion is not loaded, call `ToolSearch` with `select:AskUserQuestion` first.
+
+When you have finished the checklist AND marked the task completed, run:
+
+  Bash: codeyam-editor-dev editor advance
+
+━━━ BEGIN STEP 14: Dependency Graph ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 14: 'Dependency Graph' and move on to step 15: 'Isolation Routes'
+
+  1. TaskCreate with the EXACT title above, status in_progress
+  2. Run the step 14 checklist (printed above this trailer)
+  3. TaskUpdate completed
+  4. Run `codeyam-editor editor advance`
+
+Tail-truncated this output? Re-run without piping: codeyam-editor editor advance
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+Partitions needing attention: stale=1 red=0 untested=0 — pass --verbose for names
+Staleness sweep: 2 non-blocking finding(s) (DEPENDENCY_GRAPH_STALE, PARTITION_NEEDS_REFRESH) — pass --verbose to list. Recovery: codeyam-editor editor sweep-staleness
+

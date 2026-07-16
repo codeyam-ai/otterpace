@@ -239,38 +239,9 @@ struct OnboardingFlowView: View {
     }
 
     private func themeOptionRow(_ id: ThemeID) -> some View {
-        let t = id.theme
-        let selected = themeStore.themeID == id
-        return Button {
+        ThemeChoiceRow(id: id, selected: themeStore.themeID == id, style: .onboarding) {
             themeStore.themeID = id
-        } label: {
-            HStack(spacing: 14) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12).fill(t.bgTop)
-                    RoundedRectangle(cornerRadius: 12).strokeBorder(t.subtle.opacity(0.25), lineWidth: 1)
-                    if id == .default {
-                        PuffyBuddy(mood: .ready, size: 34, showHalo: false)
-                    } else {
-                        ThemeMark(theme: t, size: 30)
-                    }
-                }
-                .frame(width: 56, height: 56)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(id.displayName).font(Typography.headline).foregroundColor(Palette.ink)
-                    Text(id.blurb).font(Typography.caption).foregroundColor(Palette.subtle)
-                }
-                Spacer()
-                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(selected ? Palette.brand : Palette.subtle.opacity(0.45))
-            }
-            .padding(12)
-            .background(RoundedRectangle(cornerRadius: 16).fill(Palette.card))
-            .overlay(RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(selected ? Palette.brand : Color.clear, lineWidth: 2))
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("\(id.displayName) theme. \(id.blurb)")
-        .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
     private var goalStep: some View {

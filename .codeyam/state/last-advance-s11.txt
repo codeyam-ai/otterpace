@@ -1,0 +1,222 @@
+Building Rust binary...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.03s
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+━━━ BEGIN STEP 12: Extract TDD ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 12: 'Extract TDD' and move on to step 13: 'Glossary'
+
+# UI Flow 12 / 26: Extract TDD
+
+**Feature:** Choose a Design — App Theme System
+
+Extract components and functions via TDD; cover library functions with multiple tests.
+
+## Instructions
+
+RESUMING this step. Check what was already done before repeating work.
+  Tip: Run client-errors and verify-images to check for issues.
+  (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
+
+Execute the extraction plan from the `ui-deconstruct` slug — TDD for every function/hook, isolated extraction for every component.
+
+**Mid-session, narrowed runs are sufficient.** Use `--test <name>` for the
+inner TDD loop, `--changed` after a batch of edits. The full suite runs
+once at `finalize` via `session-finalize`. The `ui-register-incremental`
+slug registers everything you create here; the `ui-glossary-reconcile`
+slug runs the audit gate.
+
+**Cache-update matrix — which refresh-tests run updates the gate cache.**
+The audit gate reads the FULL-SUITE `test-cache.json`. Only a full run
+updates it: `--changed`, `--test`, `--runner`, and `--partition` update
+only the targeted / partition cache(s), and flag-free `refresh-tests` is
+gated mid-session (it refuses until `finalize`). So for a brand-new test
+file — which is untracked and therefore lands in NO partition cache yet —
+the command that updates the gate cache in one step is
+`refresh-tests --force`. Do not cycle through `--partition all` →
+flag-free → `--changed` first; for brand-new (untracked) tests those each
+succeed quietly without updating the gate cache. Modifying an
+already-tracked test is the `--changed` case (it updates that test's
+partition cache).
+
+PROHIBITED: Raw Test Runners
+  Do NOT run raw `npm test`, `vitest`, or `cargo test` commands. Always use
+  `codeyam-editor-dev editor refresh-tests` (with `--test` or `--changed`). The
+  editor CLI enforces the environment configuration (DOM/JSDOM for UI tests),
+  applies the cache invariant, and handles the failure parser. Raw
+  invocations bypass these and frequently fail with environment errors
+  (e.g., `ReferenceError: document is not defined`).
+
+  Never background a test run. Do NOT launch `vitest`, `cargo test`, or
+  `refresh-tests` as a background Bash process and then poll for output —
+  the task-output stream is unreliable for long test runs, so you end up
+  blind-polling an empty file, then `kill`/`pkill`-ing orphaned workers.
+  Run `refresh-tests` (narrowed via `--test` / `--changed`) in the
+  FOREGROUND and read the result directly; a narrowed run finishes in
+  seconds, removing any reason to background it. If the harness DOES
+  auto-background a long command (e.g. a full `refresh-tests` or
+  `rebuild-self`), run the printed `codeyam-editor-dev editor wait-for
+  <task-id>` line to block until it finishes — never hand-roll an
+  `until grep … sleep` loop; the harness blocks it.
+
+━━━ WAITING ON BACKGROUND WORK ━━━
+A long editor command (`refresh-tests`, `session-finalize`, `rebuild-self`,
+`recapture-stale`, `analyze-imports`) may end up running in the background —
+either because the harness auto-backgrounded it, or because you launched a
+genuinely long op with `run_in_background: true`. When that happens, TRUST
+the harness completion notification; do NOT poll.
+
+  - The harness re-invokes you automatically the moment the task exits — that
+    re-invocation IS your completion signal. Do NOT spawn `sleep` /
+    `until grep "CODEYAM_CMD_COMPLETE" … sleep` loops, do NOT re-read the
+    task `.output` file on a timer, and do NOT `kill -0` spin. A bare `sleep`
+    is blocked by the harness anyway, so the polling fallback never even
+    works — it just burns turns.
+  - If you need to block on the result inside the SAME turn, run the printed
+    `codeyam-editor-dev editor wait-for <task-id>` line BARE, exactly once. It now
+    BLOCKS to completion in one call and returns a single `WAIT_FOR COMPLETE`
+    block — you do NOT re-issue it repeatedly. Re-issue ONLY if it reports
+    `WAIT_FOR LIKELY_WEDGED` (a stale heartbeat — it names a `pid-status <pid>`
+    command to confirm the process is dead before killing). Never hand-roll an
+    `until grep … sleep` loop, and do NOT pipe it through `| tail`: the wrapped
+    command self-reports a `CODEYAM_CMD_RUNNING` heartbeat even under a pipe, so
+    piping only block-buffers and hides that liveness.
+  - `Monitor` is the supported watch tool, but its schema must be loaded
+    first or the call fails with `InputValidationError` and you fall back to
+    the very polling this avoids. It is pre-loaded once at session start
+    (`ToolSearch select:Monitor`); if it ever is not, load it before use.
+  - Only if you genuinely need a hang-detector, schedule ONE long fallback
+    (`ScheduleWakeup` ≥ 1200s) — never a short polling cadence. A fixed short
+    interval just fires stale after the task already finished, forcing a
+    context refetch to dismiss it.
+  - TIE that fallback to the current step so a late firing self-dismisses:
+    after you create the ScheduleWakeup, run
+    `codeyam-editor-dev editor wakeup-arm --schedule-id <the ScheduleWakeup id you
+    just created> --task <the backgrounded task id>`, embed the token it prints
+    in the wakeup's prompt, and have the prompt instruct future-you to run
+    `codeyam-editor-dev editor wakeup-check --token <token>` FIRST. If it reports
+    STALE (the workflow advanced past the armed step, a different feature is
+    active, or the session completed/reset), dismiss the wakeup WITHOUT
+    re-fetching step context. Only a LIVE verdict warrants re-engaging.
+  - When a later `codeyam-editor-dev editor advance` prints a
+    `> CANCEL STALE WAKEUP: … CancelWakeup <schedule_id>` directive, the awaited
+    step has completed — cancel the named fallback wakeup right then so it never
+    fires. The `wakeup-check`-on-fire step above stays as the belt-and-suspenders
+    fallback for a cancel that gets missed.
+
+
+  Bin-only crate caveat (self-hosting `codeyam-editor`). The
+  `codeyam-editor` crate has NO lib target — `cargo test -p codeyam-editor
+  --lib` fails with "no library targets found". If you ever drop to raw
+  cargo for it, use `--bin codeyam-editor <filter>`, not `-p codeyam-editor`
+  alone (which buries the unit summary under integration binaries). And
+  never `| tail` a full-workspace `cargo test` to read pass/fail — the
+  summary line can be anywhere and tail truncates it. Prefer the narrowed
+  `refresh-tests --changed`.
+
+**Relaxed-TDD invariant (applies to every checklist item below).** Every
+change in this session must have a test, and that test must be
+red if the change were reverted. Strict red-first ordering is not
+required — write the test alongside or after the change, then mentally
+revert (or `git stash`) the change and re-run the test runner narrowed
+to that test. If it does not fail, the test is not actually exercising
+the change; rewrite the test, not the code.
+
+Read-before-edit discipline (avoids wasted "File has not been read yet" Edit/Write failures):
+[ ] Always `Read` a file before you `Edit` or `Write` it — even when you
+    already know its contents from a `Grep`/`Glob` match. A search hit is not
+    a read; `Edit`/`Write` reject any file this session has not actually read,
+    and each rejection is a wasted tool call plus a retry that breaks your flow.
+[ ] Watch for the linter race: a pre-commit hook or formatter (`cargo fmt`,
+    `prettier`, `eslint --fix`) can rewrite a file *between* your `Read` and
+    your `Edit`, invalidating the read. For files subject to formatting hooks
+    (`.rs`, `.ts`/`.tsx`, test files), run the format/test command FIRST, then
+    `Read`, then `Edit` in one close sequence — do not carry a stale `Read`
+    across intervening `Bash` calls that may have reformatted the file.
+
+Checklist:
+[ ] For each library function / hook in the plan: write MULTIPLE tests
+    (typical inputs, edge cases, empty/null, error conditions — 3-8 cases per
+    function) and extract the implementation. The relaxed-TDD invariant above
+    applies — the tests must exercise the extraction, not just compile against
+    it. Place test files next to source (`app/lib/drinks.ts` → `app/lib/drinks.test.ts`),
+    wrap in `describe("FunctionName", ...)`, and write a `//` description comment directly above every `it()` block — the audit fails on missing
+    descriptions. **Test titles must avoid forbidden characters — shell metacharacters and parentheses (`> | ; < & \` $ * ? ( )`) plus control whitespace — because they are passed to runner CLIs.** Tests ARE the only coverage for library functions; component
+    coverage comes from scenarios.
+
+    If your stack splits server and client modules: when extracting functions into shared lib modules, keep server-only imports (DB clients, `fs`, secrets) in their own module — a client component importing the shared module drags the server dependency into the client bundle and 500s the page. For example, split `lib/foo.ts` (pure, client-safe) from `lib/getFoo.ts` (server-only).
+
+    Stack caveat (expo-router): do NOT place `*.test.*` files anywhere under
+    the routes dir (`app/`) — that includes `app/lib/`. Expo Router bundles
+    EVERY file in `app/` as a route, so a test there pulls the test renderer
+    into the web bundle and crashes the live preview (`react-test-renderer@null`).
+    Put logic tests in a TOP-LEVEL `lib/` (e.g. `lib/drinks.test.ts`) or a
+    top-level `__tests__/` directory instead. `register-test` and the audit
+    (`TEST_FILE_UNDER_ROUTES_DIR`) reject `app/`-dir test files on this stack.
+[ ] Extract every component listed in the plan into its own file
+    Page/route files must end up with ZERO direct JSX — only imported
+    components. Components that render multiple sections must split into
+    sub-components. Visual verification of components happens in the
+    `isolation-routes` / `ui-component-scenarios` slugs — no extra unit
+    tests needed for visual components.
+    PROP THREADING: when adding/changing props, update (1) the destructured
+    function signature, (2) every test importing the component (mock/noop
+    the new prop), (3) every parent rendering the component. Run
+    `codeyam-editor-dev editor verify-build` after each batch to catch threading
+    errors immediately.
+[ ] After each logical batch of edits: gate, then refresh narrowed
+      codeyam-editor-dev editor verify-test-cache --partial
+    If non-zero, run `codeyam-editor-dev editor refresh-tests --changed`. Do NOT
+    run flag-free `refresh-tests` — that's reserved for `finalize`.
+
+
+━━━ TEST SCOPE FOR THIS STEP ━━━
+
+No Rust source files detected in the current diff.
+Targeted test scope unknown — verify your changes are staged or
+committed before running tests, and do NOT broaden to a full-suite run
+at this step.
+
+When done, move to the next step: `codeyam-editor-dev editor 13`
+
+━━━ TASK ━━━
+If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
+
+Hand off from the previous step's task to this step's task. Procedure:
+  1. Run TaskList
+  2. If a task titled exactly `Complete codeyam editor step 11: 'Deconstruct' and move on to step 12: 'Extract TDD'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  3. Run TaskCreate with the EXACT title below and set it to in_progress:
+
+EXACT_TASK_TITLE: Complete codeyam editor step 12: 'Extract TDD' and move on to step 13: 'Glossary'
+
+When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
+Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
+
+━━━ END OF STEP ━━━
+
+This is a non-gate step. Do NOT wait for user confirmation.
+Do NOT write a recap. Do NOT ask the user "ready to advance?" — they did
+not opt into a checkpoint. Recaps belong at gate steps, not here.
+
+If the checklist surfaces a finding that requires a user decision (unrelated test failures, surprising state, ambiguous next action), use AskUserQuestion with 2-4 concrete options — never an inline numbered list. If AskUserQuestion is not loaded, call `ToolSearch` with `select:AskUserQuestion` first.
+
+When you have finished the checklist AND marked the task completed, run:
+
+  Bash: codeyam-editor-dev editor advance
+
+━━━ BEGIN STEP 12: Extract TDD ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 12: 'Extract TDD' and move on to step 13: 'Glossary'
+
+  1. TaskCreate with the EXACT title above, status in_progress
+  2. Run the step 12 checklist (printed above this trailer)
+  3. TaskUpdate completed
+  4. Run `codeyam-editor editor advance`
+
+Tail-truncated this output? Re-run without piping: codeyam-editor editor advance
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+Staleness sweep: 1 non-blocking finding(s) (DEPENDENCY_GRAPH_STALE) — pass --verbose to list. Recovery: codeyam-editor editor analyze-imports
+

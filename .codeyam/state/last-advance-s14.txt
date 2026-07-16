@@ -1,0 +1,216 @@
+Building Rust binary...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.75s
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+━━━ BEGIN STEP 15: Isolation Routes ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 15: 'Isolation Routes' and move on to step 16: 'Component Scenarios'
+
+# UI Flow 15 / 26: Isolation Routes
+
+**Feature:** Choose a Design — App Theme System
+
+Create isolation routes for every visual component.
+
+## Instructions
+
+RESUMING this step. Check what was already done before repeating work.
+  Tip: Check if the user already approved or requested changes.
+  (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
+
+Every extracted visual component must end up satisfied by EITHER a
+component scenario whose `componentName` matches OR an
+`untestabilityReason`. Page-level (application) scenarios do NOT credit
+a component entry — the audit matches by `componentName == entry.name`
+or `pageFilePath == entry.file_path` (entry-point case only).
+`glossary-add` enforces the same contract at write time.
+
+Pipeline ordering — `isolate` → `register` (component scenario) →
+`glossary-add` citing the EMITTED slug `register` prints (never a
+guess). The glossary entry isn't registerable until `register-incremental`,
+because `glossary-add` rejects a visual-component `scenarios` citation
+before the slug exists in scenarios.json.
+
+`codeyam-editor-dev editor isolate` resolves a component name from source
+even when it's not yet in the glossary — the supported path for freshly
+extracted components (run `analyze-imports` first when adding a new file
+so the dep-graph picks it up). There is NO "register the entry, then
+isolate" prerequisite; isolate-first skips the old `trivial-wrapper` bind.
+Run it BEFORE hand-writing a scenario — let it tell you whether to capture
+a visual scenario or fall back to a `testFile` satisfier. Never skip
+`isolate` and hand-author an `/isolated-components/...` url: on a static
+export (Astro / plain HTML) that url 404s on capture, and `register` now
+rejects it loud rather than persisting an uncapturable ghost.
+
+The `testFile` fallback is ONLY for stacks without an `isolate`
+scaffolder. If `codeyam-editor-dev editor isolate <Component>` SUCCEEDS for
+your stack (nextjs-prisma-sqlite, expo-react-native, any query-param
+stack, …), you MUST capture a component scenario for every visual
+component — a `testFile` (unit test) is NOT a visual scenario and does
+NOT substitute. The coverage gate is isolation-aware: when your stack can
+isolate, a component credited only by a `testFile` glossary entry is
+surfaced as uncovered by `visual-components-without-coverage` and the
+advance gate blocks. Only when `isolate` bails that your stack is
+unsupported do you fall back — follow the recovery it prints: register the
+component in the registry file named by `.codeyam/stack.json` →
+`components.registryFile`, then satisfy the visual-component check with a
+`testFile` entry. The Next.js scaffolding below applies to any stack whose
+`isolate` succeeds — the route shape differs (expo-router
+`app/isolated-components/<Name>.tsx`, Next.js `<Name>/page.tsx`) but the
+`?s=` + capture-wrapper contract is the same.
+
+Visual Components — Component Isolation:
+[ ] List all files with new/modified visual components from `ui-extract-tdd`
+[ ] Check existing scenarios: `codeyam-editor-dev editor scenarios`
+    Reuse and improve existing scenarios — update mock data to reflect
+    current changes. Add new scenarios only for genuinely new states;
+    at least one should clearly demonstrate what changed this session.
+[ ] Create isolation route dirs: `codeyam-editor-dev editor isolate ComponentA ComponentB ...`
+    Creates app/isolated-components/layout.tsx (with production guard)
+    and a directory per component. List ALL components needing routes.
+    When isolate creates NEW route dirs it auto-restarts the dev server
+    so Turbopack/Vite picks them up before `register` probes the URLs.
+    Pass `--no-restart` only when batching several calls.
+[ ] BEFORE registering scenarios: verify each new component is exported
+    from the project's component registry (e.g. componentRegistry.ts).
+    Scenarios for unregistered components render blank — no error shown.
+[ ] After modifying the component registry, rely on HMR — adding an
+    export is almost always hot-updated by Vite/Turbopack. Restart ONLY
+    if an isolated scenario renders blank/stale (`codeyam-editor-dev editor
+    dev-server '{"action":"restart"}'`) — a restart detaches Live Preview
+    with no auto-reconnect. Verify: `dev-server '{"action":"status"}'`.
+
+[ ] For each extracted visual component, choose ONE of (a) or (b). First
+    enumerate every component still needing a decision:
+    codeyam-editor-dev editor visual-components-without-coverage
+    You MUST resolve EVERY entry — registering scenarios for only the
+    "interesting" components is the failure mode. The advance gate at the
+    next step blocks while this list is non-empty.
+    Verify: codeyam-editor-dev editor visual-components-without-coverage
+
+    (a) ISOLATE + multi-state scenarios — the default for any component
+        with a non-trivial prop surface (≥1 meaningful prop) OR more than
+        one visual state. Walk the state-axis checklist (mirrors
+        `app-scenarios-state-coverage`, trimmed for component level):
+          - Default — typical props, the page's most common configuration.
+          - Edge data — long / short / special-char / missing-optional-
+            field. Exercises typography and null branches.
+          - Boundary values — single vs many, min/max, zero counts.
+            Exercises pluralization and empty/filled branches.
+          - Visual states — loading / error / disabled / selected /
+            featured / hover. One scenario per state worth showing.
+          - All-of-one-kind — every row shares a normally-discriminating
+            prop value (only when relevant).
+
+        GOOD DATA IS NOT OPTIONAL. A scenario whose array/list props are all
+        `[]` and whose objects are all `null`/placeholder renders an empty
+        shell — that is a BUG to fix and recapture, not a state. The Default
+        scenario must populate every list with realistic rows, fill optionals, and
+        use counts that exercise pluralization — it must look like the
+        component doing its job, not its empty state. Empty / loading /
+        error belong in their OWN separate, clearly-named scenarios, never
+        as the Default.
+
+        Read the source AND its usage site to learn props/interface and
+        container width. Create ONE isolation route per component with a
+        scenarios map and ?s= query param (Next.js:
+        app/isolated-components/ComponentName/page.tsx →
+        /isolated-components/ComponentName). The route defines a
+        `scenarios` object mapping names to props, reads `?s=Name`, and
+        renders the component inside `id="codeyam-capture"` — the SAME
+        shape the scaffolder emits:
+          <div id="codeyam-capture">
+            <Component {...props} />
+          </div>
+
+        CENTERING — leave it to the layout. The scaffolded
+        `app/isolated-components/layout.tsx` already centers the capture
+        (flex, `min-height:100vh`, centered). The page must NOT re-declare
+        `min-h-screen`/`items-center`/`justify-center` or wrap the capture in
+        `display:inline-block` — an inline-block shrink-to-fit with an inner
+        `width:100%`/`minWidth` yields the off-center, arbitrary-width capture
+        this exists to prevent. Don't fight the layout.
+
+        WIDTH — match the component's REAL container, keyed to the Desktop
+        capture viewport (1440×900). Add a thin width wrapper ONLY when the
+        component needs a bounded width:
+          - Full-width surface (header, nav, toolbar, banner, section, full
+            pane): leave `#codeyam-capture` as-is, or wrap in
+            `<div style={{ width:"100%" }}>` with NO `maxWidth`.
+          - Fixed-width card / panel (grid cell, sidebar item): wrap in
+            `<div style={{ width:"100%", maxWidth:<cell width> }}>` — the
+            number comes from the real grid/column (card in a 3-col grid → ~384).
+          - Intrinsic control (button, badge, chip): NO width wrapper — let
+            it size to content.
+        READ the width from the component's actual usage site, never a
+        fabricated `minWidth`. If you can't find it, the component is
+        full-width — use `width:"100%"`.
+
+    (b) UNTESTABILITY REASON — for **genuine** trivial wrappers: no
+        meaningful props, single visual state, layout-only (PageShell,
+        BrandMark, SiteFooter) — one element, optionally forwarding
+        `children`/`className`/`style`, no branching or iteration. Supply
+        `untestabilityReason: {"kind":"trivial-wrapper","justification":"<one line>"}`.
+
+        `glossary-add` rejects `trivial-wrapper` on a visual component
+        whose source actually shows real render complexity (`.map(...)`
+        over data, conditional JSX, more than ~3 distinct child
+        elements, or more than one meaningful prop). When that
+        rejection fires, the recovery is (a): run `editor isolate
+        <Component>` and register multi-state scenarios — NOT to
+        write a longer justification.
+
+    NOT VALID: claiming a page-level (application) scenario as the sole
+    satisfier for a component glossary entry. Page-level visual coverage
+    is NOT a substitute — same way "Loaded with many" is not an Empty
+    scenario. The write-time check in `glossary-add` enforces this. If
+    you find yourself listing `scenarios: ["<page-app-scenario>"]` on a
+    component entry whose `filePath` is NOT the page itself, use (a)/(b).
+
+Isolation routes are committed to git — the layout guard blocks them in production.
+
+
+When done, move to the next step: `codeyam-editor-dev editor 16`
+
+━━━ TASK ━━━
+If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
+
+Hand off from the previous step's task to this step's task. Procedure:
+  1. Run TaskList
+  2. If a task titled exactly `Complete codeyam editor step 14: 'Dependency Graph' and move on to step 15: 'Isolation Routes'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  3. Run TaskCreate with the EXACT title below and set it to in_progress:
+
+EXACT_TASK_TITLE: Complete codeyam editor step 15: 'Isolation Routes' and move on to step 16: 'Component Scenarios'
+
+When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
+Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
+
+━━━ END OF STEP ━━━
+
+This is a non-gate step. Do NOT wait for user confirmation.
+Do NOT write a recap. Do NOT ask the user "ready to advance?" — they did
+not opt into a checkpoint. Recaps belong at gate steps, not here.
+
+If the checklist surfaces a finding that requires a user decision (unrelated test failures, surprising state, ambiguous next action), use AskUserQuestion with 2-4 concrete options — never an inline numbered list. If AskUserQuestion is not loaded, call `ToolSearch` with `select:AskUserQuestion` first.
+
+When you have finished the checklist AND marked the task completed, run:
+
+  Bash: codeyam-editor-dev editor advance
+
+━━━ BEGIN STEP 15: Isolation Routes ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 15: 'Isolation Routes' and move on to step 16: 'Component Scenarios'
+
+  1. TaskCreate with the EXACT title above, status in_progress
+  2. Run the step 15 checklist (printed above this trailer)
+  3. TaskUpdate completed
+  4. Run `codeyam-editor editor advance`
+
+Tail-truncated this output? Re-run without piping: codeyam-editor editor advance
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+Partitions needing attention: stale=1 red=0 untested=0 — pass --verbose for names
+Staleness sweep: 2 non-blocking finding(s) (DEPENDENCY_GRAPH_STALE, PARTITION_NEEDS_REFRESH) — pass --verbose to list. Recovery: codeyam-editor editor sweep-staleness
+

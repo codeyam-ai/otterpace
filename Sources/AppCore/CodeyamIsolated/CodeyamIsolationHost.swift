@@ -21,6 +21,10 @@ public enum CodeyamIsolationHost {
             return AnyView(RaceImportSheetIsolated(scenario: scenario))
         case "RaceSearchSheet":
             return AnyView(RaceSearchSheetIsolated(scenario: scenario))
+        case "ThemeChoiceRow":
+            return AnyView(ThemeChoiceRowIsolated(scenario: scenario))
+        case "ThemeSwatch":
+            return AnyView(ThemeSwatchIsolated(scenario: scenario))
         default:
             return AnyView(Text("Unknown isolated component: \(component)"))
         }

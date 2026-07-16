@@ -1,0 +1,153 @@
+Building Rust binary...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.36s
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+━━━ BEGIN STEP 23: Finalize ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 23: 'Finalize' and move on to step 24: 'Commit'
+
+# UI Flow 23 / 26: Finalize
+
+**Feature:** Choose a Design — App Theme System
+
+Finalize the session — run the full suite once.
+
+## Instructions
+
+RESUMING this step. Check what was already done before repeating work.
+  (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
+
+Finalize the session.
+
+
+
+Runs the full suite once — flag-free `refresh-tests`, strict audit,
+analyze-imports, verify-build, finalize invariants. This is the only
+flag-free `refresh-tests` of the feature; every prior step accepted
+narrowed-run evidence.
+
+  `codeyam-editor-dev editor session-finalize`
+
+Deferring this cost is no longer a choice made *here* — it is the
+"Save & fast-commit" option at the Present gate. If the branch is in
+Fast Commit mode this step renders its fast-aware variant instead (a
+single `session-checkpoint --compile-only` post-merge compile gate),
+and the deferred-finalize trailer is stamped on the feature commit at
+the Commit step. If you are seeing this full body, the branch is on the
+normal path: run the full finalize.
+
+The `pre-commit-sync` phase runs as its own step BEFORE `finalize`, so
+the suite here validates the already-merged tree. Do NOT invoke
+`pre-commit-sync` from here.
+
+`session-finalize` runs the full suite and can take a while — the harness
+may auto-background it.
+
+━━━ WAITING ON BACKGROUND WORK ━━━
+A long editor command (`refresh-tests`, `session-finalize`, `rebuild-self`,
+`recapture-stale`, `analyze-imports`) may end up running in the background —
+either because the harness auto-backgrounded it, or because you launched a
+genuinely long op with `run_in_background: true`. When that happens, TRUST
+the harness completion notification; do NOT poll.
+
+  - The harness re-invokes you automatically the moment the task exits — that
+    re-invocation IS your completion signal. Do NOT spawn `sleep` /
+    `until grep "CODEYAM_CMD_COMPLETE" … sleep` loops, do NOT re-read the
+    task `.output` file on a timer, and do NOT `kill -0` spin. A bare `sleep`
+    is blocked by the harness anyway, so the polling fallback never even
+    works — it just burns turns.
+  - If you need to block on the result inside the SAME turn, run the printed
+    `codeyam-editor-dev editor wait-for <task-id>` line BARE, exactly once. It now
+    BLOCKS to completion in one call and returns a single `WAIT_FOR COMPLETE`
+    block — you do NOT re-issue it repeatedly. Re-issue ONLY if it reports
+    `WAIT_FOR LIKELY_WEDGED` (a stale heartbeat — it names a `pid-status <pid>`
+    command to confirm the process is dead before killing). Never hand-roll an
+    `until grep … sleep` loop, and do NOT pipe it through `| tail`: the wrapped
+    command self-reports a `CODEYAM_CMD_RUNNING` heartbeat even under a pipe, so
+    piping only block-buffers and hides that liveness.
+  - `Monitor` is the supported watch tool, but its schema must be loaded
+    first or the call fails with `InputValidationError` and you fall back to
+    the very polling this avoids. It is pre-loaded once at session start
+    (`ToolSearch select:Monitor`); if it ever is not, load it before use.
+  - Only if you genuinely need a hang-detector, schedule ONE long fallback
+    (`ScheduleWakeup` ≥ 1200s) — never a short polling cadence. A fixed short
+    interval just fires stale after the task already finished, forcing a
+    context refetch to dismiss it.
+  - TIE that fallback to the current step so a late firing self-dismisses:
+    after you create the ScheduleWakeup, run
+    `codeyam-editor-dev editor wakeup-arm --schedule-id <the ScheduleWakeup id you
+    just created> --task <the backgrounded task id>`, embed the token it prints
+    in the wakeup's prompt, and have the prompt instruct future-you to run
+    `codeyam-editor-dev editor wakeup-check --token <token>` FIRST. If it reports
+    STALE (the workflow advanced past the armed step, a different feature is
+    active, or the session completed/reset), dismiss the wakeup WITHOUT
+    re-fetching step context. Only a LIVE verdict warrants re-engaging.
+  - When a later `codeyam-editor-dev editor advance` prints a
+    `> CANCEL STALE WAKEUP: … CancelWakeup <schedule_id>` directive, the awaited
+    step has completed — cancel the named fallback wakeup right then so it never
+    fires. The `wakeup-check`-on-fire step above stays as the belt-and-suspenders
+    fallback for a cancel that gets missed.
+
+
+Checklist:
+Presentability (open-source pass) — treat this branch as if it were about to
+be read by a stranger. Do all three BEFORE the final `session-finalize` so the
+suite validates the cleanup:
+[ ] `codeyam-editor-dev editor presentability-scan` — surfaces stale docs and
+    non-essential debug logging (read-only; it never deletes).
+[ ] Assertively remove the clearly-dead docs and debug log lines the scan
+    finds — but ASK the user about anything you are unsure about before
+    deleting it.
+[ ] `codeyam-editor-dev editor readme-sync` — refresh the "develop with
+    codeyam-editor" how-to and the scenario-screenshot gallery.
+[ ] Run `codeyam-editor-dev editor session-finalize`. If any phase fails
+    (refresh-tests, strict audit, analyze-imports, or verify-build),
+    fix the issue and re-run BEFORE continuing. A debug log line a test
+    asserted on will fail here — revert that removal and re-run.
+    Verify: codeyam-editor-dev editor verify-build
+
+
+When done, move to the next step: `codeyam-editor-dev editor 24`
+
+━━━ TASK ━━━
+If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
+
+Hand off from the previous step's task to this step's task. Procedure:
+  1. Run TaskList
+  2. If a task titled exactly `Complete codeyam editor step 22: 'Pre-Commit Sync' and move on to step 23: 'Finalize'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  3. Run TaskCreate with the EXACT title below and set it to in_progress:
+
+EXACT_TASK_TITLE: Complete codeyam editor step 23: 'Finalize' and move on to step 24: 'Commit'
+
+When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
+Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
+
+━━━ END OF STEP ━━━
+
+This is a non-gate step. Do NOT wait for user confirmation.
+Do NOT write a recap. Do NOT ask the user "ready to advance?" — they did
+not opt into a checkpoint. Recaps belong at gate steps, not here.
+
+If the checklist surfaces a finding that requires a user decision (unrelated test failures, surprising state, ambiguous next action), use AskUserQuestion with 2-4 concrete options — never an inline numbered list. If AskUserQuestion is not loaded, call `ToolSearch` with `select:AskUserQuestion` first.
+
+When you have finished the checklist AND marked the task completed, run:
+
+  Bash: codeyam-editor-dev editor advance
+
+━━━ BEGIN STEP 23: Finalize ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 23: 'Finalize' and move on to step 24: 'Commit'
+
+  1. TaskCreate with the EXACT title above, status in_progress
+  2. Run the step 23 checklist (printed above this trailer)
+  3. TaskUpdate completed
+  4. Run `codeyam-editor editor advance`
+
+Tail-truncated this output? Re-run without piping: codeyam-editor editor advance
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+Partitions needing attention: stale=1 red=0 untested=0 — pass --verbose for names
+Staleness sweep: 2 non-blocking finding(s) (DEPENDENCY_GRAPH_STALE, PARTITION_NEEDS_REFRESH) — pass --verbose to list. Recovery: codeyam-editor editor sweep-staleness
+

@@ -1,0 +1,16 @@
+{
+  "name": "ThemeSwatch - Default",
+  "id": "831f8255-7e9f-4b6d-be63-ea42535bb9bb",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "ThemeSwatch",
+      "CODEYAM_ISOLATE_SCENARIO": "Default"
+    }
+  },
+  "componentName": "ThemeSwatch",
+  "scenarioType": "component"
+}

@@ -507,6 +507,16 @@
     "testFile": "Tests/AppCoreTests/ThemeStoreTests.swift"
   },
   {
+    "conformsToView": true,
+    "description": "A full selectable theme row: ThemeSwatch preview + name + one-line blurb + selection check. A Style enum covers the two host surfaces (Settings plain vs onboarding carded); selecting invokes an onSelect closure so each caller sets the theme and fires its own analytics.",
+    "filePath": "Sources/AppCore/Theming/ThemeSwatch.swift",
+    "name": "ThemeChoiceRow",
+    "scenarios": [
+      "themechoicerow-settings-list",
+      "themechoicerow-onboarding-list"
+    ]
+  },
+  {
     "conformsToView": false,
     "description": "The five selectable looks (default, bolt, orbit, fieldnote, garden). Each maps to its resolved Theme token set plus a display name and one-line education blurb shown in the onboarding step and the Settings picker. Default is the shipping identity and the default.",
     "filePath": "Sources/AppCore/Theming/ThemeSystem.swift",
@@ -519,6 +529,17 @@
     "filePath": "Sources/AppCore/Theming/ThemeSystem.swift",
     "name": "ThemeStore",
     "testFile": "Tests/AppCoreTests/ThemeStoreTests.swift"
+  },
+  {
+    "conformsToView": true,
+    "description": "A small rounded preview tile for one theme: the theme bgTop fill, a hairline subtle border, and the theme identity mark (PuffyBuddy for Default, ThemeMark otherwise). Shared by the Settings Appearance list and the onboarding Choose-your-look step.",
+    "filePath": "Sources/AppCore/Theming/ThemeSwatch.swift",
+    "name": "ThemeSwatch",
+    "scenarios": [
+      "themeswatch-all-themes",
+      "themeswatch-default",
+      "themeswatch-bolt"
+    ]
   },
   {
     "description": "The full Today surface composed from the header, Buddy summary, stats row, and the coach, latest-activity, and weekly-load cards. Exercised by the Today dashboard application scenarios.",

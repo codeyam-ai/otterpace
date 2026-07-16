@@ -1,0 +1,144 @@
+Building Rust binary...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.24s
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+━━━ BEGIN STEP 11: Deconstruct ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 11: 'Deconstruct' and move on to step 12: 'Extract TDD'
+
+# UI Flow 11 / 26: Deconstruct
+
+**Feature:** Choose a Design — App Theme System
+
+Read the code and plan all component and function extractions.
+
+## Instructions
+
+RESUMING this step. Check what was already done before repeating work.
+  Tip: Run `codeyam-editor-dev editor scenarios` to see existing persona scenarios.
+  (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
+
+Goal: pages contain ONLY components. Components contain ONLY sub-components.
+This step is read and plan only. Code extraction happens in the `ui-extract-tdd` slug.
+
+THE RULE: No direct JSX in page files.
+  After extraction, a page/route file should import and compose components — nothing else.
+  Every distinct visual section in the page is its own component.
+  Every component that renders multiple distinct sections should be split into sub-components.
+  If a component has N visually distinct parts, it should compose N sub-components.
+
+Checklist:
+[ ] List reusable functions/components: `codeyam-editor-dev editor glossary-list`
+
+Read the glossary through the CLI, never with the `Read` tool.
+  `.codeyam/glossary.json` exceeds the Read tool's token limit. Use
+  `codeyam-editor-dev editor glossary-find <name>` (flags: `--prefix`,
+  `--substring`, `--feature`, `--format`) for a single lookup. Use
+  `codeyam-editor-dev editor glossary-list`,
+  `codeyam-editor-dev editor glossary-untested`, or
+  `codeyam-editor-dev editor glossary-by-tag <tag>` for projections across the
+  whole table. If you need to grep the table directly, read
+  `.codeyam/glossary-index.txt` (a regenerated, line-oriented sidecar — see
+  the `glossary_index_file` glossary entry).
+[ ] Read EVERY file used by this page/feature
+    For EACH file, identify EVERY extractable piece:
+    Components: headers, nav, loading states, empty states, error states,
+      badges/pills, image containers, card sections, form fields, modals,
+      titles, descriptions, rating displays, status indicators, buttons
+    Functions: data transforms, calculations, formatting, validation,
+      API response shaping, any logic that is not directly about rendering
+    Hooks: data fetching, state management, side effects
+
+[ ] Write a numbered extraction plan listing EVERYTHING you will extract
+    The end state: every page file is ONLY imports + component composition.
+    No raw <div>, <span>, <h1>, <p>, <img>, or <ul> in page files.
+    Every visual section in every component is itself a component.
+
+    For each item in the plan, note:
+    — What it is (component, function, hook)
+    — Where it currently lives (source file + approximate lines)
+    — Where it will go (new file path)
+
+Present the numbered plan, then proceed to the `ui-extract-tdd` slug to execute it.
+
+Pre-Deletion Sweep:
+  Before deleting files or removing public functions, build a complete
+  reference list in a single upfront sweep — don't discover callsites
+  incrementally through compile errors and test failures.
+
+  1. List every symbol, file path, and module name being removed.
+  2. Run ONE parallel batch of `Grep` calls (output_mode: files_with_matches)
+     for each name across the whole workspace — source, tests, docs, config
+     JSON, `.gitattributes`, merge-driver setup, CI files.
+  3. Read the hits together. Decide what must be removed, updated, or left
+     alone.
+  4. THEN make the deletions, updating every call site in the same pass.
+
+  This replaces the delete → compile-fail → grep → test-fail → grep-again
+  cycle with a single upfront pass. Especially important for:
+    - Public functions used across crates or packages
+    - Merge driver entries (`.gitattributes`, `.git/config`, scripts in
+      `.codeyam/`)
+    - Test helpers and fixtures that look unused but are called from other
+      test files
+    - Glossary entries (see next section)
+
+  If you catch yourself running a fifth targeted grep after a deletion
+  failed, stop and do the sweep properly.
+
+Glossary Staleness:
+  Before running `codeyam-editor-dev editor audit --summary-only` at the audit gate, clean up
+  glossary entries for code you've deleted — the audit gate blocks
+  advancement on stale entries.
+
+  In the same pass as the pre-deletion sweep, for each removed function or
+  component:
+    1. codeyam-editor-dev editor glossary-find <name>   — confirm the entry exists
+    2. codeyam-editor-dev editor glossary-remove <name> — remove it
+
+  Treat stale glossary entries as part of the deletion, not a follow-up
+  cleanup triggered by a blocked audit.
+
+When done, move to the next step: `codeyam-editor-dev editor 12`
+
+━━━ TASK ━━━
+If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
+
+Hand off from the previous step's task to this step's task. Procedure:
+  1. Run TaskList
+  2. If a task titled exactly `Complete codeyam editor step 10: 'Interactive Test' and move on to step 11: 'Deconstruct'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  3. Run TaskCreate with the EXACT title below and set it to in_progress:
+
+EXACT_TASK_TITLE: Complete codeyam editor step 11: 'Deconstruct' and move on to step 12: 'Extract TDD'
+
+When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
+Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
+
+━━━ END OF STEP ━━━
+
+This is a non-gate step. Do NOT wait for user confirmation.
+Do NOT write a recap. Do NOT ask the user "ready to advance?" — they did
+not opt into a checkpoint. Recaps belong at gate steps, not here.
+
+If the checklist surfaces a finding that requires a user decision (unrelated test failures, surprising state, ambiguous next action), use AskUserQuestion with 2-4 concrete options — never an inline numbered list. If AskUserQuestion is not loaded, call `ToolSearch` with `select:AskUserQuestion` first.
+
+When you have finished the checklist AND marked the task completed, run:
+
+  Bash: codeyam-editor-dev editor advance
+
+━━━ BEGIN STEP 11: Deconstruct ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 11: 'Deconstruct' and move on to step 12: 'Extract TDD'
+
+  1. TaskCreate with the EXACT title above, status in_progress
+  2. Run the step 11 checklist (printed above this trailer)
+  3. TaskUpdate completed
+  4. Run `codeyam-editor editor advance`
+
+Tail-truncated this output? Re-run without piping: codeyam-editor editor advance
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+Staleness sweep: 1 non-blocking finding(s) (DEPENDENCY_GRAPH_STALE) — pass --verbose to list. Recovery: codeyam-editor editor analyze-imports
+

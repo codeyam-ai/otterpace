@@ -1,0 +1,130 @@
+Building Rust binary...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.60s
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+━━━ BEGIN STEP 17: Curate Scenarios ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 17: 'Curate Scenarios' and move on to step 18: 'App Scenarios'
+
+# UI Flow 17 / 26: Curate Scenarios
+
+**Feature:** Choose a Design — App Theme System
+
+Curate the existing app-scenario set — review, consolidate, dedup, and edit in place — before registering new scenarios.
+
+## Instructions
+
+RESUMING this step. Check what was already done before repeating work.
+  Tip: Check if the journal was already updated with the commit SHA.
+  (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
+
+Curate the existing application-scenario set for every surface this feature touched, BEFORE registering anything new. Registering new scenarios is the next step; this step makes sure you're not about to pile new scenarios on top of stale or duplicated ones. The next step (App Scenarios) registers the genuinely-new states this leaves uncovered.
+
+CONSOLIDATION-FIRST — edit existing scenarios before adding new ones. This is the
+LEAD behavior, not an afterthought. The default failure mode is "new feature → new
+scenarios," which accumulates dozens of near-identical app scenarios that differ by
+one field — noisy, expensive to recapture, hard to review. For every surface this
+feature touches, work in this order:
+
+  1. LIST the existing app scenarios first: `codeyam-editor-dev editor scenarios`.
+  2. For EACH existing scenario on a touched surface, decide whether the feature
+     changes what it should demonstrate. If so, EDIT its seed/mocks and recapture
+     IN PLACE — and RENAME it when the feature changes its meaning (e.g.
+     `home-grouped` → a name that reflects the new Labels grid). Folding the new
+     surface into an existing scenario is the preferred outcome, not a fallback.
+  3. Defer creating a NEW scenario to the next step — and only for a display state
+     no edited scenario covers. A new STATE is the bar for "new," not a new data
+     variation.
+
+The lens for review — the canonical display states. Each distinct state deserves
+its own scenario; use this list to judge whether an existing scenario has gone
+stale or whether a state is missing entirely:
+  - Empty: zero rows / no results / signed-out. Surfaces missing empty-state UI.
+  - Single item: one row only. Surfaces "1 result" / single-column collapse.
+  - Loaded with many: a rich mix of categories, lengths, ratings, statuses. The canonical demo.
+  - All-of-one-kind: every row shares a normally-varying value (all unrated, all draft). Surfaces fallback sort orders.
+  - Edge data: very long / short / special-char / missing-optional-field rows. Promote out of "Loaded with many" only when the state has its own visual treatment.
+
+RICH, REALISTIC DATA. "Test Item 1" won't reveal whether the feature works — when
+you edit a scenario's seed, use real names, real image URLs (verify-images runs a
+HEAD check), realistic copy lengths.
+
+Anti-pattern — "thin parallel scenarios" = SAME display state with cosmetic data
+swaps (`Library_Cards1` vs `Library_Cards2`, both populated). DIFFERENT states
+(empty vs populated) are NOT thin — they're load-bearing coverage. When enhancing,
+enhance WITHIN a state; don't fold empty into populated.
+
+Checklist:
+[ ] Review the existing scenario set for every target you touched
+    Run `codeyam-editor-dev editor scenario-review --target <route-or-component>`
+    (repeat `--target`, or omit to review all). It lists each scenario grouped by
+    target with a render-input fingerprint and flags:
+      - DUPLICATE-CANDIDATE — same route + equivalent render inputs (seed, mocks,
+        storage, shares, dimensions) as a sibling. Resolve: consolidate to one,
+        OR differentiate the inputs. Do NOT keep both unchanged.
+      - OBSOLETE-CANDIDATE — a non-empty seed/storage scenario whose screenshot is
+        stale. Recapture and look: renders the seeded data → just stale; renders
+        empty/unchanged → most often a SEED-INJECTION FAILURE to FIX (stale/empty
+        overlay, adapter stdout parse, dead injection path), not an obsolete
+        scenario. Fix the seed and recapture; only retire it after confirming the
+        app genuinely no longer consumes the seed shape. NEVER delete a seeded
+        scenario to dodge an empty capture, and never read a `native-storage:
+        manual` capability as "this stack can't be seeded" — `manual` is a
+        real-device verification hint; the editor still seeds the web preview from
+        the adapter (stack.json `data.seedAdapterType`). If a seeded scenario
+        renders empty, the seed didn't land — fix the seed.
+      - stale — screenshot out of date; recapture before relying on it.
+    The tool only FLAGS — never deletes. Resolve every flag for touched targets
+    before advancing; a deletion is a real change, so confirm it.
+[ ] Consolidation pass — edit/rename existing scenarios in place
+    Run `codeyam-editor-dev editor scenarios` to inventory. For each existing scenario
+    on a touched surface, edit its seed/mocks, recapture, and rename it when its
+    meaning changed. Do this BEFORE registering anything new — a near-duplicate
+    differing by one field must be folded in, not added in the next step.
+    Verify: codeyam-editor-dev editor scenarios
+
+
+When done, move to the next step: `codeyam-editor-dev editor 18`
+
+━━━ TASK ━━━
+If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
+
+Hand off from the previous step's task to this step's task. Procedure:
+  1. Run TaskList
+  2. If a task titled exactly `Complete codeyam editor step 16: 'Component Scenarios' and move on to step 17: 'Curate Scenarios'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  3. Run TaskCreate with the EXACT title below and set it to in_progress:
+
+EXACT_TASK_TITLE: Complete codeyam editor step 17: 'Curate Scenarios' and move on to step 18: 'App Scenarios'
+
+When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
+Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
+
+━━━ END OF STEP ━━━
+
+This is a non-gate step. Do NOT wait for user confirmation.
+Do NOT write a recap. Do NOT ask the user "ready to advance?" — they did
+not opt into a checkpoint. Recaps belong at gate steps, not here.
+
+If the checklist surfaces a finding that requires a user decision (unrelated test failures, surprising state, ambiguous next action), use AskUserQuestion with 2-4 concrete options — never an inline numbered list. If AskUserQuestion is not loaded, call `ToolSearch` with `select:AskUserQuestion` first.
+
+When you have finished the checklist AND marked the task completed, run:
+
+  Bash: codeyam-editor-dev editor advance
+
+━━━ BEGIN STEP 17: Curate Scenarios ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 17: 'Curate Scenarios' and move on to step 18: 'App Scenarios'
+
+  1. TaskCreate with the EXACT title above, status in_progress
+  2. Run the step 17 checklist (printed above this trailer)
+  3. TaskUpdate completed
+  4. Run `codeyam-editor editor advance`
+
+Tail-truncated this output? Re-run without piping: codeyam-editor editor advance
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+Partitions needing attention: stale=1 red=0 untested=0 — pass --verbose for names
+Staleness sweep: 2 non-blocking finding(s) (DEPENDENCY_GRAPH_STALE, PARTITION_NEEDS_REFRESH) — pass --verbose to list. Recovery: codeyam-editor editor sweep-staleness
+

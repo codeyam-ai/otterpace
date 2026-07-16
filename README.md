@@ -250,11 +250,11 @@ States captured as runnable scenarios with codeyam-editor:
 
 ![App Icon — Showcase](.codeyam/scenarios/screenshots/app-icon-showcase--iphone-16.png)
 
+### Ask Coach — Building On Track
+
+![Ask Coach — Building On Track](.codeyam/scenarios/screenshots/ask-coach-building-on-track--iphone-16.png)
+
 ### Ask Coach — Empty Chat
 
 ![Ask Coach — Empty Chat](.codeyam/scenarios/screenshots/ask-coach-empty-chat--iphone-16.png)
-
-### Ask Coach — Hit 10K
-
-![Ask Coach — Hit 10K](.codeyam/scenarios/screenshots/ask-coach-hit-10k--iphone-16.png)
 <!-- codeyam:scenario-gallery:end -->

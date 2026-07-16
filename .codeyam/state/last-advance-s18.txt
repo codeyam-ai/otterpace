@@ -1,0 +1,107 @@
+Building Rust binary...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.44s
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+━━━ BEGIN STEP 19: Present ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 19: 'Present' and move on to step 20: 'Reconcile'
+
+# UI Flow 19 / 26: Present
+
+**Feature:** Choose a Design — App Theme System
+
+Final approval gate — recapture screenshots and present a summary of all work to the user.
+
+## Instructions
+
+RESUMING this step. Check what was already done before repeating work.
+  (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
+
+Present the session results to the user and get their approval. THIS IS THE MANDATORY APPROVAL GATE — do NOT skip or rush. Glossary reconcile + audit run AFTER this gate, in `ui-glossary-reconcile`.
+
+Checklist:
+[ ] Recapture stale screenshots, refresh README + setup, run `verify-build`
+    - `codeyam-editor-dev editor recapture-stale` — finds every stale/missing
+      screenshot and recaptures it. The `--skip-when-clean` short-circuit
+      returns in <100ms when nothing is stale.
+    - Update `README.md` (project name, one-line description, setup
+      prerequisites) and `npm run setup` in `package.json` if setup needs
+      extra steps. A new clone must work with: `git clone → npm run setup → npm run dev`.
+    - `codeyam-editor-dev editor verify-build` — runs every `staticChecks` entry
+      whose `filePatterns` match the diff. Fix any failure before presenting;
+      the advance gate runs verify-build too.
+[ ] Confirm the scenario set for the touched targets is curated
+    Re-run `codeyam-editor-dev editor scenario-review --target <route-or-component>`
+    for what you touched. After recapture, no DUPLICATE-CANDIDATE or unresolved
+    OBSOLETE-CANDIDATE flags should remain — if any do, resolve them (consolidate
+    / differentiate / retire-with-confirmation) before presenting, so you hand
+    the user a coherent set rather than an accumulated pile.
+[ ] Show the results panel and write a summary
+    `codeyam-editor-dev editor show-results` — MANDATORY (run even if no scenarios
+    changed). Advancing OFF this step is BLOCKED until it has run (the marker it
+    writes is also re-checked at Commit); screenshots or files shown to the user
+    do NOT satisfy the gate. Then write a 1-2 sentence summary of
+    what was built and a one-line test count + audit status (simply report the
+    status shown by `show-results`. Do NOT run `editor audit` or try to fix audit
+    failures here).
+    Verify: codeyam-editor-dev editor show-results
+
+[ ] Present the selection menu via Present a selection menu to the user using AskUserQuestion with these EXACT option labels. If AskUserQuestion is not loaded yet, call `ToolSearch` with `select:AskUserQuestion` first, then call AskUserQuestion: — wait for explicit user approval
+    Option 1 label: "Save & commit" — full finalize path: ui-glossary-reconcile, full audit, `session-finalize` (~7 min flag-free suite), then journal + commit. When the user picks this, first run `codeyam-editor-dev editor fast-commit-stop` (clears any lingering Fast Commit intent from a prior cycle on this branch so Reconcile/Finalize render the full path), then advance.
+
+    Option 3 label: "I'd like to make some changes" — describe changes, then re-verify
+
+    If the user picks "Save & commit", advance: `codeyam-editor-dev editor advance`.
+    If the user picks "Make changes" (or asks for ANY change, even as a
+    question): hide results (`codeyam-editor-dev editor hide-results`), ask what
+    changes they want (if not clear), run `codeyam-editor-dev editor change "Choose a Design — App Theme System"`
+    to get the change checklist, THEN make the changes. Always run the change
+    command BEFORE writing any code.
+
+WAIT for the user's answer. Do NOT proceed without explicit approval.
+
+
+When done, move to the next step: `codeyam-editor-dev editor 20`
+
+━━━ TASK ━━━
+If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
+
+Hand off from the previous step's task to this step's task. Procedure:
+  1. Run TaskList
+  2. If a task titled exactly `Complete codeyam editor step 18: 'App Scenarios' and move on to step 19: 'Present'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  3. Run TaskCreate with the EXACT title below and set it to in_progress:
+
+EXACT_TASK_TITLE: Complete codeyam editor step 19: 'Present' and move on to step 20: 'Reconcile'
+
+When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
+Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
+
+━━━ END OF STEP ━━━
+
+This is a non-gate step. Do NOT wait for user confirmation.
+Do NOT write a recap. Do NOT ask the user "ready to advance?" — they did
+not opt into a checkpoint. Recaps belong at gate steps, not here.
+
+If the checklist surfaces a finding that requires a user decision (unrelated test failures, surprising state, ambiguous next action), use AskUserQuestion with 2-4 concrete options — never an inline numbered list. If AskUserQuestion is not loaded, call `ToolSearch` with `select:AskUserQuestion` first.
+
+When you have finished the checklist AND marked the task completed, run:
+
+  Bash: codeyam-editor-dev editor advance
+
+━━━ BEGIN STEP 19: Present ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 19: 'Present' and move on to step 20: 'Reconcile'
+
+  1. TaskCreate with the EXACT title above, status in_progress
+  2. Run the step 19 checklist (printed above this trailer)
+  3. TaskUpdate completed
+  4. Run `codeyam-editor editor advance`
+
+Tail-truncated this output? Re-run without piping: codeyam-editor editor advance
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+Partitions needing attention: stale=1 red=0 untested=0 — pass --verbose for names
+Staleness sweep: 2 non-blocking finding(s) (DEPENDENCY_GRAPH_STALE, PARTITION_NEEDS_REFRESH) — pass --verbose to list. Recovery: codeyam-editor editor sweep-staleness
+

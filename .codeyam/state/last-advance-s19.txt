@@ -1,0 +1,178 @@
+Building Rust binary...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.30s
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+━━━ BEGIN STEP 20: Reconcile ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 20: 'Reconcile' and move on to step 21: 'Journal'
+
+# UI Flow 20 / 26: Reconcile
+
+**Feature:** Choose a Design — App Theme System
+
+Run the audit gate, reconcile any registry/glossary drift until clean.
+
+## Instructions
+
+RESUMING this step. Check what was already done before repeating work.
+  (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
+
+**This audit system has no deferral primitives. Resolve every drift before advancing.**
+
+Run the audit and reconcile any registry/runner/glossary drift before `finalize` runs the full suite.
+
+This audit accepts partial-run evidence — every test in current discovery
+just needs a recent passing record. Do NOT pre-emptively run flag-free
+`refresh-tests`; the audit itself will tell you if a full run is required
+(rare). The flag-free run is reserved for `finalize`.
+
+Always run tests through the configured runner command via `refresh-tests`
+(it echoes the exact command before running) — never hand-construct runner
+flags like `--lib`/`--bins`/`--test`.
+
+The audit is a HARD GATE; the next slug will refuse to advance until the
+audit passes. There is no `pendingResolution` table, no `--investigating`
+escape hatch, no time-boxed suppression — every drift gets a real fix.
+
+Checklist:
+[ ] Run `codeyam-editor-dev editor audit --summary-only`
+    Bounded ≤30-line summary; never `tail`/`head` full output. See CLAUDE.md `## Audit output discipline` for `--only <ID>` / `--format json` drill-ins.
+    If the audit bails reporting cache staleness, that is the only place
+    in the workflow where a flag-free `codeyam-editor-dev editor refresh-tests`
+    may run before `finalize`. Run it, then re-run `audit`. If the audit
+    doesn't bail on the first try, no full run was needed.
+
+    If you add or rename a test and the audit can't see it yet, run
+    `codeyam-editor-dev editor refresh-tests --test <name>` to update just
+    that entry's cache. NEVER run `refresh-tests --force` to update the
+    cache for a single test — `--force` runs the entire suite, is
+    extremely slow, and is reserved for the `finalize` step (where
+    `session-finalize` runs it automatically). Other targeted flags:
+    `--changed` (run only what changed since HEAD), `--runner <name>`
+    (a single runner). The CLI itself prints a loud warning when
+    `--force` is used outside of `finalize` — that warning is your
+    cue to drop back to a targeted flag.
+
+    Cache-freshness contract for `reconcile-registry`: it diffs the
+    registry against the test cache, so it only needs the partition(s)
+    you touched this branch to be fresh — NOT the whole suite. When
+    `reconcile-registry` bails on a partial or stale/aborted cache, read
+    the bail: it now prints the exact, copy-pasteable
+    `refresh-tests --partition <touched>` command that fixes it. Run that
+    command verbatim, then re-run `reconcile-registry`. Reach for
+    `--force` / a full-suite refresh ONLY if a partition refresh still
+    leaves the cache incomplete — escalating straight to `--force` is the
+    redundant full-suite churn this contract exists to prevent.
+
+    Environmental drift is not a real failure — defer it, don't `--force`
+    it. When the audit body opens with a `◇ Environmental drift:` banner,
+    those findings are platform / runner-cache artifacts (a test
+    platform-gated to another host the runner here skipped, or a partition
+    that didn't load this pass), not genuine regressions. Do NOT run a
+    full-suite `refresh-tests --force` to clear them — that is ~20+ minutes
+    for zero signal. Carry them to `session-finalize`, which runs the full
+    suite once before the branch merges.
+
+    Unrelated flakiness no longer aborts the reconcile. When a partition
+    aborted mid-suite in a crate your change never touched,
+    `reconcile-registry --auto-apply` registers your affected crate's
+    tests anyway and prints a WARNING naming the unrelated aborted
+    partition (it declines every rename/remove as a safety net). You do
+    NOT need to re-run the unrelated crate in isolation to "prove" it was
+    transient — the warning already isolated it. Clear it with the printed
+    narrow `refresh-tests --partition <aborted>` before `finalize`.
+[ ] Fix every drift the audit names — registry first, glossary second
+    Registry / runner drift must be resolved before advancing. Use
+    `register-test`, `remove-test`, `rename-test`, or `platform-gate`
+    — there is no suppression primitive. If a test is intentionally
+    not running on a given host, that is `platform_gate`. If a test
+    is intentionally not running at all, that is `#[ignore]` (Rust)
+    or `it.skip()` (vitest), not a registry-side marker.
+    Reconcile in bulk via `codeyam-editor-dev editor reconcile-registry`
+    (`--auto-apply` runs the unambiguous actions). What `--auto-apply`
+    can and cannot do depends entirely on what metadata the runner
+    emits for each test:
+      * Runner emits file + line (jest, etc.): auto-applied directly.
+      * Runner emits file but no line (vitest today): line is resolved
+        from source by the runner-shape-dispatched resolver, and the
+        add is auto-applied. No manual `register-test` needed.
+      * Runner emits no file path (cargo today, and any future runner
+        with the same output shape): the entry will ALWAYS land in
+        `skipped` and `reconcile-registry` will exit with code 2.
+        There is nothing for `--auto-apply` to anchor an add to.
+    For the cargo case (which is the common one when you've just added
+    a new `#[test]`), the printed skip line contains a complete,
+    copy-pasteable `register-test` command with `--key`, `--runner`,
+    and a placeholder `--file` / `--description` you fill in. Run that
+    command for each skipped entry. The `--line` flag is optional for
+    `register-test` — the source-resolver will fill it in.
+    Do NOT re-run `reconcile-registry --auto-apply` expecting a different
+    result for these entries — they will land in `skipped` again with
+    the same message. Do NOT `git checkout .codeyam/test-registry.json`
+    to "start fresh"; that destroys session work and does not change
+    auto-apply's behaviour. The exit code is the contract: 0 = clean,
+    2 = read the printed commands and run them.
+    Removes are skipped by default; pass `--allow-removes` together with
+    `--auto-apply` when you know the deletions are intentional (e.g. you
+    just refactored tests away) to skip the per-key `remove-test`
+    round-trips.
+    For glossary integrity (`staleSources` / `staleTests`): remove the
+    referenced entries from `.codeyam/glossary.json` (use
+    `codeyam-editor-dev editor glossary-remove <name>`). The audit auto-fixes
+    incomplete entities by running targeted analysis on just the affected
+    files. Do NOT run `codeyam-editor-dev editor analyze-imports` here — the
+    audit runs targeted analysis automatically and is much faster.
+[ ] Re-run `codeyam-editor-dev editor audit --summary-only` until it reports zero failures
+    Do not advance until the audit is clean. Pre-existing drift from prior
+    sessions must be fixed too — the audit gates the whole feature, not
+    just this session's edits. (Under Fast Commit this whole step is
+    deferred — the renderer replaces this body with a one-line
+    auto-advance and the full audit/reconcile runs once at
+    `session-finalize`. If you are reading this body, the branch is on
+    the normal path.)
+
+
+When done, move to the next step: `codeyam-editor-dev editor 21`
+
+━━━ TASK ━━━
+If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
+
+Hand off from the previous step's task to this step's task. Procedure:
+  1. Run TaskList
+  2. If a task titled exactly `Complete codeyam editor step 19: 'Present' and move on to step 20: 'Reconcile'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  3. Run TaskCreate with the EXACT title below and set it to in_progress:
+
+EXACT_TASK_TITLE: Complete codeyam editor step 20: 'Reconcile' and move on to step 21: 'Journal'
+
+When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
+Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
+
+━━━ END OF STEP ━━━
+
+This is a non-gate step. Do NOT wait for user confirmation.
+Do NOT write a recap. Do NOT ask the user "ready to advance?" — they did
+not opt into a checkpoint. Recaps belong at gate steps, not here.
+
+If the checklist surfaces a finding that requires a user decision (unrelated test failures, surprising state, ambiguous next action), use AskUserQuestion with 2-4 concrete options — never an inline numbered list. If AskUserQuestion is not loaded, call `ToolSearch` with `select:AskUserQuestion` first.
+
+When you have finished the checklist AND marked the task completed, run:
+
+  Bash: codeyam-editor-dev editor advance
+
+━━━ BEGIN STEP 20: Reconcile ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 20: 'Reconcile' and move on to step 21: 'Journal'
+
+  1. TaskCreate with the EXACT title above, status in_progress
+  2. Run the step 20 checklist (printed above this trailer)
+  3. TaskUpdate completed
+  4. Run `codeyam-editor editor advance`
+
+Tail-truncated this output? Re-run without piping: codeyam-editor editor advance
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+Partitions needing attention: stale=1 red=0 untested=0 — pass --verbose for names
+Staleness sweep: 2 non-blocking finding(s) (DEPENDENCY_GRAPH_STALE, PARTITION_NEEDS_REFRESH) — pass --verbose to list. Recovery: codeyam-editor editor sweep-staleness
+

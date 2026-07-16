@@ -1,0 +1,215 @@
+Building Rust binary...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.79s
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+━━━ BEGIN STEP 16: Component Scenarios ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 16: 'Component Scenarios' and move on to step 17: 'Curate Scenarios'
+
+# UI Flow 16 / 26: Component Scenarios
+
+**Feature:** Choose a Design — App Theme System
+
+Register and capture component-level scenarios for every visual component.
+
+## Instructions
+
+RESUMING this step. Check what was already done before repeating work.
+  Tip: Check git status to see if changes are already committed.
+  (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
+
+Register and capture isolated-component scenarios now that isolation routes exist.
+
+NO-ISOLATION STACK? If `codeyam-editor-dev editor isolate <Component>` bailed "stack
+not supported" (a static export — Astro / plain HTML — or any stack with no
+scaffolder): STOP. Do NOT hand-write a component scenario with an
+`/isolated-components/...` url — `register` now REJECTS it (the route 404s on a
+static export, captures nothing, and the scenario vanishes from results). Do NOT
+register the component as an application/page scenario to get a screenshot — page
+coverage is NOT a component substitute. Follow the bail's recovery: register the
+component in `stack.json → components.registryFile` and add a `testFile` glossary
+satisfier — that satisfier (never an application scenario) credits leaf components
+on a no-isolation stack in the Components section.
+
+  TELL THE USER proactively, at the Component Scenarios / Present step, that on this
+  stack there are intentionally no isolated component shots: leaf components are
+  credited via the full app scenarios and appear under Components with a "Covered via
+  app scenarios — no isolation harness" note plus a section banner — so the human
+  doesn't read the absence as a coverage gap.
+
+For each component with an isolation route, register ONE scenario per state worth
+showing — walk the state-axis checklist in the `isolation-routes` step (Default /
+Edge data / Boundary values / Visual states / All-of-one-kind). A single Default
+scenario per component leaves it under-covered; the audit treats a `componentName
+== entry.name` match as the satisfier, so you get credit for every distinct state.
+
+Demonstrating every meaningful state is the core value of codeyam — not a checkbox.
+A scenario that seeds data but renders blank, or shows only one trivial state, is a
+BUG: seed it richer and recapture. Reserve `n-a` for states that genuinely cannot
+occur on this view, with a reason that says why — never for a state you skipped.
+
+ANTI-PATTERN — the empty-shell seed. A scenario whose array/list props are all `[]`
+and objects all `null`/placeholder renders an empty shell — a bug, not a state.
+Default MUST populate every list with realistic rows, fill optional fields, and use
+counts that exercise pluralization, so it looks like the component doing its job.
+Keep empty / loading / error as SEPARATE, clearly-named scenarios; a genuinely-empty
+capture is only legitimate when the empty state is the point.
+
+Components without an isolation route MUST carry an `untestabilityReason` on their
+glossary entry — and only the GENUINE wrapper shape (`PageShell` / `BrandMark` /
+`CategoryTag`: one element, no branching, no iteration, ≤1 meaningful prop) is
+accepted as `trivial-wrapper`. `glossary-add` reads the source and rejects the kind
+when the component shows real render complexity; the audit mirrors the check so
+mis-classified entries surface in `visual-components-without-coverage`. The
+write-time check also rejects a page-level application scenario as a visual-component
+satisfier — page coverage is NOT a component substitute.
+
+Once each scenario is registered + captured here, its EMITTED slug (in the
+`register` response) is the legal value to cite on the matching `glossary-add` entry
+at the `register-incremental` step — that's when the visual-component coverage
+contract becomes satisfiable. The slug is `slugify(scenario.name)`; cite the printed
+slug, never a guess.
+
+[ ] Register a scenario for every visual component (bulk; one per state worth showing)
+    Canonical shape — `componentName` + isolation-route `url` + (optional)
+    `mocks.http` for any internal API calls:
+
+```json
+{
+  "name": "ArticleCard - Default",
+  "componentName": "ArticleCard",
+  "url": "/isolated-components/ArticleCard?s=Default",
+  "dimensions": ["Desktop"],
+  "mocks": {
+    "http": { "GET /api/article/1": {"status": 200, "body": {"id": 1, "title": "Iced matcha"}} }
+  }
+}
+```
+
+    Before hand-writing an HTTP mock body, start from an observed response:
+    `codeyam-editor-dev editor catalog-export --route /api/article` (falls back to the
+    persisted catalog when the server is down). Where `.codeyam/mockable/<app>.json`
+    declares a `responseSchema`, `register` validates the body and bails loud on a
+    mismatch; else an observed-sample divergence is a non-fatal warning.
+
+    Bulk-register: write the array to a per-invocation scratch path (unique
+    filename per call) and run `codeyam-editor-dev editor register
+    @.codeyam/tmp/register-<batch-tag>.json`. The file auto-deletes on success — do
+    NOT reuse a shared path. URL MUST be an isolation route; omit `mocks` when the
+    component has no internal API calls. With `components.registryFile` set in
+    `stack.json`, register validates every `componentName` and fails loud on unknowns.
+
+    Streaming / transcript mocks (same `mocks` object as `http`). A WebSocket/SSE
+    feed uses `mocks.streams` keyed by an HTTP-style endpoint; a terminal/agent
+    view uses `mocks.transcripts` keyed by the PTY endpoint (`"/ws/terminal"`). The
+    value is a timed frame list: a transcript frame is either `bytes` (terminal
+    output, ANSI included) OR `event` (a lifecycle message like `agent-idle`), never
+    both; a stream frame is `{at, kind, data}`. `onEnd` is `close` (default) | `idle`
+    | `loop`. **Every endpoint AND every `event` name must be declared in
+    `.codeyam/mockable/<app>.json`** — `register` rejects an undeclared endpoint or
+    misspelled event. Capture a real state with `record-transcript --scenario <slug>`.
+
+    Interaction scenarios (the `interactions` field). A resting-render screenshot
+    shows nothing about what a component does when touched — a hover action bar, an
+    expanded section, an open modal, a validation error all stay invisible. If a
+    component binds event handlers and has behavior worth showing, register a
+    scenario whose `interactions` list drives it, so the capture shows the
+    INTERACTED state. Each step is `click` / `fill` / `press` / `hover`, with a
+    `text` (visible label, preferred) or CSS `selector` target and optional `value`
+    (text to `fill`, or the key for `press`). The sequence replays before every
+    capture and `recapture-stale`, so the state stays fresh. A target matching
+    nothing fails the capture loud (with candidate labels), never silently.
+
+```json
+{
+  "name": "UrlRow - Hover Actions Revealed",
+  "componentName": "UrlRow",
+  "url": "/isolated-components/UrlRow?s=Default",
+  "dimensions": ["Desktop"],
+  "interactions": [
+    { "action": "hover", "text": "https://example.com/articles" }
+  ]
+}
+```
+
+    Only add `interactions` for components that GENUINELY have interaction-only
+    state. A purely presentational component (tag, badge, static card) has nothing
+    to reveal — a Default scenario is complete; an interaction just re-captures it.
+[ ] Sanity-check routes, then capture screenshots in one pass
+    First: `codeyam-editor-dev editor probe-isolation-routes` — parallel GET sweep across
+    every component scenario's route. A 500 means the component crashed at render —
+    read `bodyPrefix` to triage before paying the screenshot cost. Then: `codeyam-editor
+    editor recapture-stale` captures every fresh/missing screenshot just registered.
+    On bulk-capture 404s, register defers them, runs ONE dev-server restart, and
+    recaptures; a second 404 is a real error — fix the route/typo and re-register.
+[ ] Pre-advance verifications — both must be clean before `editor advance`:
+    - This step gates on **leaf / presentational** components only. Entry-point
+      pages are covered by application scenarios in the NEXT step, so a page with no
+      scenario won't block you. `codeyam-editor-dev editor
+      visual-components-without-coverage` lists the full surface (leaf + pages) as a
+      diagnostic; the gate blocks only on leaf components. For each uncovered LEAF
+      component, return to the isolation-routes decisions: (a) isolate + register
+      scenarios OR (b) glossary-update with an `untestabilityReason`.
+    - Register response `clientErrors` → must be empty for every captured scenario.
+      If non-empty, fix the isolation route (or component code) and re-register.
+
+Non-Serializable Props Reference (use these `__type` markers in scenario props):
+
+  | `__type`      | JSON                                                          | Runtime value           |
+  |---------------|---------------------------------------------------------------|-------------------------|
+  | `"noop"`      | `{"__type": "noop"}`                                          | `() => {}`              |
+  | `"undefined"` | `{"__type": "undefined"}`                                     | `undefined`             |
+  | `"Ref"`       | `{"__type": "Ref"}`                                           | `{ current: null }`     |
+  | `"Date"`      | `{"__type": "Date", "value": "2024-01-15T10:30:00Z"}`         | `new Date(value)`       |
+  | `"Set"`       | `{"__type": "Set", "values": [1, 2, 3]}`                      | `new Set([1, 2, 3])`    |
+  | `"Map"`       | `{"__type": "Map", "entries": {"k": "v"}}`                    | `new Map([["k","v"]])`  |
+  | `"ReactNode"` | `{"__type": "ReactNode", "text": "Hello"}`                    | `"Hello"`               |
+  | `"ReactNode"` | `{"__type": "ReactNode", "element": "div", "children": "…"}`  | `createElement("div")`  |
+
+  Required-callback props: always `{"__type": "noop"}`, never `null`.
+
+
+When done, move to the next step: `codeyam-editor-dev editor 17`
+
+━━━ TASK ━━━
+If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
+
+Hand off from the previous step's task to this step's task. Procedure:
+  1. Run TaskList
+  2. If a task titled exactly `Complete codeyam editor step 15: 'Isolation Routes' and move on to step 16: 'Component Scenarios'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  3. Run TaskCreate with the EXACT title below and set it to in_progress:
+
+EXACT_TASK_TITLE: Complete codeyam editor step 16: 'Component Scenarios' and move on to step 17: 'Curate Scenarios'
+
+When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
+Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
+
+━━━ END OF STEP ━━━
+
+This is a non-gate step. Do NOT wait for user confirmation.
+Do NOT write a recap. Do NOT ask the user "ready to advance?" — they did
+not opt into a checkpoint. Recaps belong at gate steps, not here.
+
+If the checklist surfaces a finding that requires a user decision (unrelated test failures, surprising state, ambiguous next action), use AskUserQuestion with 2-4 concrete options — never an inline numbered list. If AskUserQuestion is not loaded, call `ToolSearch` with `select:AskUserQuestion` first.
+
+When you have finished the checklist AND marked the task completed, run:
+
+  Bash: codeyam-editor-dev editor advance
+
+━━━ BEGIN STEP 16: Component Scenarios ━━━
+
+NEXT ACTION (same turn — do not stop):
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 16: 'Component Scenarios' and move on to step 17: 'Curate Scenarios'
+
+  1. TaskCreate with the EXACT title above, status in_progress
+  2. Run the step 16 checklist (printed above this trailer)
+  3. TaskUpdate completed
+  4. Run `codeyam-editor editor advance`
+
+Tail-truncated this output? Re-run without piping: codeyam-editor editor advance
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+Partitions needing attention: stale=1 red=0 untested=0 — pass --verbose for names
+Staleness sweep: 2 non-blocking finding(s) (DEPENDENCY_GRAPH_STALE, PARTITION_NEEDS_REFRESH) — pass --verbose to list. Recovery: codeyam-editor editor sweep-staleness
+

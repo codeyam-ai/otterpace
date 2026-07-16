@@ -1,0 +1,166 @@
+Building Rust binary...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.94s
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+━━━ AWAIT USER CONFIRMATION — STEP 18: App Scenarios ━━━
+
+This step requires explicit user approval before advancing.
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 18: 'App Scenarios' and move on to step 19: 'Present'
+
+# UI Flow 18 / 26: App Scenarios
+
+**Feature:** Choose a Design — App Theme System
+
+Create app-level scenarios that show full pages with realistic data.
+
+## Instructions
+
+RESUMING this step. Check what was already done before repeating work.
+  Tip: Check if the commit was already pushed with `git log --oneline -3`.
+  (Resuming in a fresh session? TaskList may be empty — the previous-step task lived in the prior session's in-memory store. Skip the close-prior step; just create THIS step's task and continue.)
+
+After the consolidation pass (previous step), register the genuinely-new app-level scenarios this feature needs, with rich data that exercises it, and capture initial screenshots. Full re-capture (recapture-stale) runs in the `ui-present` slug.
+
+Pipeline: `register` writes `.codeyam/scenarios/<slug>.json`, then runs the seed adapter (per-scenario `seed.command` override → `.codeyam/seed-adapter.ts` → hard error), then captures the screenshot. Full reference: `docs/scenarios.md`. **If captures don't reflect the seed, run `codeyam-editor-dev editor scenario-explain <slug>` first** — it prints the resolved adapter command, capture URL, and last-capture timestamp.
+
+**Native simulator stacks** seed via `deviceState` (not the adapter), injected at app launch. `scenario-explain`'s device-seed line is **declared, not verified** — it reports the seed the scenario *intends* to inject, never a confirmed capture, so do NOT treat it as proof the seed landed. After capturing seeded native scenarios, run `codeyam-editor-dev editor seeded-capture-check`: it fails loud if scenarios with distinct `deviceState` seeds produced byte-identical screenshots (the seed not reaching the capture). See `docs/scenarios.md` → "Native simulator stacks seed via `deviceState`".
+
+Register a NEW scenario only for a display state no edited scenario already covers
+— walk the canonical state list (Empty / Single / Loaded-with-many /
+All-of-one-kind / Edge). A new STATE is the bar for "new," not a new data
+variation; fold a one-field variation into an existing scenario instead.
+
+App vs component scenarios are DIFFERENT. App scenarios show the FULL PAGE at a
+real route (`/`, `/library`); component scenarios show ONE COMPONENT in isolation
+at `/isolated-components/...`. This step is APP scenarios — do NOT set
+`componentName`.
+
+Once an app scenario is registered + captured here, its EMITTED slug (in the
+`register` response) becomes the legal value to cite on the matching ENTRY-POINT
+page glossary entry at the `register-incremental` step — that's when a page-level
+glossary entry (filePath == pageFilePath) becomes satisfiable via `scenarios`.
+The slug is `slugify(scenario.name)`; cite the printed slug, never a guess.
+
+Leaving this step gates on the FULL visual surface, not just pages. Component
+scenarios and application scenarios both exist by now, so the advance gate refuses
+to advance while ANY visual component is uncovered — leaf component OR entry-point
+page. Registering each page's application scenarios is what satisfies its
+entry-point glossary entry (`filePath` == `pageFilePath`).
+
+Checklist:
+[ ] Register seed data + entry-point glossary entries for every page touched
+    Walk the canonical state list (Empty / Single / Loaded-with-many /
+    All-of-one-kind / Edge) for each page and register any genuinely-new state no
+    edited scenario covers. Every page file used in app scenarios needs a glossary
+    entry with `filePath` (register validates `pageFilePath` against the glossary).
+[ ] Bulk-register every app scenario in one shot
+    Required top-level fields: `"scenarioType": "application"`, `"url"` (real
+    route), `"pageFilePath"` (source file), `"dimensions"`. **Every app scenario
+    MUST include data** — `seed` (DB-backed pages; keys are table names, values
+    row arrays) and/or `mocks.http` (API-backed pages; keys are `"METHOD URL"`,
+    local AND external in the same map, `{status, body}` values). There is no
+    `mockData` / `externalApis` field. Do NOT include `componentName`. Before
+    hand-writing a `mocks.http` body, author from an observed response:
+      codeyam-editor-dev editor catalog-export --route /api/<path>
+    Where `.codeyam/mockable/<app>.json` declares a `responseSchema` for a route,
+    `register` validates the mock body against it (mismatch bails loud); else a
+    divergence from observed traffic is a warning. Write the array to a
+    per-invocation scratch path (unique filename per call — auto-deletes on
+    success): `codeyam-editor-dev editor register @.codeyam/tmp/register-<batch-tag>.json`.
+    See FEATURE_PATTERNS.md for auth/email scenario guidance.
+
+```json
+{
+  "name": "Library - Rich Catalog",
+  "scenarioType": "application",
+  "url": "/library",
+  "pageFilePath": "app/library/page.tsx",
+  "dimensions": ["Desktop"],
+  "seed": {
+    "user": [{"id": "u_1", "name": "Alice"}],
+    "article": [
+      {"id": "a_1", "userId": "u_1", "title": "Iced matcha", "status": "published"},
+      {"id": "a_2", "userId": "u_1", "title": "Stovetop beans", "status": "draft"}
+    ]
+  }
+}
+```
+
+    Streaming / transcript surfaces. A page driven by a WebSocket/SSE stream takes
+    `mocks.streams`; a terminal/agent feed takes `mocks.transcripts` (keyed by the
+    PTY endpoint `"/ws/terminal"`). Same author model as `mocks.http`, but the
+    value is a timed frame list — a stream frame is `{at, kind:
+    "text"|"binary"|"event", data?, event?, eventPayload?}`; a transcript frame is
+    either `bytes` (terminal output) OR `event` (lifecycle), never both. `onEnd` is
+    `close` (default) | `idle` | `loop`. **Every stream/transcript endpoint AND
+    every `event` name must be declared in `.codeyam/mockable/<app>.json`** —
+    `register` rejects an undeclared endpoint or misspelled event. Capture a real
+    state with `codeyam-editor-dev editor record-transcript --scenario <slug>` instead
+    of hand-authoring frames.
+[ ] Walk the scenario-taxonomy checklist for every touched view
+    The state list above tells you WHICH states to consider; the taxonomy
+    checklist makes you RECORD A DECISION about each, so a skipped state is
+    deliberate, not an oversight. For each touched view, seed and fill it:
+      codeyam-editor-dev editor scenario-taxonomy seed --view <View>
+      codeyam-editor-dev editor scenario-taxonomy mark --view <View> \
+        --archetype <empty|single|typical|many|loading|error|edge|key-interaction> \
+        --status <covered|added|n-a> [--reason "..."]
+    `seed` pre-marks archetypes the state-matrix confirms; you decide the rest.
+    Every archetype needs a status: `covered`, `added`, or `n-a` WITH a reason. A
+    `covered`/`added` claim the matrix contradicts is rejected. The advance gate
+    blocks until every started checklist is clear; inspect with
+    `codeyam-editor-dev editor scenario-taxonomy show`. For a thorough pass, run
+    `codeyam-editor-dev editor scenario-taxonomy critique --view <View>`.
+
+    Demonstrating every meaningful state is the core value of codeyam — not a
+    checkbox. A scenario that seeds data but renders blank, or shows only one
+    trivial state, is a BUG: seed it richer and recapture. Reserve `n-a` for
+    states that genuinely cannot occur on this view, with a reason that says
+    why — never for a state you skipped.
+
+    Verify: codeyam-editor-dev editor scenario-taxonomy show
+[ ] Verify clientErrors is empty for every registered scenario
+    Check the register response for `clientErrors`. If non-empty → fix the
+    page/source, re-register, and re-check until `hasErrors` is false (common
+    causes: React errors, failed fetches, undefined refs, hydration mismatches).
+    View each captured screenshot — does it show what the scenario name promises?
+    Before advancing, the full visual surface (leaf components AND entry-point
+    pages) must be covered.
+    Verify: codeyam-editor-dev editor visual-components-without-coverage
+
+
+When done, move to the next step: `codeyam-editor-dev editor 19`
+
+━━━ TASK ━━━
+If TaskList/TaskCreate/TaskUpdate are not loaded in this session, call `ToolSearch` with `select:TaskList,TaskCreate,TaskUpdate` first.
+
+Hand off from the previous step's task to this step's task. Procedure:
+  1. Run TaskList
+  2. If a task titled exactly `Complete codeyam editor step 17: 'Curate Scenarios' and move on to step 18: 'App Scenarios'` exists and is not yet completed, run TaskUpdate with status "completed" on it
+  3. Run TaskCreate with the EXACT title below and set it to in_progress:
+
+EXACT_TASK_TITLE: Complete codeyam editor step 18: 'App Scenarios' and move on to step 19: 'Present'
+
+When you finish this step's checklist, mark this task completed BEFORE running `codeyam-editor-dev editor advance`. The advance gate will block if the current-step task is not both created and completed.
+Do NOT use status "deleted" on any step task — tasks are check-off records of completed work.
+
+━━━ AWAIT USER CONFIRMATION ━━━
+
+This step requires explicit user approval before advancing.
+Confirm with the user, then run the next step command.
+
+━━━ BEGIN STEP 18: App Scenarios (CONFIRMATION GATE) ━━━
+
+This step requires explicit user approval before advancing.
+
+  EXACT_TASK_TITLE: Complete codeyam editor step 18: 'App Scenarios' and move on to step 19: 'Present'
+
+  1. TaskCreate with the EXACT title above, status in_progress
+  2. Present the approval menu via AskUserQuestion and WAIT for the user
+  3. Do NOT auto-run `codeyam-editor editor advance` until they approve
+
+Tail-truncated this output? Re-run without piping: codeyam-editor editor advance
+CODEYAM_FULL_HANDOFF: full step hand-off written to .codeyam/state/last-advance.txt — if this output was piped/truncated, read it: cat .codeyam/state/last-advance.txt
+Partitions needing attention: stale=1 red=0 untested=0 — pass --verbose for names
+Staleness sweep: 2 non-blocking finding(s) (DEPENDENCY_GRAPH_STALE, PARTITION_NEEDS_REFRESH) — pass --verbose to list. Recovery: codeyam-editor editor sweep-staleness
+
