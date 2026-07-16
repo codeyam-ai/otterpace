@@ -461,7 +461,7 @@ struct OnboardingFlowView: View {
         Button(action: action) {
             Text(title)
                 .font(Typography.headline)
-                .foregroundColor(.white)
+                .foregroundColor(Palette.onAccent)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(

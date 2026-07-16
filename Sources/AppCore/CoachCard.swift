@@ -17,7 +17,7 @@ struct CoachCard: View {
                 Spacer()
                 Text(coach.recommendationType.uppercased())
                     .font(Typography.caption2)
-                    .foregroundColor(.white)
+                    .foregroundColor(Palette.onAccent)
                     .padding(.horizontal, 8).padding(.vertical, 3)
                     .background(Capsule().fill(coach.safetyFlag ? Palette.amber : Palette.go))
             }

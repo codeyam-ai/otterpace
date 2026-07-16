@@ -42,7 +42,7 @@ struct ConnectHero: View {
                     Text("Connect Apple Health")
                         .font(Typography.headline)
                 }
-                .foregroundColor(.white)
+                .foregroundColor(Palette.onAccent)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(

@@ -21,7 +21,7 @@ struct AskCoachLockedState: View {
             Button(action: onAddKey) {
                 Text("Connect your AI key")
                     .font(Typography.headline)
-                    .foregroundColor(.white)
+                    .foregroundColor(Palette.onAccent)
                     .padding(.horizontal, 22).padding(.vertical, 12)
                     .background(Capsule().fill(Palette.brand))
             }
