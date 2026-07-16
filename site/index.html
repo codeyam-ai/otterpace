@@ -4,6 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Otterpace — a friendly running companion</title>
+<meta name="description" content="Otterpace turns the steps and runs already on your phone into daily encouragement — in five whole-app themes. Free, no account needed, open source, built with CodeYam. Live on the App Store; Android coming soon.">
+<link rel="icon" href="otterpace-icon.png">
+<meta name="theme-color" content="#FF5A3C">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://otterpace.com/">
+<meta property="og:title" content="Otterpace — a friendly running companion">
+<meta property="og:description" content="Daily encouragement from the activity already on your phone, in five whole-app themes. Free, open source, built with CodeYam. Live on the App Store; Android coming soon.">
+<meta property="og:image" content="https://otterpace.com/otterpace-icon.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Otterpace — a friendly running companion">
+<meta name="twitter:description" content="Daily encouragement from the activity already on your phone, in five whole-app themes. Open source, built with CodeYam.">
+<meta name="twitter:image" content="https://otterpace.com/otterpace-icon.png">
 <style>
   :root{--paper:#FBF6EF;--ink:#20202a;--coral:#FF5A3C;--coral2:#ED4C36;--go:#2FA968;--gold:#F3B430;--sky:#5B9EED;--muted:#7a7480;--line:#EADFCF;--card:#fff}
   *{box-sizing:border-box;margin:0;padding:0}
@@ -37,6 +49,11 @@
   .cta-row{display:flex;gap:14px;margin-top:26px;flex-wrap:wrap;align-items:center}
   .cta-row img{height:50px;width:auto;display:block}
   .fine{margin-top:14px;font-family:"SF Mono",monospace;font-size:12px;color:var(--muted);letter-spacing:.02em}
+  /* Android "coming soon" — deliberately non-interactive: ghosted badge + tag. */
+  .soon{position:relative;display:inline-block;vertical-align:bottom;cursor:default}
+  .soon img{height:50px;width:auto;display:block;opacity:.38;filter:grayscale(.7)}
+  .soon-tag{position:absolute;top:-9px;right:-9px;background:var(--coral);color:#fff;font-size:10px;font-weight:800;
+    letter-spacing:.03em;padding:2px 9px;border-radius:100px;transform:rotate(4deg);box-shadow:0 3px 8px rgba(32,32,42,.22);white-space:nowrap}
 
   .hero-device{position:relative;justify-self:center}
   .hero-device img{width:min(272px,74vw);border-radius:36px;border:8px solid var(--ink);background:var(--ink);display:block;box-shadow:0 30px 60px rgba(32,32,42,.22)}
@@ -128,20 +145,20 @@
 </div></nav>
 
 <div class="mq"><div class="track">
-  <span>Available on the App Store</span><span class="d">🐾</span><span>Android coming soon</span><span class="d">🐾</span><span>Five whole-app themes</span><span class="d">🐾</span><span>On-device &amp; private</span><span class="d">🐾</span><span>Open source</span><span class="d">🐾</span>
-  <span>Available on the App Store</span><span class="d">🐾</span><span>Android coming soon</span><span class="d">🐾</span><span>Five whole-app themes</span><span class="d">🐾</span><span>On-device &amp; private</span><span class="d">🐾</span><span>Open source</span><span class="d">🐾</span>
+  <span>Available on the App Store</span><span class="d">🐾</span><span>Android coming soon</span><span class="d">🐾</span><span>Five whole-app themes</span><span class="d">🐾</span><span>No ads, no data sold</span><span class="d">🐾</span><span>Open source</span><span class="d">🐾</span>
+  <span>Available on the App Store</span><span class="d">🐾</span><span>Android coming soon</span><span class="d">🐾</span><span>Five whole-app themes</span><span class="d">🐾</span><span>No ads, no data sold</span><span class="d">🐾</span><span>Open source</span><span class="d">🐾</span>
 </div></div>
 
 <header><div class="wrap"><div class="hero-grid">
   <div>
     <span class="eyebrow"><span class="dot"></span>Now live on the App Store</span>
     <h1>Run happy.<br><span class="o">Coach kind.</span></h1>
-    <p class="lead">A friendly running companion. Otterpace reads your steps and runs from Apple Health and turns them into daily encouragement.</p>
+    <p class="lead">A friendly running companion. Otterpace reads the steps and runs already on your phone and turns them into daily encouragement.</p>
     <div class="cta-row" id="get">
       <a href="https://apps.apple.com/us/app/otterpace/id6784287408"><img src="app-store-badge.svg" alt="Download on the App Store"></a>
-      <a style="cursor:not-allowed"><img src="play-badge-soon.svg" alt="Coming soon to Google Play"></a>
+      <span class="soon" aria-label="Coming soon to Google Play"><img src="play-badge-soon.svg" alt=""><span class="soon-tag">Coming soon</span></span>
     </div>
-    <div class="fine">Free · No accounts · Apple Health stays on your device</div>
+    <div class="fine">Free · No account needed · No ads, no data sold</div>
   </div>
   <div class="hero-device">
     <div class="ring-bg"></div>
@@ -172,7 +189,7 @@
 <section id="recap"><div class="wrap">
   <div class="k">// your week, in plain words</div>
   <div class="h2">A weekly recap<br>you’ll actually read.</div>
-  <p class="sub">Otterpace summarizes the steps and runs already in your Apple Health — in plain language, not charts to decode. Here’s what a week looks like.</p>
+  <p class="sub">Otterpace summarizes the steps and runs already on your phone — in plain language, not charts to decode. Here’s what a week looks like.</p>
   <div class="week">
     <div class="title"><b>This week</b>with Buddy</div>
     <div class="stat"><div class="v c">11,240</div><div class="l">STEPS TODAY</div></div>
@@ -192,13 +209,13 @@
 
 <section><div class="wrap">
   <div class="k">// what’s inside</div>
-  <div class="h2">Everything Otterpace does.</div>
+  <div class="h2">What Otterpace does.</div>
   <div class="feat">
-    <div class="fc"><div class="e">🎯</div><h3>Daily step goal</h3><p>Track your progress toward your goal, with a gentle reminder to move.</p></div>
+    <div class="fc"><div class="e">🎯</div><h3>Daily step goal</h3><p>Track your progress toward your goal, with reminders to move.</p></div>
     <div class="fc"><div class="e">💬</div><h3>Ask Buddy</h3><p>Ask about your activity in plain language. Works offline; connect your own AI key for more.</p></div>
     <div class="fc"><div class="e">📅</div><h3>Weekly recap</h3><p>A short, human summary of your week — no charts to decode.</p></div>
     <div class="fc"><div class="e">🎨</div><h3>Five whole-app themes</h3><p>The entire app re-skins — colors, type, and mascot.</p></div>
-    <div class="fc"><div class="e">🔒</div><h3>On-device &amp; private</h3><p>Apple Health is read on your phone and never uploaded. No accounts, no ads, no data sold.</p></div>
+    <div class="fc"><div class="e">🔒</div><h3>Private by default</h3><p>No account required, no ads, and we never sell your data. Your health data is read from your device; optional features only send data when you turn them on.</p></div>
     <div class="fc"><div class="e">💛</div><h3>Open source</h3><p>Built in the open — read every line on GitHub.</p></div>
   </div>
 </div></section>
@@ -222,7 +239,7 @@
   <h2>Lace up<br>with <span class="o">Buddy.</span></h2>
   <div class="cta-row">
     <a href="https://apps.apple.com/us/app/otterpace/id6784287408"><img src="app-store-badge.svg" alt="Download on the App Store"></a>
-    <a style="cursor:not-allowed"><img src="play-badge-soon.svg" alt="Coming soon to Google Play"></a>
+    <span class="soon" aria-label="Coming soon to Google Play"><img src="play-badge-soon.svg" alt=""><span class="soon-tag">Coming soon</span></span>
   </div>
 </div></div>
 
