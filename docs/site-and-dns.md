@@ -14,7 +14,7 @@ The privacy policy URL the app + App Store reference is
 ## One-time setup (you)
 
 ### 1. Import the repo into Vercel
-Vercel → **Add New… → Project** → import `nseldeib/otterpace`. Framework preset:
+Vercel → **Add New… → Project** → import `codeyam-ai/otterpace`. Framework preset:
 **Other**. Vercel auto-detects `vercel.json` (static site served from `site/`)
 and the `api/` serverless function. Deploy.
 

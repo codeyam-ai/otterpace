@@ -27,7 +27,7 @@ Legend: ☐ = you do it. Each phase ends with a **Verify** you can actually chec
 
 ## Phase 1 — Deploy the site + API to Vercel
 Unblocks the coach, Strava, and the marketing/privacy site at once.
-1. ☐ Vercel → **Add New… → Project** → import `nseldeib/otterpace`. Framework
+1. ☐ Vercel → **Add New… → Project** → import `codeyam-ai/otterpace`. Framework
    preset: **Other** (it auto-detects `vercel.json` → static `site/` + `api/`).
 2. ☐ Deploy. Note the temporary `*.vercel.app` URL.
 

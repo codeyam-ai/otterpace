@@ -46,7 +46,7 @@ iOS app ──{question, TodayState}──▶  otterpace.com/api/coach   ──�
 ## Going live (one-time, you)
 
 1. **Import this repo into Vercel** (your personal account → New Project →
-   pick `nseldeib/otterpace`). Framework preset: **Other**. It auto-detects
+   pick `codeyam-ai/otterpace`). Framework preset: **Other**. It auto-detects
    `vercel.json` (static site from `site/`) and the `api/` function.
 2. **Add the domain** `otterpace.com` in the Vercel project's **Domains** tab
    and follow its DNS instructions on Namecheap. Using Vercel for the domain

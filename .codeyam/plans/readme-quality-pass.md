@@ -127,7 +127,7 @@ it's a Swift project, no `npm install` for the app itself):
 
 ```bash
 # Clone the repo
-git clone https://github.com/nseldeib/otterpace && cd otterpace
+git clone https://github.com/codeyam-ai/otterpace && cd otterpace
 
 # Install codeyam-editor
 npm install -g @codeyam-editor/codeyam-editor@latest
