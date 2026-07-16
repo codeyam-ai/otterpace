@@ -13,7 +13,7 @@ struct ChatBubble: View {
                 Spacer(minLength: 40)
                 Text(message.text)
                     .font(Typography.body)
-                    .foregroundColor(.white)
+                    .foregroundColor(Palette.onAccent)
                     .padding(.horizontal, 14).padding(.vertical, 10)
                     .background(
                         RoundedRectangle(cornerRadius: 18, style: .continuous)

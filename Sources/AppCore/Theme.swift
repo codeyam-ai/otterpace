@@ -27,6 +27,11 @@ public enum Palette {
     public static var card: Color { t.card }
     public static var bgTop: Color { t.bgTop }
     public static var bgBottom: Color { t.bgBottom }
+
+    // Readable text/icon color to place on a brand/go/amber accent fill. White on
+    // the light themes; a near-black on the dark themes (whose accents are light),
+    // so on-accent text always contrasts instead of blending in.
+    public static var onAccent: Color { t.onAccent }
 }
 
 // MARK: - Typography

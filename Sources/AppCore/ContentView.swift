@@ -114,11 +114,22 @@ public struct ContentView: View {
                 .onAppear { Analytics.shared.capture("onboarding_started") }
             }
         }
+        // Re-key the whole visual tree on the selected theme so a live switch
+        // rebuilds every module — leaf cards read the static `Palette` (which
+        // resolves the current theme) but don't individually observe `ThemeStore`,
+        // so without this identity change SwiftUI keeps their cached (default,
+        // white-card) render and only the theme-observing screen roots retint.
+        // `model`/`session` live above this `.id`, so app state survives the
+        // switch; scenario captures pin one theme at launch, so `.id` is constant
+        // there and never triggers a rebuild.
+        .id(themeStore.themeID)
         .modifier(DynamicTypeOverride(raw: contentSizeOverride))
-        // Light-only design: also pin the scheme here so SwiftUI previews and
-        // isolated-component captures (which mount ContentView directly, not via
-        // the App scene) render light too. The App scene sets this as well.
-        .preferredColorScheme(.light)
+        // Match the system color scheme to the selected theme so system chrome
+        // (TabView bar, SecureField, scroll backgrounds, default Text) tracks the
+        // painted surfaces — light for Default/Fieldnote/Garden, dark for
+        // Bolt/Orbit. Default is light, so SwiftUI previews and isolated-component
+        // captures (which mount ContentView directly) still render light.
+        .preferredColorScheme(themeStore.current.isDark ? .dark : .light)
         .onAppear {
             if previewMode.isEmpty { Analytics.shared.capture("app_opened") }
             revalidateSessionIfNeeded()

@@ -31,7 +31,7 @@ struct AskCoachInputBar: View {
             Button(action: onSend) {
                 Image(systemName: "arrow.up")
                     .font(.system(size: 17, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(Palette.onAccent)
                     .frame(width: 40, height: 40)
                     .background(
                         Circle().fill(canSend

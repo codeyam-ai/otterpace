@@ -30,6 +30,12 @@ public struct Theme: Equatable {
     public let card: Color
     public let bgTop: Color
     public let bgBottom: Color
+
+    // The readable text/icon color to place *on* a brand/go/amber accent fill
+    // (buttons, pills, chat bubbles). Light themes use white; the dark themes
+    // carry deliberately *light* accents (bright teal/blue), so white would blend
+    // — they use a near-black instead so on-accent text always contrasts.
+    public let onAccent: Color
 }
 
 /// The five selectable looks. `.default` is the shipping identity and the default.
@@ -68,35 +74,40 @@ public enum ThemeID: String, CaseIterable, Identifiable {
                 go: Color(hex: 0x3DBC7D), sky: Color(hex: 0x5B9EED), amber: Color(hex: 0xF7B03B),
                 gold: Color(hex: 0xFACC4D), lilac: Color(hex: 0x8C82DC),
                 ink: Color(hex: 0x292B38), subtle: Color(hex: 0x575C6E),
-                card: .white, bgTop: Color(hex: 0xFDF5EE), bgBottom: Color(hex: 0xF5F0FA))
+                card: .white, bgTop: Color(hex: 0xFDF5EE), bgBottom: Color(hex: 0xF5F0FA),
+                onAccent: .white)
         case .bolt:
             return Theme(id: self, isDark: true,
                 brand: Color(hex: 0x2FE3D0), brandDeep: Color(hex: 0x17B7A6),
                 go: Color(hex: 0x3DD68C), sky: Color(hex: 0x5AB0FF), amber: Color(hex: 0xFFB65A),
                 gold: Color(hex: 0xFFD65A), lilac: Color(hex: 0xB49CFF),
                 ink: Color(hex: 0xF5F5F7), subtle: Color(hex: 0xAEAEB4),
-                card: Color(hex: 0x1B1B1D), bgTop: Color(hex: 0x0A0B0D), bgBottom: Color(hex: 0x000000))
+                card: Color(hex: 0x1B1B1D), bgTop: Color(hex: 0x0A0B0D), bgBottom: Color(hex: 0x000000),
+                onAccent: Color(hex: 0x08110F))
         case .orbit:
             return Theme(id: self, isDark: true,
                 brand: Color(hex: 0x74D6FF), brandDeep: Color(hex: 0x3E9FD6),
                 go: Color(hex: 0x5FD6C4), sky: Color(hex: 0x9AB8FF), amber: Color(hex: 0xFFC46F),
                 gold: Color(hex: 0xFFDA7A), lilac: Color(hex: 0xA79CFF),
                 ink: Color(hex: 0xEAEFFA), subtle: Color(hex: 0x9AA5BE),
-                card: Color(hex: 0x111524), bgTop: Color(hex: 0x0A0E1C), bgBottom: Color(hex: 0x05070E))
+                card: Color(hex: 0x111524), bgTop: Color(hex: 0x0A0E1C), bgBottom: Color(hex: 0x05070E),
+                onAccent: Color(hex: 0x061019))
         case .fieldnote:
             return Theme(id: self, isDark: false,
                 brand: Color(hex: 0xE0562F), brandDeep: Color(hex: 0xC0421F),
                 go: Color(hex: 0x1F7E8C), sky: Color(hex: 0x4E8FA0), amber: Color(hex: 0xD99A3C),
                 gold: Color(hex: 0xE0B24A), lilac: Color(hex: 0x9C7B9E),
                 ink: Color(hex: 0x2A2620), subtle: Color(hex: 0x7C7263),
-                card: Color(hex: 0xFBF5E6), bgTop: Color(hex: 0xEFE6D2), bgBottom: Color(hex: 0xE9DFC8))
+                card: Color(hex: 0xFBF5E6), bgTop: Color(hex: 0xEFE6D2), bgBottom: Color(hex: 0xE9DFC8),
+                onAccent: .white)
         case .garden:
             return Theme(id: self, isDark: false,
                 brand: Color(hex: 0x4E6B54), brandDeep: Color(hex: 0x3A5340),
                 go: Color(hex: 0x6F9E8B), sky: Color(hex: 0x7FB0AE), amber: Color(hex: 0xC9A24A),
                 gold: Color(hex: 0xD6B85C), lilac: Color(hex: 0xC98BA8),
                 ink: Color(hex: 0x26312A), subtle: Color(hex: 0x69756A),
-                card: .white, bgTop: Color(hex: 0xECEFE8), bgBottom: Color(hex: 0xE4EADD))
+                card: .white, bgTop: Color(hex: 0xECEFE8), bgBottom: Color(hex: 0xE4EADD),
+                onAccent: .white)
         }
     }
 }

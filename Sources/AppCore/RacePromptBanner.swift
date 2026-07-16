@@ -13,14 +13,14 @@ struct RacePromptBanner: View {
                 HStack(spacing: 12) {
                     Image(systemName: "flag.checkered")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(Palette.onAccent)
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Got a race coming up?")
                             .font(Typography.headline)
-                            .foregroundColor(.white)
+                            .foregroundColor(Palette.onAccent)
                         Text("Tell Buddy and I'll tailor your training toward it.")
                             .font(Typography.caption)
-                            .foregroundColor(.white.opacity(0.92))
+                            .foregroundColor(Palette.onAccent.opacity(0.92))
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer(minLength: 24)
@@ -39,7 +39,7 @@ struct RacePromptBanner: View {
             Button(action: onDismiss) {
                 Image(systemName: "xmark")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.white.opacity(0.9))
+                    .foregroundColor(Palette.onAccent.opacity(0.9))
                     .padding(10)
             }
             .accessibilityLabel("Dismiss race prompt")
