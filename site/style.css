@@ -54,6 +54,13 @@ body {
 }
 .cta a.secondary { background: rgba(255, 115, 87, 0.14); color: var(--brand-deep); }
 
+/* Official App Store badge — no button chrome; keep clear space and min height. */
+.appstore-cta { margin: 32px 0 4px; }
+.cta a.appstore-badge, .cta a.appstore-badge:hover {
+  display: inline-block; background: none; padding: 0; margin: 0; border-radius: 0;
+}
+.cta a.appstore-badge img { display: block; height: 48px; width: auto; }
+
 footer { text-align: center; color: var(--subtle); font-size: 0.88rem; padding: 40px 24px 60px; }
 footer a { color: var(--brand-deep); }
 

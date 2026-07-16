@@ -9,10 +9,12 @@ mood-reactive otter mascot.
 
 ## Launch
 
-Otterpace is code-complete; going live is account/config work (Vercel deploy, DNS,
-API keys, Xcode capabilities, TestFlight). Follow the ordered checklist:
+**Otterpace is live — [available on the App Store](https://apps.apple.com/us/app/otterpace/id6784287408).**
 
-**▶ [docs/go-live-runbook.md](docs/go-live-runbook.md)** — the end-to-end launch sequence, with a verification check at each phase.
+[<img src="site/app-store-badge.svg" alt="Download on the App Store" height="48">](https://apps.apple.com/us/app/otterpace/id6784287408)
+
+The end-to-end launch sequence that got us there is preserved as a runbook:
+**▶ [docs/go-live-runbook.md](docs/go-live-runbook.md)** — with a verification check at each phase.
 
 Area deep-dives: [site + DNS](docs/site-and-dns.md) · [AI coach](docs/ai-coach.md) · [Strava + analytics](docs/strava-and-analytics.md) · [TestFlight prep](docs/testflight-prep.md).
 

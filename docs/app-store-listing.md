@@ -34,8 +34,10 @@ pastes from.
   **Health or Wellness Topics = Yes** (self-care/lifestyle recs), **Medical or
   Treatment-Focused = No** ("not medical advice"); resulting rating may be 4+ to
   12+ — take whatever ASC computes. **For the v1 submission ASC returned 9+.**
-- **Version**: `1.0` submitted (Waiting for Review). Next: **`1.0.1`** update with
-  **build 5** (conversational coaching + five themes), to submit once 1.0 is live.
+- **Version**: `1.0` is **live on the App Store**
+  ([id6784287408](https://apps.apple.com/us/app/otterpace/id6784287408)). The
+  **`1.0.1`** update (**build 6** — conversational coaching + five themes) is
+  uploaded to TestFlight and submitted for external Beta App Review.
 - **Copyright**: `2026 Nadia Eldeib`
 
 ## Privacy "nutrition label" (App Privacy section)
