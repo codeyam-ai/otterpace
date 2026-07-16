@@ -190,7 +190,7 @@ Verify which display sizes ASC requires before uploading (it may now mandate 6.9
 A 6-shot raw set is committed at `appstore/screenshots/6.5-inch/`. Upload order
 (first 3 show on the install sheet):
 1. `01-today-goal-crushed.png`: Today dashboard, goal crushed
-2. `02-ask-coach-knee-pain.png`: injury-aware "Safety First" coaching
+2. `02-ask-coach-knee-pain.png`: "Safety First" coaching
 3. `03-weekly-review-solid-week.png`: Weekly Review
 4. `04-welcome-meet-buddy.png`: Meet Buddy onboarding
 5. `05-today-fresh-start.png`: day-one dashboard

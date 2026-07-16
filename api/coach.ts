@@ -5,7 +5,7 @@ import { allow, clientIp } from "./_lib/ratelimit.js";
 // Otterpace AI coach — stateless BYO-key proxy.
 //
 // The iOS app POSTs { question, context } here with the user's own Anthropic key
-// in the `x-anthropic-key` header. We call Claude with the curated, injury-aware
+// in the `x-anthropic-key` header. We call Claude with the curated, load-aware
 // coach system prompt and return a structured reply. The key is used for this one
 // request and never stored, logged, or persisted — this function holds no state.
 //

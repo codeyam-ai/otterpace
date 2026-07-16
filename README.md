@@ -1,10 +1,13 @@
 # Otterpace 🐾
 
+[![CI](https://github.com/codeyam-ai/otterpace/actions/workflows/ci.yml/badge.svg)](https://github.com/codeyam-ai/otterpace/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 An open-source, AI running coach for iOS — built in the open as a CodeYam showcase.
 
 Otterpace is a friendly running coach in your pocket: it pulls your activity from
 Apple HealthKit (or, optionally, Strava), keeps you moving toward your daily 10,000
-steps, and gives injury-aware, never-shame-based coaching through **Buddy**, a
+steps, and gives kind, never-shame-based coaching through **Buddy**, a
 mood-reactive otter mascot.
 
 ## Launch
@@ -27,14 +30,14 @@ The **Today dashboard**, a native SwiftUI screen that shows:
 - **Buddy**, whose mood (resting → ready → jogging → cheering → concerned →
   celebrating → recovery) reflects how the day is going
 - An **AI coach card** with one clear, practical recommendation — conservative and
-  injury-aware, flipping to an amber caution when your training load spikes
+  load-aware, flipping to an amber caution when your training load spikes
 - Your **latest run/walk** and a **weekly training-load** snapshot
 - A friendly **day-one "Connect Apple Health"** hero for first launch
 
 The **Ask Coach** chat, reached from a Today/Coach tab bar or the
 "Ask Buddy" button on the coach card:
 
-- Ask Buddy a fitness question and get a practical, **injury-aware** reply —
+- Ask Buddy a fitness question and get a practical, **load-aware** reply —
   "Can I run or should I rest?", "How do I hit 10K without overdoing it?",
   "Am I increasing mileage too fast?", or "my knee hurts after my run"
 - Replies are **classified by intent** and built from your own activity context,
@@ -43,7 +46,7 @@ The **Ask Coach** chat, reached from a Today/Coach tab bar or the
   behind an amber **"safety first"** shield
 - A **real AI coach** is available when you connect your own Anthropic key
   (Settings → AI Coach): questions go to a Vercel backend that calls Claude with
-  the injury-aware coach prompt. Without a key — and offline, or in scenario
+  the load-aware coach prompt. Without a key — and offline, or in scenario
   previews — the deterministic `CoachEngine`
   (`Sources/AppCore/CoachEngine.swift`) answers, so the coach always works and
   captures stay reproducible
@@ -222,6 +225,16 @@ codeyam-editor editor
 swift test --parallel --disable-swift-testing --xunit-output .codeyam/swift-tests.xml
 ```
 <!-- codeyam:run-and-edit:end -->
+
+## Contributing
+
+Contributions are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for
+the architecture conventions and PR checklist, and note the
+[Code of Conduct](./CODE_OF_CONDUCT.md) and [Security Policy](./SECURITY.md).
+
+## License
+
+[MIT](./LICENSE) © 2026 Codeyam
 
 <!-- codeyam:scenario-gallery:start -->
 ## Scenario gallery

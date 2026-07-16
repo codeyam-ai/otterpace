@@ -204,7 +204,7 @@ public enum CoachEngine {
             return CoachRecommendation(
                 buddyMood: "ready",
                 headline: "Your build is on track",
-                body: "You're building, and it's climbing the right way. Keep today's movement easy and consistent, that steady progression is exactly how the fitness comes without the injury tax.",
+                body: "You're building, and it's climbing the right way. Keep today's movement easy and consistent, that steady progression is exactly how the fitness comes without burning out.",
                 recommendationType: "run")
         }
         // Otherwise, a gentle nudge toward the step goal. For a walking-focused
@@ -330,7 +330,7 @@ public enum CoachEngine {
     private static func mileageReply(_ c: TodayState, _ history: [CoachTurn]) -> CoachReply {
         // A genuine spike (baseline classifier) still wins, phase or not.
         if let l = c.weeklyLoad, l.loadTrend == "spiking" {
-            let text = "Your weekly load is climbing fast, about \(miles(l.weeklyMileage)) mi this week. That's where injury risk creeps in, so let's hold steady or pull back about 10% next week and keep most runs easy.\(checkInSuffix(history))"
+            let text = "Your weekly load is climbing fast, about \(miles(l.weeklyMileage)) mi this week. That's where things tend to backfire, so let's hold steady or pull back about 10% next week and keep most runs easy.\(checkInSuffix(history))"
             return CoachReply(intent: .mileageTooFast, text: text, mood: .concerned, safetyFlag: true)
         }
         // Not enough weeks logged to judge honestly. Say so instead of guessing.
@@ -341,10 +341,10 @@ public enum CoachEngine {
         // A declared build with a modest, non-spiking rise is the plan working, not
         // a warning. Affirm it rather than nudging toward rest.
         if isBuilding(c) {
-            let text = "You're in a build, and the numbers back it up. A steady climb of around 10% a week is the plan working, not a red flag. Keep most runs easy and let only the hard days be hard, and this is exactly how fitness comes without the injury tax.\(checkInSuffix(history))"
+            let text = "You're in a build, and the numbers back it up. A steady climb of around 10% a week is the plan working, not a red flag. Keep most runs easy and let only the hard days be hard, and this is exactly how fitness comes without burning out.\(checkInSuffix(history))"
             return CoachReply(intent: .mileageTooFast, text: text, mood: .ready)
         }
-        let text = "Good instinct to check. Keep weekly mileage growth under about 10%, with an easier week every few weeks. You're in a reasonable range right now, so keep most runs conversational and the fitness builds without the injury tax.\(checkInSuffix(history))"
+        let text = "Good instinct to check. Keep weekly mileage growth under about 10%, with an easier week every few weeks. You're in a reasonable range right now, so keep most runs conversational and the fitness builds without burning out.\(checkInSuffix(history))"
         return CoachReply(intent: .mileageTooFast, text: text, mood: .ready)
     }
 

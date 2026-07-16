@@ -124,7 +124,7 @@ limit (ASC flags overflow inline).
 
 **4b. Upload order** (first three show on the install sheet):
 1. `01-today-goal-crushed.png` — Today dashboard, goal crushed
-2. `02-ask-coach-knee-pain.png` — injury-aware "Safety First" coaching
+2. `02-ask-coach-knee-pain.png` — "Safety First" coaching
 3. `03-weekly-review-solid-week.png` — Weekly Review
 4. `04-welcome-meet-buddy.png` — Meet Buddy onboarding
 5. `05-today-fresh-start.png` — day-one dashboard

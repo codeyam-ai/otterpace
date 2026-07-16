@@ -2,7 +2,7 @@ import SwiftUI
 
 // The AI coach recommendation card. Uses a calm brand/gold treatment normally,
 // and an amber, shield-marked treatment when the recommendation carries a
-// safety flag (injury-aware caution).
+// safety flag (a take-it-easy caution).
 struct CoachCard: View {
     let coach: CoachRecommendation
     var onAskCoach: () -> Void = {}

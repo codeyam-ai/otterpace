@@ -39,7 +39,7 @@ open App.xcodeproj
   grouping) free of SwiftUI so it can be unit-tested — see `CoachEngine`,
   `WeeklyReviewEngine`, `ActivityHistory`.
 - **Coaching is conservative and never shame-based.** Any coaching copy must stay
-  injury-aware: no diagnoses, encourage clinical care for real pain, and prefer
+  cautious: no diagnoses, encourage clinical care for real pain, and prefer
   rest/easy effort when the data suggests fatigue.
 
 ## Tests

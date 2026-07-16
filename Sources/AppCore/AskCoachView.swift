@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Ask Coach chat screen
 //
 // A chat-style surface where the user types a fitness question and Buddy replies
-// with a practical, injury-aware answer from `CoachEngine`. Mock mode: replies
+// with a practical, load-aware answer from `CoachEngine`. Mock mode: replies
 // are curated by intent from the day's `TodayState`, so they're deterministic
 // and safe to capture as scenarios.
 //

@@ -59,7 +59,7 @@ public enum WeeklyReviewEngine {
                 return emptyReview(context)
             }
             // Spiking load is the one safety-sensitive state — it wins regardless of
-            // how many runs went in, mirroring the coach's injury-aware bias.
+            // how many runs went in, mirroring the coach's cautious, load-aware bias.
             if load.loadTrend == "spiking" {
                 return spikingReview(load, context)
             }
@@ -183,7 +183,7 @@ public enum WeeklyReviewEngine {
         if let cross = crossTrainingClause(c.profile) {
             changed += " Paired with \(cross), you're building well-rounded fitness."
         }
-        let risk = "Low. With \(l.restDaysThisWeek) rest \(l.restDaysThisWeek == 1 ? "day" : "days") and runs kept honest, you're building the right way. Keep most runs conversational and you'll stay clear of the injury tax."
+        let risk = "Low. With \(l.restDaysThisWeek) rest \(l.restDaysThisWeek == 1 ? "day" : "days") and runs kept honest, you're building the right way. Keep most runs conversational and you'll keep it sustainable."
         let next = "Repeat the pattern with one small nudge: hold the run count, add no more than ~10% to total miles, and keep one true rest day. Sustainable beats heroic."
         let focus = "Protect the easy days. The temptation after a strong week is to push every run — resist it, and the long run will keep climbing safely."
         return WeeklyReview(
@@ -200,7 +200,7 @@ public enum WeeklyReviewEngine {
 
     private static func spikingReview(_ l: WeeklyLoad, _ c: TodayState) -> WeeklyReview {
         let well = "You showed up — \(l.daysRunThisWeek) runs and \(miles(l.weeklyMileage)) miles is real commitment, with a \(miles(l.longestRunMiles))-mile long run in the bank. The engine is clearly willing."
-        let changed = "Your weekly load jumped sharply this week. Big week-over-week climbs are the single most common place running injuries start — it's the rate of change, not the mileage itself, that matters."
+        let changed = "Your weekly load jumped sharply this week. Big week-over-week climbs are the single most common place things start to backfire — it's the rate of change, not the mileage itself, that matters."
         let risk = "Elevated. \(l.restDaysThisWeek == 0 ? "No rest days this week and a" : "A") fast-rising load is a classic overtraining setup. This isn't a problem yet — it's a flag to ease off before it becomes one. Sharp or one-sided pain means stop and check in with a clinician."
         let next = "Pull total mileage back ~10–15% and make it an easy week. Keep the run count if you like, but cap the long run and keep every run conversational. Protect at least one full rest day."
         let focus = "Take an easy week. One deliberate down week now protects the next month of training — that's the highest-leverage move you can make."
@@ -224,7 +224,7 @@ public enum WeeklyReviewEngine {
         let sessionWord = walkingFocused(c.profile) ? "sessions" : "runs"
         let well = "You're logging real activity — \(l.daysRunThisWeek) \(sessionWord) for \(miles(l.weeklyMileage)) miles, with a \(miles(l.longestRunMiles))-mile longest. That's exactly the input I need to start coaching you well."
         let changed = "I'm still gathering your baseline. A couple more weeks like this and I'll be able to tell a healthy build from too much, too fast with real confidence."
-        let risk = "I won't guess at your injury risk on this little history. Nothing here looks alarming. Keep runs easy and let the picture fill in."
+        let risk = "I won't read too much into this little history. Nothing here looks alarming. Keep runs easy and let the picture fill in."
         let next = "Keep the rhythm going with easy, consistent movement. Grow total miles by no more than about 10% and keep one true rest day, and your trends will come into focus."
         let focus = "Consistency this week. The more regularly you move, the sooner I can give you a real read on your training."
         return WeeklyReview(
@@ -245,7 +245,7 @@ public enum WeeklyReviewEngine {
             ? (l.daysRunThisWeek == 1 ? "one movement session" : "no sessions")
             : (l.daysRunThisWeek == 1 ? "one run" : "no runs")
         let well = "Life happened this week — \(runWord) and \(l.restDaysThisWeek) rest \(l.restDaysThisWeek == 1 ? "day" : "days"). No guilt here: rest is part of training, and you're still showing up to check in. That counts."
-        let changed = "Training volume dipped versus a fuller week. The upside is you're well-rested and at very low injury risk right now."
+        let changed = "Training volume dipped versus a fuller week. The upside is you're well-rested and comfortably within a sustainable range right now."
         let risk = "Minimal. The only real risk from here is trying to make up for it all at once. Fitness is patient — a gentle restart beats a heroic comeback every time."
         let next = "Ease back in with two or three short, easy sessions — a 20–30 minute walk or relaxed jog. Consistency over intensity is the whole game this week."
         let focus = "Get one easy session in early in the week. Breaking the seal is the hardest part; after that, momentum does the work."
