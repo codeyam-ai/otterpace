@@ -1,0 +1,24 @@
+{
+  "claimStartedAt": "2026-07-17T13:21:59Z",
+  "completedAt": "2026-07-17T19:07:17Z",
+  "completedBy": {
+    "agentProvider": "claude",
+    "codeyamEditorVersion": "0.1.0",
+    "machine": "Nadias-MacBook-Pro-2.local",
+    "pid": 97196,
+    "priority": 0,
+    "selectedPlan": "settings-connect-and-race-import-flow",
+    "sessionId": "328b56ba-2d05-4908-8534-17e1a07625ed",
+    "startedAt": "2026-07-17T13:21:59Z"
+  },
+  "createdAt": "2026-07-15T22:40:00Z",
+  "deliverables": [
+    "App.xcodeproj/project.pbxproj",
+    "Sources/AppCore/SettingsView.swift"
+  ],
+  "journalTimestamp": "2026-07-17T19:07:17Z",
+  "mode": "ui",
+  "planFile": "completed/settings-connect-and-race-import-flow.md",
+  "slug": "settings-connect-and-race-import-flow",
+  "title": "Settings connect & race-import flow: tappable rows and working prefill"
+}

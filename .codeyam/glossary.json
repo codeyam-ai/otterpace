@@ -258,6 +258,15 @@
     }
   },
   {
+    "description": "Loads a TrueType font at a given size (PIL ImageFont.truetype wrapper) for OG-card text.",
+    "filePath": "Scripts/make-og-card.py",
+    "name": "F",
+    "untestabilityReason": {
+      "justification": "Standalone Open Graph card image generator (Scripts/make-og-card.py), run manually to produce marketing assets; not part of the app build or unit-test surface.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
     "description": "macOS-only dev tool (SwiftPM executable) that rasterizes AppIconArtwork via ImageRenderer and writes the opaque 1024x1024 AppIcon-1024.png, flattening onto the coral background so the output has no alpha channel. Regenerates the icon when the mascot art changes.",
     "filePath": "Scripts/GenerateAppIcon/main.swift",
     "name": "GenerateAppIcon",
@@ -687,6 +696,15 @@
     "testFile": "test/api/coach.test.ts"
   },
   {
+    "description": "Fetch wrapper for App Store Connect REST API calls; injects the bearer JWT auth header and parses the JSON response.",
+    "filePath": "Scripts/asc-beta-probe.mjs",
+    "name": "api",
+    "untestabilityReason": {
+      "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
+  },
+  {
     "description": "Fetch a path from the live App Store Connect API with a bearer JWT (maintainer build-status script).",
     "filePath": "Scripts/asc-build-status.mjs",
     "name": "api",
@@ -700,10 +718,73 @@
     }
   },
   {
+    "description": "Fetch wrapper for App Store Connect REST API calls; injects the bearer JWT auth header and parses the JSON response.",
+    "filePath": "Scripts/asc-expire-build.mjs",
+    "name": "api",
+    "untestabilityReason": {
+      "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
+  },
+  {
+    "description": "Fetch wrapper for App Store Connect REST API calls; injects the bearer JWT auth header and parses the JSON response.",
+    "filePath": "Scripts/asc-setup-version.mjs",
+    "name": "api",
+    "untestabilityReason": {
+      "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
+  },
+  {
+    "description": "Fetch wrapper for App Store Connect REST API calls; injects the bearer JWT auth header and parses the JSON response.",
+    "filePath": "Scripts/asc-submit-appstore.mjs",
+    "name": "api",
+    "untestabilityReason": {
+      "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
+  },
+  {
+    "description": "Fetch wrapper for App Store Connect REST API calls; injects the bearer JWT auth header and parses the JSON response.",
+    "filePath": "Scripts/asc-submit-external.mjs",
+    "name": "api",
+    "untestabilityReason": {
+      "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
+  },
+  {
+    "description": "Fetch wrapper for App Store Connect REST API calls; injects the bearer JWT auth header and parses the JSON response.",
+    "filePath": "Scripts/asc-version-probe.mjs",
+    "name": "api",
+    "untestabilityReason": {
+      "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
+  },
+  {
+    "description": "Fetch wrapper for App Store Connect REST API calls; injects the bearer JWT auth header and parses the JSON response.",
+    "filePath": "Scripts/asc-withdraw-review.mjs",
+    "name": "api",
+    "untestabilityReason": {
+      "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
+  },
+  {
     "description": "Pure mapping from Apple's ASAuthorizationAppleIDProvider.CredentialState to the decoupled AppleCredentialState enum (authorized/revoked/notFound/unknown), with .transferred treated as inconclusive so the session is retained.",
     "filePath": "Sources/AppCore/Auth/AppleCredentialChecker.swift",
     "name": "appleCredentialState",
     "testFile": "Tests/AppCoreTests/AppleCredentialMappingTests.swift"
+  },
+  {
+    "description": "Draws the 'Download on the App Store' badge at a given height for the OG card.",
+    "filePath": "Scripts/make-og-card.py",
+    "name": "appstore_badge",
+    "untestabilityReason": {
+      "justification": "Standalone Open Graph card image generator (Scripts/make-og-card.py), run manually to produce marketing assets; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
   },
   {
     "description": "Gate the cron endpoint behind a CRON_SECRET bearer so it cannot be invoked publicly.",
@@ -712,6 +793,42 @@
     "untestabilityReason": {
       "justification": "reads process env and the request header at the Vercel cron auth boundary",
       "kind": "platform-glue"
+    }
+  },
+  {
+    "description": "base64url-encodes a string for the ASC JWT header/payload segments.",
+    "filePath": "Scripts/asc-setup-version.mjs",
+    "name": "b",
+    "untestabilityReason": {
+      "justification": "Trivial one-line helper in a standalone release/ops script; not part of the app build or unit-test surface.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "description": "base64url-encodes a string for the ASC JWT header/payload segments.",
+    "filePath": "Scripts/asc-submit-appstore.mjs",
+    "name": "b",
+    "untestabilityReason": {
+      "justification": "Trivial one-line helper in a standalone release/ops script; not part of the app build or unit-test surface.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "description": "base64url-encodes a string for the ASC JWT header/payload segments.",
+    "filePath": "Scripts/asc-version-probe.mjs",
+    "name": "b",
+    "untestabilityReason": {
+      "justification": "Trivial one-line helper in a standalone release/ops script; not part of the app build or unit-test surface.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "description": "base64url-encodes a string for the ASC JWT header/payload segments.",
+    "filePath": "Scripts/asc-beta-probe.mjs",
+    "name": "b64url",
+    "untestabilityReason": {
+      "justification": "Trivial one-line helper in a standalone release/ops script; not part of the app build or unit-test surface.",
+      "kind": "trivial-wrapper"
     }
   },
   {
@@ -724,6 +841,33 @@
     ],
     "untestabilityReason": {
       "justification": "pure base64url string transform with no branching logic, inside a standalone maintainer ops script",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "description": "base64url-encodes a string for the ASC JWT header/payload segments.",
+    "filePath": "Scripts/asc-expire-build.mjs",
+    "name": "b64url",
+    "untestabilityReason": {
+      "justification": "Trivial one-line helper in a standalone release/ops script; not part of the app build or unit-test surface.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "description": "base64url-encodes a string for the ASC JWT header/payload segments.",
+    "filePath": "Scripts/asc-submit-external.mjs",
+    "name": "b64url",
+    "untestabilityReason": {
+      "justification": "Trivial one-line helper in a standalone release/ops script; not part of the app build or unit-test surface.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "description": "base64url-encodes a string for the ASC JWT header/payload segments.",
+    "filePath": "Scripts/asc-withdraw-review.mjs",
+    "name": "b64url",
+    "untestabilityReason": {
+      "justification": "Trivial one-line helper in a standalone release/ops script; not part of the app build or unit-test surface.",
       "kind": "trivial-wrapper"
     }
   },
@@ -1027,6 +1171,15 @@
     "testFile": "test/api/strava-handlers.test.ts"
   },
   {
+    "description": "Builds the short-lived ES256 JWT used to authenticate to the App Store Connect API.",
+    "filePath": "Scripts/asc-beta-probe.mjs",
+    "name": "jwt",
+    "untestabilityReason": {
+      "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
+  },
+  {
     "description": "Mint a short-lived ES256 App Store Connect API JWT from the local AuthKey (maintainer build-status script).",
     "filePath": "Scripts/asc-build-status.mjs",
     "name": "jwt",
@@ -1037,6 +1190,60 @@
     "untestabilityReason": {
       "justification": "signs a JWT with a local App Store Connect private key file for the live ASC API; standalone maintainer ops script, not part of the shipped app",
       "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "description": "Builds the short-lived ES256 JWT used to authenticate to the App Store Connect API.",
+    "filePath": "Scripts/asc-expire-build.mjs",
+    "name": "jwt",
+    "untestabilityReason": {
+      "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
+  },
+  {
+    "description": "Builds the short-lived ES256 JWT used to authenticate to the App Store Connect API.",
+    "filePath": "Scripts/asc-setup-version.mjs",
+    "name": "jwt",
+    "untestabilityReason": {
+      "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
+  },
+  {
+    "description": "Builds the short-lived ES256 JWT used to authenticate to the App Store Connect API.",
+    "filePath": "Scripts/asc-submit-appstore.mjs",
+    "name": "jwt",
+    "untestabilityReason": {
+      "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
+  },
+  {
+    "description": "Builds the short-lived ES256 JWT used to authenticate to the App Store Connect API.",
+    "filePath": "Scripts/asc-submit-external.mjs",
+    "name": "jwt",
+    "untestabilityReason": {
+      "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
+  },
+  {
+    "description": "Builds the short-lived ES256 JWT used to authenticate to the App Store Connect API.",
+    "filePath": "Scripts/asc-version-probe.mjs",
+    "name": "jwt",
+    "untestabilityReason": {
+      "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
+  },
+  {
+    "description": "Builds the short-lived ES256 JWT used to authenticate to the App Store Connect API.",
+    "filePath": "Scripts/asc-withdraw-review.mjs",
+    "name": "jwt",
+    "untestabilityReason": {
+      "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
     }
   },
   {
@@ -1074,6 +1281,15 @@
     "filePath": "api/_lib/strava.ts",
     "name": "pacePerMile",
     "testFile": "test/api/strava.test.ts"
+  },
+  {
+    "description": "Renders a phone-frame mockup image at a target width/rotation for the OG card.",
+    "filePath": "Scripts/make-og-card.py",
+    "name": "phone",
+    "untestabilityReason": {
+      "justification": "Standalone Open Graph card image generator (Scripts/make-og-card.py), run manually to produce marketing assets; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
   },
   {
     "description": "Defense-in-depth guard: true when a settings/preferences payload carries any health field, so the prefs endpoint can reject it and never leak health data into the wrong row.",
@@ -1127,6 +1343,15 @@
     "filePath": "api/_lib/strava.ts",
     "name": "round1",
     "testFile": "test/api/strava.test.ts"
+  },
+  {
+    "description": "Applies rounded corners to an image via an alpha mask for the OG card.",
+    "filePath": "Scripts/make-og-card.py",
+    "name": "rounded",
+    "untestabilityReason": {
+      "justification": "Standalone Open Graph card image generator (Scripts/make-og-card.py), run manually to produce marketing assets; not part of the app build or unit-test surface.",
+      "kind": "platform-glue"
+    }
   },
   {
     "description": "Recursively walk a prefs payload (bounded depth) detecting any health-related key, backing prefsContainHealthFields so the prefs endpoint never stores health data.",

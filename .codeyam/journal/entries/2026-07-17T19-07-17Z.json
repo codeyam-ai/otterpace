@@ -1,0 +1,131 @@
+{
+  "timestamp": "2026-07-17T19:07:17Z",
+  "title": "Settings tap targets & race-import prefill",
+  "type": "feature",
+  "userRequest": "## Summary\n\nTwo concrete problems in Settings and its connect/import flows. First, the\naction rows that drive nearly every \"connect\" and \"add\" affordance (Import from\nURL, Search online, Add manually, Connect Strava / Apple Health / AI Coach, Sign\nout, Delete account, etc.) are hard to tap: the shared `actionRowLabel` builder\nhas no `contentShape` and no vertical padding, so only the icon/text glyphs are\nhit-testable — the gaps and the trailing chevron area are dead. Second, the\n\"Import from URL\" and \"Search online\" flows successfully find a race but never\nopen the editor to save it: the handoff flips a single `.sheet(item:)` directly\nfrom `.importURL`/`.search` to `.editor` (non-nil → non-nil in one update),\nwhich SwiftUI does not reliably re-present, so the prefilled editor never\nappears. This plan makes every settings row a comfortable full-width tap target\nand fixes the sheet handoff so a found/searched race actually opens the editor\npre-filled and ready to confirm-and-save.\n\n## Key Decisions\n\n- **Fix tappability at the shared builder, not per call site** — enlarging\n  `actionRowLabel`/`actionRow` in `SettingsView` fixes every connect/add/account\n  action at once (Strava, Health, Coach, Races, Account) and keeps the change in\n  one place. Match the existing `phaseRow`/`themeRow` pattern already in the file\n  (`.contentShape(Rectangle())` + vertical padding) so rows read consistently and\n  clear the ~44pt HIG tap-target minimum.\n- **Fix the import→editor handoff by dismissing then re-presenting** — the\n  root cause is a known SwiftUI limitation: mutating a presented `.sheet(item:)`\n  from one non-nil identity to another non-nil identity in the same runloop tick\n  does not swap the sheet. Set `activeRaceSheet = nil` first, then schedule\n  `activeRaceSheet = .editor` on the next main-runloop tick so the editor\n  presents cleanly with the seed. Chosen over restructuring into nested/separate\n  sheets because it's the smallest change that preserves the existing single-enum\n  design and all the scenario hooks (`rbShowRaceEditor`, `rbRaceEditorSeedJSON`).\n- **The seed mapping is already correct and tested** — `RaceDraft.asRaceGoalSeed`\n  and `RaceSearchResult.asDraft` are covered by `RaceImportPersistenceTests` and\n  work; do NOT touch them. The bug is purely the presentation handoff, not the\n  data. This is why `settings-import-race-review` (which seeds the editor state\n  directly) looks fine while the live URL/search path is broken.\n- **Also enlarge the small per-race edit/delete controls** — the pencil/trash\n  buttons in `raceRow` are ~17pt glyphs with only 6pt padding (~29pt targets),\n  below the comfortable minimum; give them a larger hit area so races are easy to\n  edit/remove (\"easy to select or unselect\").\n\n## Implementation\n\n### 1. Make every settings action row a full, comfortable tap target\n\n**File**: `Sources/AppCore/SettingsView.swift`\n\nIn `actionRowLabel(...)` (the shared HStack of icon + title + spacer + chevron),\nadd vertical padding and a rectangular hit shape so the whole row — including the\nempty spacer region and the trailing chevron — is tappable, not just the glyphs.\nConcretely: give the label `.padding(.vertical, 8)` (or enough to reach ≥44pt\ntotal height) and apply `.contentShape(Rectangle())`. Since `actionRow` wraps\n`actionRowLabel` in a `Button(...).buttonStyle(.plain)`, the enlarged content\nshape becomes the button's hit region. Ensure the `Link`-wrapped uses\n(`actionRowLabel(... external: true)` for \"Get an API key\" and \"Privacy policy\")\nalso benefit — they route through the same builder, so the tappable Link area\ngrows too. Verify the destructive rows (Delete account, Disconnect) keep their\nred tint and still read correctly with the added padding.\n\nConfirm spacing inside each `card(...)` still looks right after rows get taller\n(the card uses `VStack(spacing: 12)`); reduce per-row vertical padding slightly\nif rows feel too loose, but never below the ~44pt effective target.\n\n### 2. Enlarge the per-race edit/delete controls\n\n**File**: `Sources/AppCore/SettingsView.swift`\n\nIn `raceRow(_:)`, the edit (pencil) and delete (trash) `Button`s currently use a\nbare `Image(...).padding(6)`. Increase their tap area (e.g. a fixed\n`.frame(width: 44, height: 44)` with `.contentShape(Rectangle())`, keeping the\nglyph centered and the existing tints/`accessibilityLabel`s) so each race is easy\nto edit or delete. Keep the row layout visually balanced — adjust the row's\ntrailing spacing if the larger targets crowd the name/detail text.\n\n### 3. Fix the import/search → editor handoff so the found race opens prefilled\n\n**File**: `Sources/AppCore/SettingsView.swift`\n\nThe handoff functions `openEditorPrefilled(seed:flagged:)` and\n`openEditorForAdd()` (the import/search \"add manually\" fallback) both set\n`activeRaceSheet = .editor` while an import/search sheet is already presented.\nChange these so they first dismiss the current sheet, then present the editor on\nthe next runloop tick, e.g.:\n\n```swift\nprivate func openEditorPrefilled(seed: RaceGoal, flagged: [String]) {\n    editingRace = nil\n    raceEditorSeed = seed\n    raceEditorFlagged = flagged\n    presentEditorAfterDismiss()\n}\n\nprivate func openEditorForAdd() {\n    editingRace = nil\n    raceEditorSeed = nil\n    raceEditorFlagged = []\n    presentEditorAfterDismiss()\n}\n\n/// Dismiss any presented race sheet, then present the editor on the next\n/// runloop tick. Mutating a live `.sheet(item:)` straight from one non-nil\n/// case to another does not reliably re-present in SwiftUI, so the editor\n/// (and its seed) would silently never appear.\nprivate func presentEditorAfterDismiss() {\n    if activeRaceSheet == nil {\n        activeRaceSheet = .editor            // opened cold (e.g. \"Add manually\" with no sheet up)\n    } else {\n        activeRaceSheet = nil\n        DispatchQueue.main.async { activeRaceSheet = .editor }\n    }\n}\n```\n\nNotes:\n- The `nil`-check preserves the direct path for the \"Add manually\" button on the\n  Races card, which opens the editor when no sheet is showing (avoids a needless\n  dismiss/re-present flicker there).\n- `raceEditorSeed`/`raceEditorFlagged`/`editingRace` are plain `@State` read at\n  sheet-build time, so setting them before scheduling the editor is safe — the\n  `.editor` case reads the current values when it presents on the next tick.\n- Leave the `raceRow` edit button's direct `activeRaceSheet = .editor` as-is: it\n  fires with no sheet presented (nil → `.editor`), which presents fine.\n\n### 4. (If verification shows a flicker) reset seed state on editor dismiss\n\n**File**: `Sources/AppCore/SettingsView.swift`\n\nOnly if the deconstruct/verify step surfaces stale-seed carryover between\nsuccessive opens (e.g. open import → editor, cancel, then \"Add manually\" shows an\nold seed): clear `raceEditorSeed`/`raceEditorFlagged`/`editingRace` when the\neditor's `onSave`/`onCancel` set `activeRaceSheet = nil`. The current\n`openEditorForAdd` already resets them on each open, so this is a belt-and-suspenders\nguard, not expected to be required — implement only if observed.\n\n## Reused existing code\n\n- `actionRow` / `actionRowLabel` builders in `Sources/AppCore/SettingsView.swift`\n  (glossary entry: `SettingsView`) — the single place all connect/add/account\n  action rows are built; enlarging here fixes tappability app-wide.\n- `phaseRow` / `themeRow` in `Sources/AppCore/SettingsView.swift` — existing\n  in-file precedent for `.contentShape(Rectangle())` + vertical padding on a\n  full-width tappable row; match their pattern.\n- `RaceEditorView` from `Sources/AppCore/RaceEditorView.swift` (glossary entry:\n  `RaceEditorView`) — already accepts `seed:` + `flaggedFields:` and prefills\n  correctly; no change needed, it just needs to actually be presented.\n- `RaceImportSheet` / `RaceSearchSheet` from\n  `Sources/AppCore/RaceImportView.swift` (glossary entries: `RaceImportSheet`,\n  `RaceSearchSheet`) — already call `onPrefill`/`onManual` with the right data;\n  the fix is on the SettingsView side that handles those callbacks.\n- `RaceDraft.asRaceGoalSeed`, `RaceSearchResult.asDraft` from\n  `Sources/AppCore/RaceGoals.swift` / `Coach/RaceImportClient.swift` — verified\n  correct by `Tests/AppCoreTests/RaceImportPersistenceTests.swift`; reused\n  unchanged.\n- The `RaceSheet` enum + `.sheet(item: $activeRaceSheet)` and scenario hooks\n  (`rbShowRaceEditor`, `rbRaceEditorSeedJSON`, `rbRaceEditorFlagged`) —\n  preserved; the fix works within this design.\n\n## Scenarios to Demonstrate\n\n- **Import-from-URL → editor opens prefilled** — with a coach key connected (or\n  `rbCoachConnected`), paste a race URL, import succeeds, and the editor appears\n  pre-filled with name/date/distance/location and the \"Double-check …\" review\n  hint. This is the flow that's currently broken.\n- **Search online → pick a candidate → editor opens prefilled** — search returns\n  candidates; tapping one opens the editor seeded from that candidate with the\n  missing fields flagged.\n- **Add manually (cold)** — tapping \"Add manually\" on the Races card with no\n  sheet up opens a blank editor immediately (no flicker), Save disabled until a\n  name is typed.\n- **Manual fallback from the import sheet** — inside the import sheet (e.g. no\n  key, or after an error), \"Add manually instead\" dismisses the import sheet and\n  opens the blank editor.\n- **Tappable connect rows** — the Races, Strava, Apple Health, AI Coach, and\n  Account action rows register a tap anywhere across the full row width\n  (including the chevron/empty area), not only on the icon/label.\n- **Easy edit/unselect a race** — a Races list with one or more races where the\n  enlarged pencil/trash controls are comfortably tappable to edit or remove.\n- **Edge: sparse import** — a URL import that only yields a name opens the editor\n  with the Half distance preset selected and every unknown field flagged for\n  review, Save enabled once the name is present.",
+  "description": "Made every Settings action row a full-width, HIG-compliant 44pt tap target (via a min-height floor plus contentShape on the shared actionRowLabel builder) and enlarged the per-race edit/delete controls to 44x44 hit frames. Fixed the import/search to race-editor handoff by dismissing the open sheet then re-presenting the editor on the next runloop tick (presentEditorAfterDismiss), so a found race now opens prefilled. Also padded the Daily Step Goal pills so the 'Custom' label is no longer cramped, and root-caused an oversized-text demo artifact to a stale rbContentSize=accessibility3 seed, pinning the scenario to the native default.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/settings-connect-and-race-import-flow.md\t.codeyam/plans/completed/settings-connect-and-race-import-flow.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-custom-goal--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-custom-goal--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-races-list--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-races-list--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-replay-tour-row--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-races-list.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/provider-auth-verdict.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "App.xcodeproj/project.pbxproj",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/SettingsView.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Settings",
+      "screenshotPath": "settings--iphone-16.png"
+    },
+    {
+      "name": "Settings - Appearance Picker - Bolt",
+      "screenshotPath": "settings-appearance-picker-bolt--iphone-16.png"
+    },
+    {
+      "name": "Settings — Account Sync",
+      "screenshotPath": "settings-account-sync--iphone-16.png"
+    },
+    {
+      "name": "Settings — Custom Goal",
+      "screenshotPath": "settings-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Settings — Health Sync On",
+      "screenshotPath": "settings-health-sync-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Races List",
+      "screenshotPath": "settings-races-list--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders On",
+      "screenshotPath": "settings-reminders-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Replay Tour Row",
+      "screenshotPath": "settings-replay-tour-row--iphone-16.png"
+    },
+    {
+      "name": "Settings — Training Phase (Building)",
+      "screenshotPath": "settings-training-phase-building--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 243,
+    "passed": 243,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 243,
+        "passed": 243
+      }
+    ]
+  }
+}

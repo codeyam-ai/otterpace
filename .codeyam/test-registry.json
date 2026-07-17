@@ -1195,7 +1195,7 @@
       "file": "Tests/AppCoreTests/ModelTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testIngestEmptyWorkoutsLeavesWeeklyLoadNil",
-      "line": 267,
+      "line": 271,
       "registeredAt": "2026-07-07T19:46:28Z",
       "runner": "tests"
     },
@@ -1204,7 +1204,7 @@
       "file": "Tests/AppCoreTests/ModelTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testIngestStravaWorkoutsPopulatesLoadHistory",
-      "line": 275,
+      "line": 279,
       "registeredAt": "2026-07-10T15:15:02.846883+00:00",
       "runner": "tests"
     },
@@ -1213,7 +1213,7 @@
       "file": "Tests/AppCoreTests/ModelTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testIngestStravaWorkoutsPopulatesWeeklyLoad",
-      "line": 249,
+      "line": 253,
       "registeredAt": "2026-07-07T19:46:28Z",
       "runner": "tests"
     },
@@ -1306,7 +1306,7 @@
       "file": "Tests/AppCoreTests/ModelTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testSetTrainingPhasePersistsAndApplies",
-      "line": 289,
+      "line": 293,
       "registeredAt": "2026-07-10T15:15:02.858617+00:00",
       "runner": "tests"
     },
@@ -1315,7 +1315,7 @@
       "file": "Tests/AppCoreTests/ModelTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testSetTrainingPhasePreservesOtherProfileFields",
-      "line": 302,
+      "line": 306,
       "registeredAt": "2026-07-10T15:15:02.861139+00:00",
       "runner": "tests"
     },

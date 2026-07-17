@@ -546,7 +546,7 @@ public struct SettingsView: View {
         editingRace = nil
         raceEditorSeed = nil
         raceEditorFlagged = []
-        activeRaceSheet = .editor
+        presentEditorAfterDismiss()
     }
 
     /// Open the editor pre-filled from a web import / search pick, flagging the
@@ -555,7 +555,20 @@ public struct SettingsView: View {
         editingRace = nil
         raceEditorSeed = seed
         raceEditorFlagged = flagged
-        activeRaceSheet = .editor
+        presentEditorAfterDismiss()
+    }
+
+    /// Dismiss any presented race sheet, then present the editor on the next
+    /// runloop tick. Mutating a live `.sheet(item:)` straight from one non-nil
+    /// case to another does not reliably re-present in SwiftUI, so the editor
+    /// (and its seed) would silently never appear.
+    private func presentEditorAfterDismiss() {
+        if activeRaceSheet == nil {
+            activeRaceSheet = .editor
+        } else {
+            activeRaceSheet = nil
+            DispatchQueue.main.async { activeRaceSheet = .editor }
+        }
     }
 
     private func raceRow(_ race: RaceGoal) -> some View {
@@ -571,11 +584,15 @@ public struct SettingsView: View {
             }
             Spacer()
             Button { editingRace = race; raceEditorSeed = nil; raceEditorFlagged = []; activeRaceSheet = .editor } label: {
-                Image(systemName: "pencil").foregroundColor(Palette.sky).padding(6)
+                Image(systemName: "pencil").foregroundColor(Palette.sky)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             .accessibilityLabel("Edit \(race.name)")
             Button { model.removeRace(id: race.id) } label: {
-                Image(systemName: "trash").foregroundColor(Palette.brandDeep).padding(6)
+                Image(systemName: "trash").foregroundColor(Palette.brandDeep)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             .accessibilityLabel("Delete \(race.name)")
         }
@@ -733,6 +750,9 @@ public struct SettingsView: View {
             Text(label)
                 .font(Typography.captionStrong)
                 .foregroundColor(selected ? .white : Palette.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .padding(.horizontal, 6)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
                 .background(Capsule().fill(selected ? Palette.brand : Palette.ink.opacity(0.06)))
@@ -840,6 +860,8 @@ public struct SettingsView: View {
             Image(systemName: external ? "arrow.up.right" : "chevron.right")
                 .font(.system(size: 13, weight: .bold)).foregroundColor(Palette.subtle)
         }
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
     }
 
     private func openSystemSettings() {
