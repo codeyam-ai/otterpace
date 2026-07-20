@@ -1,0 +1,20 @@
+{
+  "name": "Onboarding Choose-Your-Look - Otter",
+  "id": "5f548c48-e87f-4162-9a05-72b36479d9f2",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbOnboardingPage": 3,
+      "rbTheme": "default",
+      "rbStartScreen": "onboarding",
+      "rbDate": "2026-06-22",
+      "rbConnected": true
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/Onboarding/OnboardingFlowView.swift"
+}

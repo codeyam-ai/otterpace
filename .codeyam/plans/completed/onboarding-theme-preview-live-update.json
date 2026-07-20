@@ -1,0 +1,24 @@
+{
+  "claimStartedAt": "2026-07-20T13:54:53Z",
+  "completedAt": "2026-07-20T15:28:35Z",
+  "completedBy": {
+    "agentProvider": "claude",
+    "codeyamEditorVersion": "0.1.0",
+    "machine": "MacBookPro.mynetworksettings.com",
+    "pid": 97000,
+    "priority": 0,
+    "selectedPlan": "onboarding-theme-preview-live-update",
+    "sessionId": "5cd9ad9c-b55c-4e59-a273-91f894fbb542",
+    "startedAt": "2026-07-20T13:54:53Z"
+  },
+  "createdAt": "2026-07-16T01:43:31Z",
+  "deliverables": [
+    "App.xcodeproj/project.pbxproj",
+    "Sources/AppCore/SettingsView.swift"
+  ],
+  "journalTimestamp": "2026-07-20T15:28:35Z",
+  "mode": "ui",
+  "planFile": "completed/onboarding-theme-preview-live-update.md",
+  "slug": "onboarding-theme-preview-live-update",
+  "title": "Onboarding Theme Preview Live-Updates on Selection"
+}

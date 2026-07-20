@@ -1,0 +1,20 @@
+{
+  "name": "Onboarding Choose-Your-Look - Orbit",
+  "id": "fb762e16-88fe-4ead-9cb6-0b4a9bb85131",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "orbit",
+      "rbConnected": true,
+      "rbDate": "2026-06-22",
+      "rbOnboardingPage": 3,
+      "rbStartScreen": "onboarding"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/Onboarding/OnboardingFlowView.swift"
+}
