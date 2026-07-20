@@ -10,6 +10,15 @@ Apple HealthKit (or, optionally, Strava), keeps you moving toward your daily 10,
 steps, and gives kind, never-shame-based coaching through **Buddy**, a
 mood-reactive otter mascot.
 
+It's one of the CodeYam showcase apps, alongside
+[CodeYam Counter](https://github.com/codeyam-ai/codeyam-counter) and
+[TabCommand](https://github.com/codeyam-ai/tabcommand) — worked examples built
+with [codeyam-editor](https://codeyam.com).
+
+<p align="center">
+  <img src=".codeyam/scenarios/screenshots/today-goal-crushed--iphone-16.png" alt="Otterpace Today dashboard — daily step goal reached, Buddy celebrating" width="300">
+</p>
+
 ## Launch
 
 **Otterpace is live — [available on the App Store](https://apps.apple.com/us/app/otterpace/id6784287408).**
