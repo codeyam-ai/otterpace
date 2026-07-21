@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Otterpace — Orbit</title>
+<style>
+  :root{--bg:#05070E;--bg2:#0A1020;--ice:#74D6FF;--sky:#5AB0FF;--ink:#EAF2FB;--sub:#8CA0BE;--card:rgba(20,30,52,.55);--line:rgba(116,214,255,.16)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,"SF Pro Display",system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  /* starfield */
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(1.5px 1.5px at 20% 30%,#fff,transparent),
+      radial-gradient(1.5px 1.5px at 70% 20%,#cfe6ff,transparent),
+      radial-gradient(1px 1px at 40% 70%,#fff,transparent),
+      radial-gradient(1.5px 1.5px at 85% 60%,#bfe0ff,transparent),
+      radial-gradient(1px 1px at 55% 45%,#fff,transparent),
+      radial-gradient(1px 1px at 12% 80%,#fff,transparent),
+      radial-gradient(1.5px 1.5px at 90% 88%,#cfe6ff,transparent),
+      radial-gradient(1200px 700px at 75% -5%,rgba(90,176,255,.18),transparent 60%),
+      radial-gradient(900px 600px at 10% 110%,rgba(116,214,255,.12),transparent 60%);
+    opacity:.9}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 26px;position:relative;z-index:1}
+  a{color:inherit;text-decoration:none}
+
+  nav{position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);background:rgba(5,7,14,.6);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:16px;height:66px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.02em}
+  .brand img{width:32px;height:32px;border-radius:9px;box-shadow:0 0 18px rgba(116,214,255,.4)}
+  nav .sp{flex:1}
+  .nl{color:var(--sub);font-weight:600;font-size:14px}.nl:hover{color:var(--ice)}
+  .btn{border:1px solid var(--ice);color:var(--ice);font-weight:700;padding:9px 17px;border-radius:100px;font-size:14px;
+    background:rgba(116,214,255,.08);box-shadow:0 0 20px rgba(116,214,255,.15)}
+
+  header{padding:74px 0 40px;position:relative}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
+  .tag{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:100px;padding:7px 14px;font-size:12px;
+    color:var(--ice);letter-spacing:.08em;text-transform:uppercase;background:rgba(116,214,255,.05)}
+  h1{font-size:clamp(46px,7.5vw,86px);line-height:1;letter-spacing:-.035em;font-weight:800;margin:22px 0 0}
+  h1 .g{background:linear-gradient(120deg,#fff,var(--ice) 60%,var(--sky));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{color:var(--sub);font-size:19px;max-width:38ch;margin-top:20px}
+  .cta-row{display:flex;gap:14px;margin-top:28px;flex-wrap:wrap}
+  .cta-row img{height:50px;width:auto;display:block}
+  .note{margin-top:16px;color:var(--sub);font-size:14px}
+  .note b{color:var(--ice)}
+
+  .orbit-stage{position:relative;justify-self:center;width:340px;height:400px;display:grid;place-items:center}
+  .ring{position:absolute;border:1px solid var(--line);border-radius:50%}
+  .ring.r1{width:340px;height:340px}.ring.r2{width:250px;height:250px;border-color:rgba(116,214,255,.28)}
+  .planet{position:absolute;width:120px;height:120px;border-radius:50%;top:8px;left:60px;
+    background:radial-gradient(circle at 35% 30%,#EAF7FF,#8FD2F2 45%,#2E6A96 90%);
+    box-shadow:0 0 50px rgba(116,214,255,.5),inset -10px -10px 30px rgba(0,20,40,.5)}
+  .planet::after{content:"";position:absolute;inset:0;border-radius:50%;
+    background:linear-gradient(transparent 40%,rgba(255,255,255,.25) 41%,transparent 44%,transparent 58%,rgba(255,255,255,.18) 59%,transparent 62%)}
+  .phone-o{position:relative;z-index:2}
+  .phone-o img{width:230px;border-radius:32px;border:8px solid #05070E;background:#05070E;display:block;
+    box-shadow:0 0 0 1px var(--line),0 30px 70px rgba(90,176,255,.25)}
+
+  section{padding:62px 0;border-top:1px solid var(--line)}
+  .kh{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--ice)}
+  .sh{font-size:clamp(30px,5vw,52px);letter-spacing:-.03em;font-weight:800;margin:12px 0 6px}
+  .ss{color:var(--sub);font-size:17px;max-width:44ch}
+
+  .theme-belt{display:flex;gap:16px;overflow-x:auto;padding:26px 2px 12px;scroll-snap-type:x mandatory}
+  .theme-belt figure{flex:0 0 auto;text-align:center;scroll-snap-align:center}
+  .theme-belt img{width:168px;border-radius:26px;border:6px solid #05070E;background:#05070E;display:block;box-shadow:0 18px 40px rgba(0,0,0,.5),0 0 0 1px var(--line)}
+  .theme-belt figcaption{margin-top:12px;font-weight:700}
+  .theme-belt .h{color:var(--sub);font-size:12px}
+
+  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
+  .fc{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;backdrop-filter:blur(8px)}
+  .fc .e{font-size:26px}.fc h3{font-size:18px;margin:10px 0 6px}.fc p{color:var(--sub);font-size:14px}
+
+  .final{text-align:center;padding:60px 24px;border:1px solid var(--line);border-radius:26px;margin:20px 0;
+    background:radial-gradient(600px 300px at 50% 0,rgba(90,176,255,.14),transparent 70%)}
+  .final h2{font-size:clamp(32px,5vw,54px);letter-spacing:-.03em;font-weight:800}
+  .final .cta-row{justify-content:center;margin-top:24px}
+
+  footer{border-top:1px solid var(--line);padding:34px 0 60px;color:var(--sub);font-size:13px}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  footer a:hover{color:var(--ice)}
+  @media(max-width:860px){.hero-grid,.feat{grid-template-columns:1fr}.orbit-stage{margin-top:20px}.nl{display:none}}
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="brand"><img src="shots/icon.png" alt="">Otterpace</a>
+  <span class="sp"></span>
+  <a class="nl" href="#themes">Themes</a><a class="nl" href="#coach">Coaching</a><a class="nl" href="#">GitHub</a>
+  <a class="btn" href="#get">Get the app</a>
+</div></nav>
+
+<header><div class="wrap"><div class="hero-grid">
+  <div>
+    <span class="tag">◍ Live on the App Store · Android incoming</span>
+    <h1>Your training,<br><span class="g">in orbit.</span></h1>
+    <p class="lead">Otterpace is a kind, injury-aware running coach — and it comes in five whole-app looks. This is <b style="color:var(--ice)">Orbit</b>: cool, calm, cosmic.</p>
+    <div class="cta-row" id="get">
+      <a href="https://apps.apple.com/us/app/otterpace/id6784287408"><img src="shots/app-store-badge.svg" alt="Download on the App Store"></a>
+      <a style="cursor:not-allowed"><img src="shots/play-badge-soon.svg" alt="Coming soon to Google Play"></a>
+    </div>
+    <div class="note"><b>Free</b> · privacy-first · Apple Health stays on your device · <b>Android coming!</b></div>
+  </div>
+  <div class="orbit-stage">
+    <div class="ring r1"></div><div class="ring r2"></div>
+    <div class="planet"></div>
+    <div class="phone-o"><img src="shots/shot-orbit.png" alt="Otterpace in Orbit theme"></div>
+  </div>
+</div></div></header>
+
+<section id="themes"><div class="wrap">
+  <div class="kh">The theme system</div>
+  <div class="sh">Five constellations, one app.</div>
+  <p class="ss">Every theme reskins the entire app — colors, type, and mascot shift together. Orbit is just one of five.</p>
+  <div class="theme-belt">
+    <figure><img src="shots/shot-orbit.png" alt="Orbit"><figcaption>Orbit</figcaption><div class="h">cosmic · ice</div></figure>
+    <figure><img src="shots/shot-otter.png" alt="Otter"><figcaption>Otter</figcaption><div class="h">warm · coral</div></figure>
+    <figure><img src="shots/shot-bolt.png" alt="Bolt"><figcaption>Bolt</figcaption><div class="h">dark · aqua</div></figure>
+    <figure><img src="shots/shot-fieldnote.png" alt="Fieldnote"><figcaption>Fieldnote</figcaption><div class="h">analog · teal</div></figure>
+    <figure><img src="shots/shot-garden.png" alt="Garden"><figcaption>Garden</figcaption><div class="h">calm · sage</div></figure>
+  </div>
+</div></section>
+
+<section id="coach"><div class="wrap">
+  <div class="kh">Coaching, grounded</div>
+  <div class="sh">Kind guidance, cosmic calm.</div>
+  <div class="feat">
+    <div class="fc"><div class="e">🩺</div><h3>Injury-aware</h3><p>Backs off when your load spikes. Sensible run/rest calls, never a diagnosis.</p></div>
+    <div class="fc"><div class="e">💬</div><h3>Ask Buddy</h3><p>Conversational coaching in plain language. Works offline; smarter with your key.</p></div>
+    <div class="fc"><div class="e">👟</div><h3>Gentle nudges</h3><p>Move toward your step goal with encouragement, not guilt.</p></div>
+    <div class="fc"><div class="e">📅</div><h3>Weekly review</h3><p>What went well, what changed, one focus for next week.</p></div>
+    <div class="fc"><div class="e">🔒</div><h3>On-device</h3><p>Apple Health stays on your phone. No accounts, no ads, no data sold.</p></div>
+    <div class="fc"><div class="e">💛</div><h3>Open source</h3><p>Built in the open as a CodeYam showcase.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap"><div class="final">
+  <div class="kh">Ready for liftoff</div>
+  <h2>Bring Buddy into orbit.</h2>
+  <div class="cta-row">
+    <a href="https://apps.apple.com/us/app/otterpace/id6784287408"><img src="shots/app-store-badge.svg" alt="Download on the App Store"></a>
+    <a style="cursor:not-allowed"><img src="shots/play-badge-soon.svg" alt="Coming soon to Google Play"></a>
+  </div>
+</div></div></section>
+
+<footer><div class="wrap">
+  <div>Otterpace · open source · built with 💛 and CodeYam</div>
+  <div>github.com/nseldeib/otterpace · hello@otterpace.com · Privacy</div>
+</div></footer>
+</body></html>

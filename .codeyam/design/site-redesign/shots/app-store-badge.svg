@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40" viewBox="0 0 120 40" role="img" aria-label="Download on the App Store">
+  <title>Download on the App Store</title>
+  <rect x="0.5" y="0.5" width="119" height="39" rx="6.5" fill="#000000" stroke="#A6A6A6" stroke-width="1"/>
+  <!-- Apple logo -->
+  <path fill="#FFFFFF" d="M24.77 20.3c-.02-2.4 1.96-3.56 2.05-3.62-1.12-1.64-2.86-1.86-3.48-1.89-1.48-.15-2.89.87-3.64.87-.75 0-1.91-.85-3.14-.83-1.62.02-3.11.94-3.94 2.39-1.68 2.91-.43 7.22 1.2 9.58.8 1.16 1.75 2.46 3 2.41 1.2-.05 1.66-.78 3.11-.78 1.45 0 1.86.78 3.13.75 1.29-.02 2.11-1.18 2.9-2.35.91-1.35 1.29-2.66 1.31-2.73-.03-.01-2.51-.96-2.53-3.83zm-2.39-7.03c.66-.8 1.11-1.92.99-3.03-.95.04-2.11.64-2.79 1.44-.61.71-1.14 1.84-1 2.93 1.06.08 2.14-.54 2.8-1.34z"/>
+  <!-- Text -->
+  <text x="34" y="15.5" fill="#FFFFFF" font-family="-apple-system, Helvetica, Arial, sans-serif" font-size="6" letter-spacing="0.2">Download on the</text>
+  <text x="33.5" y="30" fill="#FFFFFF" font-family="-apple-system, Helvetica, Arial, sans-serif" font-size="15" font-weight="500" letter-spacing="-0.4">App Store</text>
+</svg>

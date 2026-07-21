@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en" data-theme="otter">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Otterpace — Theme Chameleon</title>
+<style>
+  :root{
+    --bg1:#FFF3EC;--bg2:#F5F0FA;--accent:#FF7357;--accent2:#ED524A;--ink:#292B38;--sub:#6b6f80;
+    --card:#ffffff;--cardline:rgba(41,43,56,.08);--chipink:#292B38;--glow:rgba(255,115,87,.25)}
+  html[data-theme="bolt"]{--bg1:#0A0B0D;--bg2:#000000;--accent:#2FE3D0;--accent2:#17B7A6;--ink:#F5F5F7;--sub:#9a9aa2;--card:#161619;--cardline:rgba(255,255,255,.08);--chipink:#F5F5F7;--glow:rgba(47,227,208,.28)}
+  html[data-theme="orbit"]{--bg1:#05070E;--bg2:#0A1424;--accent:#74D6FF;--accent2:#5AB0FF;--ink:#EAF2FB;--sub:#8ca0be;--card:#111c30;--cardline:rgba(116,214,255,.16);--chipink:#EAF2FB;--glow:rgba(116,214,255,.28)}
+  html[data-theme="fieldnote"]{--bg1:#F1E8D4;--bg2:#EFE6D2;--accent:#E0562F;--accent2:#1F7E8C;--ink:#2A2A24;--sub:#7c7466;--card:#FBF6EA;--cardline:rgba(42,42,36,.1);--chipink:#2A2A24;--glow:rgba(224,86,47,.22)}
+  html[data-theme="garden"]{--bg1:#ECEFE8;--bg2:#E4EADF;--accent:#4E6B54;--accent2:#C98BA8;--ink:#26302A;--sub:#5f6b60;--card:#F6F8F2;--cardline:rgba(38,48,42,.1);--chipink:#26302A;--glow:rgba(78,107,84,.2)}
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);min-height:100vh;
+    font-family:-apple-system,"SF Pro Display",system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;
+    transition:background .5s ease,color .5s ease}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 26px}
+  a{color:inherit;text-decoration:none}
+  .accent{color:var(--accent)}
+
+  nav .wrap{display:flex;align-items:center;gap:16px;height:70px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.02em}
+  .brand img{width:32px;height:32px;border-radius:9px}
+  nav .sp{flex:1}
+  .nl{color:var(--sub);font-weight:600;font-size:14px}
+  .btn{background:var(--accent);color:#fff;font-weight:800;padding:10px 18px;border-radius:12px;font-size:14px;
+    box-shadow:0 8px 20px var(--glow);transition:background .4s}
+  html[data-theme="bolt"] .btn,html[data-theme="orbit"] .btn,html[data-theme="fieldnote"] .btn,html[data-theme="garden"] .btn{color:#08110f}
+
+  header{padding:56px 0 30px}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center}
+  .tag{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--accent);color:var(--accent);
+    padding:7px 14px;border-radius:100px;font-size:13px;font-weight:700;letter-spacing:.02em}
+  h1{font-size:clamp(44px,7vw,80px);line-height:.98;letter-spacing:-.035em;font-weight:850;margin:20px 0 0}
+  .lead{color:var(--sub);font-size:19px;max-width:36ch;margin-top:18px}
+
+  /* the switcher — the whole point */
+  .switcher{margin-top:26px}
+  .switcher .lbl{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);margin-bottom:10px;font-weight:700}
+  .chips{display:flex;gap:9px;flex-wrap:wrap}
+  .chip{border:1.5px solid var(--cardline);background:var(--card);border-radius:100px;padding:9px 15px;font-weight:800;
+    font-size:14px;color:var(--sub);display:flex;gap:9px;align-items:center;cursor:pointer;transition:.2s;user-select:none}
+  .chip:hover{transform:translateY(-2px)}
+  .chip .sw{width:14px;height:14px;border-radius:50%;box-shadow:0 0 0 2px var(--card)}
+  .chip[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);box-shadow:0 6px 18px var(--glow)}
+
+  .cta-row{display:flex;gap:14px;margin-top:26px;flex-wrap:wrap}
+  .cta-row img{height:50px;width:auto;display:block}
+  .note{margin-top:14px;color:var(--sub);font-size:14px}
+
+  .device{position:relative;justify-self:center}
+  .device .halo{position:absolute;inset:-40px;border-radius:50%;background:radial-gradient(circle,var(--glow),transparent 65%);filter:blur(24px);z-index:-1;transition:background .5s}
+  .device img{width:min(280px,74vw);border-radius:38px;border:9px solid #1c1d22;background:#1c1d22;display:block;
+    box-shadow:0 34px 70px rgba(0,0,0,.28);transition:opacity .35s}
+  .float{position:absolute;background:var(--card);border:1px solid var(--cardline);border-radius:14px;padding:10px 14px;
+    font-weight:800;font-size:13px;box-shadow:0 12px 26px rgba(0,0,0,.14);display:flex;gap:8px;align-items:center}
+  .float.f1{top:30px;left:-16px}.float.f2{bottom:60px;right:-20px}
+  .float .d{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+
+  section{padding:56px 0}
+  .sec-head{max-width:640px}
+  .sec-head .k{color:var(--accent);font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:12px}
+  .sec-head h2{font-size:clamp(28px,4.5vw,44px);letter-spacing:-.025em;font-weight:850;margin:8px 0 6px}
+  .sec-head p{color:var(--sub);font-size:18px}
+
+  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+  .fc{background:var(--card);border:1px solid var(--cardline);border-radius:20px;padding:24px;transition:.4s,transform .18s}
+  .fc:hover{transform:translateY(-5px)}
+  .fc .e{font-size:26px;width:52px;height:52px;border-radius:15px;display:grid;place-items:center;background:var(--glow);margin-bottom:12px}
+  .fc h3{font-size:18px;margin-bottom:5px}.fc p{color:var(--sub);font-size:14px}
+
+  .final{text-align:center;border:1.5px solid var(--accent);border-radius:28px;padding:52px 24px;
+    background:radial-gradient(600px 300px at 50% 0,var(--glow),transparent 70%)}
+  .final h2{font-size:clamp(30px,5vw,50px);letter-spacing:-.03em;font-weight:850}
+  .final p{color:var(--sub);margin-top:8px;font-size:17px}
+  .final .cta-row{justify-content:center;margin-top:22px}
+
+  footer{padding:34px 0 60px;color:var(--sub);font-size:13px}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  @media(max-width:860px){.hero-grid,.feat{grid-template-columns:1fr}.feat{grid-template-columns:1fr 1fr}.nl{display:none}}
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="brand"><img src="shots/icon.png" alt="">Otterpace</a>
+  <span class="sp"></span>
+  <a class="nl" href="#coach">Coaching</a><a class="nl" href="#">GitHub</a>
+  <a class="btn" href="#get">Get the app</a>
+</div></nav>
+
+<header><div class="wrap"><div class="hero-grid">
+  <div>
+    <span class="tag">🐾 Live on the App Store · Android coming!</span>
+    <h1>Your coach.<br>Your <span class="accent">colors.</span></h1>
+    <p class="lead">Otterpace ships in five whole-app looks. Tap one below — watch the entire app <em>and this page</em> change with it.</p>
+    <div class="switcher">
+      <div class="lbl">👇 Try it — pick a theme</div>
+      <div class="chips" id="chips">
+        <button class="chip" data-set="otter" aria-pressed="true"><span class="sw" style="background:#FF7357"></span>Otter</button>
+        <button class="chip" data-set="bolt" aria-pressed="false"><span class="sw" style="background:#2FE3D0"></span>Bolt</button>
+        <button class="chip" data-set="orbit" aria-pressed="false"><span class="sw" style="background:#74D6FF"></span>Orbit</button>
+        <button class="chip" data-set="fieldnote" aria-pressed="false"><span class="sw" style="background:#E0562F"></span>Fieldnote</button>
+        <button class="chip" data-set="garden" aria-pressed="false"><span class="sw" style="background:#4E6B54"></span>Garden</button>
+      </div>
+    </div>
+    <div class="cta-row" id="get">
+      <a href="https://apps.apple.com/us/app/otterpace/id6784287408"><img src="shots/app-store-badge.svg" alt="Download on the App Store"></a>
+      <a style="cursor:not-allowed"><img src="shots/play-badge-soon.svg" alt="Coming soon to Google Play"></a>
+    </div>
+    <div class="note">Free · No accounts · Your health data never leaves your phone.</div>
+  </div>
+  <div class="device">
+    <div class="halo"></div>
+    <div class="float f1"><span class="d"></span>Goal crushed</div>
+    <div class="float f2"><span class="d"></span>Buddy is proud</div>
+    <img id="device-shot" src="shots/shot-otter.png" alt="Otterpace app">
+  </div>
+</div></div></header>
+
+<section id="coach"><div class="wrap">
+  <div class="sec-head"><div class="k">The coaching</div><h2>Kind, injury-aware, always on your side.</h2><p>The look changes. The care doesn’t.</p></div>
+  <div class="feat">
+    <div class="fc"><div class="e">🩺</div><h3>Injury-aware</h3><p>Backs off when your load spikes. Run/rest calls, never a diagnosis.</p></div>
+    <div class="fc"><div class="e">💬</div><h3>Ask Buddy</h3><p>Conversational coaching in plain language. Offline by default; smarter with your key.</p></div>
+    <div class="fc"><div class="e">👟</div><h3>Gentle nudges</h3><p>Move toward your step goal with encouragement, not guilt.</p></div>
+    <div class="fc"><div class="e">📅</div><h3>Weekly review</h3><p>What went well, what changed, one focus for next week.</p></div>
+    <div class="fc"><div class="e">🔒</div><h3>On-device</h3><p>Apple Health read locally, never uploaded. No accounts, no ads.</p></div>
+    <div class="fc"><div class="e">💛</div><h3>Open source</h3><p>Built in the open as a CodeYam showcase.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap"><div class="final">
+  <h2>Find your look. Start moving.</h2>
+  <p>Otterpace 1.0 is live on the App Store. Android is coming.</p>
+  <div class="cta-row">
+    <a href="https://apps.apple.com/us/app/otterpace/id6784287408"><img src="shots/app-store-badge.svg" alt="Download on the App Store"></a>
+    <a style="cursor:not-allowed"><img src="shots/play-badge-soon.svg" alt="Coming soon to Google Play"></a>
+  </div>
+</div></div></section>
+
+<footer><div class="wrap">
+  <div>Open source · Built with 💛 and CodeYam</div>
+  <div>github.com/nseldeib/otterpace · hello@otterpace.com · Privacy</div>
+</div></footer>
+
+<script>
+  var shots={otter:"shots/shot-otter.png",bolt:"shots/shot-bolt.png",orbit:"shots/shot-orbit.png",fieldnote:"shots/shot-fieldnote.png",garden:"shots/shot-garden.png"};
+  var img=document.getElementById('device-shot');
+  document.getElementById('chips').addEventListener('click',function(e){
+    var b=e.target.closest('.chip'); if(!b)return;
+    var t=b.getAttribute('data-set');
+    document.documentElement.setAttribute('data-theme',t);
+    [].forEach.call(document.querySelectorAll('.chip'),function(c){c.setAttribute('aria-pressed', c===b?'true':'false');});
+    img.style.opacity=0; setTimeout(function(){img.src=shots[t]; img.style.opacity=1;},180);
+  });
+</script>
+</body></html>
