@@ -11,7 +11,7 @@ if(!KEY_ID||!ISSUER_ID){console.error("set ASC_KEY_ID and ASC_ISSUER_ID");proces
 if(!NEW_VERSION){console.error("pass the new version string, e.g. 1.0.1");process.exit(1);}
 
 const SUBTITLE="Your friendly running coach";
-const WHATS_NEW="Buddy holds a real conversation now: Ask Buddy remembers what you already said and builds on it, gives calmer, more trusting guidance, and no longer over-flags rest. New: choose from five app themes — from warm and friendly to dark and focused — in onboarding or Settings. Plus fixes and polish.";
+const WHATS_NEW="Buddy holds a real conversation now: Ask Buddy remembers what you already said and builds on it, gives calmer, more trusting guidance, and no longer over-flags rest. Your week reads honestly mid-week: rest days now count only the days that have actually happened, so a Tuesday with one run no longer looks like a quiet week, and a new last-7-days view keeps a strong weekend visible after Monday. Activity History gains a progress heatmap for distance, active minutes, and steps toward your goal. New: choose from five app themes, from warm and friendly to dark and focused, in onboarding or Settings. Plus fixes and polish.";
 
 const pk=crypto.createPrivateKey(fs.readFileSync(`${os.homedir()}/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8`));
 const b=x=>Buffer.from(x).toString("base64url");
