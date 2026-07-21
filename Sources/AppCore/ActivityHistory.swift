@@ -32,14 +32,17 @@ public struct WeekGroup: Equatable, Identifiable {
 
 public enum ActivityHistory {
     // A fixed calendar so week boundaries are deterministic and locale-independent.
-    private static var calendar: Calendar {
+    // Internal (not private) so the progress heatmap lays its Monday-start week
+    // columns out on exactly these boundaries instead of duplicating the rules.
+    static var calendar: Calendar {
         var c = Calendar(identifier: .iso8601)   // Monday-start, ISO weeks
         c.locale = Locale(identifier: "en_US_POSIX")
         c.timeZone = TimeZone(identifier: "UTC") ?? .current
         return c
     }
 
-    private static var parser: DateFormatter {
+    // Shared with the heatmap so both drop unparseable dates the same way.
+    static var parser: DateFormatter {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
         f.locale = Locale(identifier: "en_US_POSIX")

@@ -1,0 +1,215 @@
+{
+  "timestamp": "2026-07-21T13:26:24Z",
+  "title": "Progress heatmap — on-brand activity calendar",
+  "type": "feature",
+  "userRequest": "## Summary\n\nAdd a GitHub-contributions-style activity heatmap to the top of the **Activity\nHistory** screen, restyled to be aesthetic and on-brand: a grid of day cells\n(Monday-start weeks, matching the rest of the app) where each day's color\nintensity reflects how active that day was, plus a **range selector** (Week /\nMonth / 3-Month) and a **metric filter** (Distance / Active minutes / Steps vs.\ngoal). The metric filter defaults to a single metric so the view never feels\noverwhelming; the other two are one tap away. The heatmap reads the theme tokens\nso it retints with the five app looks, and shows a friendly Buddy-fronted empty\nstate on day one. All the binning logic is pure and testable, mirroring the\nexisting `ActivityHistory` module.\n\n## Key Decisions\n\n- **Lives at the top of Activity History, not a new screen** — the Activity\n  History overlay (`ActivityHistoryView`) already owns the workout data\n  (`model.today.workouts`) and per-week rollups; adding the heatmap as a section\n  above the existing per-week list reuses that entry point and data with the\n  smallest new navigation surface. It scrolls with the weeks below it.\n- **Three metrics behind a filter, default Distance** — the segmented metric\n  filter offers **Distance (miles)**, **Active minutes**, and **Steps vs. goal**.\n  Default to **Distance** because it derives directly from existing\n  `LatestWorkout.distanceMiles` with no new data plumbing and is always present.\n  Active minutes derives from `LatestWorkout.durationMinutes`. **Steps vs. goal**\n  needs a per-day steps series that does not exist in the model yet (see next\n  decision), so it renders as \"no step data yet\" until that series is seeded —\n  never a broken/empty grid.\n- **New per-day steps series, additively** — add an optional `dailySteps`\n  ([date → steps]) series to `TodayState`, seeded from a new scenario key\n  (e.g. `rbDailySteps`) the same launch-seed way `workouts`/`loadHistory` are\n  seeded today. It's optional and defaults empty, so nothing regresses when a\n  scenario doesn't provide it. The Steps-vs-goal metric bins each day's steps\n  against `today.goalSteps`.\n- **Pure, testable binning in the `ActivityHistory` style** — all grid math\n  (bucketing workouts/steps into per-day intensity, mapping to 0–4 levels,\n  laying out the Monday-start week columns over the selected range) goes in a new\n  pure function set, XCTest-covered, so the view stays a thin renderer. Reuse the\n  existing Monday-start POSIX-calendar convention and unparseable-date dropping\n  from `ActivityHistory.groupByWeek`.\n- **On-brand, theme-reactive color ramp** — intensity levels 0–4 map to a ramp\n  built from the theme's `brand`/`go` tokens via `Palette` (empty = a subtle\n  card tint, hottest = full brand), so the heatmap retints across Default / Bolt\n  / Orbit / Fieldnote / Garden. Rounded cells, soft spacing from `Layout`,\n  `Typography` labels — never a clinical grid. WCAG AA contrast preserved.\n- **Range = visible span, not aggregation** — Week / Month / 3-Month change how\n  much history the grid shows (default Month), keeping day-granularity cells like\n  GitHub. This satisfies the \"over a day / week / month\" ask without a second\n  aggregation mode that would complicate the read.\n\n## Implementation\n\n### 1. Per-day intensity + grid logic (pure)\n\n**New file**: `Sources/AppCore/ActivityHeatmap.swift`\n\nA pure module (no SwiftUI) alongside `ActivityHistory.swift`:\n\n- `enum HeatmapMetric { case distance, activeMinutes, stepsGoal }` — the three\n  filterable metrics, each with a display label.\n- `enum HeatmapRange { case week, month, threeMonth }` — the visible span, each\n  knowing how many trailing days/weeks to render (default `.month`).\n- `struct HeatmapDay { let dateISO: String; let value: Double; let level: Int }`\n  — one cell; `level` is 0–4.\n- `func heatmap(workouts: [LatestWorkout], dailySteps: [String: Int], goalSteps:\n  Int, metric: HeatmapMetric, range: HeatmapRange, todayISO: String) ->\n  [[HeatmapDay]]` — returns Monday-start week columns of day cells over the\n  range. Sums that day's workout miles / minutes for distance & active-minutes;\n  reads `dailySteps` for steps-vs-goal; bins each day's value into levels 0–4\n  with per-metric thresholds (relative to the window's max, or goal for steps).\n  Drops unparseable dates and reuses the Monday-start POSIX calendar convention\n  from `ActivityHistory`.\n\nFactor out the shared Monday-start / date-parsing helpers from\n`ActivityHistory.swift` if they aren't already reusable, rather than duplicating.\n\n### 2. Add an optional per-day steps series to the model\n\n**File**: `Sources/AppCore/Model.swift`\n\n- Add `public var dailySteps: [String: Int]` to `TodayState` (default `[:]`),\n  with `Codable` `decodeIfPresent` fallback like the other optional fields.\n- In the scenario-seeding path (where `workouts` and `loadHistory` are read from\n  UserDefaults), read a new `rbDailySteps` key (JSON-encoded `[date: steps]`)\n  into `dailySteps`, defaulting to empty when absent.\n\n### 3. Heatmap UI components (theme-reactive)\n\n**New file**: `Sources/AppCore/ActivityHeatmapView.swift`\n\n- `ActivityHeatmapSection` — the composed section: a title row, the metric\n  segmented filter, the range selector, the grid, and a small legend\n  (less → more). Reads `@ObservedObject ThemeStore.shared` (or `@Environment`\n  as the rest of the app does) so it retints live; holds `@State` for the\n  selected metric (default `.distance`) and range (default `.month`).\n- A `HeatmapGrid` subview rendering `[[HeatmapDay]]` as rounded cells, weekday\n  row labels, and month/週 column labels, colored by an intensity ramp derived\n  from `Palette.brand`/`Palette.go` per `level`.\n- A compact empty state (reuse the Buddy prompt pattern from\n  `ActivityHistoryEmptyState`) shown when there are no workouts and no daily\n  steps in range; and a per-metric \"no step data yet\" note for the steps metric\n  when `dailySteps` is empty.\n\nUse `Layout`, `Typography`, and `Palette` tokens throughout — no hardcoded\nsizes/colors — so it matches the app and scales with Dynamic Type.\n\n### 4. Mount it atop Activity History\n\n**File**: `Sources/AppCore/ActivityHistoryView.swift`\n\nInsert `ActivityHeatmapSection` as the first child of the existing `ScrollView`'s\n`VStack`, above the `ForEach(weeks) { ActivityWeekSection... }`. When there are\nno weeks (day-one), still show the heatmap section's own empty state rather than\nonly the full-screen `ActivityHistoryEmptyState` — decide with the user during\nbuild whether the heatmap replaces or sits above the day-one empty prompt.\n\n### 5. Tests\n\n**New file**: `Tests/AppCoreTests/ActivityHeatmapTests.swift`\n\nXCTest coverage (`swift test --parallel --disable-swift-testing`) of the pure\nlogic, each with a `//`-comment description above the `func testX()`:\n\n- Distance metric bins a rich multi-week workout list into expected levels\n- Active-minutes metric bins by duration, independent of distance\n- Steps-vs-goal metric bins against `goalSteps`; empty `dailySteps` → all level 0\n- Range selection changes the number of week columns (week vs month vs 3-month)\n- Monday-start week alignment and unparseable-date dropping match `ActivityHistory`\n- Rest days / empty days resolve to level 0\n\nRegister with `codeyam-editor editor reconcile-registry --auto-apply`.\n\n## Reused existing code\n\n- `ActivityHistory` (`Sources/AppCore/ActivityHistory.swift`, glossary:\n  `ActivityHistory`) — Monday-start POSIX calendar, date parsing, unparseable-date\n  dropping; factor shared helpers rather than duplicate.\n- `LatestWorkout` (`Sources/AppCore/Model.swift`) — `date`, `distanceMiles`,\n  `durationMinutes`, `type` are the heatmap's data atoms.\n- `TodayState` / `model.today.workouts` (`Sources/AppCore/Model.swift`) — source\n  series; extended with `dailySteps`.\n- `ActivityHistoryView` (glossary: `ActivityHistoryView`) — host screen.\n- `ActivityHistoryEmptyState` (glossary: `ActivityHistoryEmptyState`) — Buddy\n  empty-state pattern to mirror.\n- `Palette` (`Sources/AppCore/Theme.swift`), `Typography`, `Layout` — theme\n  tokens / type / spacing so the heatmap is on-brand and retints with the five\n  themes (glossary: `Theme`, `ThemeStore`).\n\n## Scenarios to Demonstrate\n\n- **Heatmap — Rich Multi-Week (Distance)** — a dense several-week workout history,\n  default distance metric, month range: a lively spread of intensities.\n- **Heatmap — Active Minutes** — same data, active-minutes metric selected, to\n  show the filter changing the read.\n- **Heatmap — Steps vs. Goal** — seeded `rbDailySteps` with a mix of goal-hit and\n  short days, steps metric selected.\n- **Heatmap — Sparse** — a few scattered workouts, mostly rest days (lots of\n  level-0 cells).\n- **Heatmap — Empty (Day One)** — no workouts, no daily steps: the friendly Buddy\n  empty state.\n- **Heatmap — Week vs 3-Month range** — the same history at the narrow and wide\n  spans, to show the range selector.\n- **Heatmap — Themed** — the rich heatmap rendered under a non-default theme\n  (e.g. Bolt or Garden) to prove the intensity ramp retints on-brand.",
+  "description": "Added a GitHub-style progress heatmap to the top of Activity History. Monday-start day cells binned 0-4, with three metrics (Distance, Active minutes, Steps vs goal) and three spans (Week, Month, 3-Month). The intensity ramp is a single theme hue at rising opacity so it retints across all five app themes and stays strictly monotonic on both light and dark grounds. Short spans render as a calendar (weeks as rows); the 3-month span flips to the contribution shape (weeks as columns) to use the full card width and scroll horizontally. Tapping a day shows its workouts and step total; rest days are stated warmly. Month markers label where each month begins. All binning lives in the pure, XCTest-covered ActivityHeatmap; the view is split into nine focused components. Adds an optional TodayState.dailySteps series seeded via rbDailyStepsJSON, plus rbHeatmapMetric/rbHeatmapRange so each filter state is capturable on this native stack. The superseded full-screen ActivityHistoryEmptyState was removed in favor of the heatmap own day-one prompt.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/progress-heatmap-calendar.md\t.codeyam/plans/completed/progress-heatmap-calendar.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-rich-multi-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/accessibility-large-text-today--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-other-training--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-set-goal-8k--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-training-phase--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-walking-habits--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-appearance-picker-bolt--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-replay-tour-row--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-training-phase-building--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/sign-in-welcome--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-almost-there--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-computed-nudge--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-custom-goal--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-day-one-connect--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-fresh-start--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-bolt-theme--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-fieldnote-theme--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-garden-theme--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ActivityHistory.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ActivityHistoryEmptyState.swift",
+      "status": "deleted"
+    },
+    {
+      "path": "Sources/AppCore/ActivityHistoryView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Model.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/design/heatmap-mocks.html",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/ActivityHeatmap.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/ActivityHeatmapSection.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/HeatmapDayDetail.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/HeatmapEmptyState.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/HeatmapGrid.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/HeatmapLegend.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/HeatmapMetricPicker.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/HeatmapNote.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/HeatmapRamp.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/HeatmapRangePicker.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Activity History — Empty",
+      "screenshotPath": "activity-history-empty--iphone-16.png"
+    },
+    {
+      "name": "Activity History — Long Values",
+      "screenshotPath": "activity-history-long-values--iphone-16.png"
+    },
+    {
+      "name": "Activity History — Rich Multi-Week",
+      "screenshotPath": "activity-history-rich-multi-week--iphone-16.png"
+    },
+    {
+      "name": "Activity History — Sparse",
+      "screenshotPath": "activity-history-sparse--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 259,
+    "passed": 259,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 259,
+        "passed": 259
+      }
+    ]
+  }
+}

@@ -90,6 +90,12 @@ public struct TodayState: Codable, Equatable {
     public var loadHistory: [WeeklyLoadPoint] // coach-facing weekly mileage series, newest-first; [] => none
     public var races: [RaceGoal]           // optional upcoming races; [] => none set
     public var profile: CoachProfile?      // optional onboarding personalization; nil => not shared
+    /// Per-day step totals keyed by ISO date ("yyyy-MM-dd"), powering the progress
+    /// heatmap's steps-vs-goal metric. Optional and empty by default: HealthKit
+    /// gives us today's steps but no per-day series, so this is populated only
+    /// where a scenario seeds it. [:] => the steps metric shows "no step data yet"
+    /// rather than a grid of misleading zeroes.
+    public var dailySteps: [String: Int]
 
     public init(
         healthKitConnected: Bool,
@@ -106,7 +112,8 @@ public struct TodayState: Codable, Equatable {
         workouts: [LatestWorkout] = [],
         loadHistory: [WeeklyLoadPoint] = [],
         races: [RaceGoal] = [],
-        profile: CoachProfile? = nil
+        profile: CoachProfile? = nil,
+        dailySteps: [String: Int] = [:]
     ) {
         self.healthKitConnected = healthKitConnected
         self.date = date
@@ -123,6 +130,7 @@ public struct TodayState: Codable, Equatable {
         self.loadHistory = loadHistory
         self.races = races
         self.profile = profile
+        self.dailySteps = dailySteps
     }
 
     // Tolerant decode: TodayState is encode-only in production (assembled via the
@@ -147,6 +155,7 @@ public struct TodayState: Codable, Equatable {
         loadHistory = try c.decodeIfPresent([WeeklyLoadPoint].self, forKey: .loadHistory) ?? []
         races = try c.decodeIfPresent([RaceGoal].self, forKey: .races) ?? []
         profile = try c.decodeIfPresent(CoachProfile.self, forKey: .profile)
+        dailySteps = try c.decodeIfPresent([String: Int].self, forKey: .dailySteps) ?? [:]
     }
 
     // Production default: nothing connected yet, blank day-one state.
@@ -275,6 +284,17 @@ public final class OtterpaceModel: ObservableObject {
             profile = decoded
         }
 
+        // Per-day steps for the progress heatmap: a JSON-encoded [ISO date: steps]
+        // map under one key (same single-key pattern as rbWorkoutsJSON, since the
+        // flat rb* primitives can't hold a dictionary). Absent => [:], which the
+        // heatmap renders as an honest "no step data yet" instead of all-zero days.
+        var dailySteps: [String: Int] = [:]
+        if let json = d.string(forKey: "rbDailyStepsJSON"), !json.isEmpty,
+           let data = json.data(using: .utf8),
+           let decoded = try? JSONDecoder().decode([String: Int].self, from: data) {
+            dailySteps = decoded
+        }
+
         var coach: CoachRecommendation? = nil
         if let headline = d.string(forKey: "rbCoachHeadline"), !headline.isEmpty {
             coach = CoachRecommendation(
@@ -301,7 +321,8 @@ public final class OtterpaceModel: ObservableObject {
             workouts: workouts,
             loadHistory: loadHistory,
             races: races,
-            profile: profile
+            profile: profile,
+            dailySteps: dailySteps
         )
     }
 

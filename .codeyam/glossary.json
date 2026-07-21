@@ -6,6 +6,23 @@
     "testFile": "Tests/AppCoreTests/AccountSyncTests.swift"
   },
   {
+    "conformsToView": false,
+    "description": "Pure binning behind the progress heatmap: lays Monday-start week columns over the selected span, bins each day 0-4 per metric (distance/active-minutes relative to the window max, steps against the goal), derives month markers, and summarizes a tapped day.",
+    "filePath": "Sources/AppCore/ActivityHeatmap.swift",
+    "name": "ActivityHeatmap",
+    "testFile": "Tests/AppCoreTests/ActivityHeatmapTests.swift"
+  },
+  {
+    "conformsToView": true,
+    "description": "The Progress card atop Activity History: composes the metric filter, day grid, tapped-day detail, range selector and legend; opening metric/range are seedable via rbHeatmapMetric/rbHeatmapRange.",
+    "filePath": "Sources/AppCore/ActivityHeatmapSection.swift",
+    "name": "ActivityHeatmapSection",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
     "description": "Pure deterministic training-history logic. groupByWeek rolls a newest-first workout list into per-week groups with weekly mileage, run count, and rest days. weeklyLoad classifies the current week via classifyTrend against a trailing multi-week baseline rather than a single prior week, so a steady progressive build reads as building not spiking, a true one-week jump reads spiking, a deliberate down week reads recovering with a mid-week guard, and too little history reads insufficient. loadHistory derives a compact newest-first weekly mileage series for the coach context. Monday-start POSIX calendar; drops unparseable dates.",
     "filePath": "Sources/AppCore/ActivityHistory.swift",
     "name": "ActivityHistory",
@@ -15,15 +32,6 @@
     "description": "The Today dashboard's entry point into Activity History: a full-width card button that opens the recent-workouts history overlay.",
     "filePath": "Sources/AppCore/ActivityHistoryButton.swift",
     "name": "ActivityHistoryButton",
-    "untestabilityReason": {
-      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
-      "kind": "no-isolation-harness"
-    }
-  },
-  {
-    "description": "The day-one empty state for Activity History: a friendly Buddy prompt shown when no workouts have been logged yet.",
-    "filePath": "Sources/AppCore/ActivityHistoryEmptyState.swift",
-    "name": "ActivityHistoryEmptyState",
     "untestabilityReason": {
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
       "kind": "no-isolation-harness"
@@ -298,6 +306,86 @@
     "filePath": "Sources/AppCore/Health/HealthDataSource.swift",
     "name": "HealthSource",
     "testFile": "Tests/AppCoreTests/HealthDataSourceTests.swift"
+  },
+  {
+    "conformsToView": true,
+    "description": "Detail shown when a day cell is tapped: date, that day's workouts, and step total; rest days are stated warmly rather than as an error.",
+    "filePath": "Sources/AppCore/HeatmapDayDetail.swift",
+    "name": "HeatmapDayDetail",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "The heatmap's day-one Buddy prompt, which stands in for the whole screen's empty state.",
+    "filePath": "Sources/AppCore/HeatmapEmptyState.swift",
+    "name": "HeatmapEmptyState",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "The day-cell grid. Short spans render as a calendar (weeks as rows); the 3-month span flips to the contribution shape (weeks as columns) to use full width and scroll horizontally.",
+    "filePath": "Sources/AppCore/HeatmapGrid.swift",
+    "name": "HeatmapGrid",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "The less-to-more color key, mirroring the intensity ramp so the card explains itself.",
+    "filePath": "Sources/AppCore/HeatmapLegend.swift",
+    "name": "HeatmapLegend",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "Segmented filter choosing Distance, Active minutes, or Steps vs. goal.",
+    "filePath": "Sources/AppCore/HeatmapMetricPicker.swift",
+    "name": "HeatmapMetricPicker",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "A quiet explanatory line used when a metric can't be drawn yet, e.g. steps before any per-day series has synced.",
+    "filePath": "Sources/AppCore/HeatmapNote.swift",
+    "name": "HeatmapNote",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Maps an intensity level 0-4 to an on-brand fill: a single theme hue at rising opacity, so the ramp is strictly monotonic on both light and dark grounds and retints with the selected theme.",
+    "filePath": "Sources/AppCore/HeatmapRamp.swift",
+    "name": "HeatmapRamp",
+    "untestabilityReason": {
+      "justification": "Resolves theme Colors that are only meaningful on screen; verified visually through the per-theme application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "Capsule selector for the visible span: Week, Month, or 3-Month.",
+    "filePath": "Sources/AppCore/HeatmapRangePicker.swift",
+    "name": "HeatmapRangePicker",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
   },
   {
     "description": "The app's two top-level destinations behind the connected tab bar: today and coach. Its init(raw:) coerces a seeded rbStartTab string case-insensitively, falling back to today, so scenarios can land directly on the Ask Coach chat.",

@@ -156,6 +156,150 @@
       "runner": "tests"
     },
     {
+      "description": "Active-minutes bins by duration, ranking a slow long walk above a fast short run.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testActiveMinutesMetricIsIndependentOfDistance",
+      "line": 44,
+      "registeredAt": "2026-07-21T01:58:04.897305+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Any activity is at least level 1 so a short recovery walk never reads as a rest day.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testAnyActivityIsAtLeastLevelOne",
+      "line": 124,
+      "registeredAt": "2026-07-21T01:58:40.883946+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Day one yields a rectangle with nothing active, driving the friendly empty state.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testDayOneIsEmpty",
+      "line": 135,
+      "registeredAt": "2026-07-21T01:58:48.782606+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A day with no workouts is reported as a rest day, not an error.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testDaySummaryForRestDay",
+      "line": 188,
+      "registeredAt": "2026-07-21T01:59:19.588501+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An unparseable date yields nil so the view can clear the selection.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testDaySummaryRejectsUnparseableDate",
+      "line": 199,
+      "registeredAt": "2026-07-21T01:59:25.754136+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A tapped day reports only that day's workouts plus its mileage and minute totals.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testDaySummaryReportsThatDaysWorkouts",
+      "line": 172,
+      "registeredAt": "2026-07-21T01:59:13.502424+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Distance bins by miles relative to the busiest visible day; rest days stay level 0.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testDistanceMetricBinsRelativeToWindowMax",
+      "line": 30,
+      "registeredAt": "2026-07-21T01:57:58.490398+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Every range renders full 7-day Monday-start weeks so the grid is always rectangular.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testGridIsRectangularMondayStartWeeks",
+      "line": 19,
+      "registeredAt": "2026-07-21T01:57:52.112433+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Month labels appear only where the month changes, naming each month once in order.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testMonthLabelsMarkOnlyMonthBoundaries",
+      "line": 153,
+      "registeredAt": "2026-07-21T01:59:01.531985+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A single-week span still names its month.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testMonthLabelsOnSingleWeek",
+      "line": 164,
+      "registeredAt": "2026-07-21T01:59:07.687703+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Range changes the visible span only, keeping day-granular cells.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testRangeChangesVisibleSpanOnly",
+      "line": 85,
+      "registeredAt": "2026-07-21T01:58:22.843207+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Multiple workouts on one day sum into a single cell.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testSameDayWorkoutsAccumulate",
+      "line": 113,
+      "registeredAt": "2026-07-21T01:58:34.523711+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Steps bin against the daily goal, not the window max, and clamp at the top level.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testStepsMetricBinsAgainstGoal",
+      "line": 59,
+      "registeredAt": "2026-07-21T01:58:10.880296+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "With no seeded step series the steps metric is empty; workouts never leak into it.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testStepsMetricWithoutSeriesIsEmpty",
+      "line": 75,
+      "registeredAt": "2026-07-21T01:58:16.920023+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Unparseable workout dates are dropped, matching ActivityHistory.groupByWeek.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testUnparseableDatesAreDropped",
+      "line": 101,
+      "registeredAt": "2026-07-21T01:58:28.567536+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An unparseable anchor date yields no grid rather than silently anchoring on now.",
+      "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHeatmapTests › testUnparseableTodayYieldsNoGrid",
+      "line": 144,
+      "registeredAt": "2026-07-21T01:58:55.648086+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "Workouts in different weeks produce separate groups, newest week first.",
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",

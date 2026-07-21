@@ -34,16 +34,15 @@ public struct ActivityHistoryView: View {
             VStack(spacing: 0) {
                 ActivityHistoryHeader(onClose: onClose)
                 Divider().opacity(0.4)
-                if weeks.isEmpty {
-                    ActivityHistoryEmptyState()
-                    Spacer()
-                } else {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: Layout.xl) {
-                            ForEach(weeks) { ActivityWeekSection(group: $0) }
-                        }
-                        .screenScrollContent()
+                // The heatmap leads the screen and carries its own day-one prompt,
+                // so an empty history shows one friendly message (the heatmap's)
+                // rather than stacking two empty states.
+                ScrollView {
+                    VStack(alignment: .leading, spacing: Layout.xl) {
+                        ActivityHeatmapSection(model: model)
+                        ForEach(weeks) { ActivityWeekSection(group: $0) }
                     }
+                    .screenScrollContent()
                 }
             }
         }

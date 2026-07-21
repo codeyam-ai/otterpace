@@ -1,0 +1,27 @@
+{
+  "completedAt": "2026-07-21T13:26:24Z",
+  "createdAt": "2026-07-16T01:43:30Z",
+  "deliverables": [
+    "README.md",
+    "Sources/AppCore/ActivityHeatmap.swift",
+    "Sources/AppCore/ActivityHeatmapSection.swift",
+    "Sources/AppCore/ActivityHistory.swift",
+    "Sources/AppCore/ActivityHistoryEmptyState.swift",
+    "Sources/AppCore/ActivityHistoryView.swift",
+    "Sources/AppCore/HeatmapDayDetail.swift",
+    "Sources/AppCore/HeatmapEmptyState.swift",
+    "Sources/AppCore/HeatmapGrid.swift",
+    "Sources/AppCore/HeatmapLegend.swift",
+    "Sources/AppCore/HeatmapMetricPicker.swift",
+    "Sources/AppCore/HeatmapNote.swift",
+    "Sources/AppCore/HeatmapRamp.swift",
+    "Sources/AppCore/HeatmapRangePicker.swift",
+    "Sources/AppCore/Model.swift",
+    "Tests/AppCoreTests/ActivityHeatmapTests.swift"
+  ],
+  "journalTimestamp": "2026-07-21T13:26:24Z",
+  "mode": "ui",
+  "planFile": "completed/progress-heatmap-calendar.md",
+  "slug": "progress-heatmap-calendar",
+  "title": "Progress Heatmap — On-Brand Activity Calendar"
+}
