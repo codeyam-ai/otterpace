@@ -1671,6 +1671,42 @@
       "runner": "tests"
     },
     {
+      "description": "A newly added onboarding or welcome scenario must be listed in the expected-page table so it cannot be introduced with an unchecked page index.",
+      "file": "Tests/AppCoreTests/OnboardingScenarioIndexTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.OnboardingScenarioIndexTests › testEveryOnboardingScenarioIsCovered",
+      "line": 94,
+      "registeredAt": "2026-07-21T21:24:01.120164+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Every seeded page must be addressable so a stale seed is never silently clamped by startPage onto a neighbouring screen.",
+      "file": "Tests/AppCoreTests/OnboardingScenarioIndexTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.OnboardingScenarioIndexTests › testSeededPagesAreInRange",
+      "line": 82,
+      "registeredAt": "2026-07-21T21:23:56.158592+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Every onboarding and welcome scenario's seeded rbOnboardingPage must match the step it is named for, so a capture cannot silently render a different screen than its name claims.",
+      "file": "Tests/AppCoreTests/OnboardingScenarioIndexTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.OnboardingScenarioIndexTests › testSeededPagesMatchNamedSteps",
+      "line": 72,
+      "registeredAt": "2026-07-21T21:23:51.527314+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Pins the intro and personalization step counts so adding or removing an onboarding step fails loudly and forces the scenario page indices to be updated in the same change.",
+      "file": "Tests/AppCoreTests/OnboardingScenarioIndexTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.OnboardingScenarioIndexTests › testStepCountsAreUnchanged",
+      "line": 64,
+      "registeredAt": "2026-07-21T21:23:47.512469+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "First launch (nothing seen, not seeded) shows the onboarding tour.",
       "file": "Tests/AppCoreTests/OnboardingStateTests.swift",
       "format": "junit-xml",
