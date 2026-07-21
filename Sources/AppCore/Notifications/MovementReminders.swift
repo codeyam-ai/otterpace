@@ -108,9 +108,9 @@ public enum InactivitySchedule {
 /// never-shame voice.
 public enum ReminderCopy {
     public static let dailyTitle = "Time to move 🐾"
-    public static let dailyBody = "A short walk keeps things ticking over. Buddy's ready whenever you are — no rush."
+    public static let dailyBody = "A short walk keeps things ticking over. Buddy's ready whenever you are, no rush."
     public static let goalTitle = "Evening check-in"
-    public static let goalBody = "If you haven't reached your step goal yet, a relaxed walk gets you there. Already done? Nice — consider this a wave from Buddy."
+    public static let goalBody = "If you haven't reached your step goal yet, a relaxed walk gets you there. Already done? Nice, consider this a wave from Buddy."
     public static let inactivityTitle = "Stretch your legs?"
     public static let inactivityBody = "It's been a little while since you moved. A couple of easy minutes is plenty."
 }

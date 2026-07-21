@@ -1,6 +1,6 @@
 {
-  "feature": "progress-heatmap-calendar",
-  "maxStep": 26,
-  "version": 1296,
-  "updatedAt": "2026-07-21T14:07:12.292422+00:00"
+  "feature": "elapsed-aware-weekly-view",
+  "maxStep": 24,
+  "version": 499,
+  "updatedAt": "2026-07-21T20:15:49.086147+00:00"
 }

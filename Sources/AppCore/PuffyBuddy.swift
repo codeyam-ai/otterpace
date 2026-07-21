@@ -135,7 +135,7 @@ public struct PuffyBuddyGallery: View {
         ScrollView {
             VStack(spacing: 22) {
                 VStack(spacing: 6) {
-                    Text("Buddy — Puffy")
+                    Text("Buddy · Puffy")
                         .font(.system(size: 24, weight: .heavy, design: .rounded))
                         .foregroundColor(Palette.ink)
                     Text("The chosen direction, across every mood")

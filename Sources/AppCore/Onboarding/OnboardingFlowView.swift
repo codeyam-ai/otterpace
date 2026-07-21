@@ -400,7 +400,7 @@ struct OnboardingFlowView: View {
                     Analytics.shared.capture("onboarding_step_skipped", ["step": Step.aiKey.name])
                     finish()
                 }) {
-                    Text("Skip for now — Buddy still coaches you")
+                    Text("Skip for now, Buddy still coaches you")
                         .font(Typography.caption)
                         .foregroundColor(Palette.subtle)
                 }

@@ -116,8 +116,15 @@ public enum WeeklyReviewEngine {
     }
 
     /// A sparse week: at most one run, mostly rest. Gentle "ease back in" framing.
+    ///
+    /// Judged over the trailing 7 days rather than the partial calendar week. A
+    /// runner who ran Saturday, Sunday, and Monday is not having a quiet week when
+    /// they open the app on Tuesday, even though the Monday-start week holds only
+    /// one of those runs. Falls back to the calendar count for payloads that carry
+    /// no rolling window (older data decodes `rolling7DaysRun` as 0).
     private static func isSparse(_ l: WeeklyLoad) -> Bool {
-        l.daysRunThisWeek <= 1
+        if l.rolling7DaysRun > 0 { return l.rolling7DaysRun <= 1 }
+        return l.daysRunThisWeek <= 1
     }
 
     private static func miles(_ d: Double) -> String {
@@ -159,33 +166,33 @@ public enum WeeklyReviewEngine {
         // Walking-focused users get walk-first framing; with no profile the copy is
         // byte-identical to before, so the empty-state capture is a regression guard.
         let next = walkingFocused(c.profile)
-            ? "Aim for three short, easy walks this week — even 15–20 minutes counts as your training. Buddy will start building your recap the moment activity shows up."
-            : "Aim for three short, easy movement sessions this week — a 15–20 minute walk counts. Buddy will start building your recap the moment activity shows up."
+            ? "Aim for three short, easy walks this week. Even 15–20 minutes counts as your training. Buddy will start building your recap the moment activity shows up."
+            : "Aim for three short, easy movement sessions this week. A 15–20 minute walk counts. Buddy will start building your recap the moment activity shows up."
         return WeeklyReview(
             hasActivity: false,
             buddyMood: .ready,
             headline: "Your first week starts here",
-            wentWell: "There's no run history to recap yet — and that's a perfectly good place to begin. Every consistent runner started with a single easy walk.",
+            wentWell: "There's no run history to recap yet, and that's a perfectly good place to begin. Every consistent runner started with a single easy walk.",
             whatChanged: "",
             trainingRisk: "",
             nextWeek: next,
-            focusArea: "Take one relaxed walk today. That's the whole goal — momentum first, mileage later."
+            focusArea: "Take one relaxed walk today. That's the whole goal: momentum first, mileage later."
         )
     }
 
     private static func solidReview(_ l: WeeklyLoad, _ c: TodayState) -> WeeklyReview {
         let well = walkingFocused(c.profile)
-            ? "A consistent week — \(l.daysRunThisWeek) sessions covering \(miles(l.weeklyMileage)) miles, with a \(miles(l.longestRunMiles))-mile longest outing. Walking is real training, and this rhythm is exactly what builds durable fitness."
-            : "A consistent week — \(l.daysRunThisWeek) runs for \(miles(l.weeklyMileage)) miles, topped by a \(miles(l.longestRunMiles))-mile long run. That kind of rhythm is exactly what builds durable fitness."
+            ? "A consistent week: \(l.daysRunThisWeek) sessions covering \(miles(l.weeklyMileage)) miles, with a \(miles(l.longestRunMiles))-mile longest outing. Walking is real training, and this rhythm is exactly what builds durable fitness."
+            : "A consistent week: \(l.daysRunThisWeek) runs for \(miles(l.weeklyMileage)) miles, topped by a \(miles(l.longestRunMiles))-mile long run. That kind of rhythm is exactly what builds durable fitness."
         var changed = l.loadTrend == "building"
-            ? "Your load is trending up gently — more total miles than a typical week, but at a sustainable pace rather than a jump."
+            ? "Your load is trending up gently, with more total miles than a typical week, but at a sustainable pace rather than a jump."
             : "Your load held steady, which is great: steady weeks are where the earlier work actually settles into fitness."
         if let cross = crossTrainingClause(c.profile) {
             changed += " Paired with \(cross), you're building well-rounded fitness."
         }
         let risk = "Low. With \(l.restDaysThisWeek) rest \(l.restDaysThisWeek == 1 ? "day" : "days") and runs kept honest, you're building the right way. Keep most runs conversational and you'll keep it sustainable."
         let next = "Repeat the pattern with one small nudge: hold the run count, add no more than ~10% to total miles, and keep one true rest day. Sustainable beats heroic."
-        let focus = "Protect the easy days. The temptation after a strong week is to push every run — resist it, and the long run will keep climbing safely."
+        let focus = "Protect the easy days. The temptation after a strong week is to push every run. Resist it, and the long run will keep climbing safely."
         return WeeklyReview(
             hasActivity: true,
             buddyMood: .cheering,
@@ -199,15 +206,15 @@ public enum WeeklyReviewEngine {
     }
 
     private static func spikingReview(_ l: WeeklyLoad, _ c: TodayState) -> WeeklyReview {
-        let well = "You showed up — \(l.daysRunThisWeek) runs and \(miles(l.weeklyMileage)) miles is real commitment, with a \(miles(l.longestRunMiles))-mile long run in the bank. The engine is clearly willing."
-        let changed = "Your weekly load jumped sharply this week. Big week-over-week climbs are the single most common place things start to backfire — it's the rate of change, not the mileage itself, that matters."
-        let risk = "Elevated. \(l.restDaysThisWeek == 0 ? "No rest days this week and a" : "A") fast-rising load is a classic overtraining setup. This isn't a problem yet — it's a flag to ease off before it becomes one. Sharp or one-sided pain means stop and check in with a clinician."
+        let well = "You showed up. \(l.daysRunThisWeek) runs and \(miles(l.weeklyMileage)) miles is real commitment, with a \(miles(l.longestRunMiles))-mile long run in the bank. The engine is clearly willing."
+        let changed = "Your weekly load jumped sharply this week. Big week-over-week climbs are the single most common place things start to backfire: it's the rate of change, not the mileage itself, that matters."
+        let risk = "Elevated. \(l.restDaysThisWeek == 0 ? "No rest days this week and a" : "A") fast-rising load is a classic overtraining setup. This isn't a problem yet, but it's a flag to ease off before it becomes one. Sharp or one-sided pain means stop and check in with a clinician."
         let next = "Pull total mileage back ~10–15% and make it an easy week. Keep the run count if you like, but cap the long run and keep every run conversational. Protect at least one full rest day."
-        let focus = "Take an easy week. One deliberate down week now protects the next month of training — that's the highest-leverage move you can make."
+        let focus = "Take an easy week. One deliberate down week now protects the next month of training, and that's the highest-leverage move you can make."
         return WeeklyReview(
             hasActivity: true,
             buddyMood: .concerned,
-            headline: "Big week — let's ease off",
+            headline: "Big week, let's ease off",
             wentWell: well,
             whatChanged: changed,
             trainingRisk: risk,
@@ -222,7 +229,7 @@ public enum WeeklyReviewEngine {
     /// one — the Weekly Review face of "no coaching over bad coaching."
     private static func gatheringReview(_ l: WeeklyLoad, _ c: TodayState) -> WeeklyReview {
         let sessionWord = walkingFocused(c.profile) ? "sessions" : "runs"
-        let well = "You're logging real activity — \(l.daysRunThisWeek) \(sessionWord) for \(miles(l.weeklyMileage)) miles, with a \(miles(l.longestRunMiles))-mile longest. That's exactly the input I need to start coaching you well."
+        let well = "You're logging real activity: \(l.daysRunThisWeek) \(sessionWord) for \(miles(l.weeklyMileage)) miles, with a \(miles(l.longestRunMiles))-mile longest. That's exactly the input I need to start coaching you well."
         let changed = "I'm still gathering your baseline. A couple more weeks like this and I'll be able to tell a healthy build from too much, too fast with real confidence."
         let risk = "I won't read too much into this little history. Nothing here looks alarming. Keep runs easy and let the picture fill in."
         let next = "Keep the rhythm going with easy, consistent movement. Grow total miles by no more than about 10% and keep one true rest day, and your trends will come into focus."
@@ -244,15 +251,15 @@ public enum WeeklyReviewEngine {
         let runWord = walking
             ? (l.daysRunThisWeek == 1 ? "one movement session" : "no sessions")
             : (l.daysRunThisWeek == 1 ? "one run" : "no runs")
-        let well = "Life happened this week — \(runWord) and \(l.restDaysThisWeek) rest \(l.restDaysThisWeek == 1 ? "day" : "days"). No guilt here: rest is part of training, and you're still showing up to check in. That counts."
+        let well = "Life happened this week: \(runWord) and \(l.restDaysThisWeek) rest \(l.restDaysThisWeek == 1 ? "day" : "days"). No guilt here, rest is part of training, and you're still showing up to check in. That counts."
         let changed = "Training volume dipped versus a fuller week. The upside is you're well-rested and comfortably within a sustainable range right now."
-        let risk = "Minimal. The only real risk from here is trying to make up for it all at once. Fitness is patient — a gentle restart beats a heroic comeback every time."
-        let next = "Ease back in with two or three short, easy sessions — a 20–30 minute walk or relaxed jog. Consistency over intensity is the whole game this week."
+        let risk = "Minimal. The only real risk from here is trying to make up for it all at once. Fitness is patient, and a gentle restart beats a heroic comeback every time."
+        let next = "Ease back in with two or three short, easy sessions: a 20–30 minute walk or relaxed jog. Consistency over intensity is the whole game this week."
         let focus = "Get one easy session in early in the week. Breaking the seal is the hardest part; after that, momentum does the work."
         return WeeklyReview(
             hasActivity: true,
             buddyMood: .ready,
-            headline: "A quiet week — that's okay",
+            headline: "A quiet week, that's okay",
             wentWell: well,
             whatChanged: changed,
             trainingRisk: risk,

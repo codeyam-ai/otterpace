@@ -31,15 +31,41 @@ public struct WeeklyLoad: Codable, Equatable {
     public var weeklyMileage: Double
     public var daysRunThisWeek: Int
     public var longestRunMiles: Double
-    public var restDaysThisWeek: Int
+    public var restDaysThisWeek: Int  // measured over elapsed days, not a full 7
     public var loadTrend: String      // building | steady | spiking | recovering
+    public var daysElapsedThisWeek: Int  // 1 (Monday) ... 7 (Sunday)
+    public var rolling7Miles: Double     // trailing 7 days inclusive of the reference date
+    public var rolling7DaysRun: Int      // distinct run days in that same window
 
-    public init(weeklyMileage: Double, daysRunThisWeek: Int, longestRunMiles: Double, restDaysThisWeek: Int, loadTrend: String) {
+    // The trailing-window fields default so every existing construction site
+    // (tests, coach engines, scenario seeding) keeps compiling, and so older
+    // persisted `Codable` payloads still decode.
+    public init(weeklyMileage: Double, daysRunThisWeek: Int, longestRunMiles: Double, restDaysThisWeek: Int, loadTrend: String,
+                daysElapsedThisWeek: Int = 7, rolling7Miles: Double = 0, rolling7DaysRun: Int = 0) {
         self.weeklyMileage = weeklyMileage
         self.daysRunThisWeek = daysRunThisWeek
         self.longestRunMiles = longestRunMiles
         self.restDaysThisWeek = restDaysThisWeek
         self.loadTrend = loadTrend
+        self.daysElapsedThisWeek = daysElapsedThisWeek
+        self.rolling7Miles = rolling7Miles
+        self.rolling7DaysRun = rolling7DaysRun
+    }
+
+    // Tolerant decode, same rationale as `TodayState` (which embeds this type): a
+    // payload written before the elapsed/rolling fields existed must still decode
+    // instead of throwing on the missing keys. Swift's synthesized decoder ignores
+    // initializer defaults, so the fallbacks have to be spelled out here.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        weeklyMileage = try c.decodeIfPresent(Double.self, forKey: .weeklyMileage) ?? 0
+        daysRunThisWeek = try c.decodeIfPresent(Int.self, forKey: .daysRunThisWeek) ?? 0
+        longestRunMiles = try c.decodeIfPresent(Double.self, forKey: .longestRunMiles) ?? 0
+        restDaysThisWeek = try c.decodeIfPresent(Int.self, forKey: .restDaysThisWeek) ?? 0
+        loadTrend = try c.decodeIfPresent(String.self, forKey: .loadTrend) ?? "steady"
+        daysElapsedThisWeek = try c.decodeIfPresent(Int.self, forKey: .daysElapsedThisWeek) ?? 7
+        rolling7Miles = try c.decodeIfPresent(Double.self, forKey: .rolling7Miles) ?? 0
+        rolling7DaysRun = try c.decodeIfPresent(Int.self, forKey: .rolling7DaysRun) ?? 0
     }
 }
 
@@ -252,6 +278,21 @@ public final class OtterpaceModel: ObservableObject {
             workouts = decoded
         }
 
+        // A seeded load carries only the flat rb* primitives, so the elapsed and
+        // trailing-window fields would sit at their defaults (7 / 0 / 0) and a
+        // scenario could never show the in-progress or rolling-window states the
+        // real HealthKit path produces. When the scenario also seeds workouts,
+        // derive those fields from the same reference date the rest of the
+        // snapshot uses, so seeded previews match production.
+        if load != nil, !workouts.isEmpty {
+            let asOf = ActivityHistory.referenceDate(fromISO: d.string(forKey: "rbDate") ?? "")
+            let rolling = ActivityHistory.rollingSevenDay(from: workouts, asOf: asOf)
+            func round1(_ n: Double) -> Double { (n * 10).rounded() / 10 }
+            load?.daysElapsedThisWeek = ActivityHistory.daysElapsedInWeek(asOf: asOf, cal: ActivityHistory.calendar)
+            load?.rolling7Miles = round1(rolling.miles)
+            load?.rolling7DaysRun = rolling.daysRun
+        }
+
         // Coach-facing weekly mileage series. A scenario can seed it explicitly
         // via rbLoadHistoryJSON (mirroring rbWorkoutsJSON); otherwise, when the
         // scenario seeded a workout list, derive the series from it so a rich
@@ -421,7 +462,9 @@ public final class OtterpaceModel: ObservableObject {
         // Roll the imported activities up into the weekly load, the same way
         // `HealthKitDataSource.loadToday()` does, so a Strava-only user gets a real
         // Weekly Review recap instead of the empty "first week starts here" prompt.
-        today.weeklyLoad = ActivityHistory.weeklyLoad(from: workouts)
+        today.weeklyLoad = ActivityHistory.weeklyLoad(
+            from: workouts,
+            asOf: ActivityHistory.referenceDate(fromISO: today.date))
         // Carry the multi-week series too, so the coach can reason from the shape
         // of the imported trajectory rather than a single trend flag.
         today.loadHistory = ActivityHistory.loadHistory(from: workouts)

@@ -41,8 +41,11 @@
       { "name": "weeklyMileage", "type": "number", "required": true },
       { "name": "daysRunThisWeek", "type": "number", "required": true },
       { "name": "longestRunMiles", "type": "number", "required": true },
-      { "name": "restDaysThisWeek", "type": "number", "required": true },
-      { "name": "loadTrend", "type": "string", "required": true, "description": "building | steady | spiking | recovering | insufficient. Classified against a trailing multi-week baseline (acute-vs-chronic), not a 2-week ratio: 'spiking' means a genuine deviation above the recent baseline; 'insufficient' means too little history (< ~2-3 prior weeks) to judge, so coaching abstains instead of guessing." }
+      { "name": "restDaysThisWeek", "type": "number", "required": true, "description": "Rest days so far in the current calendar week, measured only over days that have actually elapsed (not 7 - activeDays), so a partial week no longer reports future days as rest the user chose to take." },
+      { "name": "loadTrend", "type": "string", "required": true, "description": "building | steady | spiking | recovering | insufficient. Classified against a trailing multi-week baseline (acute-vs-chronic), not a 2-week ratio: 'spiking' means a genuine deviation above the recent baseline; 'insufficient' means too little history (< ~2-3 prior weeks) to judge, so coaching abstains instead of guessing." },
+      { "name": "daysElapsedThisWeek", "type": "number", "required": true, "description": "How far into the Monday-start calendar week the reference date sits, 1 through 7. Derived from the existing asOf date, not a second clock, so rollups stay pure and deterministic for scenario capture. Defaults to 7." },
+      { "name": "rolling7Miles", "type": "number", "required": true, "description": "Miles run over the trailing 7 days inclusive of asOf. Shown beside the calendar week so a strong weekend stays visible after the Monday reset. Defaults to 0." },
+      { "name": "rolling7DaysRun", "type": "number", "required": true, "description": "Distinct days run over the trailing 7 days inclusive of asOf. Sparseness is judged over this rolling window rather than the partial calendar week, which is what stops the false 'quiet week'. Defaults to 0." }
     ]
   },
   {

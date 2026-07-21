@@ -1,0 +1,16 @@
+{
+  "name": "RollingWindowNote - Single Run Day",
+  "id": "ffc61a6e-5d12-4596-88a5-5f8d3a87d4c9",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "RollingWindowNote",
+      "CODEYAM_ISOLATE_SCENARIO": "Single Run Day"
+    }
+  },
+  "componentName": "RollingWindowNote",
+  "scenarioType": "component"
+}

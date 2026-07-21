@@ -51,6 +51,24 @@ func stepRingFill(_ progress: Double) -> Double {
     min(1.0, max(0.001, progress))
 }
 
+/// The Activity History week-header rollup: "14.7 mi · 3 runs · 3 rest", with a
+/// "so far" qualifier while the week is still in progress. That suffix is the
+/// user-visible signal that the smaller numbers describe a week still being
+/// lived rather than a finished week that went badly, so it lives here as pure
+/// logic instead of only being observable through a screenshot.
+func weekRollup(miles m: Double, runCount: Int, restDays: Int, daysElapsed: Int) -> String {
+    let base = "\(miles(m)) mi · \(runCount) \(runCount == 1 ? "run" : "runs") · \(restDays) rest"
+    return daysElapsed < 7 ? base + " so far" : base
+}
+
+/// Spoken VoiceOver form of `weekRollup`, with words instead of separators and
+/// the elapsed-day count stated outright so a screen-reader user gets the same
+/// "this week isn't over" context the visual "so far" conveys.
+func weekRollupSpoken(miles m: Double, runCount: Int, restDays: Int, daysElapsed: Int) -> String {
+    let base = "\(miles(m)) miles, \(runCount) \(runCount == 1 ? "run" : "runs"), \(restDays) rest \(restDays == 1 ? "day" : "days")"
+    return daysElapsed < 7 ? base + " so far, \(daysElapsed) of 7 days elapsed" : base
+}
+
 /// Render an ISO `yyyy-MM-dd` date as "EEE, MMM d" (e.g. "Mon, Jun 22").
 /// Falls back to the raw string when it isn't a valid ISO date.
 func prettyDate(_ iso: String) -> String {

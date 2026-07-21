@@ -10,7 +10,7 @@
     "preferences": {
       "rbStartScreen": "onboarding",
       "rbCoachConnected": true,
-      "rbOnboardingPage": 7
+      "rbOnboardingPage": 8
     }
   },
   "scenarioType": "application",

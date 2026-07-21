@@ -1,0 +1,33 @@
+{
+  "completedAt": "2026-07-21T19:29:08Z",
+  "createdAt": "2026-07-21T00:00:00Z",
+  "deliverables": [
+    "Sources/AppCore/ActivityHeatmapSection.swift",
+    "Sources/AppCore/ActivityHistory.swift",
+    "Sources/AppCore/ActivityHistoryView.swift",
+    "Sources/AppCore/ActivityWeekSection.swift",
+    "Sources/AppCore/AppIconArtwork.swift",
+    "Sources/AppCore/Auth/SignInView.swift",
+    "Sources/AppCore/CoachEngine.swift",
+    "Sources/AppCore/CodeyamIsolated/CodeyamIsolationHost.swift",
+    "Sources/AppCore/CodeyamIsolated/RollingWindowNoteIsolated.swift",
+    "Sources/AppCore/ConnectHero.swift",
+    "Sources/AppCore/Formatters.swift",
+    "Sources/AppCore/Model.swift",
+    "Sources/AppCore/Notifications/MovementReminders.swift",
+    "Sources/AppCore/Onboarding/OnboardingFlowView.swift",
+    "Sources/AppCore/PuffyBuddy.swift",
+    "Sources/AppCore/RollingWindowNote.swift",
+    "Sources/AppCore/SettingsView.swift",
+    "Sources/AppCore/Theming/ThemeSystem.swift",
+    "Sources/AppCore/WeeklyLoadCard.swift",
+    "Sources/AppCore/WeeklyReviewEngine.swift",
+    "Tests/AppCoreTests/ActivityHistoryTests.swift",
+    "Tests/AppCoreTests/FormattersTests.swift"
+  ],
+  "journalTimestamp": "2026-07-21T19:29:08Z",
+  "mode": "ui",
+  "planFile": "completed/elapsed-aware-weekly-view.md",
+  "slug": "elapsed-aware-weekly-view",
+  "title": "Elapsed-Aware Weekly View"
+}

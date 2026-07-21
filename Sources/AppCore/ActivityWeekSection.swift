@@ -31,10 +31,12 @@ struct ActivityWeekSection: View {
     }
 
     private var rollup: String {
-        "\(miles(group.totalMiles)) mi · \(group.runCount) \(group.runCount == 1 ? "run" : "runs") · \(group.restDays) rest"
+        weekRollup(miles: group.totalMiles, runCount: group.runCount,
+                   restDays: group.restDays, daysElapsed: group.daysElapsed)
     }
 
     private var spokenRollup: String {
-        "\(miles(group.totalMiles)) miles, \(group.runCount) \(group.runCount == 1 ? "run" : "runs"), \(group.restDays) rest \(group.restDays == 1 ? "day" : "days")"
+        weekRollupSpoken(miles: group.totalMiles, runCount: group.runCount,
+                         restDays: group.restDays, daysElapsed: group.daysElapsed)
     }
 }

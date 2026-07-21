@@ -8,7 +8,7 @@ struct WeeklyLoadCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("This week")
+                Text(load.daysElapsedThisWeek < 7 ? "This week so far" : "This week")
                     .cardSectionLabel()
                 Spacer()
                 TrendBadge(trend: load.loadTrend)
@@ -21,6 +21,10 @@ struct WeeklyLoadCard: View {
                 loadMetric(String(format: "%.1f", load.longestRunMiles), "longest")
                 divider
                 loadMetric("\(load.restDaysThisWeek)", "rest days")
+            }
+
+            if load.rolling7DaysRun > 0 {
+                RollingWindowNote(miles: load.rolling7Miles, daysRun: load.rolling7DaysRun)
             }
         }
         .padding(Layout.cardPadding)

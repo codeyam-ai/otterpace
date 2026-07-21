@@ -59,7 +59,7 @@ public struct AppIconPreviewGallery: View {
     public var body: some View {
         ScrollView {
             VStack(spacing: 26) {
-                Text("Otterpace — App Icon")
+                Text("Otterpace · App Icon")
                     .font(.system(size: 24, weight: .heavy, design: .rounded))
                     .foregroundColor(Palette.ink)
                     .padding(.top, 16)

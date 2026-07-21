@@ -258,8 +258,8 @@ public struct SettingsView: View {
                 Text("Sync my settings").font(Typography.body).foregroundColor(Palette.ink)
             }
             .tint(Palette.brand)
-            Text(settingsSyncOn ? "On — your step goal & preferences sync to your account."
-                                : "Off — settings stay on this device.")
+            Text(settingsSyncOn ? "On. Your step goal & preferences sync to your account."
+                                : "Off. Settings stay on this device.")
                 .font(Typography.caption).foregroundColor(Palette.subtle)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -268,8 +268,8 @@ public struct SettingsView: View {
                 Text("Sync my health & activity data").font(Typography.body).foregroundColor(Palette.ink)
             }
             .tint(Palette.brand)
-            Text(healthSyncOn ? "On — your activity snapshot syncs to your account. You can turn this off and delete it anytime."
-                              : "Off (private) — your health data stays on this device.")
+            Text(healthSyncOn ? "On. Your activity snapshot syncs to your account. You can turn this off and delete it anytime."
+                              : "Off (private). Your health data stays on this device.")
                 .font(Typography.caption).foregroundColor(healthSyncOn ? Palette.subtle : Palette.go)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -334,7 +334,7 @@ public struct SettingsView: View {
                     BuddyView(mood: .ready, size: 34)
                     Text("Sync health data?").font(Typography.title3).foregroundColor(Palette.ink)
                 }
-                Text("If you turn this on, a snapshot of your activity — steps, distance, active minutes and energy — is uploaded to your Otterpace account, tied to your Apple sign-in, so it follows you across devices.")
+                Text("If you turn this on, a snapshot of your activity (steps, distance, active minutes and energy) is uploaded to your Otterpace account, tied to your Apple sign-in, so it follows you across devices.")
                     .font(Typography.callout).foregroundColor(Palette.ink)
                     .fixedSize(horizontal: false, vertical: true)
                 Text("It's stored privately on Otterpace's backend, never sold or sent to analytics, and you can turn it off and delete it at any time.")
@@ -440,7 +440,7 @@ public struct SettingsView: View {
                 }
             } else {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Connect your own Anthropic API key for real AI coaching. Without one, Buddy still coaches you with built-in guidance. Your key is stored only on this device and sent over HTTPS to power replies — it's never saved on a server.")
+                    Text("Connect your own Anthropic API key for real AI coaching. Without one, Buddy still coaches you with built-in guidance. Your key is stored only on this device and sent over HTTPS to power replies. It's never saved on a server.")
                         .font(Typography.callout).foregroundColor(Palette.ink)
                         .fixedSize(horizontal: false, vertical: true)
                     SecureField("sk-ant-…", text: $coachKeyDraft)
@@ -520,7 +520,7 @@ public struct SettingsView: View {
     @ViewBuilder private var racesCard: some View {
         card("Races") {
             if model.today.races.isEmpty {
-                Text("Add a race and Buddy will tailor your coaching — building toward it, then easing off as it nears.")
+                Text("Add a race and Buddy will tailor your coaching, building toward it, then easing off as it nears.")
                     .font(Typography.callout).foregroundColor(Palette.ink)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
@@ -777,7 +777,7 @@ public struct SettingsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("What Buddy uses")
                     .font(Typography.captionStrong).foregroundColor(Palette.subtle)
-                Text("Otterpace reads your steps, distance, and active energy from Apple Health, and uses them on your device to coach you. Your health data stays on your device by default — it's only synced to your account if you turn on health sync, and it's never sent to analytics.")
+                Text("Otterpace reads your steps, distance, and active energy from Apple Health, and uses them on your device to coach you. Your health data stays on your device by default. It's only synced to your account if you turn on health sync, and it's never sent to analytics.")
                     .font(Typography.callout).foregroundColor(Palette.ink)
                     .fixedSize(horizontal: false, vertical: true)
             }

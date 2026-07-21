@@ -1,0 +1,16 @@
+{
+  "name": "RollingWindowNote - Default",
+  "id": "40a83201-1ecf-4adf-bdf6-2185339c7ba7",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "RollingWindowNote",
+      "CODEYAM_ISOLATE_SCENARIO": "Default"
+    }
+  },
+  "componentName": "RollingWindowNote",
+  "scenarioType": "component"
+}

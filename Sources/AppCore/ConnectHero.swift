@@ -28,7 +28,7 @@ struct ConnectHero: View {
                 Text("Hi, I'm Buddy! 🐾")
                     .font(Typography.title)
                     .foregroundColor(Palette.ink)
-                Text("Connect Apple Health and I'll turn your steps and runs into friendly, day-by-day coaching — toward 10,000 steps a day, without overdoing it.")
+                Text("Connect Apple Health and I'll turn your steps and runs into friendly, day-by-day coaching, toward 10,000 steps a day, without overdoing it.")
                     .font(Typography.callout)
                     .foregroundColor(Palette.subtle)
                     .multilineTextAlignment(.center)

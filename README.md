@@ -262,6 +262,10 @@ States captured as runnable scenarios with codeyam-editor:
 
 ![Activity History — Long Values](.codeyam/scenarios/screenshots/activity-history-long-values--iphone-16.png)
 
+### Activity History — Partial Week (Mid-Week)
+
+![Activity History — Partial Week (Mid-Week)](.codeyam/scenarios/screenshots/activity-history-partial-week-mid-week--iphone-16.png)
+
 ### Activity History — Rich Multi-Week
 
 ![Activity History — Rich Multi-Week](.codeyam/scenarios/screenshots/activity-history-rich-multi-week--iphone-16.png)
@@ -277,8 +281,4 @@ States captured as runnable scenarios with codeyam-editor:
 ### Ask Coach — Building On Track
 
 ![Ask Coach — Building On Track](.codeyam/scenarios/screenshots/ask-coach-building-on-track--iphone-16.png)
-
-### Ask Coach — Empty Chat
-
-![Ask Coach — Empty Chat](.codeyam/scenarios/screenshots/ask-coach-empty-chat--iphone-16.png)
 <!-- codeyam:scenario-gallery:end -->

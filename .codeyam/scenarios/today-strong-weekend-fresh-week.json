@@ -1,0 +1,48 @@
+{
+  "name": "Today — Strong Weekend, Fresh Week",
+  "id": "810a6420-a01a-4e34-a29a-95ce5d6f3d42",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbWeeklyMileage": 3.1,
+      "rbConnected": true,
+      "rbActiveMinutes": 26,
+      "rbShowSettings": false,
+      "rbWorkoutType": "run",
+      "rbCoachBody": "Three run days in the last week, including a solid Saturday. Today is a good day to keep it easy.",
+      "rbShowWeeklyReview": false,
+      "rbWorkoutDurationMinutes": 32,
+      "rbWorkoutsJSON": "[{\"type\": \"run\", \"distanceMiles\": 3.1, \"durationMinutes\": 32, \"pace\": \"10:19/mi\", \"date\": \"2026-06-22\", \"source\": \"healthkit\"}, {\"type\": \"run\", \"distanceMiles\": 4.2, \"durationMinutes\": 44, \"pace\": \"10:28/mi\", \"date\": \"2026-06-21\", \"source\": \"strava\"}, {\"type\": \"run\", \"distanceMiles\": 5.0, \"durationMinutes\": 52, \"pace\": \"10:24/mi\", \"date\": \"2026-06-20\", \"source\": \"strava\"}]",
+      "rbDaysRunThisWeek": 1,
+      "rbLongestRunMiles": 3.1,
+      "rbRestDaysThisWeek": 0,
+      "rbShowHistory": false,
+      "rbWorkoutPace": "10:19/mi",
+      "rbPreviewMode": "",
+      "rbGoalSteps": 10000,
+      "rbDistanceMiles": 3.1,
+      "rbStartTab": "today",
+      "rbWorkoutDistanceMiles": 3.1,
+      "rbLoadTrend": "building",
+      "rbMinutesSinceMovement": 40,
+      "rbContentSize": "",
+      "rbActiveEnergyKcal": 190,
+      "rbCoachType": "walk",
+      "rbAskSeedQuestion": "",
+      "rbWorkoutDate": "2026-06-22",
+      "rbWorkoutSource": "healthkit",
+      "otterpaceRacePromptDismissed": true,
+      "rbBuddyMood": "ready",
+      "rbCoachHeadline": "Nice weekend block",
+      "rbSteps": 4180,
+      "rbDate": "2026-06-23",
+      "rbTheme": "default"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/ContentView.swift"
+}

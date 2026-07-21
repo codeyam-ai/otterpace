@@ -8,7 +8,7 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbOnboardingPage": 3,
+      "rbOnboardingPage": 4,
       "rbStartScreen": "onboarding",
       "rbGoalSteps": 8000
     }

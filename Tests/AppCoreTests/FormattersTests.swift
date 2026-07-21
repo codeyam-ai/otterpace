@@ -113,4 +113,44 @@ final class FormattersTests: XCTestCase {
         XCTAssertEqual(stepRingFill(1.4), 1.0, accuracy: 1e-9)
         XCTAssertEqual(stepRingFill(3.0), 1.0, accuracy: 1e-9)
     }
+
+    // MARK: weekRollup / weekRollupSpoken
+
+    // A finished week reads as a plain rollup with no "so far" qualifier.
+    func testWeekRollupCompletedWeekHasNoSoFar() {
+        let s = weekRollup(miles: 14.7, runCount: 3, restDays: 3, daysElapsed: 7)
+        XCTAssertEqual(s, "14.7 mi · 3 runs · 3 rest")
+    }
+
+    // An in-progress week is qualified with "so far" so the smaller numbers read
+    // as a week still being lived, not a week that went badly.
+    func testWeekRollupInProgressWeekSaysSoFar() {
+        let s = weekRollup(miles: 3.1, runCount: 1, restDays: 1, daysElapsed: 2)
+        XCTAssertEqual(s, "3.1 mi · 1 run · 1 rest so far")
+    }
+
+    // Run count is singular at exactly 1 and plural otherwise, including 0.
+    func testWeekRollupPluralizesRuns() {
+        XCTAssertTrue(weekRollup(miles: 0, runCount: 0, restDays: 7, daysElapsed: 7).contains("0 runs"))
+        XCTAssertTrue(weekRollup(miles: 4, runCount: 1, restDays: 6, daysElapsed: 7).contains("1 run ·"))
+        XCTAssertTrue(weekRollup(miles: 9, runCount: 2, restDays: 5, daysElapsed: 7).contains("2 runs"))
+    }
+
+    // Whole mileage drops the decimal, matching the shared miles() helper.
+    func testWeekRollupUsesSharedMilesFormatting() {
+        XCTAssertTrue(weekRollup(miles: 12.0, runCount: 2, restDays: 5, daysElapsed: 7).hasPrefix("12 mi"))
+    }
+
+    // The spoken form pluralizes rest days and states how far into the week we are
+    // when the week is still in progress.
+    func testWeekRollupSpokenInProgressStatesElapsedDays() {
+        let s = weekRollupSpoken(miles: 3.1, runCount: 1, restDays: 1, daysElapsed: 2)
+        XCTAssertEqual(s, "3.1 miles, 1 run, 1 rest day so far, 2 of 7 days elapsed")
+    }
+
+    // A finished week's spoken form stays plain, with plural rest days.
+    func testWeekRollupSpokenCompletedWeekIsPlain() {
+        let s = weekRollupSpoken(miles: 14.7, runCount: 3, restDays: 3, daysElapsed: 7)
+        XCTAssertEqual(s, "14.7 miles, 3 runs, 3 rest days")
+    }
 }

@@ -89,6 +89,46 @@ final class ActivityHistoryTests: XCTestCase {
         XCTAssertTrue(OtterpaceModel.readState(defaults: d).workouts.isEmpty)
     }
 
+    // A seeded weekly load carries only the flat rb* primitives, so the elapsed /
+    // trailing-window fields have to be derived from the seeded workouts. Without
+    // this a scenario could never show the in-progress or rolling-window states
+    // that the real HealthKit path produces.
+    func testSeededLoadDerivesElapsedAndRollingWindow() {
+        let suite = "ActivityHistoryTests.\(UUID().uuidString)"
+        let d = UserDefaults(suiteName: suite)!
+        defer { d.removePersistentDomain(forName: suite) }
+        d.set(true, forKey: "rbConnected")
+        d.set("2026-06-23", forKey: "rbDate")          // Tuesday
+        d.set("building", forKey: "rbLoadTrend")        // anchor key for the load group
+        d.set(1, forKey: "rbDaysRunThisWeek")
+        d.set(3.1, forKey: "rbWeeklyMileage")
+        d.set("""
+        [{"type":"run","distanceMiles":3.1,"durationMinutes":32,"pace":"10:19/mi","date":"2026-06-22","source":"healthkit"},\
+        {"type":"run","distanceMiles":4.2,"durationMinutes":44,"pace":"10:28/mi","date":"2026-06-21","source":"strava"},\
+        {"type":"run","distanceMiles":5.0,"durationMinutes":52,"pace":"10:24/mi","date":"2026-06-20","source":"strava"}]
+        """, forKey: "rbWorkoutsJSON")
+
+        let load = OtterpaceModel.readState(defaults: d).weeklyLoad
+        XCTAssertEqual(load?.daysElapsedThisWeek, 2)     // Mon=1, Tue=2
+        XCTAssertEqual(load?.rolling7DaysRun, 3)         // Sat + Sun + Mon
+        XCTAssertEqual(load?.rolling7Miles ?? 0, 12.3, accuracy: 0.001)
+    }
+
+    // A seeded load with NO workouts keeps the defaults, so the existing
+    // load-only Weekly Review scenarios are unchanged by the derivation above.
+    func testSeededLoadWithoutWorkoutsKeepsDefaults() {
+        let suite = "ActivityHistoryTests.\(UUID().uuidString)"
+        let d = UserDefaults(suiteName: suite)!
+        defer { d.removePersistentDomain(forName: suite) }
+        d.set(true, forKey: "rbConnected")
+        d.set("recovering", forKey: "rbLoadTrend")
+        d.set(1, forKey: "rbDaysRunThisWeek")
+
+        let load = OtterpaceModel.readState(defaults: d).weeklyLoad
+        XCTAssertEqual(load?.daysElapsedThisWeek, 7)
+        XCTAssertEqual(load?.rolling7DaysRun, 0)
+    }
+
     // MARK: weeklyLoad(from:asOf:) — the live HealthKit/Strava derivation (SW-1)
 
     // A fixed reference day inside the week of Mon 2026-06-22 (UTC ISO week).
@@ -112,7 +152,10 @@ final class ActivityHistoryTests: XCTestCase {
         XCTAssertEqual(load.weeklyMileage, 12.0, accuracy: 0.001)  // 4+6+2
         XCTAssertEqual(load.longestRunMiles, 6.0, accuracy: 0.001)
         XCTAssertEqual(load.daysRunThisWeek, 2)                    // Mon + Wed
-        XCTAssertEqual(load.restDaysThisWeek, 5)                   // 7 - 2 active days
+        // Elapsed-aware: by Wednesday only 3 days have happened, 2 of them active,
+        // so 1 rest day so far — Thu-Sun are not rest the user has chosen yet.
+        XCTAssertEqual(load.restDaysThisWeek, 1)
+        XCTAssertEqual(load.daysElapsedThisWeek, 3)                // Mon=1, Wed=3
     }
 
     // A later reference day inside the same week (Sun), used to test the mid-week
@@ -204,12 +247,15 @@ final class ActivityHistoryTests: XCTestCase {
         XCTAssertEqual(load.loadTrend, "insufficient")
     }
 
-    // No workouts at all: an all-rest week, steady, nothing logged.
+    // No workouts at all: an all-rest week so far, steady, nothing logged. Rest
+    // counts only COMPLETED days, so a blank Wednesday reads 2 (Mon + Tue), not a
+    // full 7 that claims days the user has not reached, and not 3 — Wednesday is
+    // still open, so it isn't a rest day yet.
     func testWeeklyLoadEmptyIsRestWeek() {
         let load = ActivityHistory.weeklyLoad(from: [], asOf: Self.asOf)
         XCTAssertEqual(load.weeklyMileage, 0)
         XCTAssertEqual(load.daysRunThisWeek, 0)
-        XCTAssertEqual(load.restDaysThisWeek, 7)
+        XCTAssertEqual(load.restDaysThisWeek, 2)
         XCTAssertEqual(load.loadTrend, "steady")
     }
 
@@ -250,5 +296,98 @@ final class ActivityHistoryTests: XCTestCase {
     // No workouts yields an empty series (not shared with the coach).
     func testLoadHistoryEmpty() {
         XCTAssertTrue(ActivityHistory.loadHistory(from: []).isEmpty)
+    }
+
+    // MARK: Elapsed-aware weeks + the trailing 7-day window
+
+    // Only the IN-PROGRESS week is capped at elapsed days. A finished week keeps
+    // its honest 7 - activeDays, so history doesn't get retroactively rewritten.
+    func testCompletedWeeksKeepFullRestDays() {
+        let groups = ActivityHistory.groupByWeek([
+            wk("run", 4.0, "2026-06-22"),   // week of Jun 22 — in progress on Wed Jun 24
+            wk("run", 5.0, "2026-06-15"),   // week of Jun 15 — finished
+        ], asOf: Self.asOf)
+
+        let current = groups.first { $0.weekStartISO == "2026-06-22" }
+        let finished = groups.first { $0.weekStartISO == "2026-06-15" }
+        XCTAssertEqual(current?.daysElapsed, 3)
+        // Mon + Tue are complete; Mon was active, so 1 rest so far. Wednesday is
+        // still open and is not counted.
+        XCTAssertEqual(current?.restDays, 1)
+        XCTAssertEqual(finished?.daysElapsed, 7)
+        XCTAssertEqual(finished?.restDays, 6)     // 7 - 1 active, unchanged
+    }
+
+    // The Monday-reset blind spot: a strong Sat/Sun plus a Monday run is barely
+    // visible in the calendar week on Tuesday, but the rolling window still sees
+    // all three days. This is the signal that stops the false "quiet week".
+    func testRollingSevenDaySurvivesTheMondayReset() {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "UTC")
+        let tuesday = f.date(from: "2026-06-23")!
+
+        let workouts = [
+            wk("run", 3.1, "2026-06-22"),   // Mon — the only run in the calendar week
+            wk("run", 4.2, "2026-06-21"),   // Sun — previous calendar week
+            wk("run", 5.0, "2026-06-20"),   // Sat — previous calendar week
+        ]
+        let load = ActivityHistory.weeklyLoad(from: workouts, asOf: tuesday)
+
+        XCTAssertEqual(load.daysRunThisWeek, 1)        // calendar week sees one run
+        XCTAssertEqual(load.daysElapsedThisWeek, 2)    // Mon=1, Tue=2
+        // Only Monday is complete and Monday was active, so zero rest days so
+        // far — not 6, and not 1, because Tuesday is still open.
+        XCTAssertEqual(load.restDaysThisWeek, 0)
+        XCTAssertEqual(load.rolling7DaysRun, 3)        // rolling window sees all three
+        XCTAssertEqual(load.rolling7Miles, 12.3, accuracy: 0.001)
+    }
+
+    // Today's mileage and runs count immediately, but today is not a rest day
+    // until it is over. Ran Wednesday (today) having rested Mon+Tue: the miles
+    // land right away, and the two genuinely-rested completed days still read as
+    // rest — a run logged today must not cancel out earlier rest days.
+    func testTodayCountsAsMileageButNotAsRest() {
+        let groups = ActivityHistory.groupByWeek([
+            wk("run", 5.0, "2026-06-24"),   // today (Wed)
+        ], asOf: Self.asOf)
+
+        let current = groups.first { $0.weekStartISO == "2026-06-22" }
+        XCTAssertEqual(current?.totalMiles ?? 0, 5.0, accuracy: 0.001)  // counts now
+        XCTAssertEqual(current?.runCount, 1)                            // counts now
+        XCTAssertEqual(current?.restDays, 2)                            // Mon + Tue only
+        XCTAssertEqual(current?.daysElapsed, 3)
+    }
+
+    // The mirror case: resting today after running earlier. Monday was active and
+    // Tuesday was not, so exactly one completed rest day, with Wednesday still open.
+    func testRestTodayDoesNotCountUntilDayEnds() {
+        let groups = ActivityHistory.groupByWeek([
+            wk("run", 4.0, "2026-06-22"),   // Mon
+        ], asOf: Self.asOf)
+
+        let current = groups.first { $0.weekStartISO == "2026-06-22" }
+        XCTAssertEqual(current?.restDays, 1)   // Tue only; Wed is not yet rest
+    }
+
+    // The rolling window is inclusive of the reference day and stops at 7 days
+    // back, so an 8-day-old run is excluded while a same-day run counts.
+    func testRollingSevenDayWindowBounds() {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "UTC")
+        let asOf = f.date(from: "2026-06-24")!
+
+        let r = ActivityHistory.rollingSevenDay(from: [
+            wk("run", 2.0, "2026-06-24"),   // today — included
+            wk("run", 3.0, "2026-06-18"),   // 6 days back — included
+            wk("run", 9.0, "2026-06-17"),   // 7 days back — outside the window
+        ], asOf: asOf)
+
+        XCTAssertEqual(r.daysRun, 2)
+        XCTAssertEqual(r.miles, 5.0, accuracy: 0.001)
+        XCTAssertEqual(r.longestRunMiles, 3.0, accuracy: 0.001)
     }
 }

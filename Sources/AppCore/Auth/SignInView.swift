@@ -22,7 +22,7 @@ struct SignInView: View {
                 Text("Welcome to Otterpace")
                     .font(Typography.title)
                     .foregroundColor(Palette.ink)
-                Text("Sign in to keep your coaching across devices — or continue without an account. Either way, your health data stays on your device.")
+                Text("Sign in to keep your coaching across devices, or continue without an account. Either way, your health data stays on your device.")
                     .font(Typography.callout)
                     .foregroundColor(Palette.subtle)
                     .multilineTextAlignment(.center)

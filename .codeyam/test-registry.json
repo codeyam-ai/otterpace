@@ -300,6 +300,13 @@
       "runner": "tests"
     },
     {
+      "description": "Only the in-progress week is capped at elapsed days; a finished week keeps its honest 7 minus activeDays so history is not retroactively rewritten.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testCompletedWeeksKeepFullRestDays",
+      "registeredAt": "2026-07-21T16:49:34Z",
+      "runner": "tests"
+    },
+    {
       "description": "Workouts in different weeks produce separate groups, newest week first.",
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
@@ -331,7 +338,7 @@
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ActivityHistoryTests › testLoadHistoryCapsToMaxWeeks",
-      "line": 242,
+      "line": 288,
       "registeredAt": "2026-07-10T15:15:02.793924+00:00",
       "runner": "tests"
     },
@@ -340,7 +347,7 @@
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ActivityHistoryTests › testLoadHistoryDaysRunDistinct",
-      "line": 232,
+      "line": 278,
       "registeredAt": "2026-07-10T15:15:02.796360+00:00",
       "runner": "tests"
     },
@@ -349,7 +356,7 @@
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ActivityHistoryTests › testLoadHistoryEmpty",
-      "line": 251,
+      "line": 297,
       "registeredAt": "2026-07-10T15:15:02.798566+00:00",
       "runner": "tests"
     },
@@ -358,7 +365,7 @@
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ActivityHistoryTests › testLoadHistoryNewestFirstPerWeek",
-      "line": 219,
+      "line": 265,
       "registeredAt": "2026-07-10T15:15:02.801218+00:00",
       "runner": "tests"
     },
@@ -399,6 +406,29 @@
       "runner": "tests"
     },
     {
+      "description": "Resting today after running earlier counts only the completed rest days, leaving today uncounted while it is still open.",
+      "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testRestTodayDoesNotCountUntilDayEnds",
+      "line": 365,
+      "registeredAt": "2026-07-21T18:52:19.486723+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A Saturday/Sunday/Monday block is barely visible in the calendar week on Tuesday, but the rolling 7-day window still sees all three run days. This is the signal that stops the false quiet week.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testRollingSevenDaySurvivesTheMondayReset",
+      "registeredAt": "2026-07-21T16:49:34Z",
+      "runner": "tests"
+    },
+    {
+      "description": "The rolling window is inclusive of the reference day and stops 7 days back, so a same-day run counts while an 8-day-old run is excluded.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testRollingSevenDayWindowBounds",
+      "registeredAt": "2026-07-21T16:49:34Z",
+      "runner": "tests"
+    },
+    {
       "description": "Run count includes only run-type workouts, not walks or rides.",
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
@@ -417,6 +447,33 @@
       "runner": "tests"
     },
     {
+      "description": "A seeded weekly load derives its elapsed and trailing-window fields from the seeded workouts, so a scenario can show the in-progress and rolling-window states the real HealthKit path produces.",
+      "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testSeededLoadDerivesElapsedAndRollingWindow",
+      "line": 96,
+      "registeredAt": "2026-07-21T18:52:23.822094+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A seeded load with no workouts keeps the default elapsed and rolling-window values, so existing load-only Weekly Review scenarios are unaffected.",
+      "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testSeededLoadWithoutWorkoutsKeepsDefaults",
+      "line": 119,
+      "registeredAt": "2026-07-21T18:52:28.133376+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Today's mileage and runs count immediately, but today is not a rest day until it is over; a run logged today must not cancel out genuinely rested earlier days.",
+      "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testTodayCountsAsMileageButNotAsRest",
+      "line": 351,
+      "registeredAt": "2026-07-21T18:52:15.543883+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "Total mileage sums every workout in the week.",
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
@@ -430,7 +487,7 @@
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadEmptyIsRestWeek",
-      "line": 208,
+      "line": 254,
       "registeredAt": "2026-06-26T21:10:05.699781+00:00",
       "runner": "tests"
     },
@@ -439,7 +496,7 @@
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadInsufficientFromFirstWeek",
-      "line": 202,
+      "line": 245,
       "registeredAt": "2026-07-10T15:15:02.803972+00:00",
       "runner": "tests"
     },
@@ -448,7 +505,7 @@
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadInsufficientWithThinHistory",
-      "line": 192,
+      "line": 235,
       "registeredAt": "2026-07-10T15:15:02.806766+00:00",
       "runner": "tests"
     },
@@ -457,7 +514,7 @@
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadMidWeekGuardSuppressesRecovering",
-      "line": 180,
+      "line": 223,
       "registeredAt": "2026-07-10T15:15:02.809435+00:00",
       "runner": "tests"
     },
@@ -466,7 +523,7 @@
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadNormalWeekAfterCutbackIsNotSpike",
-      "line": 155,
+      "line": 198,
       "registeredAt": "2026-07-10T15:15:02.811879+00:00",
       "runner": "tests"
     },
@@ -475,7 +532,7 @@
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadRecoveringWhenWeekMostlyElapsed",
-      "line": 168,
+      "line": 211,
       "registeredAt": "2026-07-10T15:15:02.814351+00:00",
       "runner": "tests"
     },
@@ -484,7 +541,7 @@
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadRollsUpCurrentWeek",
-      "line": 105,
+      "line": 145,
       "registeredAt": "2026-06-26T21:10:19.497691+00:00",
       "runner": "tests"
     },
@@ -493,7 +550,7 @@
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadSpikingVsBaseline",
-      "line": 130,
+      "line": 173,
       "registeredAt": "2026-07-10T15:15:02.816582+00:00",
       "runner": "tests"
     },
@@ -502,7 +559,7 @@
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.ActivityHistoryTests › testWeeklyLoadSteadyClimbIsBuilding",
-      "line": 142,
+      "line": 185,
       "registeredAt": "2026-07-10T15:15:02.818923+00:00",
       "runner": "tests"
     },
@@ -1215,6 +1272,48 @@
       "key": "AppCoreTests.FormattersTests › testStepRingFillMidProgress",
       "line": 94,
       "registeredAt": "2026-06-26T02:37:39.435791+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A finished week renders a plain rollup with no 'so far' qualifier.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testWeekRollupCompletedWeekHasNoSoFar",
+      "registeredAt": "2026-07-21T16:49:34Z",
+      "runner": "tests"
+    },
+    {
+      "description": "An in-progress week is qualified with 'so far' so its smaller numbers read as a week still being lived rather than one that went badly.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testWeekRollupInProgressWeekSaysSoFar",
+      "registeredAt": "2026-07-21T16:49:34Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Run count is singular at exactly 1 and plural otherwise, including 0.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testWeekRollupPluralizesRuns",
+      "registeredAt": "2026-07-21T16:49:34Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A finished week's spoken VoiceOver form stays plain, with plural rest days.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testWeekRollupSpokenCompletedWeekIsPlain",
+      "registeredAt": "2026-07-21T16:49:34Z",
+      "runner": "tests"
+    },
+    {
+      "description": "The spoken form pluralizes rest days and states how far into the week we are, so a screen-reader user gets the same context the visual 'so far' conveys.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testWeekRollupSpokenInProgressStatesElapsedDays",
+      "registeredAt": "2026-07-21T16:49:34Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Whole mileage drops the decimal, matching the shared miles() helper.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testWeekRollupUsesSharedMilesFormatting",
+      "registeredAt": "2026-07-21T16:49:34Z",
       "runner": "tests"
     },
     {

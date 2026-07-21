@@ -73,7 +73,7 @@ public struct ActivityHeatmapSection: View {
             HeatmapMetricPicker(metric: $metric)
 
             if stepsSeriesMissing {
-                HeatmapNote(text: "No step data yet — daily steps show up here once they sync.")
+                HeatmapNote(text: "No step data yet. Daily steps show up here once they sync.")
             } else if ActivityHeatmap.isEmpty(weeks) {
                 HeatmapEmptyState()
             } else {

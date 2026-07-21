@@ -8,7 +8,7 @@
   "mocks": {},
   "deviceState": {
     "preferences": {
-      "rbOnboardingPage": 4,
+      "rbOnboardingPage": 5,
       "rbCoachProfileJSON": "{\"walkVolume\":\"mostDays\",\"walkTime\":\"mornings\",\"otherTraining\":[]}",
       "rbStartScreen": "onboarding"
     }

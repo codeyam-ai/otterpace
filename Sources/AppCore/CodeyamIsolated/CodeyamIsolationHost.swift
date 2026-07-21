@@ -21,6 +21,8 @@ public enum CodeyamIsolationHost {
             return AnyView(RaceImportSheetIsolated(scenario: scenario))
         case "RaceSearchSheet":
             return AnyView(RaceSearchSheetIsolated(scenario: scenario))
+        case "RollingWindowNote":
+            return AnyView(RollingWindowNoteIsolated(scenario: scenario))
         case "ThemeChoiceRow":
             return AnyView(ThemeChoiceRowIsolated(scenario: scenario))
         case "ThemeSwatch":

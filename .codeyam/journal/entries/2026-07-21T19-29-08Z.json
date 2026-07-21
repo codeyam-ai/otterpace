@@ -1,0 +1,447 @@
+{
+  "timestamp": "2026-07-21T19:29:08Z",
+  "title": "Elapsed-Aware Weekly View",
+  "type": "feature",
+  "userRequest": "## Summary\n\nThe weekly view treats a partial week as if it were finished. `ActivityHistory.groupByWeek` computes `restDays = max(0, 7 - activeDays)` against a hardcoded 7, so on a Tuesday with one run the app reports 6 rest days, and `WeeklyReviewEngine.isSparse` (`daysRunThisWeek <= 1`) then classifies the week as sparse and shows \"A quiet week, that's okay\". Future days that have not happened yet are being counted as rest days the user chose to take. The Monday reset compounds it: a strong Saturday and Sunday disappear from \"this week\" at midnight Monday, so the view can look empty right after a heavy weekend.\n\nThis plan makes the calendar week elapsed-aware (rest days and sparseness measured only over days that have actually happened, with copy that says \"so far\") and adds a trailing rolling-7-day rollup alongside it, so recent work is never invisible and the trend and sparseness judgments have a full window to reason over. It also strips em dashes out of user-facing copy across the app, starting with the weekly view where the density is highest.\n\n## Key Decisions\n\n- **Keep the Monday-start calendar week as the headline, add rolling 7 days beside it.** The fresh-start-on-Monday framing is worth keeping for motivation, so the fix is to stop pretending the week is over rather than to abandon the week concept. The rolling window covers the blind spot the Monday reset creates. Considered switching entirely to rolling 7 days; rejected because it removes the weekly reset the coaching copy is built around.\n- **Elapsed days come from the existing `asOf` date, not `Date()`.** `ActivityHistory.weeklyLoad(from:asOf:)` already threads a reference date and `classifyTrend` already derives `daysElapsed` from it. Reuse that derivation rather than introducing a second clock, so everything stays pure and unit-testable and existing scenario captures stay deterministic.\n- **`WeekGroup.restDays` becomes elapsed-aware only for the in-progress week.** Completed weeks in Activity History keep their honest `7 - activeDays`. Only the week containing `asOf` is capped at elapsed days. This means `groupByWeek` needs an `asOf` parameter with a `Date()` default so existing callers are unchanged.\n- **Sparseness is judged over the rolling 7-day window, not the partial calendar week.** This is what actually stops the false \"quiet week\". A runner who ran Saturday, Sunday, and Monday is not having a quiet week on Tuesday, even though the calendar week only holds one run.\n- **New fields are additive on `WeeklyLoad`, with defaults.** Adding `daysElapsedThisWeek`, `rolling7Miles`, `rolling7DaysRun` as init parameters with defaults keeps every existing construction site (tests, `RaceGoalsTests`, `CoachEngineTests`, scenario seeding) compiling untouched.\n- **Em dash cleanup is scoped to string literals only.** Code comments and doc headers keep theirs; only copy the user reads gets rewritten. Roughly 55 string-literal occurrences across 20 files, concentrated in `WeeklyReviewEngine` (19) and `SettingsView` (10).\n\n## Implementation\n\n### 1. Make week rollups elapsed-aware\n\n**File**: `Sources/AppCore/ActivityHistory.swift`\n\n- Add `asOf: Date = Date()` to `groupByWeek`. For the bucket whose `weekStart` matches `asOf`'s week, compute `daysElapsed` (1 through 7, where Monday is 1) and set `restDays = max(0, daysElapsed - activeDays)`. All other buckets keep `max(0, 7 - activeDays)`.\n- Add `daysElapsed: Int` to `WeekGroup` so the UI can label a partial week without recomputing the calendar. Give it a default of 7 in the initializer so existing constructions in tests still compile.\n- In `weeklyLoad(from:asOf:)`, fall back to `restDaysThisWeek: current?.restDays ?? daysElapsed` instead of the hardcoded `7`, so a week with zero logged activity on a Tuesday reports 2 rest days, not 7.\n- Extract the elapsed-days derivation currently inlined in `classifyTrend` (lines 177-178) into a small `daysElapsedInWeek(asOf:cal:) -> Int` helper and have both `groupByWeek` and `classifyTrend` call it. One definition of \"how far into the week are we\".\n- Add a `rollingSevenDay(from:asOf:) -> (miles: Double, daysRun: Int, longestRunMiles: Double)` helper: filter workouts to the trailing 7 days inclusive of `asOf`, sum miles, count distinct run days, take the longest run. Uses the same `parser` and `calendar` as everything else so the date handling stays in one place.\n\n### 2. Carry the new signals on WeeklyLoad\n\n**File**: `Sources/AppCore/Model.swift`\n\n- Add `daysElapsedThisWeek: Int`, `rolling7Miles: Double`, `rolling7DaysRun: Int` to `WeeklyLoad`, all with defaults in the initializer (`7`, `0`, `0`) so existing call sites are untouched. `WeeklyLoad` is `Codable`, so defaulted properties also keep decoding of older persisted payloads working.\n- Populate them in `ActivityHistory.weeklyLoad(from:asOf:)` from the helpers in step 1.\n- Extend the scenario seeding block (around line 236) with `rbDaysElapsedThisWeek`, `rbRolling7Miles`, `rbRolling7DaysRun` so scenarios can drive the new states directly. Note the known hazard that omitted `rb*` keys persist across scenarios, so these must be seeded explicitly in every scenario that touches weekly load, not left to fall through.\n\n### 3. Stop calling a partial week quiet\n\n**File**: `Sources/AppCore/WeeklyReviewEngine.swift`\n\n- Rewrite `isSparse(_:)` to take the whole `WeeklyLoad` and judge on the rolling window: sparse when `rolling7DaysRun <= 1`. A partial calendar week with recent weekend activity no longer trips it.\n- Add an early-week branch ahead of the sparse check: when `daysElapsedThisWeek <= 2` and there is some activity, route to a new `earlyWeekReview` that recaps what has happened so far and explicitly frames the week as in progress (\"Two days in\", \"one run in the bank, five days to go\") rather than delivering a verdict on a week that has barely started. This is the direct fix for the reported Tuesday behavior.\n- Make `sparseReview` and `solidReview` copy elapsed-aware: where they say \"N rest days\", say \"N rest days so far\" when `daysElapsedThisWeek < 7`. The `restDaysThisWeek` value itself is already correct after step 1, this is about the sentence not implying a finished week.\n- Where the recap has a rolling figure that tells a better story than the calendar week (the runner ran hard over the weekend), mention the trailing 7 days: \"across the last 7 days you covered X miles\".\n- Keep the ordering intact: spiking still wins over everything, then insufficient, then early-week, then sparse, then solid. The safety path must not be softened by any of this.\n\n### 4. Surface both windows in the UI\n\n**File**: `Sources/AppCore/WeeklyLoadCard.swift`\n\n- When `load.daysElapsedThisWeek < 7`, change the card header from \"This week\" to \"This week so far\" and label the rest-days metric \"rest so far\", so a 1 on Tuesday reads correctly instead of looking like a suspiciously low number.\n- Add a compact footer line under the metric row showing the rolling window: \"Last 7 days: X mi, N run days\". Keep it visually secondary (`Typography.caption`, `Palette.subtle`) so the calendar week stays the headline.\n- Extend the existing per-metric `accessibilityLabel` treatment to the new footer so VoiceOver announces both windows.\n\n**File**: `Sources/AppCore/ActivityWeekSection.swift`\n\n- The in-progress week's rollup line should read \"N rest so far\" rather than \"N rest\", driven by `group.daysElapsed < 7`. Update both `rollup` and `spokenRollup`.\n\n### 5. Reduce em dashes in user-facing copy\n\nRewrite em dashes out of string literals only. Code comments and doc headers are out of scope. Replace with a comma, a period and a new sentence, a colon, or by restructuring the sentence, whichever reads most naturally. Do not mechanically swap every one for the same substitute, or the copy picks up a new tic in place of the old one.\n\n**Files**, in descending density:\n\n- `Sources/AppCore/WeeklyReviewEngine.swift` (19) — the largest concentration, and already being rewritten in step 3\n- `Sources/AppCore/SettingsView.swift` (10)\n- `Sources/AppCore/TrendBadge.swift`, `Sources/AppCore/PuffyBuddy.swift`, `Sources/AppCore/Notifications/MovementReminders.swift`, `Sources/AppCore/CoachEngine.swift`, `Sources/AppCore/Auth/SignInView.swift`, `Sources/AppCore/Account/SyncConsent.swift`, `Sources/AppCore/Account/AccountSyncService.swift` (2 each)\n- `Sources/AppCore/WeeklyReviewFocusCallout.swift`, `Sources/AppCore/Theming/ThemeSystem.swift`, `Sources/AppCore/Strava/StravaService.swift`, `Sources/AppCore/RaceGoals.swift`, `Sources/AppCore/Onboarding/OnboardingFlowView.swift`, `Sources/AppCore/Model.swift`, `Sources/AppCore/ConnectHero.swift`, `Sources/AppCore/CodeyamIsolated/AskCoachHeaderIsolated.swift`, `Sources/AppCore/AppIconArtwork.swift`, `Sources/AppCore/ActivityHistory.swift`, `Sources/AppCore/ActivityHeatmapSection.swift` (1 each)\n\nNote that `CoachEngineTests` and `WeeklyReviewEngineTests` assert on copy in places, so any test asserting a phrase that contained an em dash needs its expectation updated in the same pass.\n\n### 6. Tests\n\n**File**: `Tests/AppCoreTests/ActivityHistoryTests.swift`\n\n- Update `testWeeklyLoadRollsUpCurrentWeek`: with `asOf` Wednesday 2026-06-24 and active days Mon and Wed, `restDaysThisWeek` should now be 1 (3 elapsed minus 2 active), not 5. The existing comment \"7 - 2 active days\" documents exactly the bug.\n- Update `testWeeklyLoadEmptyIsRestWeek`: no workouts as of Wednesday should report 3 rest days, not 7.\n- New: rest days never exceed elapsed days for the in-progress week, across Monday through Sunday reference dates.\n- New: a completed prior week still reports `7 - activeDays`, so only the current week is capped.\n- New: `rollingSevenDay` picks up the previous weekend from a Tuesday reference date, and excludes a workout 8 days back.\n- New: rest days never go negative when two workouts land on the same day.\n\n**File**: `Tests/AppCoreTests/WeeklyReviewEngineTests.swift`\n\n- New, the reported bug as a regression guard: a Tuesday with one run and a busy preceding weekend must not produce the \"quiet week\" headline.\n- New: a genuinely quiet rolling window (one run across 7 days) still produces the sparse review, so the fix does not just delete the state.\n- New: early-week copy says \"so far\" and does not deliver a finished-week verdict.\n- New: spiking still wins over the early-week branch, so the safety path is unchanged.\n\n## Reused existing code\n\n- `ActivityHistory.calendar` and `ActivityHistory.parser` from `Sources/AppCore/ActivityHistory.swift` (glossary entry: `ActivityHistory`) — the fixed ISO-8601 Monday-start UTC calendar and date parser. The heatmap already shares these; the rolling-window helper must too.\n- `ActivityHistory.classifyTrend`'s existing `daysElapsed` derivation (lines 177-178) — already solves \"how far into the week are we\", just needs extracting so the rest-day math shares it.\n- `ActivityHistory.groupByWeek` (glossary entry: `ActivityHistory`, test `Tests/AppCoreTests/ActivityHistoryTests.swift`) — the single bucketing path all week rollups flow through, so fixing rest days here fixes both Today and Activity History.\n- `WeeklyReviewEngine.walkingFocused` / `crossTrainingClause` from `Sources/AppCore/WeeklyReviewEngine.swift` (glossary entry: `WeeklyReviewEngine`) — the existing additive-framing helpers; the new early-week review should use the same walking-focused wording rules.\n- `WeeklyLoadCard.loadMetric` from `Sources/AppCore/WeeklyLoadCard.swift` (glossary entry: `WeeklyLoadCard`) — the metric cell with its accessibility treatment; reuse rather than hand-rolling the rolling-window row.\n- `Typography.caption` / `Palette.subtle` from `Sources/AppCore/Theme.swift` — the established secondary-text treatment for the rolling-window footer.\n- `ActivityHistory.loadHistory` (glossary entry: `ActivityHistory`) — the coach-facing multi-week series, unchanged by this plan but worth confirming stays consistent with the new rollups.\n\nNo constrained files. `codeyam-editor-dev editor classify-constrained-files` over the full candidate list returned an empty set, so there is no lean-contract or agent-config hazard here.\n\n## Scenarios to Demonstrate\n\n- **Tuesday with a strong weekend behind it** — the reported bug. One run logged Monday, plus runs Saturday and Sunday of the prior calendar week. Must show \"This week so far\", 1 rest day, a rolling-7-day line carrying the weekend miles, and must NOT say \"quiet week\".\n- **Tuesday with genuinely nothing** — no activity in the trailing 7 days. Shows 2 rest days so far, and the sparse or gathering framing is honest here.\n- **Sunday, week complete** — 7 days elapsed, header reads \"This week\" with no \"so far\", rest days computed against the full 7, calendar and rolling figures converge.\n- **Monday morning, zero elapsed activity** — the fresh-start edge case. 1 day elapsed, at most 1 rest day, copy frames the week as just beginning rather than empty.\n- **Spiking load mid-week** — high mileage across the rolling window on a Wednesday. The safety caution still wins over the early-week framing and the amber risk treatment still renders.\n- **Two workouts on the same day, mid-week** — rest days must not go negative or double-count the day.\n- **Weekly Review with the em dash pass applied** — a solid week recap that reads naturally with the em dashes removed, as a copy-quality check across all five sections.\n- **Activity History with an in-progress top week** — the newest week shows \"rest so far\" while completed weeks below it show plain \"rest\".",
+  "description": "The weekly view treated a partial week as if it were finished: groupByWeek computed restDays against a hardcoded 7, so a Tuesday with one run reported 6 rest days and WeeklyReviewEngine then classified the week as sparse and showed 'A quiet week, that's okay'. Rest days are now measured only over days that have COMPLETED, so today's mileage and runs count immediately but today is not called a rest day until it is over, and a run logged today can no longer cancel out a genuinely rested earlier day. Completed weeks keep their honest 7 minus activeDays. A trailing rolling-7-day rollup (rolling7Miles / rolling7DaysRun) now sits alongside the calendar week and drives the sparseness judgment, so a strong Saturday and Sunday stay visible after the Monday reset instead of vanishing at midnight. Also stripped em dashes from 36 user-facing strings across 13 files, leaving code comments untouched.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/data-structure.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/elapsed-aware-weekly-view.md\t.codeyam/plans/completed/elapsed-aware-weekly-view.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-empty--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-empty--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-long-values--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-long-values--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-rich-multi-week--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-rich-multi-week--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-sparse--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-sparse--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/app-icon-showcase--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/app-icon-showcase--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/buddy-puffy-moods--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/buddy-puffy-moods--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-cross-training-runner--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-cross-training-runner--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-empty-first-week--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-empty-first-week--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-gathering-baseline--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-gathering-baseline--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-solid-week--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-solid-week--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-sparse-mostly-rest--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-sparse-mostly-rest--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-spiking-load--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-spiking-load--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-walking-focused-week--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-walking-focused-week--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/provider-auth-verdict.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ActivityHeatmapSection.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ActivityHistory.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ActivityHistoryView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ActivityWeekSection.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/AppIconArtwork.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Auth/SignInView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CoachEngine.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CodeyamIsolationHost.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ConnectHero.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Formatters.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Model.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Notifications/MovementReminders.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Onboarding/OnboardingFlowView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/PuffyBuddy.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/SettingsView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Theming/ThemeSystem.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/WeeklyLoadCard.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/WeeklyReviewEngine.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/ActivityHistoryTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/FormattersTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-partial-week-mid-week.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/rollingwindownote-big-week.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/rollingwindownote-default.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/rollingwindownote-single-run-day.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-partial-week-mid-week--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-partial-week-mid-week--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/rollingwindownote-big-week--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/rollingwindownote-big-week--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/rollingwindownote-default--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/rollingwindownote-default--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/rollingwindownote-single-run-day--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/rollingwindownote-single-run-day--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-strong-weekend-fresh-week--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-strong-weekend-fresh-week--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/today-strong-weekend-fresh-week.json",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/RollingWindowNoteIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/RollingWindowNote.swift",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Activity History — Empty",
+      "screenshotPath": "activity-history-empty--iphone-16.png"
+    },
+    {
+      "name": "Activity History — Long Values",
+      "screenshotPath": "activity-history-long-values--iphone-16.png"
+    },
+    {
+      "name": "Activity History — Partial Week (Mid-Week)",
+      "screenshotPath": "activity-history-partial-week-mid-week--iphone-16.png"
+    },
+    {
+      "name": "Activity History — Rich Multi-Week",
+      "screenshotPath": "activity-history-rich-multi-week--iphone-16.png"
+    },
+    {
+      "name": "Activity History — Sparse",
+      "screenshotPath": "activity-history-sparse--iphone-16.png"
+    },
+    {
+      "name": "App Icon — Showcase",
+      "screenshotPath": "app-icon-showcase--iphone-16.png"
+    },
+    {
+      "name": "Buddy Puffy — Moods",
+      "screenshotPath": "buddy-puffy-moods--iphone-16.png"
+    },
+    {
+      "name": "Onboarding - Choose Your Look",
+      "screenshotPath": "onboarding-choose-your-look--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Choose-Your-Look - Fieldnote",
+      "screenshotPath": "onboarding-choose-your-look-fieldnote--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Choose-Your-Look - Garden",
+      "screenshotPath": "onboarding-choose-your-look-garden--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Choose-Your-Look - Orbit",
+      "screenshotPath": "onboarding-choose-your-look-orbit--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Choose-Your-Look - Otter",
+      "screenshotPath": "onboarding-choose-your-look-otter--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — AI Coaching Connected",
+      "screenshotPath": "onboarding-ai-coaching-connected--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Add AI Coaching (Skip)",
+      "screenshotPath": "onboarding-add-ai-coaching-skip--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Other Training",
+      "screenshotPath": "onboarding-other-training--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Set Goal (8K)",
+      "screenshotPath": "onboarding-set-goal-8k--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Training Phase",
+      "screenshotPath": "onboarding-training-phase--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Walking Habits",
+      "screenshotPath": "onboarding-walking-habits--iphone-16.png"
+    },
+    {
+      "name": "RollingWindowNote - Big Week",
+      "screenshotPath": "rollingwindownote-big-week--iphone-16.png"
+    },
+    {
+      "name": "RollingWindowNote - Default",
+      "screenshotPath": "rollingwindownote-default--iphone-16.png"
+    },
+    {
+      "name": "RollingWindowNote - Single Run Day",
+      "screenshotPath": "rollingwindownote-single-run-day--iphone-16.png"
+    },
+    {
+      "name": "Settings",
+      "screenshotPath": "settings--iphone-16.png"
+    },
+    {
+      "name": "Settings - Appearance Picker - Bolt",
+      "screenshotPath": "settings-appearance-picker-bolt--iphone-16.png"
+    },
+    {
+      "name": "Settings — Account Sync",
+      "screenshotPath": "settings-account-sync--iphone-16.png"
+    },
+    {
+      "name": "Settings — Custom Goal",
+      "screenshotPath": "settings-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Settings — Health Sync On",
+      "screenshotPath": "settings-health-sync-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Races List",
+      "screenshotPath": "settings-races-list--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders On",
+      "screenshotPath": "settings-reminders-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Replay Tour Row",
+      "screenshotPath": "settings-replay-tour-row--iphone-16.png"
+    },
+    {
+      "name": "Settings — Training Phase (Building)",
+      "screenshotPath": "settings-training-phase-building--iphone-16.png"
+    },
+    {
+      "name": "Sign In — Welcome",
+      "screenshotPath": "sign-in-welcome--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Ask Me Anything",
+      "screenshotPath": "welcome-ask-me-anything--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Day-by-Day Coaching",
+      "screenshotPath": "welcome-day-by-day-coaching--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Large Text",
+      "screenshotPath": "welcome-large-text--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Meet Buddy",
+      "screenshotPath": "welcome-meet-buddy--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 272,
+    "passed": 272,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 272,
+        "passed": 272
+      }
+    ]
+  }
+}

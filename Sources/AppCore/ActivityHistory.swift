@@ -17,16 +17,18 @@ public struct WeekGroup: Equatable, Identifiable {
     public var workouts: [LatestWorkout]  // newest-first within the week
     public var totalMiles: Double
     public var runCount: Int
-    public var restDays: Int             // 7 minus the number of distinct active days
+    public var restDays: Int             // elapsed days minus distinct active days
+    public var daysElapsed: Int          // 7 for a finished week, 1...7 for the in-progress one
 
     public init(weekStartISO: String, title: String, workouts: [LatestWorkout],
-                totalMiles: Double, runCount: Int, restDays: Int) {
+                totalMiles: Double, runCount: Int, restDays: Int, daysElapsed: Int = 7) {
         self.weekStartISO = weekStartISO
         self.title = title
         self.workouts = workouts
         self.totalMiles = totalMiles
         self.runCount = runCount
         self.restDays = restDays
+        self.daysElapsed = daysElapsed
     }
 }
 
@@ -50,12 +52,40 @@ public enum ActivityHistory {
         return f
     }
 
+    /// The app's notion of "today" as a `Date`, from the `TodayState.date` ISO
+    /// string. Scenario seeding drives that string via `rbDate`, so threading it
+    /// here keeps the preview's "this week" the same week the seeded data lives
+    /// in — otherwise a seeded June scenario is judged against the real clock and
+    /// its in-progress week looks finished. Falls back to the real clock.
+    public static func referenceDate(fromISO iso: String) -> Date {
+        parser.date(from: iso) ?? Date()
+    }
+
+    /// How far into its Monday-start week `now` sits: 1 on Monday through 7 on
+    /// Sunday. One definition of "how far into the week are we", shared by the
+    /// week rollups and the trend classifier so they can't drift apart.
+    static func daysElapsedInWeek(asOf now: Date, cal: Calendar) -> Int {
+        guard let weekStart = cal.dateInterval(of: .weekOfYear, for: now)?.start else { return 7 }
+        let whole = Int((now.timeIntervalSince(weekStart) / 86_400.0).rounded(.down))
+        return min(7, max(1, whole + 1))
+    }
+
     /// Group workouts into weeks, newest week first, each week newest-first
     /// inside it, with mileage / run-count / rest-day rollups. Workouts whose
     /// `date` isn't a valid ISO date are dropped (they can't be placed in a week).
-    public static func groupByWeek(_ workouts: [LatestWorkout]) -> [WeekGroup] {
+    ///
+    /// The week containing `asOf` is treated as IN PROGRESS: its rest days are
+    /// measured only over days that have actually elapsed, so a Tuesday with one
+    /// run reports 1 rest day rather than 6 days the user has not lived yet.
+    /// Completed weeks keep their honest `7 - activeDays`.
+    public static func groupByWeek(_ workouts: [LatestWorkout], asOf now: Date = Date()) -> [WeekGroup] {
         let cal = calendar
         let fmt = parser
+        let currentWeekStart = cal.dateInterval(of: .weekOfYear, for: now)?.start
+        let elapsedThisWeek = daysElapsedInWeek(asOf: now, cal: cal)
+        // ISO form of the reference day, so "before today" is a plain string
+        // comparison against each workout's already-ISO `date`.
+        let todayISO = fmt.string(from: now)
 
         // Bucket by the Monday that starts each workout's week.
         var buckets: [Date: [LatestWorkout]] = [:]
@@ -75,14 +105,34 @@ public enum ActivityHistory {
             let totalMiles = items.reduce(0) { $0 + $1.distanceMiles }
             let runCount = items.filter { $0.type == "run" }.count
             let activeDays = Set(items.map { $0.date }).count
-            let restDays = max(0, 7 - activeDays)
+            let isCurrentWeek = (weekStart == currentWeekStart)
+            let daysInWeek = isCurrentWeek ? elapsedThisWeek : 7
+
+            // Today's mileage and runs count immediately (they're in `items`
+            // above), but today cannot be called a REST day until it is over —
+            // the user can still go out this evening. So rest is measured over
+            // COMPLETED days only, and the active days subtracted from it must
+            // likewise be completed ones. Subtracting all active days would let
+            // a run logged today cancel out a genuine rest day earlier in the
+            // week.
+            let restDays: Int
+            if isCurrentWeek {
+                let completedDays = max(0, elapsedThisWeek - 1)
+                let activeCompletedDays = Set(
+                    items.map { $0.date }.filter { $0 < todayISO }
+                ).count
+                restDays = max(0, completedDays - activeCompletedDays)
+            } else {
+                restDays = max(0, 7 - activeDays)
+            }
             return WeekGroup(
                 weekStartISO: fmt.string(from: weekStart),
                 title: "Week of \(labeler.string(from: weekStart))",
                 workouts: items,
                 totalMiles: totalMiles,
                 runCount: runCount,
-                restDays: restDays
+                restDays: restDays,
+                daysElapsed: daysInWeek
             )
         }
     }
@@ -100,7 +150,7 @@ public enum ActivityHistory {
     public static func weeklyLoad(from workouts: [LatestWorkout], asOf now: Date = Date()) -> WeeklyLoad {
         let cal = calendar
         let fmt = parser
-        let weeks = groupByWeek(workouts)
+        let weeks = groupByWeek(workouts, asOf: now)
 
         func weekStartISO(for date: Date) -> String? {
             guard let start = cal.dateInterval(of: .weekOfYear, for: date)?.start else { return nil }
@@ -124,14 +174,47 @@ public enum ActivityHistory {
 
         let trend = classifyTrend(currentMileage: mileage, priorWeeks: priorWeeks, now: now, cal: cal)
 
+        let elapsed = daysElapsedInWeek(asOf: now, cal: cal)
+        let rolling = rollingSevenDay(from: workouts, asOf: now)
+
         func round1(_ n: Double) -> Double { (n * 10).rounded() / 10 }
         return WeeklyLoad(
             weeklyMileage: round1(mileage),
             daysRunThisWeek: daysRun,
             longestRunMiles: round1(longest),
-            restDaysThisWeek: current?.restDays ?? 7,
-            loadTrend: trend
+            // A week with nothing logged yet has rested only the days that have
+            // COMPLETED — not a full 7, and not today, which is still open.
+            restDaysThisWeek: current?.restDays ?? max(0, elapsed - 1),
+            loadTrend: trend,
+            daysElapsedThisWeek: elapsed,
+            rolling7Miles: round1(rolling.miles),
+            rolling7DaysRun: rolling.daysRun
         )
+    }
+
+    /// Rollup over the trailing 7 days INCLUSIVE of `asOf` — the window that
+    /// survives the Monday reset, so a strong Saturday and Sunday stay visible on
+    /// Tuesday instead of vanishing from "this week" at midnight. Same `parser`
+    /// and `calendar` as every other rollup, so date handling stays in one place.
+    public static func rollingSevenDay(from workouts: [LatestWorkout],
+                                       asOf now: Date = Date())
+        -> (miles: Double, daysRun: Int, longestRunMiles: Double) {
+        let cal = calendar
+        let fmt = parser
+        guard let endDay = cal.dateInterval(of: .day, for: now)?.start,
+              let startDay = cal.date(byAdding: .day, value: -6, to: endDay) else {
+            return (0, 0, 0)
+        }
+
+        let inWindow = workouts.filter { w in
+            guard let d = fmt.date(from: w.date),
+                  let day = cal.dateInterval(of: .day, for: d)?.start else { return false }
+            return day >= startDay && day <= endDay
+        }
+
+        let miles = inWindow.reduce(0) { $0 + $1.distanceMiles }
+        let runs = inWindow.filter { $0.type == "run" }
+        return (miles, Set(runs.map { $0.date }).count, runs.map { $0.distanceMiles }.max() ?? 0)
     }
 
     /// Number of trailing weeks that must have logged activity before we trust a
@@ -173,13 +256,14 @@ public enum ActivityHistory {
 
         // Mid-week guard: early in the current week the partial total always looks
         // low vs. completed weeks, so only call a down week "recovering" once most
-        // of the week has actually elapsed.
-        let weekStart = cal.dateInterval(of: .weekOfYear, for: now)?.start
-        let daysElapsed = weekStart.map { now.timeIntervalSince($0) / 86_400.0 } ?? 7.0
+        // of the week has actually elapsed. `daysElapsedInWeek` is 1-based (Monday
+        // is 1), so `>= 6` is Saturday-or-later — the same cutoff the previous
+        // fractional `>= 5.0` days-since-week-start check drew.
+        let daysElapsed = daysElapsedInWeek(asOf: now, cal: cal)
 
         if ratio >= 1.5 { return "spiking" }
         if ratio >= 1.15 { return "building" }
-        if ratio < 0.7 && daysElapsed >= 5.0 { return "recovering" }
+        if ratio < 0.7 && daysElapsed >= 6 { return "recovering" }
         return "steady"
     }
 

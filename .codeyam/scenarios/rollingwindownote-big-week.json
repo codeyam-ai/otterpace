@@ -1,0 +1,16 @@
+{
+  "name": "RollingWindowNote - Big Week",
+  "id": "394f88ce-d365-42f8-9021-df0d70ef65db",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "RollingWindowNote",
+      "CODEYAM_ISOLATE_SCENARIO": "Big Week"
+    }
+  },
+  "componentName": "RollingWindowNote",
+  "scenarioType": "component"
+}

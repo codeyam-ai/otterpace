@@ -9,7 +9,7 @@
   "deviceState": {
     "preferences": {
       "rbCoachConnected": false,
-      "rbOnboardingPage": 7,
+      "rbOnboardingPage": 8,
       "rbStartScreen": "onboarding"
     }
   },

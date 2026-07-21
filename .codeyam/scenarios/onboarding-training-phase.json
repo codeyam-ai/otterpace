@@ -10,7 +10,7 @@
     "preferences": {
       "rbStartScreen": "onboarding",
       "rbCoachProfileJSON": "{\"otherTraining\":[],\"trainingPhase\":\"building\"}",
-      "rbOnboardingPage": 6
+      "rbOnboardingPage": 7
     }
   },
   "scenarioType": "application",

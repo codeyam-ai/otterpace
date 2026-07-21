@@ -57,7 +57,7 @@ public enum ThemeID: String, CaseIterable, Identifiable {
     /// One-line education blurb (shared by onboarding + Settings).
     public var blurb: String {
         switch self {
-        case .default:   return "Warm and friendly — meet Buddy."
+        case .default:   return "Warm and friendly. Meet Buddy."
         case .bolt:      return "Dark and focused, built for training."
         case .orbit:     return "Cool, calm, cosmic."
         case .fieldnote: return "Warm, analog, field-guide."

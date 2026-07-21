@@ -521,6 +521,17 @@
     "testFile": "Tests/AppCoreTests/RaceGoalsTests.swift"
   },
   {
+    "conformsToView": true,
+    "description": "The trailing-7-day line under the Weekly Load metrics: 'Last 7 days: 12.3 mi · 3 run days'. Covers the Monday-start calendar week's blind spot, where a strong Saturday and Sunday vanish from 'this week' at midnight Monday and leave a heavy weekend invisible on Tuesday. Renders only when the window holds at least one run day.",
+    "filePath": "Sources/AppCore/RollingWindowNote.swift",
+    "name": "RollingWindowNote",
+    "scenarios": [
+      "rollingwindownote-default",
+      "rollingwindownote-single-run-day",
+      "rollingwindownote-big-week"
+    ]
+  },
+  {
     "description": "HealthDataSource that serves the TodayState seeded by a scenario's rb* UserDefaults — the pre-HealthKit behavior, now behind the source seam so previews are unchanged.",
     "filePath": "Sources/AppCore/Health/HealthDataSource.swift",
     "name": "SeededHealthDataSource",
@@ -1024,6 +1035,12 @@
     "testFile": "test/api/session-lib.test.ts"
   },
   {
+    "description": "How far into its Monday-start week a reference date sits, 1 on Monday through 7 on Sunday. Single definition of 'how far into the week are we', shared by groupByWeek's elapsed-aware rest days and classifyTrend's mid-week recovering guard so the two cannot drift apart. Note the guard's cutoff is >= 6 (Saturday or later), matching the fractional >= 5.0 days-since-week-start test it replaced.",
+    "filePath": "Sources/AppCore/ActivityHistory.swift",
+    "name": "daysElapsedInWeek",
+    "testFile": "Tests/AppCoreTests/ActivityHistoryTests.swift"
+  },
+  {
     "description": "Deletes the user's account_health row entirely - the opt-out and delete-my-health-data path; tolerates a 404.",
     "filePath": "api/_lib/account.ts",
     "name": "deleteHealth",
@@ -1410,6 +1427,12 @@
     "testFile": "test/api/account-push.test.ts"
   },
   {
+    "description": "Parses the app's notion of 'today' from a TodayState.date ISO string, falling back to the real clock. Scenario seeding drives that string via rbDate, so threading it into groupByWeek and weeklyLoad keeps the preview's 'this week' the same week the seeded data lives in. Without it a seeded June scenario is judged against the real clock and its in-progress week renders as finished.",
+    "filePath": "Sources/AppCore/ActivityHistory.swift",
+    "name": "referenceDate",
+    "testFile": "Tests/AppCoreTests/ActivityHistoryTests.swift"
+  },
+  {
     "description": "Remove one device token; drops the whole row when it was the last token so a signed-out user leaves no push footprint.",
     "filePath": "api/_lib/account.ts",
     "name": "removePushToken",
@@ -1425,6 +1448,12 @@
       "session"
     ],
     "testFile": "test/api/session-lib.test.ts"
+  },
+  {
+    "description": "Rolls workouts up over the trailing 7 days inclusive of a reference date, returning miles, distinct run days, and longest run. The window that survives the Monday reset: a strong Saturday and Sunday stay visible on Tuesday instead of vanishing from 'this week' at midnight. Its daysRun feeds the Weekly Review's sparseness judgment, which is what stops a runner who ran Sat/Sun/Mon being told they had a quiet week.",
+    "filePath": "Sources/AppCore/ActivityHistory.swift",
+    "name": "rollingSevenDay",
+    "testFile": "Tests/AppCoreTests/ActivityHistoryTests.swift"
   },
   {
     "description": "Rounds a number to one decimal place.",
@@ -1561,5 +1590,17 @@
       "justification": "verifies tokens against Apple live JWKS endpoint (appleid.apple.com) with no deterministic offline path. The handler that consumes it is covered in test/api/session.test.ts with the verifier mocked.",
       "kind": "no-isolation-harness"
     }
+  },
+  {
+    "description": "Builds the Activity History week-header rollup string ('14.7 mi · 3 runs · 3 rest'), appending a 'so far' qualifier while the week is still in progress (daysElapsed < 7). That suffix is the user-visible signal that the smaller numbers describe a week still being lived rather than a finished week that went badly.",
+    "filePath": "Sources/AppCore/Formatters.swift",
+    "name": "weekRollup",
+    "testFile": "Tests/AppCoreTests/FormattersTests.swift"
+  },
+  {
+    "description": "Spoken VoiceOver form of weekRollup: words instead of separators, pluralized rest days, and the elapsed-day count stated outright ('2 of 7 days elapsed') so a screen-reader user gets the same 'this week isn't over yet' context the visual 'so far' conveys.",
+    "filePath": "Sources/AppCore/Formatters.swift",
+    "name": "weekRollupSpoken",
+    "testFile": "Tests/AppCoreTests/FormattersTests.swift"
   }
 ]

@@ -23,7 +23,10 @@ public struct ActivityHistoryView: View {
         self.onClose = onClose
     }
 
-    private var weeks: [WeekGroup] { ActivityHistory.groupByWeek(model.today.workouts) }
+    private var weeks: [WeekGroup] {
+        ActivityHistory.groupByWeek(model.today.workouts,
+                                    asOf: ActivityHistory.referenceDate(fromISO: model.today.date))
+    }
 
     public var body: some View {
         ZStack {

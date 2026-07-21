@@ -256,7 +256,7 @@ public enum CoachEngine {
         if let clause = raceClause(c, asOf: today) {
             return CoachReply(intent: .raceGoal, text: clause, mood: .ready)
         }
-        let text = "Tell me about your race in Settings — the name, distance, and date — and I'll build your training toward it, then ease you off as it nears. What are you aiming at?"
+        let text = "Tell me about your race in Settings (the name, distance, and date) and I'll build your training toward it, then ease you off as it nears. What are you aiming at?"
         return CoachReply(intent: .raceGoal, text: text, mood: .ready)
     }
 
