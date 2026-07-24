@@ -67,25 +67,42 @@ public struct ContentView: View {
 
     public var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [Palette.bgTop, Palette.bgBottom],
-                startPoint: .top, endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            // Main content is re-keyed on the selected theme so a live switch
+            // rebuilds every module — leaf cards read the static `Palette` (which
+            // resolves the current theme) but don't individually observe
+            // `ThemeStore`, so without this identity change SwiftUI keeps their
+            // cached (default, white-card) render and only the theme-observing
+            // screen roots retint. `model`/`session` live above this `.id`, so app
+            // state survives the switch; scenario captures pin one theme at launch,
+            // so `.id` is constant there and never triggers a rebuild.
+            //
+            // The Settings/Onboarding overlays below are deliberately OUTSIDE this
+            // `.id`: they observe `ThemeStore` (and read `\.theme`) directly, so
+            // they retint in place. Re-keying them would tear them down and reset
+            // their state — e.g. picking a theme mid-onboarding would rebuild the
+            // flow and bounce the user back to the first page.
+            ZStack {
+                LinearGradient(
+                    colors: [Palette.bgTop, Palette.bgBottom],
+                    startPoint: .top, endPoint: .bottom
+                )
+                .ignoresSafeArea()
 
-            if !previewMode.isEmpty {
-                BuddyPreviewHost(mode: previewMode)
-            } else if session.state == .undecided {
-                SignInView(session: session)
-            } else if model.today.healthKitConnected {
-                connectedTabs
-            } else if model.healthAuth == .denied {
-                HealthDeniedView(onOpenSettings: openSettings,
-                                 onSettings: { withAnimation(Motion.overlay) { showSettings = true } })
-            } else {
-                ConnectHero(onConnect: { model.connect() },
-                            onSettings: { withAnimation(Motion.overlay) { showSettings = true } })
+                if !previewMode.isEmpty {
+                    BuddyPreviewHost(mode: previewMode)
+                } else if session.state == .undecided {
+                    SignInView(session: session)
+                } else if model.today.healthKitConnected {
+                    connectedTabs
+                } else if model.healthAuth == .denied {
+                    HealthDeniedView(onOpenSettings: openSettings,
+                                     onSettings: { withAnimation(Motion.overlay) { showSettings = true } })
+                } else {
+                    ConnectHero(onConnect: { model.connect() },
+                                onSettings: { withAnimation(Motion.overlay) { showSettings = true } })
+                }
             }
+            .id(themeStore.themeID)
 
             // Settings presents as a full-cover overlay, reachable from the
             // dashboard and the Connect hero (so sign out / delete account is
@@ -114,15 +131,6 @@ public struct ContentView: View {
                 .onAppear { Analytics.shared.capture("onboarding_started") }
             }
         }
-        // Re-key the whole visual tree on the selected theme so a live switch
-        // rebuilds every module — leaf cards read the static `Palette` (which
-        // resolves the current theme) but don't individually observe `ThemeStore`,
-        // so without this identity change SwiftUI keeps their cached (default,
-        // white-card) render and only the theme-observing screen roots retint.
-        // `model`/`session` live above this `.id`, so app state survives the
-        // switch; scenario captures pin one theme at launch, so `.id` is constant
-        // there and never triggers a rebuild.
-        .id(themeStore.themeID)
         .modifier(DynamicTypeOverride(raw: contentSizeOverride))
         // Match the system color scheme to the selected theme so system chrome
         // (TabView bar, SecureField, scroll backgrounds, default Text) tracks the

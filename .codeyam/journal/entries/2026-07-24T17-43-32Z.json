@@ -1,0 +1,391 @@
+{
+  "timestamp": "2026-07-24T17:43:32Z",
+  "title": "Onboarding Theme Switch Fix",
+  "type": "feature",
+  "userRequest": "## Summary\n\nTwo onboarding bugs around theming:\n\n1. **Theme picker jumps back to the start of onboarding.** On the \"Choose your\n   look\" step, selecting a theme sends the user back to the first intro page\n   instead of retinting the current step in place.\n\n2. **The brand mark appears to change color from one onboarding screen to the\n   next.** Most visible on the natural green/parchment themes (Garden and\n   Fieldnote): the logo reads as a different color per screen as you move\n   through the flow.\n\nNeither should happen. Picking a theme should recolor the app live and keep the\nuser exactly where they are (they only go back if they tap Back). The brand mark\nshould hold one consistent color across every onboarding screen within a theme.\n\n## Root Cause\n\n**Bug 1 — the whole view tree is re-keyed on theme change.**\n`ContentView.swift:125` applies `.id(themeStore.themeID)` to the entire root\n`ZStack`. That identity is deliberately changed on a theme switch so the\nmain-content *leaf cards* (which read the static `Palette` but do not observe\n`ThemeStore`) get torn down and rebuilt with the new colors. But the onboarding\nand Settings overlays are siblings inside that same `ZStack`, so they are torn\ndown too — and `OnboardingFlowView`'s `@State page` re-initializes to\n`startPage` (0). Result: picking a theme rebuilds onboarding from scratch and\ndrops you on page 1.\n\nThe overlays don't need the `.id` rebuild: they already retint live. Each holds\n`@ObservedObject private var themeStore = ThemeStore.shared`, and `BuddyView`\nreads `@Environment(\\.theme)`, which `ThemedAppRoot` (`App/App.swift:70`) injects\nfrom `themeStore.current` while observing the store. So the overlays recolor on\ntheir own the moment the theme changes.\n\n**Bug 2 — the mark's halo color is driven by mood, which varies per screen.**\n`BuddyView` (`ThemeMarks.swift`) renders the abstract theme mark inside a halo\n`Circle().fill(mood.accent…)`. `BuddyMood.accent` (`Theme.swift:108`) maps\n`ready → brand`, `jogging → go`, `cheering → go`, etc. The onboarding screens each\npass a different mood (`OnboardingFlowView.swift:188` intro pages, `:428` step\nscaffold): intro 1 `ready`, intro 2 `jogging`, intro 3 `cheering`, and the steps\nalternate `ready`/`jogging`/`cheering`. The mark's *fill* is a constant theme\ncolor, but the *halo* behind it shifts — brand → go → go across the flow. On\nFieldnote that is terracotta (`#E0562F`) → teal (`#1F7E8C`), a jarring swing; on\nGarden it is green (`#4E6B54`) → green-teal (`#6F9E8B`), subtler but visible. For\na face mascot (Default's `PuffyBuddy`) a mood-colored halo is intended\npersonality; for an abstract brand *mark* it reads as the logo changing color.\n\n## Key Decisions\n\n- **Scope the re-key, don't remove it.** Keep `.id(themeStore.themeID)` on the\n  main-content branch only (the background gradient + the `if/else` content\n  switch that renders `ConnectHero` / `HealthDeniedView` / `connectedTabs` /\n  `SignInView` / `BuddyPreviewHost`). Move the Settings and Onboarding overlays\n  *outside* the keyed subtree so they keep their state across a theme switch and\n  retint via their own `ThemeStore` observation. This also fixes the same class\n  of state-loss in the Settings theme picker.\n- **Preserve app state above the `.id`.** `model`/`session` already live above\n  the `.id` (they're `@StateObject`s on `ContentView`), so nothing about\n  hoisting the overlays changes app-level state survival. Scenario captures pin a\n  single theme at launch, so the `.id` is constant during a capture and never\n  triggers a rebuild — unchanged by this edit.\n- **Fix Bug 2 in the onboarding call sites, not globally.** `BuddyView`'s\n  mood-colored halo is the intended design on mood surfaces (Today, Coach,\n  weekly review) where mood must read through color without a face. Render the\n  onboarding brand mark with a consistent, non-mood presentation\n  (`showHalo: false`, or a fixed brand-tinted halo) so the logo holds one color\n  per theme across every onboarding screen, while leaving mood-halo behavior\n  everywhere else untouched. `PuffyBuddy` (Default) still conveys mood through\n  its face, so the intro carousel keeps its personality.\n- **Confirm the exact remedy visually before finalizing.** Capture the intro\n  pages under Garden and Fieldnote to verify the mark color is stable\n  screen-to-screen, and re-verify the existing \"Choose Your Look\" per-theme\n  scenarios still render correctly.\n\n## Implementation\n\n### 1. Scope the theme re-key (Bug 1)\n- In `ContentView.swift`, wrap only the gradient + main-content `if/else` chain\n  (lines ~70–88) in a container carrying `.id(themeStore.themeID)`.\n- Leave the `showSettings` and `showOnboarding` overlay blocks as siblings of\n  that container in the outer `ZStack`, without the `.id`.\n- Keep `.preferredColorScheme`, `DynamicTypeOverride`, and the lifecycle\n  modifiers on the outer view as they are. Update the explanatory comment.\n\n### 2. Make the onboarding mark color-consistent (Bug 2)\n- In `OnboardingFlowView.swift`, render the brand mark with a consistent\n  presentation at both call sites (`:188` intro, `:428` step scaffold) — e.g.\n  `BuddyView(mood:…, showHalo: false)` — so the halo no longer recolors per\n  screen. Confirm `PuffyBuddy` still renders acceptably with the chosen option.\n\n### 3. Tests\n- Add/extend coverage asserting onboarding page state is preserved across a\n  theme change (guard against the re-key regression at the logic level where\n  feasible), alongside the existing `OnboardingStateTests` /\n  `OnboardingScenarioIndexTests` / `ThemeStoreTests`.\n\n### 4. Scenarios (data states)\n- Reuse the existing per-theme \"Choose Your Look\" scenarios (Fieldnote, Garden,\n  Orbit, Otter) and the per-step onboarding scenarios.\n- Add intro-page scenarios under **Garden** and **Fieldnote** (intro pages\n  0/1/2, which carry moods `ready`/`jogging`/`cheering`) so the fix is\n  demonstrable: the mark holds one color across all three. Production DB stays\n  empty; each scenario carries its own seed (`rbStartScreen=onboarding`,\n  `rbOnboardingPage`, `rbTheme`).\n\n## Out of Scope\n\n- `BuddyView`'s mood-halo behavior on non-onboarding surfaces (Today, Coach,\n  weekly review) — intentionally unchanged.\n- Redesigning any theme's palette or the marks themselves — the mark fills are\n  already correct; only the onboarding halo presentation and the re-key scope\n  change.\n- Adding or renaming themes.\n\n## Verification\n\n- Live: enter onboarding, reach \"Choose your look\", pick a theme → the app\n  retints and stays on that step; tap Back → goes to the prior step as before.\n- Live: swipe the intro carousel under Garden and Fieldnote → the brand mark is\n  the same color on every screen.\n- Live: open Settings, switch theme → Settings retints without losing place.\n- Swift test suite green; new/updated onboarding + theme tests pass.\n- New Garden/Fieldnote intro-page scenarios captured; `scenario-coverage`\n  reports 0 stale / 0 missing.",
+  "description": "Fixed two onboarding theming bugs. First, picking a theme on the Choose-your-look step no longer bounces the user back to the first intro page: ContentViews .id(themeID) re-key is now scoped to the main content branch only, so the Settings and Onboarding overlays (which observe ThemeStore directly) retint in place instead of being torn down and rebuilt. Second, the brand mark no longer appears to change color from one onboarding screen to the next: the onboarding BuddyView now renders with showHalo:false, removing the mood-accent halo that previously shifted the mark surrounding color per page (most jarring on Fieldnote and Garden). Recaptured all onboarding/welcome scenarios and added two new scenarios showing the mark holding one color across intro pages under Garden and Fieldnote.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/completed/onboarding-theme-switch-fix.md",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/accessibility-large-text-today--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-add-ai-coaching-skip--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-add-ai-coaching-skip--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-ai-coaching-connected--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-ai-coaching-connected--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-choose-your-look--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-choose-your-look--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-choose-your-look-fieldnote--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-choose-your-look-fieldnote--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-choose-your-look-garden--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-choose-your-look-garden--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-choose-your-look-orbit--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-choose-your-look-orbit--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-choose-your-look-otter--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-choose-your-look-otter--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-other-training--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-other-training--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-set-goal-8k--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-set-goal-8k--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-training-phase--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-training-phase--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-walking-habits--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-walking-habits--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-almost-there--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-computed-nudge--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-custom-goal--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-day-one-connect--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-fresh-start--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-bolt-theme--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-fieldnote-theme--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-garden-theme--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-orbit-theme--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-long-content--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-midday-nudge--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-recovery-caution--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-strong-weekend-fresh-week--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-walking-focused-nudge--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-zero-step-morning--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-ask-me-anything--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-ask-me-anything--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-day-by-day-coaching--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-day-by-day-coaching--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-large-text--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-large-text--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-meet-buddy--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/welcome-meet-buddy--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/provider-auth-verdict.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ContentView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Onboarding/OnboardingFlowView.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/onboarding-intro-fieldnote-ask-me-anything.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/onboarding-intro-garden-day-by-day.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-intro-fieldnote-ask-me-anything--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-intro-garden-day-by-day--iphone-16.png",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Accessibility — Large Text Today",
+      "screenshotPath": "accessibility-large-text-today--iphone-16.png"
+    },
+    {
+      "name": "Onboarding - Choose Your Look",
+      "screenshotPath": "onboarding-choose-your-look--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Choose-Your-Look - Fieldnote",
+      "screenshotPath": "onboarding-choose-your-look-fieldnote--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Choose-Your-Look - Garden",
+      "screenshotPath": "onboarding-choose-your-look-garden--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Choose-Your-Look - Orbit",
+      "screenshotPath": "onboarding-choose-your-look-orbit--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Choose-Your-Look - Otter",
+      "screenshotPath": "onboarding-choose-your-look-otter--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Intro Fieldnote - Ask Me Anything",
+      "screenshotPath": "onboarding-intro-fieldnote-ask-me-anything--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Intro Garden - Day-by-Day",
+      "screenshotPath": "onboarding-intro-garden-day-by-day--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — AI Coaching Connected",
+      "screenshotPath": "onboarding-ai-coaching-connected--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Add AI Coaching (Skip)",
+      "screenshotPath": "onboarding-add-ai-coaching-skip--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Other Training",
+      "screenshotPath": "onboarding-other-training--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Set Goal (8K)",
+      "screenshotPath": "onboarding-set-goal-8k--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Training Phase",
+      "screenshotPath": "onboarding-training-phase--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Walking Habits",
+      "screenshotPath": "onboarding-walking-habits--iphone-16.png"
+    },
+    {
+      "name": "Today - Almost There",
+      "screenshotPath": "today-almost-there--iphone-16.png"
+    },
+    {
+      "name": "Today - Computed Nudge",
+      "screenshotPath": "today-computed-nudge--iphone-16.png"
+    },
+    {
+      "name": "Today - Day One (Connect)",
+      "screenshotPath": "today-day-one-connect--iphone-16.png"
+    },
+    {
+      "name": "Today - Fresh Start",
+      "screenshotPath": "today-fresh-start--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed",
+      "screenshotPath": "today-goal-crushed--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed - Bolt Theme",
+      "screenshotPath": "today-goal-crushed-bolt-theme--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed - Fieldnote Theme",
+      "screenshotPath": "today-goal-crushed-fieldnote-theme--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed - Garden Theme",
+      "screenshotPath": "today-goal-crushed-garden-theme--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed - Orbit Theme",
+      "screenshotPath": "today-goal-crushed-orbit-theme--iphone-16.png"
+    },
+    {
+      "name": "Today - Long Content",
+      "screenshotPath": "today-long-content--iphone-16.png"
+    },
+    {
+      "name": "Today - Midday Nudge",
+      "screenshotPath": "today-midday-nudge--iphone-16.png"
+    },
+    {
+      "name": "Today - Recovery Caution",
+      "screenshotPath": "today-recovery-caution--iphone-16.png"
+    },
+    {
+      "name": "Today - Walking-Focused Nudge",
+      "screenshotPath": "today-walking-focused-nudge--iphone-16.png"
+    },
+    {
+      "name": "Today - Zero-Step Morning",
+      "screenshotPath": "today-zero-step-morning--iphone-16.png"
+    },
+    {
+      "name": "Today — Custom Goal",
+      "screenshotPath": "today-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Today — Strong Weekend, Fresh Week",
+      "screenshotPath": "today-strong-weekend-fresh-week--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Ask Me Anything",
+      "screenshotPath": "welcome-ask-me-anything--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Day-by-Day Coaching",
+      "screenshotPath": "welcome-day-by-day-coaching--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Large Text",
+      "screenshotPath": "welcome-large-text--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Meet Buddy",
+      "screenshotPath": "welcome-meet-buddy--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 276,
+    "passed": 276,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 276,
+        "passed": 276
+      }
+    ]
+  }
+}

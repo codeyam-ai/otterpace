@@ -185,7 +185,13 @@ struct OnboardingFlowView: View {
     private func introPageView(_ p: IntroPage) -> some View {
         VStack(spacing: 22) {
             Spacer()
-            BuddyView(mood: p.mood, size: 140).accessibilityHidden(true)
+            // showHalo:false keeps the brand mark one consistent color across
+            // every onboarding screen. BuddyView's mood-accent halo (intended on
+            // Today/Coach where mood must read through color without a face) would
+            // otherwise recolor the abstract theme marks page-to-page — jarring on
+            // Fieldnote/Garden, where the mark reads as a fixed logo. PuffyBuddy
+            // (Default) still conveys mood through its face.
+            BuddyView(mood: p.mood, size: 140, showHalo: false).accessibilityHidden(true)
             VStack(spacing: 12) {
                 Text(p.title)
                     .font(Typography.title)
@@ -425,7 +431,10 @@ struct OnboardingFlowView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 20) {
-                    BuddyView(mood: mood, size: 96).accessibilityHidden(true)
+                    // Consistent, non-mood mark presentation (see the intro-page
+                    // note): the halo would otherwise recolor the brand mark from
+                    // one personalization step to the next.
+                    BuddyView(mood: mood, size: 96, showHalo: false).accessibilityHidden(true)
                         .padding(.top, 44)
                     VStack(spacing: 10) {
                         Text(title)

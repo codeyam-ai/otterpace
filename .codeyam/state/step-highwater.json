@@ -1,6 +1,6 @@
 {
-  "feature": "elapsed-aware-weekly-view",
-  "maxStep": 26,
-  "version": 504,
-  "updatedAt": "2026-07-21T20:46:35.095101+00:00"
+  "feature": "onboarding-theme-switch-fix",
+  "maxStep": 24,
+  "version": 417,
+  "updatedAt": "2026-07-24T17:59:06.890671+00:00"
 }
