@@ -169,9 +169,9 @@ Information (Phase 6).
 
 **6a. Contact.** Name / phone / email — this must be a **working inbox** Apple can
 reach you at, so use `nseldeib@gmail.com` (the address in
-`docs/app-store-listing.md`'s review notes). Do **not** use `hello@otterpace.com` —
-that alias is a post-launch nice-to-have (`docs/go-live-runbook.md` Phase 9) and is
-not set up yet, so review correspondence would bounce.
+`docs/app-store-listing.md`'s review notes). `hello@otterpace.com` now forwards to
+that same inbox (wired up 2026-07-10), but the review contact is deliberately kept
+as the direct address so correspondence can't be lost to a forwarding rule.
 
 **6b. Notes.** Paste the **App Review Information → Notes** block from
 `docs/app-store-listing.md`. It pre-empts the three Otterpace-specific rejection

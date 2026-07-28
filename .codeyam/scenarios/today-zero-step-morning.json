@@ -29,12 +29,13 @@
       "rbLongestRunMiles": 3.1,
       "rbShowHistory": false,
       "rbActiveMinutes": 0,
-      "rbCoachBody": "You're at zero so far — totally normal this early. A short, easy walk whenever you're ready is a friendly first step toward your 10K. No pressure, just momentum.",
+      "rbCoachBody": "You're at zero so far, totally normal this early. A short, easy walk whenever you're ready is a friendly first step toward your 10K. No pressure, just momentum.",
       "rbStartTab": "today",
       "rbCoachSafety": false,
       "rbSteps": 0,
       "rbWeeklyMileage": 5.4,
-      "otterpaceRacePromptDismissed": true
+      "otterpaceRacePromptDismissed": true,
+      "rbTheme": "default"
     }
   },
   "scenarioType": "application",

@@ -22,7 +22,7 @@
       "rbWorkoutDurationMinutes": 1284,
       "rbLongestRunMiles": 26.2,
       "rbShowWeeklyReview": false,
-      "rbCoachHeadline": "Huge week in the books — let's protect your recovery before the next big effort",
+      "rbCoachHeadline": "Huge week in the books: let's protect your recovery before the next big effort",
       "rbWorkoutDistanceMiles": 124.0,
       "rbAskSeedQuestion": "",
       "rbCoachType": "recovery",
@@ -36,10 +36,11 @@
       "rbShowSettings": false,
       "rbMinutesSinceMovement": 95,
       "rbWorkoutPace": "10:15/mi · technical alpine trail",
-      "rbCoachBody": "That was a serious block of training. With your mileage this high, the smartest move now is an easy, conversational few days — gentle walking, mobility, and real rest — so all that work turns into fitness instead of fatigue.",
+      "rbCoachBody": "That was a serious block of training. With your mileage this high, the smartest move now is an easy, conversational few days (gentle walking, mobility, and real rest) so all that work turns into fitness instead of fatigue.",
       "rbPreviewMode": "",
       "rbDate": "2026-06-23",
-      "otterpaceRacePromptDismissed": true
+      "otterpaceRacePromptDismissed": true,
+      "rbTheme": "default"
     }
   },
   "scenarioType": "application",

@@ -12,7 +12,7 @@
       "rbAskSeedQuestion": "",
       "rbMinutesSinceMovement": 22,
       "rbCoachType": "walk",
-      "rbCoachBody": "You set a custom 9,500-step goal. You're at 7,200 — a 20-minute walk closes the gap without adding training stress.",
+      "rbCoachBody": "You set a custom 9,500-step goal. You're at 7,200. A 20-minute walk closes the gap without adding training stress.",
       "rbStartTab": "today",
       "rbShowSettings": false,
       "rbWorkoutDurationMinutes": 31,
@@ -39,7 +39,8 @@
       "rbSteps": 7200,
       "rbWorkoutDistanceMiles": 2.0,
       "rbContentSize": "",
-      "otterpaceRacePromptDismissed": true
+      "otterpaceRacePromptDismissed": true,
+      "rbTheme": "default"
     }
   },
   "scenarioType": "application",

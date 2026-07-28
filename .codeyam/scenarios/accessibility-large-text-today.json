@@ -30,7 +30,7 @@
       "rbConnected": true,
       "rbRestDaysThisWeek": 2,
       "rbActiveEnergyKcal": 240,
-      "rbCoachBody": "You ran yesterday, so keep today gentle — a relaxed walk and some mobility.",
+      "rbCoachBody": "You ran yesterday, so keep today gentle: a relaxed walk and some mobility.",
       "rbGoalSteps": 10000,
       "rbLongestRunMiles": 8.0,
       "rbAskSeedQuestion": "",
@@ -38,7 +38,8 @@
       "rbWorkoutDistanceMiles": 4.2,
       "rbWorkoutDurationMinutes": 44,
       "rbShowHistory": false,
-      "otterpaceRacePromptDismissed": true
+      "otterpaceRacePromptDismissed": true,
+      "rbTheme": "default"
     }
   },
   "scenarioType": "application",

@@ -1,6 +1,6 @@
 {
-  "feature": "onboarding-theme-switch-fix",
-  "maxStep": 26,
-  "version": 425,
-  "updatedAt": "2026-07-24T18:23:47.125736+00:00"
+  "feature": "scenario-copy-em-dash-cleanup",
+  "maxStep": 24,
+  "version": 564,
+  "updatedAt": "2026-07-28T01:36:02.469567+00:00"
 }

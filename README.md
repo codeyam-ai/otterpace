@@ -144,7 +144,9 @@ editor's runner. Full walkthrough: **[docs/built-with-codeyam.md](docs/built-wit
 ## Running
 
 Requires Xcode (16+) with an iOS simulator runtime installed. No private tooling
-is needed to build, run, or test the app.
+is needed to build, run, or test the app. If the toolchain isn't set up yet,
+**[MOBILE_SETUP.md](MOBILE_SETUP.md)** has a fast pre-flight checklist that
+catches a missing SDK or simulator runtime in seconds.
 
     # Open in Xcode, then pick an iPhone simulator and press ⌘R
     open App.xcodeproj

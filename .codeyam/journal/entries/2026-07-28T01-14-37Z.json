@@ -1,0 +1,145 @@
+{
+  "timestamp": "2026-07-28T01:14:37Z",
+  "title": "Scenario Seed Copy: Em Dash Cleanup",
+  "type": "feature",
+  "userRequest": "## Summary\n\nThe \"Elapsed-Aware Weekly View\" feature stripped em dashes from user-facing string\nliterals in app source (36 strings across 13 files), but deliberately scoped that\nsweep to `Sources/**.swift`. Roughly 59 scenario JSON files under\n`.codeyam/scenarios/` still carry em dashes in their seeded demo copy — coach\nheadlines and bodies like `\"10K crushed — nice work!\"` and\n`\"So close — 820 to go!\"`. These are demo fixtures, not shipped app strings, so\nthey have ZERO effect on the binary. But they render in captured scenario\nscreenshots and therefore in the README showcase gallery, where the em dashes are\nnow inconsistent with the in-app copy the sweep already normalized.\n\nThis is a non-blocking, presentation-only cleanup. It is intentionally its own\nplan rather than folded into the feature, because rewriting seed copy invalidates\nevery affected screenshot and forces a full recapture cycle — the same ~40-scenario\nsweep the feature already paid down once.\n\n## Key Decisions\n\n- **Scope is `.codeyam/scenarios/*.json` seed values only.** Specifically the\n  `deviceState.preferences` string keys that hold user-facing copy: `rbCoachHeadline`,\n  `rbCoachBody`, `rbAskSeedQuestion`, and any similar narrative seed. Do NOT touch\n  keys that are data, not prose (dates, paces, booleans, numeric goals).\n- **Contextual rewrites, not a blind character swap.** Match what the source sweep\n  did: an em dash becomes a comma, a period, a colon, or parentheses depending on\n  the sentence. A global `—` → `,` replace would read wrong in many places\n  (`\"So close — 820 to go!\"` wants a comma; `\"10K crushed — nice work!\"` wants a\n  period or comma; a mid-clause aside wants parens). Review each string.\n- **Recapture is the expensive half and must use the verified method.**\n  `recapture-stale` is unusable on this `swift-ios-swiftui` simulator stack (it warms\n  an HTTP dev server that does not exist, 502s, and overwrites the PNG with the coral\n  LaunchScreen splash). Use the manual sweep proven during the feature: per scenario,\n  wipe the app defaults domain (so an omitted `rb*` key cannot leak from the prior\n  scenario), pin `rbTheme` to the scenario's own theme (default unless the scenario\n  seeds one), let `editor preview` seed and launch, settle ~10s past the splash\n  WITHOUT a manual relaunch (a second launch resets page state), then\n  `simctl io screenshot`. Verify each family against its committed original before\n  installing — a faithful capture of a stale seed is still the wrong screen.\n- **Verify seed correctness before recapturing, not just after.** The feature\n  surfaced that six onboarding scenarios had drifted page indices; a recapture\n  faithfully renders whatever the seed says. `OnboardingScenarioIndexTests` now\n  guards page indices, but this plan should still eyeball each family's first frame.\n- **Batch by family to keep the diff reviewable** (ask-coach, today, weekly-review,\n  onboarding, settings, welcome), capturing to a staging dir and installing per family.\n\n## Implementation\n\n### 1. Inventory the affected seeds\n\n- `grep -l \"—\" .codeyam/scenarios/*.json` for the file list (~59).\n- For each, extract the em-dash-bearing `preferences` string keys. Confirm each is\n  user-facing prose, not data.\n\n### 2. Rewrite the seed copy\n\n- Edit each scenario JSON's affected string values with a contextual replacement.\n- Keep every file in canonical JSON form (the audit's `CANONICAL_JSON_FORM`\n  invariant fires on hand-edits: raw unicode, 2-space indent, sorted keys where the\n  writer uses them, trailing newline). Prefer re-writing via a small script that\n  round-trips through the same serializer the tooling expects.\n\n### 3. Recapture affected scenarios\n\n- Run the verified manual sweep over exactly the scenarios whose copy changed.\n- Verify one frame per family against its committed original.\n- Install, then confirm `scenario-coverage` reports 0 stale / 0 missing and\n  `seeded-capture-check` finds no NEW distinct-seed collisions beyond the known\n  pre-existing ones.\n\n### 4. Refresh the README gallery\n\n- `readme-sync` so the showcase screenshots match the recaptured frames.\n\n## Out of Scope\n\n- App source strings (already swept).\n- The ~7 pre-existing `seeded-capture-check` collisions among unrelated scenarios\n  (`accessibility-large-text-today` etc.) — those are near-blank or ambient-state\n  captures, tracked separately, not caused by this copy change.\n- Code comments and doc headers (the source sweep left those; seed JSON has none).\n\n## Verification\n\n- `grep -c \"—\" .codeyam/scenarios/*.json` returns zero across the set.\n- `codeyam-editor editor scenario-coverage` → 0 stale, 0 missing.\n- No app source or test changes (this is fixtures + screenshots only), so the Swift\n  suite is untouched; run it once to confirm no incidental breakage.",
+  "description": "Normalized em dashes out of the seeded demo copy in 13 Today-family scenario fixtures, matching the contextual rewrites the earlier app-source sweep applied: a dash became a comma, colon, period, or parentheses depending on the sentence rather than a blind character swap. Recaptured all 14 affected iPhone 16 screenshots via the manual simulator sweep (recapture-stale is unusable on this Swift/simulator stack), so the README showcase gallery now matches the in-app copy. Scenario name fields were left alone deliberately - they are editor-facing labels that never render in the app. Also bundled a marketing-site fix: the nav Get the app CTA in site/index.html pointed at #get, an anchor on the hero badge row at the top of the page, so it scrolled nowhere and never reached a store; it now links directly to the App Store listing.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/scenario-copy-em-dash-cleanup.md\t.codeyam/plans/completed/scenario-copy-em-dash-cleanup.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/accessibility-large-text-today.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/accessibility-large-text-today--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-almost-there--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-custom-goal--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-fresh-start--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-bolt-theme--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-fieldnote-theme--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-garden-theme--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-orbit-theme--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-long-content--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-past-race-banner-returns--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-recovery-caution--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-zero-step-morning--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-almost-there.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-custom-goal.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-fresh-start.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed-bolt-theme.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed-fieldnote-theme.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed-garden-theme.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed-orbit-theme.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-long-content.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-past-race-banner-returns.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-recovery-caution.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-zero-step-morning.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/provider-auth-verdict.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": "site/index.html",
+      "status": "modified"
+    }
+  ],
+  "testResults": {
+    "total": 276,
+    "passed": 276,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 276,
+        "passed": 276
+      }
+    ]
+  }
+}

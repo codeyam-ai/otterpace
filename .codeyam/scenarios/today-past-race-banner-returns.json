@@ -18,7 +18,7 @@
       "rbActiveMinutes": 51,
       "rbRestDaysThisWeek": 1,
       "rbAskSeedQuestion": "",
-      "rbCoachBody": "Nice work wrapping the Bay Bridge 10K. Ease back today — a gentle walk keeps the legs fresh. Ready to pick your next race?",
+      "rbCoachBody": "Nice work wrapping the Bay Bridge 10K. Ease back today: a gentle walk keeps the legs fresh. Ready to pick your next race?",
       "rbShowRaceEditor": false,
       "rbGoalSteps": 10000,
       "rbShowHistory": false,
@@ -34,7 +34,8 @@
       "rbDate": "2026-06-22",
       "rbLoadTrend": "steady",
       "rbSteps": 8200,
-      "rbShowRacePrompt": false
+      "rbShowRacePrompt": false,
+      "rbTheme": "default"
     }
   },
   "scenarioType": "application",

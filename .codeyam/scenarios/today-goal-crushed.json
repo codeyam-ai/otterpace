@@ -26,7 +26,7 @@
       "rbSteps": 11240,
       "rbWorkoutDurationMinutes": 43,
       "rbWorkoutPace": "10:15/mi",
-      "rbCoachHeadline": "10K crushed — nice work!",
+      "rbCoachHeadline": "10K crushed, nice work!",
       "rbWorkoutSource": "strava",
       "rbDaysRunThisWeek": 3,
       "rbDate": "2026-06-22",
@@ -39,7 +39,8 @@
       "rbShowHistory": false,
       "rbWorkoutDate": "2026-06-22",
       "rbBuddyMood": "celebrating",
-      "otterpaceRacePromptDismissed": true
+      "otterpaceRacePromptDismissed": true,
+      "rbTheme": "default"
     }
   },
   "scenarioType": "application",

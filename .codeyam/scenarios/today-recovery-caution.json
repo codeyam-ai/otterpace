@@ -9,7 +9,7 @@
   "deviceState": {
     "preferences": {
       "rbConnected": true,
-      "rbCoachBody": "Your weekly mileage jumped about 40% and you logged a hard 8-mile run yesterday. Today is a great day for a relaxed walk or mobility work — let that effort settle so it builds fitness instead of backfiring.",
+      "rbCoachBody": "Your weekly mileage jumped about 40% and you logged a hard 8-mile run yesterday. Today is a great day for a relaxed walk or mobility work. Let that effort settle so it builds fitness instead of backfiring.",
       "rbStartTab": "today",
       "rbActiveEnergyKcal": 240,
       "rbDistanceMiles": 2.6,
@@ -39,7 +39,8 @@
       "rbDate": "2026-06-22",
       "rbContentSize": "",
       "rbMinutesSinceMovement": 40,
-      "otterpaceRacePromptDismissed": true
+      "otterpaceRacePromptDismissed": true,
+      "rbTheme": "default"
     }
   },
   "scenarioType": "application",
