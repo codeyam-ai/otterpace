@@ -1,6 +1,6 @@
 {
   "feature": "Multi-Provider BYOK (OpenAI + Gemini)",
-  "maxStep": 24,
-  "version": 667,
-  "updatedAt": "2026-07-30T16:08:06.074498+00:00"
+  "maxStep": 25,
+  "version": 669,
+  "updatedAt": "2026-07-30T16:38:47.687224+00:00"
 }
