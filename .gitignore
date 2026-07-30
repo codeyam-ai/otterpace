@@ -84,8 +84,12 @@ blob-report/
 .codeyam/test-cache/
 .codeyam/test-run-marker.json
 
-# Local Claude Code tooling (skills, hooks, settings) — not part of the shipped project
-.claude/
+# Local Claude Code tooling (hooks, settings) — not part of the shipped project
+.claude/*
+# …except skills: their procedure files are the reviewable body of each skill
+# (e.g. codeyam-audit/finalize-procedure.md), so they must be version-controlled
+# rather than living as untracked per-machine state.
+!.claude/skills/
 
 # CodeYam editor UI scaffolding — generated tooling artifacts, not app code
 ui/

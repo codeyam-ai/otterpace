@@ -1,0 +1,534 @@
+# codeyam-audit procedure — align, finalize, present, drive to merge-ready
+
+The authoritative, version-controlled body of the `/codeyam-audit` skill:
+**bring this repo into full codeyam alignment, finalize it whole-repo, clean it
+for presentation, and drive it to merge-ready — aggressively on deterministic
+drift, but supervised on every judgment call.**
+
+This file is the *procedure*; the sibling `SKILL.md` is the thin, stable
+*contract* that points here. Durable knowledge accrues in this file so the
+skill's "Reflect & self-improve" step can propose edits to **this file**
+(never a silent edit to `SKILL.md`) through the standard editor workflow.
+
+It is **self-contained**: a client project has no `CLAUDE.md` to lean on, so
+every command, default, and gotcha needed to converge is written here. Read it
+top to bottom on first use; on later runs, recalled memories supply the deltas.
+
+---
+
+## What this skill is (and is not)
+
+- **It is the one comprehensive "finalize outside the editor workflow" entry.**
+  Run it when you have accumulated deferred-finalize commits, made manual
+  commits outside the workflow, or just want to bring whatever HEAD currently
+  is into full alignment and merge-readiness.
+- **It is aggressive on deterministic drift.** Mechanical alignment fixes
+  (registry reconcile, test/evidence/description refresh, capture-script sync,
+  screenshot recapture, import-graph refresh) are applied autonomously.
+- **It is supervised on judgment.** A bulk unregistered-entity wall, an
+  ambiguous classification (fixture vs real, testable vs untestable), and
+  anything that would delete or rewrite content **stop and ask** — never an
+  unsupervised mass-registration or mass-deletion.
+- **It is idempotent and resumable.** Every run makes progress; re-running
+  picks up where the last left off. A run ends **either** at merge-ready
+  **or** at a specific, answerable question whose answer advances the next
+  run. It never bails-and-abandons mid-way, and never leaves the repo
+  half-aligned. "Aggressive" means *relentless toward done*, not *reckless*.
+- **Outward actions stay human-gated.** Pushing the branch, opening the PR,
+  and merging the PR each require explicit user confirmation — they are
+  irreversible and are gated by this procedure's own logic.
+
+There is also a **report-only mode** (see the last section): the cheap "just
+tell me what's misaligned, don't touch anything" path, including the
+deferred-commit attribution report. The headline behavior is the aggressive
+drive; report-only is an explicit opt-in.
+
+---
+
+## 0. Preflight — initialized project + supported stack
+
+**Confirm the project is initialized for codeyam-editor.**
+
+```bash
+codeyam-editor-dev editor config-show >/dev/null 2>&1 || {
+  echo "Project is not initialized for codeyam-editor. Run /codeyam-onboard first."
+  exit 1
+}
+```
+
+If it fails, tell the user to run `/codeyam-onboard` and stop. Do not proceed.
+
+**Read the stack up front and gate on it.** The audit engine aligns and
+finalizes per stack; on a stack it does not yet support, a partial sync would
+report a half-aligned repo as clean — a false green. So fail loud and
+actionable instead:
+
+```bash
+codeyam-editor-dev editor capabilities-list --format json   # what this binary supports
+cat .codeyam/stack.json                                  # this repo's declared stack
+```
+
+- **Supported stack** → drive to full sync (the rest of this procedure).
+- **Unsupported stack** → stop with a precise, actionable message naming the
+  stack and the supported set, e.g.:
+  `/codeyam-audit does not yet fully support stack 'X'. Supported: <list>.`
+  Do **not** proceed into a partial sync that would mislabel the repo as clean.
+
+> This mirrors the engine's own stack-agnosticism contract: generalize from
+> config where you can, and where you genuinely can't, **fail loud** rather
+> than silently producing a false-green on an unsupported stack.
+
+---
+
+## The one unrecoverable rule (read before any commit)
+
+**NEVER rebase, amend, or force-push a branch that may be shared.** A
+concurrent session (or a teammate) may have committed under you at any moment.
+Integrate a moved primary branch by **merging it in**, never by rebasing onto
+it. Every other mistake in this procedure is recoverable; this one rewrites
+history other people may be building on and cannot be undone.
+
+**Assume shared unless told otherwise.** On a genuinely private branch the
+only cost of merging is a slightly less-clean merge commit — which is never
+*wrong*. So default to merge; the user can override only by explicitly saying
+the branch is private.
+
+Because a sibling can commit between any two of your commands:
+
+- Re-check `git branch --show-current` before *every* commit — a merged-PR
+  auto-switch can move you off the branch you think you're on.
+- Re-check `git rev-list --count origin/<branch>..HEAD` and
+  `HEAD..origin/<branch>` before committing, so you see divergence the moment
+  it appears and merge it in rather than discovering it at push.
+
+> **Fleet block** (active only when the repo participates in a shared commit
+> queue — sibling sessions, a per-branch push queue). The push/finalize tail
+> prints `Commit queue: ...` lines; these are normal serialization, not
+> errors. Every queue bail names its own recovery command — read the bail body
+> and run exactly what it says; do not hand-stitch a workaround. On a solo
+> branch with no upstream the queue is disabled and this block is inert.
+>
+> **EXCEPTION — the named recovery does not cover an enqueue that never created
+> its ref.** When `pre-commit-sync` dies with:
+>
+> ```
+> error: src refspec refs/codeyam/queue/<branch>/<uuid> does not match any
+> fatal: the remote end hung up unexpectedly
+> ```
+>
+> the enqueue pushed a queue ref it never created locally. `--recover` does
+> **not** fix this — it is built for dirty-tree rebase refusals and duplicate
+> plan slugs, so it runs the full `post-merge-drift-sweep` (minutes) and then
+> re-attempts the identical failing enqueue. Do not spend that cycle.
+>
+> Instead, prove the queue is genuinely empty — **all three** must agree:
+>
+> ```bash
+> git for-each-ref refs/codeyam/                  # expect: no output
+> git ls-remote origin 'refs/codeyam/*'           # expect: no output
+> codeyam-editor-dev editor branch-queue status   # expect: "Queue empty on <branch>"
+> ```
+>
+> Then take the documented one-shot bypass `pre-commit-sync --skip-queue`. It is
+> loud, not silent: a WARN banner at acquisition and at every downstream slug,
+> plus an audit entry in `.codeyam/logs/branch-queue.jsonl`. A *second* identical
+> failure is a reproducible bug, never a flake — do not retry a third time hoping
+> it clears.
+
+---
+
+## 1. ORIENT — branch, debt, and the whole-repo preview
+
+Establish where you are before changing anything.
+
+```bash
+git branch --show-current                     # safe default: the current branch
+git fetch origin                              # see siblings' work without integrating yet
+git rev-list --count origin/<branch>..HEAD    # commits you have that origin doesn't
+git rev-list --count HEAD..origin/<branch>    # commits origin has that you don't
+codeyam-editor-dev editor finalize-debt show --format json
+```
+
+`finalize-debt show` lists the deferred commits owed a full `session-finalize`.
+**Zero deferred and no divergence** → the branch may already be merge-ready;
+jump to step 5's `verify-full-finalize` check and short-circuit if it passes
+("nothing to finalize").
+
+**Preview the whole-repo finalize debt, not just the diff-only gate.** Any
+per-step Fast-Commit gate you have been passing is **diff-scoped** — it only
+sees the current diff. `session-finalize` runs the *strict, whole-repo* audit,
+which can surface inherited debt (e.g. a `SOURCE_HAS_UNREGISTERED` wall) that
+was invisible all session. Surface that count *now* so the size of the run is
+known up front rather than discovered at the finalize wall.
+
+> GOTCHA — **diff-scoped gate vs whole-repo finalize.** Passing every
+> per-step gate does **not** mean `session-finalize` will pass. Treat a green
+> session as "the diff is clean," never as "the branch is finalize-ready."
+
+---
+
+## 2. See the whole failure set at once — no fail-fast
+
+Before fixing anything, get the *complete* list of what is broken, not the
+first failure:
+
+```bash
+codeyam-editor-dev editor audit --format json
+```
+
+Read every `failures[]` entry and the `attribution[]` array together. Group
+findings by invariant id and by the commit that introduced them. Fixing blind,
+one failure at a time, wastes finalize cycles — each full `session-finalize`
+is the expensive loop you are trying to run *once*.
+
+---
+
+## 3. Don't chase deterministic churn (the stale-cache band)
+
+Several "dirty" signals are deterministic retention churn, **not** edits to
+revert:
+
+- Deleted `.codeyam/plans/completed/*` files — the rolling completed-plan
+  archive trims to a fixed cap. Every session prunes the *same* files; they
+  reconcile to a no-op on merge. Do **not** `git checkout` them.
+- `DEPENDENCY_GRAPH_STALE` / `PARTITION_NEEDS_REFRESH` staleness-sweep
+  warnings — deferred work, discharged by `session-finalize`'s reconcile, not
+  something to fix by hand mid-session.
+
+> GOTCHA — **coverage-dir graph pollution.** Coverage output directories
+> (`coverage/`, `*/coverage/`, `coverage-seed/`, `*/lcov-report/`) can pollute
+> the dependency graph with nodes for files that aren't real source. A current
+> binary handles this; on an older one, `rm -rf` the coverage dirs before the
+> staleness sweep so they stop seeding phantom nodes — but prefer upgrading the
+> binary to repeating the `rm -rf` loop.
+
+---
+
+## 4. Align — mechanical fixes first, then judgment calls
+
+### 4a. Mechanical fixes (autonomous, deterministic, no judgment)
+
+Apply the failures whose fix is unambiguous and scripted. These have a
+`fixCommand` in the audit JSON or a named recovery:
+
+- Registry drift → `codeyam-editor-dev editor reconcile-registry --auto-apply`
+- Import / dependency-graph staleness → `codeyam-editor-dev editor analyze-imports`
+- Post-merge drift after integrating origin →
+  `codeyam-editor-dev editor pre-commit-sync --recover` (runs
+  `git pull --rebase --autostash` → `post-merge-drift-sweep` →
+  `plan-cleanup-duplicates` in one shot — do **not** hand-stitch these, and do
+  **not** `git add` a deleted queue-plan copy by hand).
+- Duplicate plan slug on merge → the same `--recover` path handles it.
+
+Re-run `codeyam-editor-dev editor audit --format json` after the mechanical pass so
+the remaining set is only the judgment calls.
+
+### 4b. Judgment fixes (STOP and ask — never mass-apply)
+
+What's left needs a decision, not a script. **Surface the count and the items,
+present concrete options, and wait** — do not autonomously pay these down:
+
+- **Bulk inherited debt (`SOURCE_HAS_UNREGISTERED` and friends).** Discharging
+  a whole-repo wall of unregistered entities is the expensive workflow-fan-out
+  path, and the user owns that token spend. Surface the count and entities and
+  **ask** before registering. No unsupervised mass-registration.
+- **Ambiguous classifications** — is this a test fixture? derive-generated?
+  testable pure logic or an untestable shim? Apply the project's glossary
+  discipline; **ask when truly unsure** rather than guessing.
+- **Anything that deletes or rewrites content** — see step 6. Ask first.
+
+This is the convergence contract in practice: each run fixes all the mechanical
+drift it can, then stops at the **first** genuine judgment call with a specific,
+answerable question. The user's answer advances the next (resumed) run.
+
+---
+
+## 5. Refresh evidence + screenshots (in the right order)
+
+If the branch carries surfaces with visual or scenario output, the finalize
+wants current evidence and screenshots.
+
+> GOTCHA — **reconcile/evidence ordering.** Record test evidence on reconcile,
+> *then* capture/refresh screenshots — not the reverse. A current binary
+> records evidence for you during reconcile; the old manual sequence
+> double-refreshed. Don't re-introduce the double-refresh.
+
+> GOTCHA — **deleted-screenshot recovery.** If screenshots were pruned
+> (retention, a clean checkout, a sibling's reconcile), **recapture** them
+> rather than reverting the deletion — the capture is the source of truth; the
+> file on disk is derived.
+
+> A pure-backend / non-visual stack has no screenshots to refresh; this step is
+> a no-op there. Don't fabricate visual evidence for a stack that has none.
+
+---
+
+## 6. Presentability pass — treat the branch as open-source
+
+Placed *after* screenshots are refreshed (step 5) so the gallery embeds the
+final images, and *before* the finalize (step 7) so the suite validates the
+cleanup. For a branch built entirely via Fast Commit, the per-cycle finalize
+bodies rendered terse (no polish), so this is where the repo finally polishes
+before merge.
+
+```bash
+# Read-only: surface stale docs + non-essential debug logging. Never deletes.
+codeyam-editor-dev editor presentability-scan
+
+# Refresh the README how-to + scenario gallery (idempotent).
+codeyam-editor-dev editor readme-sync
+```
+
+Then **assertively** remove the clearly-dead docs and debug log lines the scan
+surfaces — but **ask the user about anything uncertain** before deleting it.
+The scan only ever *lists* candidates; the judgment (and the deletion) is
+yours, and deletion is a judgment call (step 4b): when in doubt, ask. The
+step-7 finalize re-runs the suite, so a debug line a test asserted on will fail
+there — revert that one removal and re-run.
+
+> `session-finalize` also emits a self-contained presentability advisory naming
+> these same two commands, so a client with no copy of this procedure is still
+> covered.
+
+---
+
+## 7. Commit → finalize → the merge-ready gate
+
+This is the one expensive loop; run it *once*, cleanly.
+
+```bash
+# Stop fast-intent so finalize stamps the real marker, not a deferred one.
+codeyam-editor-dev editor fast-commit-stop
+
+# Integrate any sibling commits by MERGING (never rebasing) — see rule 0.
+codeyam-editor-dev editor pre-commit-sync          # claims the commit queue; --recover if it bails
+
+# The full, whole-repo finalize. Stamps lastFullFinalizeSha.
+codeyam-editor-dev editor session-finalize 2>&1 | tee /tmp/codeyam-audit-finalize.log
+```
+
+> GOTCHA — **the wrapper's exit code is not the finalize verdict.**
+> `session-finalize` can exit **0** while the finalize itself failed. The only
+> trustworthy signal is its terminal status line:
+>
+> ```bash
+> grep "session-finalize finished:" /tmp/codeyam-audit-finalize.log | tail -1
+> ```
+>
+> A real pass reads `status=ok, phase1=passed … phase5=passed` and takes minutes.
+> A masked failure reads `status=failed, phase1=pending … phase5=pending,
+> elapsed=0.1s` — an instant return with every phase `pending` is the tell, and
+> the cause is printed on the following line (e.g. "finalize ran without holding
+> the queue head"). **Never chain a commit, a push, or a merge-ready claim off
+> the wrapper's exit code alone.**
+
+> GOTCHA — **the marker-stamp trap.** A `session-finalize` that *skips* the
+> comprehensive whole-repo phase can leave `lastFullFinalizeSha` unstamped even
+> though it exited 0 — and then the merge-readiness gate still fails. Always
+> confirm the marker actually advanced:
+>
+> ```bash
+> codeyam-editor-dev editor verify-full-finalize   # exit 0 == HEAD is covered
+> ```
+>
+> If it exits 1 after a "successful" finalize, you hit the trap — re-run the
+> finalize forcing the comprehensive pass; don't trust the green exit code
+> alone.
+
+> GOTCHA — **redirection + completion token.** Use `2>&1 | tee` to capture both
+> streams. The finalize prints its terminal status as a JSON line carrying
+> `CODEYAM_CMD_COMPLETE` on **both** success and failure — wait on that token,
+> read its `status`, and don't regex English success strings.
+
+> GOTCHA — **infra crashes, not code bugs.** A finalize can die on a full disk
+> or an OOM. If it crashes non-deterministically, check `df -h` / free memory
+> before assuming the branch is broken.
+
+Only after `verify-full-finalize` exits 0 is the branch **merge-ready**.
+**Stop here and report unless the user explicitly authorized the push.** When
+authorized:
+
+```bash
+codeyam-editor-dev editor push                     # the wrapper runs the deferred-finalize gate
+```
+
+If the pre-push gate complains of deferred commits, do **not** override with
+`--allow-deferred`; it means finalize didn't cover the range — go back to the
+marker-stamp trap above.
+
+> GOTCHA — **`editor push` refuses outside a feature workflow.** The wrapper also
+> enforces feature-workflow step ordering and bails with `Cannot proceed at step
+> N. The workflow must reach step 25 first.` An audit run that lands a
+> release/ops commit (a version bump, a build cut) has no plan and no feature, so
+> it can never reach step 25 — the check is workflow *progression*, not
+> correctness, and waiting it out is not an option.
+>
+> Verify the two real gates by hand instead, and push directly only when both
+> exit 0:
+>
+> ```bash
+> codeyam-editor-dev editor verify-full-finalize    # HEAD covered by a full finalize
+> codeyam-editor-dev editor verify-completed-plans  # no dropped plan implementations
+> git push origin <branch>                          # managed pre-push hook re-runs both
+> ```
+>
+> This is a bypass of the wrapper, not of the gates — the managed pre-push hook
+> still runs them. If either verify exits 1, stop and fix; do not push.
+>
+> **The same slug gating blocks the commit itself.** `git commit` / `git add` are
+> refused unless the current step slug is in `commitSlugs`
+> (`.claude/hooks/editor-pretool-hook.py`); only `.codeyam/plans/*.md` is exempt
+> at any step. Clear it with `codeyam-editor-dev editor session-reset` —
+> **without** `--discard-changes`, which touches only `.codeyam/` session state
+> and preserves your uncommitted code. Confirm `git status` still shows your
+> changes before committing.
+
+---
+
+## 8. PR → CI → mergeability
+
+With the branch pushed and merge-ready:
+
+- Open or update the PR (`gh pr create` / `gh pr view`), **only on explicit
+  user confirmation**.
+- Track CI. Any red check is handled by 8a below — there is no shortcut.
+- Drive to `gh pr view --json mergeable` → `MERGEABLE` /
+  `mergeStateStatus: CLEAN`. A `CONFLICTING` state means origin moved again —
+  merge it in (never rebase) and re-run the finalize gate.
+- Merging the PR is the final outward action — confirm with the user.
+
+### 8a. Red CI is not done — investigate before you classify
+
+**A red test is a red test. `verify-full-finalize` exiting 0 locally is
+necessary but NEVER sufficient — local green does not clear red CI.** When any
+CI check is red, root-cause it at the source *before* any
+"known/flaky/infra/environmental" label is even considered.
+
+**The contract — investigate-then-classify, never classify-then-defer.** For
+**every** red check, in this order:
+
+1. **Pull the actual failing-job log.** Do not reason from the check name.
+   ```bash
+   gh pr checks <pr>                       # list checks + buckets
+   gh run view --job <job-id> --log-failed # the specific failure
+   ```
+2. **Extract the specific assertion or build error** — the failing test name,
+   the exact `assertion failed: ...` / compile error / panic, the line. Write
+   it down.
+3. **Only now classify**, against the flake bar below. A classification with no
+   log evidence behind it is forbidden.
+
+**FORBIDDEN:** presenting a stop/defer question whose justification is an
+un-investigated "known infra" or "known flake" label. A queued plan or a flakes
+memory is **not** evidence that *this* red check is that issue — confirm the
+failure signature matches first.
+
+**Default toward fixing, not stopping.** Red CI after a push is *inside* this
+skill's job, not an outward action — the default is "root-cause and fix."
+Surface to the user only a genuine fork (approach A vs B with real ripple), as a
+real decision, never as a defer.
+
+**The flake bar — "flake" requires proof of non-determinism.** A check may be
+labeled a flake ONLY when it **passed on a re-run with no code change**, OR it
+**exactly matches a documented flake by test name AND failure signature**. A
+check that fails on two consecutive runs with the same signature is **by
+definition not a flake — it is a real bug. Fix it.** Build/compile errors and
+assertion mismatches are never flakes.
+
+---
+
+## Cross-platform pitfalls
+
+> **Cross-platform block** — active only when the branch carries
+> platform-specific surface (multiple target OSes, conditional-compilation, a
+> desktop crate, CI/container build files, OS-dependent networking/error
+> classification). On a single-platform stack with none of these, this section
+> is inert. `session-finalize` itself prints a cross-platform advisory only
+> when it detects such surface.
+
+A green local finalize on **one** OS does not prove the branch is CI-green when
+it carries platform-specific surface. The categories to watch, and the concrete
+footguns behind each (all observed in real CI-fix rounds):
+
+- **Conditional-compilation code** (`cfg(target_os …)`, `cfg(windows)`, and
+  equivalents). The other platform's branch never compiled on your host, so a
+  dead-code/type error there fires only in CI. A cross-target compile/lint pass
+  (`codeyam-editor-dev editor cross-check`) re-evaluates every config for a
+  cross-target triple locally, in seconds.
+- **A desktop GUI member** (e.g. a Tauri crate). It links platform GUI
+  libraries, so a change can break a headless workspace build in a GUI-less
+  container though it is clean on a developer laptop. The CI/image build must
+  also *copy* the desktop dir even when the build excludes it, or the image
+  build breaks on a missing directory.
+- **CI / container build files** (`.github/workflows/*.yml`, `Dockerfile*`).
+  The build invocation itself changed; local build success says nothing about
+  the CI or image build. The CI workflow is the authority on which invocations
+  CI actually runs.
+- **Networking error classification** (connect-vs-timeout, refused-vs-reset).
+  Socket semantics diverge by OS: a connection to an unbound localhost port is
+  *refused* (RST) on Unix but *times out* on Windows, and an HTTP response
+  written without reading the request gets an RST on Windows. A classifier or
+  assertion verified on one OS can misbehave on another.
+- **Phase/error assertions bound to a platform-dependent message.** An
+  assertion matching the exact text of an OS-specific error passes on the host
+  that produces that text and fails elsewhere. Make errors name their phase
+  explicitly rather than asserting on incidental wording.
+
+Run the cheap local repros before pushing when this surface is present:
+`codeyam-editor-dev editor cross-check` and `codeyam-editor-dev editor session-finalize
+--linux`.
+
+---
+
+## Report-only mode (the cheap, touch-nothing path)
+
+When the user just wants "tell me what's misaligned, don't touch anything,"
+run the report and stop:
+
+1. **Summarize the debt.** `codeyam-editor-dev editor finalize-debt show --format
+   json` → the `deferred[]` list.
+2. **Run the audit read-only.** `codeyam-editor-dev editor audit --format json` →
+   `failures[]` + `attribution[]`.
+3. **Attribute and report.** Intersect each `attribution[].introducedIn` SHA
+   with the `deferred[].sha` list. Group findings by the deferred commit that
+   introduced them, present the grouped report, and **stop** — apply nothing.
+
+This preserves the old report-only audit value (and its deferred-commit
+attribution) as an explicit early-exit. The default headline path is the
+aggressive align→finalize→present→merge-ready drive above.
+
+---
+
+## Reflect & self-improve (the last step every run)
+
+After the branch reaches merge-ready (or the run stops at a judgment call), run
+a **bounded, honest** reflection. The skill gets better every time it runs —
+but it must never silently rewrite its own `SKILL.md`.
+
+Enumerate the friction this run actually hit: every workaround you had to
+invent, every GOTCHA that bit, every step whose guidance was stale or missing,
+every CLI whose real behavior differed from this procedure. Then route each
+genuinely-new, non-obvious lesson through one of two channels — never a silent
+self-edit:
+
+1. **Durable lesson → persistent memory** (ungated, auto-recalled). Write a
+   memory file: one fact per file, update an existing file rather than
+   duplicate, add the one-line index pointer, and skip anything already
+   captured by the repo, this procedure, or an existing memory.
+2. **Structural gap → a proposed plan/diff the user approves.** When the lesson
+   is bigger than a memory — this procedure is wrong, a step is missing — draft
+   a plan (or a concrete diff) against **this file**
+   (`.claude/skills/codeyam-audit/finalize-procedure.md`) and surface it for
+   approval. Because the change flows through the standard editor workflow, the
+   skill never edits its own `SKILL.md` unseen.
+
+If the run was clean, say **"nothing new learned"** and write nothing. Do not
+manufacture busywork edits.
+
+---
+
+## See also
+
+- `docs/fast-commit.md` — the deferred-tail mechanics this procedure finalizes.
+- `docs/finalize-deferral.md` — `verify-no-deferred-finalize`, the deferred
+  trailer, and the emergency-override audit trail.
