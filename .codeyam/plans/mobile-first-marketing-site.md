@@ -3,6 +3,7 @@ title: "Mobile-First Marketing Site"
 mode: backend
 createdAt: "2026-07-30T18:26:30Z"
 source: manual
+order: 1
 ---
 
 ## Summary
@@ -171,12 +172,29 @@ whichever ships second on top of the first.
 
 ### 6. Verification
 
-No scenario captures (see the mode note). Instead, check each of these widths in
-a browser at 1× and with the device toolbar, in both orientations where relevant:
-**320, 375, 390, 393, 430, 560, 768, 880, 1140**. At every width confirm: no
-horizontal scroll, no clipped text, no sub-44px interactive target, the theme
-rail scrolls and snaps, and the nav anchors land correctly. Re-check with
-"reduce motion" enabled at the OS level.
+No scenario captures (see the mode note) — but "check it in a browser" is not a
+gate unless someone is named to do it, so this specifies the method.
+
+**Driven verification.** Serve `site/` locally and drive Chrome through the width
+sweep, capturing a screenshot at each: **320, 375, 390, 393, 430, 560, 768, 880,
+1140**. At every width assert programmatically rather than by eye:
+
+- `document.documentElement.scrollWidth <= window.innerWidth` — the horizontal-overflow
+  check, which is the whole reason `overflow-x:hidden` is being removed. This one
+  assertion is what keeps the fix from silently regressing.
+- every `a`, `button`, and `.btn` has a bounding rect ≥44px on its smaller axis.
+- no element's `scrollWidth` exceeds its `clientWidth` outside the two containers
+  that are *meant* to scroll (the theme rail and the nav chip row).
+
+Then screenshot-review the sweep for clipped or awkward text, which is the part
+that genuinely needs eyes.
+
+**Reduced motion.** Re-run at 390px with reduced motion emulated and confirm the
+marquee is static and its text legible in place.
+
+**Desktop regression.** The 880px and 1140px captures must be visually identical
+to the current site — diff them against captures taken before any edit. Take those
+"before" captures first, as the very first step of implementation.
 
 ## Reused existing code
 

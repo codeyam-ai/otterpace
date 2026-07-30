@@ -3,6 +3,7 @@ title: "Journal — Post-Run Notes and Daily Check-Ins"
 mode: ui
 createdAt: "2026-07-30T18:26:00Z"
 source: manual
+order: 3
 ---
 
 ## Summary
@@ -59,6 +60,13 @@ three heavy-legs runs this week — take Thursday easy."
   `loadHistory` sections — "the user's own words about how they felt; treat as
   ground truth about subjective experience, never as a substitute for the safety
   rules."
+
+- **The most personal data in the app gets a way out.** Because entries are
+  on-device with no sync, there is no server-side delete to lean on — which means
+  without an explicit affordance, the only way to clear your journal is to delete
+  the app. Settings gets a destructive **"Delete all journal entries"** action with
+  a confirm, matching the existing health-sync disable dialog's shape. A feature
+  that invites people to write down how they really felt owes them an eraser.
 
 - **Never a streak, never a scold.** No "you haven't journaled in 4 days," no
   completion ring, no unbroken-chain pressure. The empty state invites; it
@@ -198,12 +206,34 @@ never overriding the safety rules or the ~10% guidance. No transport change —
 `WeeklyReviewEngineTests.swift`; extend `test/api/coach.test.ts` for the prompt
 section.
 
-### 6. Privacy copy
+### 6. Settings — delete all entries
+
+**File**: `Sources/AppCore/SettingsView.swift`
+
+A destructive **"Delete all journal entries"** row in the same card as the other
+data controls, built from the existing `actionRow(...)` helper and gated by a
+confirmation dialog in the shape of the health-sync disable dialog. Clears
+`otterpaceJournalEntries` via `JournalStore` and republishes `today.journal` as
+`[]`. Also extend the account-deletion path so journal entries go with it.
+
+**Test**: extend `Tests/AppCoreTests/JournalStoreTests.swift` — delete-all empties
+the store and a subsequent `load` returns `[]` rather than throwing.
+
+### 7. Privacy copy
 
 **File**: `site/privacy.html` — extend the "AI coach (optional)" paragraph, which
 already enumerates what's sent, to name journal entries. They stay on-device and
 leave only on a connected-coach request — the same sentence structure the
 personalization profile already uses there.
+
+> **Cross-plan note — journal must never reach a friend.** The `social-foundation`
+> plan adds `SocialShare.redact(_:)`, which projects `TodayState` down to the five
+> fields a friend may see, and a test asserting the excluded fields never appear.
+> That test's exclusion list was written before `journal` existed on `TodayState`.
+> **Whichever of these two plans lands second owns adding `journal` to that
+> assertion** — both the Swift `SocialModelsTests` list and the server-side
+> `sanitizeShare` allowlist test in `test/api/social.test.ts`. Journal text is the
+> most personal data in the app; it must never be shareable.
 
 ## Reused existing code
 
@@ -251,5 +281,7 @@ personalization profile already uses there.
   proof of no regression.
 - **Weekly Review with journal context**: the recap including the "how it felt"
   line.
+- **Settings — delete all entries confirm**: the destructive dialog, plain and
+  non-alarming.
 - **Check-in card — Fieldnote theme** (and one more, e.g. Orbit): the new cards
   retinting across the five-theme system.
