@@ -1,6 +1,6 @@
 {
-  "feature": "scenario-copy-em-dash-cleanup",
-  "maxStep": 26,
-  "version": 658,
-  "updatedAt": "2026-07-28T01:49:30.429546+00:00"
+  "feature": "Multi-Provider BYOK (OpenAI + Gemini)",
+  "maxStep": 24,
+  "version": 667,
+  "updatedAt": "2026-07-30T16:08:06.074498+00:00"
 }

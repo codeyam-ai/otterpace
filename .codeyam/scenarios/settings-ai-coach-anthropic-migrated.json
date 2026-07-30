@@ -1,0 +1,40 @@
+{
+  "name": "Settings — AI Coach Anthropic Migrated",
+  "id": "e207f916-4508-4de2-aed0-d8d274e7f542",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbRacesJSON": "",
+      "rbSettingsScroll": "coach",
+      "rbShowHistory": false,
+      "rbStartScreen": "",
+      "rbCoachConnectedProviders": "anthropic",
+      "rbGoalSteps": 10000,
+      "rbRaceEditorCustomUnit": "",
+      "rbStartTab": "today",
+      "rbSteps": 8000,
+      "rbShowWeeklyReview": false,
+      "rbTheme": "default",
+      "rbSignedInUserID": "",
+      "otterpaceRemindGoal": false,
+      "rbPreviewMode": "",
+      "rbSyncHealth": false,
+      "rbSyncSettings": false,
+      "rbDate": "2026-06-22",
+      "rbShowRaceEditor": false,
+      "rbShowSettings": true,
+      "rbCoachActiveProvider": "anthropic",
+      "otterpaceRemindInactivity": false,
+      "otterpaceRemindDaily": false,
+      "rbConnected": true,
+      "rbContentSize": "",
+      "rbRaceEditorCustomValue": ""
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/SettingsView.swift"
+}

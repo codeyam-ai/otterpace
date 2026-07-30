@@ -17,12 +17,18 @@ public enum CodeyamIsolationHost {
         switch component {
         case "AskCoachHeader":
             return AnyView(AskCoachHeaderIsolated(scenario: scenario))
+        case "CoachKeyField":
+            return AnyView(CoachKeyFieldIsolated(scenario: scenario))
+        case "CoachProviderRow":
+            return AnyView(CoachProviderRowIsolated(scenario: scenario))
         case "RaceImportSheet":
             return AnyView(RaceImportSheetIsolated(scenario: scenario))
         case "RaceSearchSheet":
             return AnyView(RaceSearchSheetIsolated(scenario: scenario))
         case "RollingWindowNote":
             return AnyView(RollingWindowNoteIsolated(scenario: scenario))
+        case "SettingsActionRow":
+            return AnyView(SettingsActionRowIsolated(scenario: scenario))
         case "ThemeChoiceRow":
             return AnyView(ThemeChoiceRowIsolated(scenario: scenario))
         case "ThemeSwatch":

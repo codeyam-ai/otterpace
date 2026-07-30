@@ -1,0 +1,16 @@
+{
+  "name": "SettingsActionRow - Variants",
+  "id": "91a6f0e1-421b-4022-805e-e34544d5d940",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "SettingsActionRow",
+      "CODEYAM_ISOLATE_SCENARIO": "Default"
+    }
+  },
+  "componentName": "SettingsActionRow",
+  "scenarioType": "component"
+}

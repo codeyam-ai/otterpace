@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import Anthropic from "@anthropic-ai/sdk";
 import { allow, clientIp } from "./_lib/ratelimit.js";
+import { complete, credentialsFromHeaders, LlmError } from "./_lib/llm.js";
 
 // Otterpace race import — stateless BYO-key proxy (URL -> structured race).
 //
@@ -15,7 +15,6 @@ import { allow, clientIp } from "./_lib/ratelimit.js";
 // extraction prompt here means it can be tuned without an App Store release. Like
 // the coach proxy, the key is used for this one request and never stored or logged.
 
-const MODEL = process.env.COACH_MODEL || "claude-opus-4-8";
 
 const SYSTEM_PROMPT = `You extract structured details about a single running race from the text of its web page. You return ONLY the fields you can find; you never invent or guess a value that is not clearly supported by the text.
 
@@ -120,9 +119,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const apiKey = req.headers["x-anthropic-key"];
-  if (typeof apiKey !== "string" || apiKey.length < 8) {
-    res.status(400).json({ error: "missing_key", message: "Connect your Anthropic API key in Settings." });
+  const credentials = credentialsFromHeaders(req.headers as Record<string, unknown>);
+  if (!credentials) {
+    res.status(400).json({ error: "missing_key", message: "Connect an AI provider API key in Settings." });
     return;
   }
 
@@ -179,13 +178,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const client = new Anthropic({ apiKey });
+  // Nothing extracted is still a valid answer: the editor opens with whatever
+  // was found and flags the rest, so a refusal or unusable reply degrades to the
+  // same empty-but-usable shape rather than an error.
+  const empty = { race: {}, confidence: 0, missingFields: ["name", "date", "distanceMiles", "location"] };
   try {
-    const message = await client.messages.create({
-      model: MODEL,
-      max_tokens: 1024,
+    const result = await complete(credentials, {
       system: SYSTEM_PROMPT,
-      output_config: { format: FORMAT },
+      schema: FORMAT.schema,
+      schemaName: "race_import",
+      maxTokens: 1024,
       messages: [
         {
           role: "user",
@@ -194,37 +196,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ],
     });
 
-    if (message.stop_reason === "refusal") {
-      res.status(200).json({ race: {}, confidence: 0, missingFields: ["name", "date", "distanceMiles", "location"] });
-      return;
-    }
-
-    const textBlock = message.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
+    if (result.kind === "empty") {
       res.status(502).json({ error: "no_text" });
       return;
     }
-
-    let parsed: { race?: unknown; confidence?: unknown; missingFields?: unknown };
-    try {
-      parsed = JSON.parse(textBlock.text);
-    } catch {
-      res.status(200).json({ race: {}, confidence: 0, missingFields: ["name", "date", "distanceMiles", "location"] });
+    if (result.kind !== "json") {
+      res.status(200).json(empty);
       return;
     }
+
+    const parsed = result.value;
     res.status(200).json({
       race: parsed.race ?? {},
       confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0,
       missingFields: Array.isArray(parsed.missingFields) ? parsed.missingFields : [],
     });
   } catch (err) {
-    const status = (err as { status?: number }).status;
-    if (status === 401) {
-      res.status(401).json({ error: "invalid_key", message: "That API key was rejected by Anthropic." });
-      return;
-    }
-    if (status === 429) {
-      res.status(429).json({ error: "rate_limited", message: "Your Anthropic account is rate limited. Try again shortly." });
+    if (err instanceof LlmError) {
+      res.status(err.status).json({ error: err.code, message: err.message });
       return;
     }
     res.status(502).json({ error: "upstream_error" });

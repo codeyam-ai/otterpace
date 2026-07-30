@@ -3,8 +3,8 @@ import Foundation
 // MARK: - Race import & search clients (Milestone 5 adjacent)
 //
 // Two thin clients over the same "BYO key, proxied through a backend" model as
-// `RemoteCoach`: the user's Anthropic key (from `CoachKeyStore`) is sent per
-// request in the `x-anthropic-key` header and never stored on the server. Both
+// `RemoteCoach`: the user's key for their active provider (from `CoachKeyStore`)
+// is sent per request via `CoachRequestHeaders` and never stored on the server. Both
 // produce a partially-filled race the app opens in `RaceEditorView` for the user
 // to confirm and save — we never auto-save a machine-extracted race.
 //
@@ -103,8 +103,8 @@ public struct RaceImportClient {
 
     /// Import a race from a web page. Throws `CoachError` so the caller can fall
     /// back to manual entry (network/server) or surface a bad key (invalidKey).
-    public func importRace(from url: String, apiKey: String) async throws -> RaceImportResult {
-        let data = try await post(to: importEndpoint, body: ImportBody(url: url), apiKey: apiKey)
+    public func importRace(from url: String, apiKey: String, provider: CoachProvider = .anthropic) async throws -> RaceImportResult {
+        let data = try await post(to: importEndpoint, body: ImportBody(url: url), apiKey: apiKey, provider: provider)
         guard let decoded = try? JSONDecoder().decode(RaceImportResult.self, from: data) else {
             throw CoachError.server
         }
@@ -112,8 +112,8 @@ public struct RaceImportClient {
     }
 
     /// Search races by name. Returns candidates (possibly empty); throws on failure.
-    public func searchRaces(query: String, apiKey: String) async throws -> [RaceSearchResult] {
-        let data = try await post(to: searchEndpoint, body: SearchBody(query: query), apiKey: apiKey)
+    public func searchRaces(query: String, apiKey: String, provider: CoachProvider = .anthropic) async throws -> [RaceSearchResult] {
+        let data = try await post(to: searchEndpoint, body: SearchBody(query: query), apiKey: apiKey, provider: provider)
         guard let decoded = try? JSONDecoder().decode(SearchResponse.self, from: data) else {
             throw CoachError.server
         }
@@ -122,11 +122,11 @@ public struct RaceImportClient {
 
     /// Shared POST: JSON body + BYO key header, mapping status codes to `CoachError`
     /// exactly like `RemoteCoach` (only a rejected key surfaces to the user).
-    private func post<Body: Encodable>(to endpoint: URL, body: Body, apiKey: String) async throws -> Data {
+    private func post<Body: Encodable>(to endpoint: URL, body: Body, apiKey: String, provider: CoachProvider) async throws -> Data {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(apiKey, forHTTPHeaderField: "x-anthropic-key")
+        CoachRequestHeaders.apply(provider: provider, apiKey: apiKey, to: &request)
         do {
             request.httpBody = try JSONEncoder().encode(body)
         } catch {

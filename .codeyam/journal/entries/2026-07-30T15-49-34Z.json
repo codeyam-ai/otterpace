@@ -1,0 +1,519 @@
+{
+  "timestamp": "2026-07-30T15:49:34Z",
+  "title": "Multi-Provider BYOK — connect an OpenAI or Gemini key, not just Anthropic",
+  "type": "feature",
+  "userRequest": "I want to expand BYOK and AI connection beyond claude API Key to allow bringing a key from OpenAI or Gemini and also see if we can connect directly to subscriptions in a more consumer-friendly way. Start with adding OpenAI key ability and Gemini key ability and plan out all of this.",
+  "description": "The AI coach now accepts a bring-your-own key from Anthropic, OpenAI, or Gemini instead of Anthropic only. One paste field recognizes the provider from the key's shape (sk-ant- / sk- / AIza), and an unrecognized shape offers a provider picker rather than rejecting a key that may be perfectly valid. All three can be connected at once with one marked active, switchable by tap; disconnecting the active provider promotes another instead of dropping the user to the offline coach. An existing Anthropic key migrates silently because CoachProvider.anthropic still reads the original coach-anthropic-key Keychain account.\n\nBackend: a new shared router (api/_lib/llm.ts) routes coach, race-import, and race-search to whichever provider the request names, with the IDENTICAL coach system prompt and safety rules — the provider changes which model generates the words, never the coaching. Anthropic goes through the SDK; OpenAI and Gemini over plain fetch so no dependency is added to the serverless bundle. Gemini needed real adaptation: no system role (systemInstruction), assistant maps to model, and additionalProperties must be stripped recursively from the response schema or every structured call 400s. Header compatibility runs both ways (new x-ai-provider/x-ai-key plus the legacy x-anthropic-key) because the app and backend cannot deploy atomically — so the backend must go live before the app build, or an OpenAI/Gemini key would connect in-app and then fail.\n\nAlso extracted CoachProviderRow, CoachKeyField, and the shared SettingsActionRow out of SettingsView (991 -> 912 lines), and added the whole BYOK layer to the glossary, which had never been registered.\n\nKnown open item: the default model IDs for OpenAI and Gemini in api/_lib/llm.ts are unverified guesses. Both are env-overridable (COACH_MODEL_OPENAI / COACH_MODEL_GEMINI), so correcting them is configuration, not a release. See docs/codeyam/ai-connection-options.md for why consumer subscriptions (ChatGPT Plus, Claude Pro, Gemini Advanced) cannot be connected instead, and why Apple Foundation Models is the recommended next step toward a no-key coach.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/data-structure.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-add-ai-coaching-skip--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-add-ai-coaching-skip--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-ai-coaching-connected--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/onboarding-ai-coaching-connected--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/provider-auth-verdict.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/scenario-taxonomy.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/AskCoachView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Coach/RaceImportClient.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Coach/RemoteCoach.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CodeyamIsolationHost.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Onboarding/OnboardingFlowView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/RaceImportView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/SettingsView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/IntegrationModuleTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/OnboardingScenarioIndexTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": "api/coach.ts",
+      "status": "modified"
+    },
+    {
+      "path": "api/race-import.ts",
+      "status": "modified"
+    },
+    {
+      "path": "api/race-search.ts",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/coachkeyfield-detected-gemini.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachkeyfield-detected-openai.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachkeyfield-empty.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachkeyfield-unrecognized-key.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachproviderrow-all-three-connected.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachproviderrow-gemini-active.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachproviderrow-openai-active.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachproviderrow-single-connected.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-detected-gemini--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-detected-gemini--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-detected-openai--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-detected-openai--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-empty--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-empty--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-unrecognized-key--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-unrecognized-key--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachproviderrow-all-three-connected--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachproviderrow-all-three-connected--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachproviderrow-gemini-active--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachproviderrow-gemini-active--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachproviderrow-openai-active--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachproviderrow-openai-active--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachproviderrow-single-connected--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachproviderrow-single-connected--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-all-three-connected--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-all-three-connected--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-anthropic-migrated--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-anthropic-migrated--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-no-key--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-no-key--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settingsactionrow-variants SettingsActionRow--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settingsactionrow-variants--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settingsactionrow-variants--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settingsactionrowlabel-variants SettingsActionRowLabel--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-ai-coach-all-three-connected.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-ai-coach-anthropic-migrated.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-ai-coach-no-key.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/settingsactionrow-variants.json",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Coach/CoachProvider.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CoachKeyField.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CoachProviderRow.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CoachKeyFieldIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CoachProviderRowIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/SettingsActionRowIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/SettingsActionRow.swift",
+      "status": "added"
+    },
+    {
+      "path": "api/_lib/llm.ts",
+      "status": "added"
+    },
+    {
+      "path": "docs/codeyam/ai-connection-options.md",
+      "status": "added"
+    },
+    {
+      "path": "test/api/llm.test.ts",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Ask Coach — Building On Track",
+      "screenshotPath": "ask-coach-building-on-track--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Empty Chat",
+      "screenshotPath": "ask-coach-empty-chat--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Hit 10K",
+      "screenshotPath": "ask-coach-hit-10k--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Knee Pain",
+      "screenshotPath": "ask-coach-knee-pain--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Mileage Spike",
+      "screenshotPath": "ask-coach-mileage-spike--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — No Key (Connect Prompt)",
+      "screenshotPath": "ask-coach-no-key-connect-prompt--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Race Taper",
+      "screenshotPath": "ask-coach-race-taper--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Run or Rest",
+      "screenshotPath": "ask-coach-run-or-rest--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Sore Not Hurt",
+      "screenshotPath": "ask-coach-sore-not-hurt--iphone-16.png"
+    },
+    {
+      "name": "Ask Coach — Still Learning (Thin Data)",
+      "screenshotPath": "ask-coach-still-learning-thin-data--iphone-16.png"
+    },
+    {
+      "name": "CoachKeyField - Detected Gemini",
+      "screenshotPath": "coachkeyfield-detected-gemini--iphone-16.png"
+    },
+    {
+      "name": "CoachKeyField - Detected OpenAI",
+      "screenshotPath": "coachkeyfield-detected-openai--iphone-16.png"
+    },
+    {
+      "name": "CoachKeyField - Empty",
+      "screenshotPath": "coachkeyfield-empty--iphone-16.png"
+    },
+    {
+      "name": "CoachKeyField - Unrecognized Key",
+      "screenshotPath": "coachkeyfield-unrecognized-key--iphone-16.png"
+    },
+    {
+      "name": "CoachProviderRow - All Three Connected",
+      "screenshotPath": "coachproviderrow-all-three-connected--iphone-16.png"
+    },
+    {
+      "name": "CoachProviderRow - Gemini Active",
+      "screenshotPath": "coachproviderrow-gemini-active--iphone-16.png"
+    },
+    {
+      "name": "CoachProviderRow - OpenAI Active",
+      "screenshotPath": "coachproviderrow-openai-active--iphone-16.png"
+    },
+    {
+      "name": "CoachProviderRow - Single Connected",
+      "screenshotPath": "coachproviderrow-single-connected--iphone-16.png"
+    },
+    {
+      "name": "Onboarding - Choose Your Look",
+      "screenshotPath": "onboarding-choose-your-look--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Choose-Your-Look - Fieldnote",
+      "screenshotPath": "onboarding-choose-your-look-fieldnote--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Choose-Your-Look - Garden",
+      "screenshotPath": "onboarding-choose-your-look-garden--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Choose-Your-Look - Orbit",
+      "screenshotPath": "onboarding-choose-your-look-orbit--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Choose-Your-Look - Otter",
+      "screenshotPath": "onboarding-choose-your-look-otter--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Intro Fieldnote - Ask Me Anything",
+      "screenshotPath": "onboarding-intro-fieldnote-ask-me-anything--iphone-16.png"
+    },
+    {
+      "name": "Onboarding Intro Garden - Day-by-Day",
+      "screenshotPath": "onboarding-intro-garden-day-by-day--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — AI Coaching Connected",
+      "screenshotPath": "onboarding-ai-coaching-connected--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Add AI Coaching (Skip)",
+      "screenshotPath": "onboarding-add-ai-coaching-skip--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Other Training",
+      "screenshotPath": "onboarding-other-training--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Set Goal (8K)",
+      "screenshotPath": "onboarding-set-goal-8k--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Training Phase",
+      "screenshotPath": "onboarding-training-phase--iphone-16.png"
+    },
+    {
+      "name": "Onboarding — Walking Habits",
+      "screenshotPath": "onboarding-walking-habits--iphone-16.png"
+    },
+    {
+      "name": "RaceImportSheet - Input",
+      "screenshotPath": "raceimportsheet-input--iphone-16.png"
+    },
+    {
+      "name": "RaceImportSheet - No Key",
+      "screenshotPath": "raceimportsheet-no-key--iphone-16.png"
+    },
+    {
+      "name": "RaceSearchSheet - Input",
+      "screenshotPath": "racesearchsheet-input--iphone-16.png"
+    },
+    {
+      "name": "RaceSearchSheet - No Key",
+      "screenshotPath": "racesearchsheet-no-key--iphone-16.png"
+    },
+    {
+      "name": "Settings",
+      "screenshotPath": "settings--iphone-16.png"
+    },
+    {
+      "name": "Settings - Appearance Picker - Bolt",
+      "screenshotPath": "settings-appearance-picker-bolt--iphone-16.png"
+    },
+    {
+      "name": "Settings — AI Coach All Three Connected",
+      "screenshotPath": "settings-ai-coach-all-three-connected--iphone-16.png"
+    },
+    {
+      "name": "Settings — AI Coach Anthropic Migrated",
+      "screenshotPath": "settings-ai-coach-anthropic-migrated--iphone-16.png"
+    },
+    {
+      "name": "Settings — AI Coach No Key",
+      "screenshotPath": "settings-ai-coach-no-key--iphone-16.png"
+    },
+    {
+      "name": "Settings — Account Sync",
+      "screenshotPath": "settings-account-sync--iphone-16.png"
+    },
+    {
+      "name": "Settings — Custom Goal",
+      "screenshotPath": "settings-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Settings — Health Sync On",
+      "screenshotPath": "settings-health-sync-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Races List",
+      "screenshotPath": "settings-races-list--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders On",
+      "screenshotPath": "settings-reminders-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Replay Tour Row",
+      "screenshotPath": "settings-replay-tour-row--iphone-16.png"
+    },
+    {
+      "name": "Settings — Training Phase (Building)",
+      "screenshotPath": "settings-training-phase-building--iphone-16.png"
+    },
+    {
+      "name": "SettingsActionRow - Variants",
+      "screenshotPath": "settingsactionrow-variants--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Ask Me Anything",
+      "screenshotPath": "welcome-ask-me-anything--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Day-by-Day Coaching",
+      "screenshotPath": "welcome-day-by-day-coaching--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Large Text",
+      "screenshotPath": "welcome-large-text--iphone-16.png"
+    },
+    {
+      "name": "Welcome — Meet Buddy",
+      "screenshotPath": "welcome-meet-buddy--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 297,
+    "passed": 297,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 297,
+        "passed": 297
+      }
+    ]
+  }
+}

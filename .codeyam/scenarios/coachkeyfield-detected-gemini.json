@@ -1,0 +1,16 @@
+{
+  "name": "CoachKeyField - Detected Gemini",
+  "id": "5056f46f-6f9e-4161-a300-e0d22f55cd67",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Detected Gemini",
+      "CODEYAM_ISOLATE_COMPONENT": "CoachKeyField"
+    }
+  },
+  "componentName": "CoachKeyField",
+  "scenarioType": "component"
+}

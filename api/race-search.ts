@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import Anthropic from "@anthropic-ai/sdk";
 import { allow, clientIp } from "./_lib/ratelimit.js";
+import { complete, credentialsFromHeaders, LlmError } from "./_lib/llm.js";
 
 // Otterpace race search — stateless BYO-key proxy (name -> candidate races).
 //
@@ -16,7 +16,6 @@ import { allow, clientIp } from "./_lib/ratelimit.js";
 // authoritative; until then the confirm-in-editor step and the per-candidate
 // sourceUrl are what keep a wrong guess from being saved silently.
 
-const MODEL = process.env.COACH_MODEL || "claude-opus-4-8";
 
 const SYSTEM_PROMPT = `You help a runner find a specific upcoming race by name. Given a short query (a race name, possibly with a city or year), propose up to 5 real races that plausibly match.
 
@@ -81,9 +80,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const apiKey = req.headers["x-anthropic-key"];
-  if (typeof apiKey !== "string" || apiKey.length < 8) {
-    res.status(400).json({ error: "missing_key", message: "Connect your Anthropic API key in Settings." });
+  const credentials = credentialsFromHeaders(req.headers as Record<string, unknown>);
+  if (!credentials) {
+    res.status(400).json({ error: "missing_key", message: "Connect an AI provider API key in Settings." });
     return;
   }
 
@@ -98,44 +97,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const client = new Anthropic({ apiKey });
   try {
-    const message = await client.messages.create({
-      model: MODEL,
-      max_tokens: 1024,
+    const result = await complete(credentials, {
       system: SYSTEM_PROMPT,
-      output_config: { format: FORMAT },
+      schema: FORMAT.schema,
+      schemaName: "race_search",
+      maxTokens: 1024,
       messages: [{ role: "user", content: `Find races matching: ${query}` }],
     });
 
-    if (message.stop_reason === "refusal") {
-      res.status(200).json({ results: [] });
-      return;
-    }
-
-    const textBlock = message.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
+    if (result.kind === "empty") {
       res.status(502).json({ error: "no_text" });
       return;
     }
-
-    let parsed: { results?: unknown };
-    try {
-      parsed = JSON.parse(textBlock.text);
-    } catch {
+    // No candidates is a normal outcome for a search, so a refusal or an
+    // unusable reply degrades to an empty result list rather than an error.
+    if (result.kind !== "json") {
       res.status(200).json({ results: [] });
       return;
     }
+
+    const parsed = result.value;
     const results = Array.isArray(parsed.results) ? parsed.results.slice(0, MAX_RESULTS) : [];
     res.status(200).json({ results });
   } catch (err) {
-    const status = (err as { status?: number }).status;
-    if (status === 401) {
-      res.status(401).json({ error: "invalid_key", message: "That API key was rejected by Anthropic." });
-      return;
-    }
-    if (status === 429) {
-      res.status(429).json({ error: "rate_limited", message: "Your Anthropic account is rate limited. Try again shortly." });
+    if (err instanceof LlmError) {
+      res.status(err.status).json({ error: err.code, message: err.message });
       return;
     }
     res.status(502).json({ error: "upstream_error" });

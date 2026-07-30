@@ -1,0 +1,16 @@
+{
+  "name": "CoachKeyField - Detected OpenAI",
+  "id": "a7849521-83ef-417b-9375-386ef136e15b",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "CoachKeyField",
+      "CODEYAM_ISOLATE_SCENARIO": "Detected OpenAI"
+    }
+  },
+  "componentName": "CoachKeyField",
+  "scenarioType": "component"
+}

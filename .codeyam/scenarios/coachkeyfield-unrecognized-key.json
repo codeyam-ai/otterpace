@@ -1,0 +1,16 @@
+{
+  "name": "CoachKeyField - Unrecognized Key",
+  "id": "009953c0-c802-4f97-bace-476662572136",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "CoachKeyField",
+      "CODEYAM_ISOLATE_SCENARIO": "Unrecognized Key"
+    }
+  },
+  "componentName": "CoachKeyField",
+  "scenarioType": "component"
+}

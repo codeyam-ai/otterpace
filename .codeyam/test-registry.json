@@ -942,38 +942,141 @@
       "runner": "tests"
     },
     {
-      "description": "clear removes the stored coach key.",
-      "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
+      "description": "With no seed key present at all, the store reports the real Keychain state, so production is unaffected by the scenario hooks.",
       "format": "junit-xml",
-      "key": "AppCoreTests.CoachKeyStoreTests › testClear",
-      "line": 70,
-      "registeredAt": "2026-06-25T16:43:33.270266+00:00",
+      "key": "AppCoreTests.CoachKeyStoreTests › testAbsentSeedFallsThroughToRealKeys",
+      "registeredAt": "2026-07-29T17:05:32Z",
       "runner": "tests"
     },
     {
-      "description": "With no key saved, the coach key store reports not-connected.",
+      "description": "The Anthropic sk-ant- prefix is also a valid OpenAI sk- prefix, so the more specific pattern must win or every Anthropic key would be misfiled as OpenAI.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachKeyStoreTests › testAnthropicKeyIsNotMistakenForOpenAI",
+      "registeredAt": "2026-07-29T17:05:32Z",
+      "runner": "tests"
+    },
+    {
+      "description": "clear with no argument disconnects every provider and clears the active choice.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachKeyStoreTests › testClearAll",
+      "registeredAt": "2026-07-29T17:05:32Z",
+      "runner": "tests"
+    },
+    {
+      "description": "clear(provider) removes just that provider's key.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachKeyStoreTests › testClearOneProvider",
+      "registeredAt": "2026-07-29T17:05:32Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Provider detection ignores whitespace around a sloppily pasted key.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachKeyStoreTests › testDetectionTrimsWhitespace",
+      "registeredAt": "2026-07-29T17:05:32Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Disconnecting the active provider promotes another connected one rather than dropping the user to the offline coach.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachKeyStoreTests › testDisconnectingActivePromotesAnother",
+      "registeredAt": "2026-07-29T17:05:32Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Disconnecting the last connected provider leaves nothing active.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachKeyStoreTests › testDisconnectingLastProviderLeavesNoneActive",
+      "registeredAt": "2026-07-29T17:05:32Z",
+      "runner": "tests"
+    },
+    {
+      "description": "With no key saved, the store reports not-connected for every provider and has no active provider or key.",
       "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachKeyStoreTests › testEmptyIsNotConnected",
-      "line": 55,
+      "line": 62,
       "registeredAt": "2026-06-25T16:43:33.266529+00:00",
       "runner": "tests"
     },
     {
-      "description": "Saving a key trims surrounding whitespace and reports connected.",
+      "description": "A key written under the original coach-anthropic-key account is already connected and active, so an existing user opens Settings to a working coach with nothing to re-enter.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachKeyStoreTests › testExistingAnthropicKeyMigratesSilently",
+      "registeredAt": "2026-07-29T17:05:32Z",
+      "runner": "tests"
+    },
+    {
+      "description": "An explicit false seed forces the disconnected state even when a real key exists, which is what the no-key capture relies on.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachKeyStoreTests › testLegacySeedFalseForcesDisconnected",
+      "registeredAt": "2026-07-29T17:05:32Z",
+      "runner": "tests"
+    },
+    {
+      "description": "The pre-multi-provider rbCoachConnected hook still means Anthropic connected, so every scenario written before this feature captures the same frame.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachKeyStoreTests › testLegacySeedHookStillMeansAnthropic",
+      "registeredAt": "2026-07-29T17:05:32Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Every connected provider is reported, in stable display order, regardless of the order they were connected in.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachKeyStoreTests › testMultipleProvidersConnect",
+      "registeredAt": "2026-07-29T17:05:32Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A pasted key is filed under the provider its shape identifies, for each of Anthropic, OpenAI, and Gemini.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachKeyStoreTests › testSaveDetectsProviderFromKeyShape",
+      "registeredAt": "2026-07-29T17:05:32Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Saving a key trims surrounding whitespace, reports connected, and makes that provider active.",
       "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachKeyStoreTests › testSaveTrimsAndConnects",
-      "line": 62,
+      "line": 75,
       "registeredAt": "2026-06-25T16:43:33.268622+00:00",
       "runner": "tests"
     },
     {
-      "description": "A whitespace-only entry trims to empty, so it is treated as no key.",
+      "description": "A scenario declares the connection shape without a real key, so a capture renders connected rows while activeKey stays nil and no network call is made.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachKeyStoreTests › testScenarioSeedDeclaresConnectionShape",
+      "registeredAt": "2026-07-29T17:05:32Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Switching the active provider changes which key a request would carry without disturbing any stored key.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachKeyStoreTests › testSetActiveSwitchesWithoutLosingKeys",
+      "registeredAt": "2026-07-29T17:05:32Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A remembered active provider that is no longer connected falls back to a connected one instead of reporting an active provider with no key.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachKeyStoreTests › testStaleActiveChoiceFallsBack",
+      "registeredAt": "2026-07-29T17:05:32Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A key whose shape matches no provider saves nothing, so the UI can ask the user to pick instead of guessing.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachKeyStoreTests › testUnrecognizedKeyIsNotSaved",
+      "registeredAt": "2026-07-29T17:05:32Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A whitespace-only entry trims to empty, so it is treated as no key at all.",
       "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachKeyStoreTests › testWhitespaceSaveIsNotConnected",
-      "line": 79,
+      "line": 94,
       "registeredAt": "2026-06-25T16:43:33.272414+00:00",
       "runner": "tests"
     },
@@ -1065,6 +1168,33 @@
       "key": "AppCoreTests.CoachProfileTests › testTrainingPhaseRoundTrip",
       "line": 73,
       "registeredAt": "2026-07-10T15:15:02.844082+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An Anthropic key also rides the legacy x-anthropic-key header, so an app build shipping ahead of the backend keeps working.",
+      "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachRequestHeadersTests › testAnthropicAlsoSendsLegacyHeader",
+      "line": 284,
+      "registeredAt": "2026-07-29T17:16:33.384792+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Every provider names itself in x-ai-provider and carries the key in x-ai-key.",
+      "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachRequestHeadersTests › testNamesProviderAndCarriesKey",
+      "line": 274,
+      "registeredAt": "2026-07-29T17:12:06.339980+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "OpenAI and Gemini keys must not populate the Anthropic-only header, or an older backend would spend them against Anthropic.",
+      "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachRequestHeadersTests › testNonAnthropicOmitsLegacyHeader",
+      "line": 290,
+      "registeredAt": "2026-07-29T17:16:38.051046+00:00",
       "runner": "tests"
     },
     {
@@ -1675,7 +1805,7 @@
       "file": "Tests/AppCoreTests/OnboardingScenarioIndexTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.OnboardingScenarioIndexTests › testEveryOnboardingScenarioIsCovered",
-      "line": 94,
+      "line": 98,
       "registeredAt": "2026-07-21T21:24:01.120164+00:00",
       "runner": "tests"
     },
@@ -1684,7 +1814,7 @@
       "file": "Tests/AppCoreTests/OnboardingScenarioIndexTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.OnboardingScenarioIndexTests › testSeededPagesAreInRange",
-      "line": 82,
+      "line": 86,
       "registeredAt": "2026-07-21T21:23:56.158592+00:00",
       "runner": "tests"
     },
@@ -1693,7 +1823,7 @@
       "file": "Tests/AppCoreTests/OnboardingScenarioIndexTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.OnboardingScenarioIndexTests › testSeededPagesMatchNamedSteps",
-      "line": 72,
+      "line": 76,
       "registeredAt": "2026-07-21T21:23:51.527314+00:00",
       "runner": "tests"
     },
@@ -1702,7 +1832,7 @@
       "file": "Tests/AppCoreTests/OnboardingScenarioIndexTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.OnboardingScenarioIndexTests › testStepCountsAreUnchanged",
-      "line": 64,
+      "line": 68,
       "registeredAt": "2026-07-21T21:23:47.512469+00:00",
       "runner": "tests"
     },
@@ -1930,6 +2060,33 @@
       "runner": "tests"
     },
     {
+      "description": "A 401 from the race endpoints surfaces as invalidKey so the user is told to reconnect.",
+      "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceImportClientTests › test401IsInvalidKey",
+      "line": 342,
+      "registeredAt": "2026-07-30T13:40:28.044163+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Race import sends the active provider's headers, so a Gemini user's import routes to Gemini rather than silently to Anthropic.",
+      "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceImportClientTests › testImportSendsActiveProviderHeaders",
+      "line": 327,
+      "registeredAt": "2026-07-30T13:40:07.032255+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Race search authenticates identically to race import.",
+      "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceImportClientTests › testSearchSendsActiveProviderHeaders",
+      "line": 335,
+      "registeredAt": "2026-07-30T13:40:07.034743+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "connect() re-merges the persisted coach profile onto the freshly loaded HealthKit snapshot.",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceImportPersistenceTests › testConnectReMergesCoachProfile",
@@ -2010,7 +2167,7 @@
       "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RemoteCoachTests › test400IsServerNotInvalidKey",
-      "line": 131,
+      "line": 397,
       "registeredAt": "2026-06-25T16:43:33.280402+00:00",
       "runner": "tests"
     },
@@ -2019,7 +2176,7 @@
       "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RemoteCoachTests › test401IsInvalidKey",
-      "line": 119,
+      "line": 342,
       "registeredAt": "2026-06-25T16:43:33.276368+00:00",
       "runner": "tests"
     },
@@ -2028,7 +2185,7 @@
       "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RemoteCoachTests › test429IsRateLimited",
-      "line": 125,
+      "line": 391,
       "registeredAt": "2026-06-25T16:43:33.278235+00:00",
       "runner": "tests"
     },
@@ -2037,7 +2194,7 @@
       "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RemoteCoachTests › testMalformedBodyIsServer",
-      "line": 137,
+      "line": 403,
       "registeredAt": "2026-06-25T16:43:33.282452+00:00",
       "runner": "tests"
     },
@@ -2046,7 +2203,7 @@
       "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RemoteCoachTests › testSuccessDecodes",
-      "line": 110,
+      "line": 376,
       "registeredAt": "2026-06-25T16:43:33.274443+00:00",
       "runner": "tests"
     },

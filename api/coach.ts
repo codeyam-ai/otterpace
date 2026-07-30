@@ -1,23 +1,23 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import Anthropic from "@anthropic-ai/sdk";
 import { allow, clientIp } from "./_lib/ratelimit.js";
+import { complete, credentialsFromHeaders, LlmError } from "./_lib/llm.js";
 
 // Otterpace AI coach — stateless BYO-key proxy.
 //
-// The iOS app POSTs { question, context } here with the user's own Anthropic key
-// in the `x-anthropic-key` header. We call Claude with the curated, load-aware
-// coach system prompt and return a structured reply. The key is used for this one
-// request and never stored, logged, or persisted — this function holds no state.
+// The iOS app POSTs { question, context } here with the user's own key and the
+// provider it belongs to (Anthropic, OpenAI, or Gemini). We send the curated,
+// load-aware coach system prompt through `_lib/llm` and return a structured
+// reply. The key is used for this one request and never stored, logged, or
+// persisted — this function holds no state.
 //
 // Why a backend at all if the user brings their own key: the coaching prompt,
 // safety rules, and model choice live here, server-side, so they can be tuned
 // without an App Store release and can't be seen or tampered with by the client.
-// The app keeps a deterministic on-device mock (CoachEngine) for offline / no-key
-// / preview, so the coach always works — this just upgrades it to real replies.
-
-// Model is overridable via env for cost/latency tuning; default to the most
-// capable Opus tier. The user pays on their own key, so this is their call.
-const MODEL = process.env.COACH_MODEL || "claude-opus-4-8";
+// It is also what keeps coaching IDENTICAL across providers — the provider only
+// changes which model generates the words, never the guidance or the safety
+// rules. The app keeps a deterministic on-device mock (CoachEngine) for offline /
+// no-key / preview, so the coach always works — this just upgrades it to real
+// replies.
 
 const SYSTEM_PROMPT = `You are Buddy, a warm, encouraging otter running coach inside the Otterpace app. You give short, practical, daily running and movement guidance.
 
@@ -142,9 +142,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const apiKey = req.headers["x-anthropic-key"];
-  if (typeof apiKey !== "string" || apiKey.length < 8) {
-    res.status(400).json({ error: "missing_key", message: "Connect your Anthropic API key in Settings." });
+  const credentials = credentialsFromHeaders(req.headers as Record<string, unknown>);
+  if (!credentials) {
+    res.status(400).json({ error: "missing_key", message: "Connect an AI provider API key in Settings." });
     return;
   }
 
@@ -181,16 +181,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // context + question, so context-serialization stays in the last message.
   const history = normalizeHistory(body.history);
 
-  const client = new Anthropic({ apiKey });
-
   try {
-    const message = await client.messages.create({
-      model: MODEL,
-      max_tokens: 1024,
+    const result = await complete(credentials, {
       system: SYSTEM_PROMPT,
-      output_config: { format: FORMAT },
+      schema: FORMAT.schema,
+      schemaName: "coach_reply",
+      maxTokens: 1024,
       messages: [
-        ...history.map((t) => ({ role: t.role, content: t.content })),
+        ...history,
         {
           role: "user",
           content: `Today's context (JSON):\n${context}\n\nUser's question:\n${question}`,
@@ -198,7 +196,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ],
     });
 
-    if (message.stop_reason === "refusal") {
+    // No text at all is an upstream fault, not something a rephrase fixes.
+    if (result.kind === "empty") {
+      res.status(502).json({ error: "no_text" });
+      return;
+    }
+
+    if (result.kind === "refusal") {
       res.status(200).json({
         text: "That one's outside what I coach. Let's put it toward your running instead. What do you want to work on today?",
         mood: "ready",
@@ -207,20 +211,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
-    const textBlock = message.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
-      res.status(502).json({ error: "no_text" });
-      return;
-    }
-
-    // output_config.format normally yields valid JSON, but a truncated response
-    // (stop_reason "max_tokens") or any malformed output would throw on parse.
-    // Degrade gracefully instead of 500-ing — the user's key worked and was billed,
-    // so don't silently drop them to the offline mock.
-    let parsed: { text?: unknown; mood?: unknown; safetyFlag?: unknown };
-    try {
-      parsed = JSON.parse(textBlock.text);
-    } catch {
+    // A structured-output request normally yields valid JSON, but a truncated
+    // response or any malformed output lands here. Degrade gracefully instead of
+    // 500-ing — the user's key worked and was billed, so don't silently drop them
+    // to the offline mock.
+    if (result.kind === "unusable") {
       res.status(200).json({
         text: "That didn't come out right on my end. Ask me again, and try to be a little more specific?",
         mood: "ready",
@@ -228,19 +223,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
       return;
     }
+
+    const parsed = result.value;
     res.status(200).json({
       text: String(parsed.text ?? ""),
       mood: String(parsed.mood ?? "ready"),
       safetyFlag: Boolean(parsed.safetyFlag),
     });
   } catch (err) {
-    const status = (err as { status?: number }).status;
-    if (status === 401) {
-      res.status(401).json({ error: "invalid_key", message: "That API key was rejected by Anthropic." });
-      return;
-    }
-    if (status === 429) {
-      res.status(429).json({ error: "rate_limited", message: "Your Anthropic account is rate limited. Try again shortly." });
+    if (err instanceof LlmError) {
+      res.status(err.status).json({ error: err.code, message: err.message });
       return;
     }
     res.status(502).json({ error: "upstream_error" });

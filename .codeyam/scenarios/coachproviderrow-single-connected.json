@@ -1,0 +1,16 @@
+{
+  "name": "CoachProviderRow - Single Connected",
+  "id": "02ec402f-6114-40d0-9683-ef65e81b0afa",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "CoachProviderRow",
+      "CODEYAM_ISOLATE_SCENARIO": "Single Connected"
+    }
+  },
+  "componentName": "CoachProviderRow",
+  "scenarioType": "component"
+}

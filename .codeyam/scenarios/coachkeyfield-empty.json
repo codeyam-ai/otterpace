@@ -1,0 +1,16 @@
+{
+  "name": "CoachKeyField - Empty",
+  "id": "9ce92bca-a94a-40f2-883f-48a086b374ba",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "CoachKeyField",
+      "CODEYAM_ISOLATE_SCENARIO": "Default"
+    }
+  },
+  "componentName": "CoachKeyField",
+  "scenarioType": "component"
+}

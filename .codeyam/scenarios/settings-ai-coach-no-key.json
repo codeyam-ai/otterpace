@@ -1,0 +1,41 @@
+{
+  "name": "Settings — AI Coach No Key",
+  "id": "fe340d2b-5d7d-428a-8fdf-c5352b310c7b",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbCoachConnected": false,
+      "rbShowHistory": false,
+      "rbSyncHealth": false,
+      "rbTheme": "default",
+      "rbShowSettings": true,
+      "rbSignedInUserID": "",
+      "rbStartScreen": "",
+      "rbCoachActiveProvider": "",
+      "rbSettingsScroll": "coach",
+      "otterpaceRemindInactivity": false,
+      "rbStartTab": "today",
+      "otterpaceRemindDaily": false,
+      "rbSyncSettings": false,
+      "rbRaceEditorCustomValue": "",
+      "rbRacesJSON": "",
+      "rbCoachConnectedProviders": "",
+      "rbPreviewMode": "",
+      "rbContentSize": "",
+      "rbRaceEditorCustomUnit": "",
+      "otterpaceRemindGoal": false,
+      "rbConnected": true,
+      "rbDate": "2026-06-22",
+      "rbShowWeeklyReview": false,
+      "rbSteps": 8000,
+      "rbShowRaceEditor": false,
+      "rbGoalSteps": 10000
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/SettingsView.swift"
+}

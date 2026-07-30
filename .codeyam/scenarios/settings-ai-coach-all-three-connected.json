@@ -1,0 +1,40 @@
+{
+  "name": "Settings — AI Coach All Three Connected",
+  "id": "99a440d8-a1bd-4ed5-8dca-fea4bff8545f",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbConnected": true,
+      "rbRaceEditorCustomUnit": "",
+      "rbShowWeeklyReview": false,
+      "rbStartTab": "today",
+      "rbSteps": 8000,
+      "rbContentSize": "",
+      "rbRacesJSON": "",
+      "rbSettingsScroll": "coach",
+      "rbShowRaceEditor": false,
+      "otterpaceRemindDaily": false,
+      "rbGoalSteps": 10000,
+      "rbShowSettings": true,
+      "rbStartScreen": "",
+      "rbSyncSettings": false,
+      "rbCoachActiveProvider": "gemini",
+      "rbDate": "2026-06-22",
+      "rbShowHistory": false,
+      "rbRaceEditorCustomValue": "",
+      "rbTheme": "default",
+      "rbPreviewMode": "",
+      "rbSignedInUserID": "",
+      "rbSyncHealth": false,
+      "otterpaceRemindInactivity": false,
+      "rbCoachConnectedProviders": "anthropic,openai,gemini",
+      "otterpaceRemindGoal": false
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/SettingsView.swift"
+}

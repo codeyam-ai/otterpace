@@ -197,16 +197,63 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "The coach backend endpoints (coach, race-import, race-search) plus the preference keys the coach layer reads: activeProviderKey holding the user's provider choice, and the scenario-only seed hooks a capture uses to declare connection shape without a secret. seedConnectedKey is the original single-provider bool, still honored as 'Anthropic connected' so scenarios written before multi-provider support capture the same frame. Kept in one place so the host can change without touching call sites.",
+    "filePath": "Sources/AppCore/Coach/RemoteCoach.swift",
+    "name": "CoachConfig",
+    "tags": [
+      "coach",
+      "byok",
+      "config"
+    ],
+    "testFile": "Tests/AppCoreTests/IntegrationModuleTests.swift"
+  },
+  {
     "description": "Buddy mock AI coach. Given a free-text question, the current TodayState, and the recent conversation history, it routes through CoachIntent and builds a curated, context-aware, safety-aware CoachReply. Pure and deterministic. Genuine safety signals still win: a genuinely hard run or a true load spike tilts recovery-ward with the safety flag, and sharp or worsening pain triggers the clinician-caution lockdown. But it trusts the athlete by default: ordinary post-run soreness gets calm reassurance without a flag, a routine easy run is no longer treated as hard, and a declared build is affirmed rather than rested. It threads conversation history to vary and de-repeat the closing check-in question, and abstains honestly when the load trend is insufficient.",
     "filePath": "Sources/AppCore/CoachEngine.swift",
     "name": "CoachEngine",
     "testFile": "Tests/AppCoreTests/CoachEngineTests.swift"
   },
   {
+    "conformsToView": false,
+    "description": "The coach failure cases the UI treats differently: invalidKey is worth telling the user about (reconnect in Settings), rateLimited names the provider account's limit, while server and network fall back silently to the deterministic CoachEngine so the coach always works offline. Only a rejected key surfaces to the user; a 400 is our request bug, not theirs.",
+    "filePath": "Sources/AppCore/Coach/RemoteCoach.swift",
+    "name": "CoachError",
+    "tags": [
+      "coach",
+      "errors"
+    ],
+    "testFile": "Tests/AppCoreTests/IntegrationModuleTests.swift"
+  },
+  {
     "description": "The intent classification behind the Ask Coach engine. Its classify(_:) does conservative keyword matching over the user's question into runOrRest, hit10K, mileageTooFast, injuryPain, postRunReflection, or a general fallback. Injury/pain is checked first so a safety-sensitive question is never mis-routed to upbeat coaching.",
     "filePath": "Sources/AppCore/CoachEngine.swift",
     "name": "CoachIntent",
     "testFile": "Tests/AppCoreTests/CoachEngineTests.swift"
+  },
+  {
+    "conformsToView": true,
+    "description": "The paste-a-key field in the Settings AI Coach card: one field for all three providers, recognizing the provider from the key's shape as you type and naming it back before you commit. A key matching no known shape is NOT rejected — providers change their prefixes and a valid key should never be turned away — so the field offers a 'Use as <provider>' picker instead. The 'Get an API key' link retargets to the detected provider, falling back to Anthropic while empty so it always leads somewhere useful. Editing clears a stale unrecognized flag so the picker does not linger over a corrected key.",
+    "filePath": "Sources/AppCore/CoachKeyField.swift",
+    "name": "CoachKeyField",
+    "scenarios": [
+      "coachkeyfield-empty",
+      "coachkeyfield-detected-gemini",
+      "coachkeyfield-detected-openai",
+      "coachkeyfield-unrecognized-key"
+    ]
+  },
+  {
+    "conformsToView": false,
+    "description": "Stores the user's own provider API keys in the Keychain, one account per CoachProvider, and remembers which one is active. Reuses the injectable TokenStoring seam, so tests inject an in-memory store while production uses KeychainTokenStore. Several providers may be connected at once; exactly one is active and only a connected provider can be — activeProvider falls back to the first connected provider whenever the remembered choice is gone, which is what makes disconnecting the active provider promote another instead of dropping the user to the offline CoachEngine. Migration from the single-key era is a no-op by construction because anthropic still reads the original coach-anthropic-key account. Also honors the scenario seed hooks so a simulator capture can render connected rows without a real secret; activeKey stays nil under a seed, correctly leaving a captured conversation on the deterministic mock.",
+    "filePath": "Sources/AppCore/Coach/RemoteCoach.swift",
+    "name": "CoachKeyStore",
+    "tags": [
+      "coach",
+      "byok",
+      "keychain"
+    ],
+    "testFile": "Tests/AppCoreTests/IntegrationModuleTests.swift"
   },
   {
     "conformsToView": false,
@@ -221,6 +268,42 @@
     "filePath": "Sources/AppCore/Onboarding/CoachProfile.swift",
     "name": "CoachProfileStore",
     "testFile": "Tests/AppCoreTests/CoachProfileTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "The AI providers Buddy's real-LLM coaching can run on: anthropic, openai, gemini. Single source of truth for everything that differs per provider — the Keychain account its key lives under, the field placeholder, the console URL where a key is created, the display name, the model family named in 'replies are generated by' copy, and the indefinite article that reads correctly before the name. Its detect(fromKey:) recognizes a pasted key from its shape; sk-ant- is deliberately tested before sk- because the Anthropic prefix is also a valid OpenAI prefix, so the specific pattern must win or every Anthropic key would be misfiled as OpenAI. An unrecognized shape returns nil rather than a guess, letting the UI ask instead of rejecting a key that may be valid. Adding a provider means a case here plus a branch in the backend's api/_lib/llm.ts.",
+    "filePath": "Sources/AppCore/Coach/CoachProvider.swift",
+    "name": "CoachProvider",
+    "tags": [
+      "coach",
+      "byok",
+      "provider"
+    ],
+    "testFile": "Tests/AppCoreTests/IntegrationModuleTests.swift"
+  },
+  {
+    "conformsToView": true,
+    "description": "One connected AI provider in the Settings AI Coach card: the provider's name, whether it is the provider Buddy currently uses, and a control to disconnect it. The active row names the model family ('Replies are generated by GPT, using your key'), which reads more concretely than repeating the vendor; the rest read 'Connected'. When only one provider is connected the row stops taking taps via allowsHitTesting rather than .disabled — .disabled dims it, and greying out the provider that IS active reads as broken. Purely props-driven, holding no store and reading no UserDefaults, so every provider x active/inactive combination is capturable in isolation without a Keychain entry.",
+    "filePath": "Sources/AppCore/CoachProviderRow.swift",
+    "name": "CoachProviderRow",
+    "scenarios": [
+      "coachproviderrow-all-three-connected",
+      "coachproviderrow-single-connected",
+      "coachproviderrow-openai-active",
+      "coachproviderrow-gemini-active"
+    ]
+  },
+  {
+    "conformsToView": false,
+    "description": "The BYO-key headers every coach-backed request carries: x-ai-provider naming the provider and x-ai-key carrying the key. Centralized because RemoteCoach and RaceImportClient must stay byte-identical here — a drift would authenticate one feature and 400 the other. An Anthropic key also rides the legacy x-anthropic-key header so an app build shipping ahead of the backend keeps working, while the backend still accepts that header so an older installed app keeps working; neither side can be upgraded atomically, so compatibility runs both ways. Non-Anthropic keys deliberately omit the legacy header, or an older backend would spend an OpenAI/Gemini key against Anthropic.",
+    "filePath": "Sources/AppCore/Coach/RemoteCoach.swift",
+    "name": "CoachRequestHeaders",
+    "tags": [
+      "coach",
+      "byok",
+      "http"
+    ],
+    "testFile": "Tests/AppCoreTests/IntegrationModuleTests.swift"
   },
   {
     "conformsToView": false,
@@ -388,6 +471,17 @@
     }
   },
   {
+    "description": "A provider-side failure already mapped to the status the iOS app handles: 401 invalid_key, 429 rate_limited, 502 upstream_error. The message names the actual provider, so a rejected OpenAI key does not tell the user Anthropic refused it.",
+    "filePath": "api/_lib/llm.ts",
+    "name": "LlmError",
+    "tags": [
+      "backend",
+      "coach",
+      "errors"
+    ],
+    "testFile": "test/api/llm.test.ts"
+  },
+  {
     "description": "The app's two top-level destinations behind the connected tab bar: today and coach. Its init(raw:) coerces a seeded rbStartTab string case-insensitively, falling back to today, so scenarios can land directly on the Ask Coach chat.",
     "filePath": "Sources/AppCore/ContentView.swift",
     "name": "MainTab",
@@ -474,6 +568,19 @@
     "testFile": "Tests/AppCoreTests/RaceGoalsTests.swift"
   },
   {
+    "conformsToView": false,
+    "description": "Calls the backend race-import (web page to structured race) and race-search (name to candidate list) proxies on the user's own provider key, authenticating through the same CoachRequestHeaders as RemoteCoach and mapping status codes to the same CoachError. Stateless; construct per use. A rejected key surfaces to the user while network and server failures fall back to manual race entry.",
+    "filePath": "Sources/AppCore/Coach/RaceImportClient.swift",
+    "name": "RaceImportClient",
+    "tags": [
+      "coach",
+      "byok",
+      "races",
+      "network"
+    ],
+    "testFile": "Tests/AppCoreTests/IntegrationModuleTests.swift"
+  },
+  {
     "conformsToView": true,
     "description": "The import-from-URL sheet opened from the Settings Races card. A URL field and Import button call the race-import backend with the user's BYO Anthropic key, then hand a prefilled RaceGoal seed plus the fields to double-check to the caller so the editor opens pre-filled. Mirrors AskCoachView's degradation: with no coach key it shows a connect-key explainer, and on any failure it surfaces a message plus an add-manually fallback, so the user is never blocked.",
     "filePath": "Sources/AppCore/RaceImportView.swift",
@@ -521,6 +628,18 @@
     "testFile": "Tests/AppCoreTests/RaceGoalsTests.swift"
   },
   {
+    "conformsToView": false,
+    "description": "The real-LLM coach: POSTs the question, TodayState context, and recent conversation history to the backend coach proxy on the user's own key, and returns the same CoachReply shape as the offline CoachEngine so nothing downstream cares which coach — or which provider — answered. Stateless and safe to construct per request. Maps status codes to CoachError so the caller can decide between falling back to the mock and surfacing a bad key. History is threaded so the model builds on the exchange instead of restarting each message.",
+    "filePath": "Sources/AppCore/Coach/RemoteCoach.swift",
+    "name": "RemoteCoach",
+    "tags": [
+      "coach",
+      "byok",
+      "network"
+    ],
+    "testFile": "Tests/AppCoreTests/IntegrationModuleTests.swift"
+  },
+  {
     "conformsToView": true,
     "description": "The trailing-7-day line under the Weekly Load metrics: 'Last 7 days: 12.3 mi · 3 run days'. Covers the Monday-start calendar week's blind spot, where a strong Saturday and Sunday vanish from 'this week' at midnight Monday and leave a heavy weekend invisible on Tuesday. Renders only when the window holds at least one run day.",
     "filePath": "Sources/AppCore/RollingWindowNote.swift",
@@ -549,6 +668,25 @@
     "filePath": "Sources/AppCore/Auth/SessionStore.swift",
     "name": "SessionStore",
     "testFile": "Tests/AppCoreTests/SessionStoreTests.swift"
+  },
+  {
+    "conformsToView": true,
+    "description": "A full-width tappable Settings row: tinted icon, title, trailing chevron, with a 44pt minimum height so the whole row is the tap target rather than just the text. Was a private helper inside SettingsView; promoted so components extracted out of that file can render the same affordance instead of reimplementing it and drifting visually. SettingsView keeps a thin private wrapper, so its other cards are untouched.",
+    "filePath": "Sources/AppCore/SettingsActionRow.swift",
+    "name": "SettingsActionRow",
+    "scenarios": [
+      "settingsactionrow-variants"
+    ]
+  },
+  {
+    "conformsToView": true,
+    "description": "The visual content of a Settings action row, split from the button so a Link can reuse it for an external destination: the `external` flag swaps the trailing chevron for an out-arrow, and `destructive` tints the title brand-deep. It is the entire rendered body of SettingsActionRow, which adds only a plain-styled Button around it — so the two are pixel-identical and every variant of this label is visible in the settingsactionrow-variants capture.",
+    "filePath": "Sources/AppCore/SettingsActionRow.swift",
+    "name": "SettingsActionRowLabel",
+    "untestabilityReason": {
+      "justification": "Renders pixel-identically to SettingsActionRow, which is only a plain Button wrapped around it. A dedicated component scenario produced a byte-identical screenshot to settingsactionrow-variants (caught by seeded-capture-check), so it was removed rather than kept as a duplicate; all three variants (normal, destructive, external) are visible in that capture.",
+      "kind": "trivial-wrapper"
+    }
   },
   {
     "description": "The Settings overlay (reached via the gear on the dashboard and Connect hero): Account (sign out / delete account — the App Store-required deletion path), Apple Health status, daily step goal with quick presets plus a Custom stepper for any in-bounds value, a privacy explainer + policy link, and About/version.",
@@ -1024,6 +1162,54 @@
     "testFile": "test/api/coach.test.ts"
   },
   {
+    "description": "Send one structured-output request on the user's own key, routing to Anthropic (via the SDK) or OpenAI / Gemini (over plain fetch, so no extra dependency weighs down the serverless bundle). The system prompt does NOT vary by provider — Otterpace's coaching and safety rules are the product, and the provider only changes which model generates the words. Normalizes every provider's reply into one LlmResult: json, refusal, unusable (text arrived but was not parseable, so the caller degrades gracefully because the key was already billed), or empty (no text at all, an upstream fault the caller treats as a failed call).",
+    "filePath": "api/_lib/llm.ts",
+    "name": "complete",
+    "tags": [
+      "backend",
+      "coach",
+      "byok",
+      "llm"
+    ],
+    "testFile": "test/api/llm.test.ts"
+  },
+  {
+    "description": "Anthropic branch of the LLM router: calls the Messages API through the official SDK with a json_schema output format, and normalizes the reply into an LlmResult. A refusal stop_reason becomes `refusal`, a missing text block becomes `empty` (an upstream fault), and unparseable text becomes `unusable` (the key was billed, so the caller degrades rather than erroring).",
+    "filePath": "api/_lib/llm.ts",
+    "name": "completeAnthropic",
+    "tags": [
+      "backend",
+      "coach",
+      "byok",
+      "anthropic"
+    ],
+    "testFile": "test/api/llm.test.ts"
+  },
+  {
+    "description": "Gemini branch of the LLM router: generateContent over plain fetch. Gemini has no system role, so the coach prompt goes in systemInstruction, and its message roles differ - the assistant is called `model`. A blocked generation arrives as a finishReason on a 200 rather than an error status, so SAFETY and PROHIBITED_CONTENT map to the refusal result.",
+    "filePath": "api/_lib/llm.ts",
+    "name": "completeGemini",
+    "tags": [
+      "backend",
+      "coach",
+      "byok",
+      "gemini"
+    ],
+    "testFile": "test/api/llm.test.ts"
+  },
+  {
+    "description": "OpenAI branch of the LLM router: Chat Completions over plain fetch with a strict json_schema response_format and the key as a bearer token. Reached without the SDK because it is one request shape and every extra dependency is weight in a serverless bundle. A strict-schema refusal arrives in its own `refusal` field with null content, which maps to the refusal result.",
+    "filePath": "api/_lib/llm.ts",
+    "name": "completeOpenAI",
+    "tags": [
+      "backend",
+      "coach",
+      "byok",
+      "openai"
+    ],
+    "testFile": "test/api/llm.test.ts"
+  },
+  {
     "description": "Mint a session for a verified user: generate a 256-bit token, store its hash in Supabase, and return the raw token (shown to the client once).",
     "filePath": "api/_lib/session.ts",
     "name": "createSession",
@@ -1033,6 +1219,18 @@
       "session"
     ],
     "testFile": "test/api/session-lib.test.ts"
+  },
+  {
+    "description": "Pull the provider and BYO key off a request's headers, or null when absent, too short, non-string, or naming an unrecognized provider. An explicit x-ai-provider always wins; when none is present the request is treated as Anthropic, which is what the legacy x-anthropic-key-only clients sent. Rejects an unknown provider rather than defaulting, since defaulting would spend the user's key on the wrong service.",
+    "filePath": "api/_lib/llm.ts",
+    "name": "credentialsFromHeaders",
+    "tags": [
+      "backend",
+      "coach",
+      "byok",
+      "validation"
+    ],
+    "testFile": "test/api/llm.test.ts"
   },
   {
     "description": "How far into its Monday-start week a reference date sits, 1 on Monday through 7 on Sunday. Single definition of 'how far into the week are we', shared by groupByWeek's elapsed-aware rest days and classifyTrend's mid-week recovering guard so the two cannot drift apart. Note the guard's cutoff is >= 6 (Saturday or later), matching the fractional >= 5.0 days-since-week-start test it replaced.",
@@ -1247,6 +1445,18 @@
     "testFile": "test/api/account.test.ts"
   },
   {
+    "description": "Type guard for the three supported provider identifiers, so an unrecognized value from a request header is rejected rather than silently coerced.",
+    "filePath": "api/_lib/llm.ts",
+    "name": "isLlmProvider",
+    "tags": [
+      "backend",
+      "coach",
+      "byok",
+      "validation"
+    ],
+    "testFile": "test/api/llm.test.ts"
+  },
+  {
     "description": "Reports whether a step goal equals one of the fixed quick-preset options, used by Settings to decide between highlighting a preset capsule and the Custom chip.",
     "filePath": "Sources/AppCore/Preferences.swift",
     "name": "isPreset",
@@ -1370,6 +1580,18 @@
     "testFile": "test/api/account-push.test.ts"
   },
   {
+    "description": "The model used for a given provider. Each is overridable via env (COACH_MODEL, COACH_MODEL_OPENAI, COACH_MODEL_GEMINI) so cost and latency can be tuned server-side without an App Store release; the user pays on their own key, so the capable tier is the right default.",
+    "filePath": "api/_lib/llm.ts",
+    "name": "modelFor",
+    "tags": [
+      "backend",
+      "coach",
+      "byok",
+      "config"
+    ],
+    "testFile": "test/api/llm.test.ts"
+  },
+  {
     "description": "Renders minutes-since-last-movement as a compact label: now at or below zero, bare minutes under an hour, and hours-plus-minutes above, dropping the minutes part when it is zero.",
     "filePath": "Sources/AppCore/Formatters.swift",
     "name": "movementLabel",
@@ -1386,6 +1608,17 @@
     "filePath": "api/_lib/strava.ts",
     "name": "pacePerMile",
     "testFile": "test/api/strava.test.ts"
+  },
+  {
+    "description": "Parse a provider's text reply into the normalized LlmResult, tolerating bad output. Anything that is not a JSON object - invalid JSON, an array, or a bare primitive - becomes `unusable` rather than throwing, so a truncated or malformed reply degrades gracefully instead of 500-ing a request the user already paid for.",
+    "filePath": "api/_lib/llm.ts",
+    "name": "parseJsonReply",
+    "tags": [
+      "backend",
+      "coach",
+      "parsing"
+    ],
+    "testFile": "test/api/llm.test.ts"
   },
   {
     "description": "Renders a phone-frame mockup image at a target width/rotation for the OG card.",
@@ -1535,6 +1768,29 @@
     "filePath": "api/_lib/strava.ts",
     "name": "supabaseHeaders",
     "testFile": "test/api/strava.test.ts"
+  },
+  {
+    "description": "Map any provider's HTTP status onto the status the iOS app already handles: 401/403 to invalid_key, 429 to rate_limited, anything else to upstream_error. The message names the actual provider, so a rejected OpenAI key never tells the user Anthropic refused it.",
+    "filePath": "api/_lib/llm.ts",
+    "name": "throwForStatus",
+    "tags": [
+      "backend",
+      "coach",
+      "errors"
+    ],
+    "testFile": "test/api/llm.test.ts"
+  },
+  {
+    "description": "Adapt a JSON Schema for Gemini's responseSchema dialect by recursively stripping additionalProperties, which Gemini rejects. Recursion matters because nested object schemas (for example the race-import race object) carry it at every depth, and a single surviving keyword 400s the whole structured call.",
+    "filePath": "api/_lib/llm.ts",
+    "name": "toGeminiSchema",
+    "tags": [
+      "backend",
+      "coach",
+      "gemini",
+      "schema"
+    ],
+    "testFile": "test/api/llm.test.ts"
   },
   {
     "description": "Builds the Supabase PostgREST URL for the strava_tokens table from SUPABASE_URL.",

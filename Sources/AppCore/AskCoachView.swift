@@ -57,12 +57,10 @@ public struct AskCoachView: View {
     /// constant so the history snapshot can exclude it (a placeholder is not a turn).
     private static let thinkingPlaceholder = "Buddy is thinking…"
 
-    /// The chat is available when the user has connected a key, or when a scenario
-    /// opts in via `rbCoachConnected` (so a populated conversation is capturable
-    /// offline without a real key). Otherwise the tab shows the connect-key CTA.
-    private var chatUnlocked: Bool {
-        keyStore.isConnected || UserDefaults.standard.bool(forKey: "rbCoachConnected")
-    }
+    /// The chat is available when the user has connected a key for any provider.
+    /// `CoachKeyStore` also honors the scenario seed hooks, so a populated
+    /// conversation stays capturable offline without a real key.
+    private var chatUnlocked: Bool { keyStore.isConnected }
 
     public init(model: OtterpaceModel, onOpenSettings: @escaping () -> Void = {}) {
         self.model = model
@@ -131,9 +129,10 @@ public struct AskCoachView: View {
         let history = recentTurns()
         append(ChatMessage(id: takeId(), role: .user, text: question))
 
-        // Seeded/preview chat without a real key (rbCoachConnected): answer
-        // deterministically offline so captures render without a network call.
-        guard let apiKey = keyStore.key else {
+        // Seeded/preview chat without a real key (a scenario declared the
+        // connection shape but carries no secret): answer deterministically
+        // offline so captures render without a network call.
+        guard let provider = keyStore.activeProvider, let apiKey = keyStore.activeKey else {
             ask(question, appendUser: false, history: history)
             return
         }
@@ -145,7 +144,8 @@ public struct AskCoachView: View {
         Task { @MainActor in
             let reply: CoachReply
             do {
-                reply = try await remote.reply(to: question, context: context, history: history, apiKey: apiKey)
+                reply = try await remote.reply(to: question, context: context, history: history,
+                                               apiKey: apiKey, provider: provider)
             } catch CoachError.invalidKey {
                 reply = CoachReply(intent: .general,
                     text: "Your AI coach key was rejected. Reconnect it in Settings, then ask again.",

@@ -1,0 +1,16 @@
+{
+  "name": "CoachProviderRow - OpenAI Active",
+  "id": "e85f0b1a-abb4-421c-b977-564162952543",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "CoachProviderRow",
+      "CODEYAM_ISOLATE_SCENARIO": "OpenAI Active"
+    }
+  },
+  "componentName": "CoachProviderRow",
+  "scenarioType": "component"
+}

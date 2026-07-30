@@ -1,0 +1,16 @@
+{
+  "name": "CoachProviderRow - Gemini Active",
+  "id": "6e604ffc-928b-4d81-a053-bb9cf6703fdb",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "CoachProviderRow",
+      "CODEYAM_ISOLATE_SCENARIO": "Gemini Active"
+    }
+  },
+  "componentName": "CoachProviderRow",
+  "scenarioType": "component"
+}

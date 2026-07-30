@@ -32,11 +32,11 @@ struct RaceImportSheet: View {
     }
 
     /// The input form is shown when the user has connected a key, or when a
-    /// scenario opts in via `rbCoachConnected` (so the populated form is
+    /// scenario declares the connection shape (so the populated form is
     /// capturable offline without a real key — mirrors `AskCoachView.chatUnlocked`).
     /// `runImport` still requires a real key and falls back to manual entry without one.
     private var unlocked: Bool {
-        keyStore.key != nil || UserDefaults.standard.bool(forKey: "rbCoachConnected")
+        keyStore.isConnected
     }
 
     var body: some View {
@@ -81,14 +81,14 @@ struct RaceImportSheet: View {
     }
 
     private func runImport() {
-        guard let apiKey = keyStore.key else { onManual(); return }
+        guard let provider = keyStore.activeProvider, let apiKey = keyStore.activeKey else { onManual(); return }
         let link = url.trimmingCharacters(in: .whitespacesAndNewlines)
         errText = nil
         working = true
         Task { @MainActor in
             defer { working = false }
             do {
-                let result = try await client.importRace(from: link, apiKey: apiKey)
+                let result = try await client.importRace(from: link, apiKey: apiKey, provider: provider)
                 // Fields the extractor couldn't find, plus a low overall confidence,
                 // are what the editor flags for the user to double-check.
                 var flagged = result.missingFields
@@ -127,10 +127,10 @@ struct RaceSearchSheet: View {
         query.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2 && !working
     }
 
-    /// Input shown with a connected key, or when a scenario opts in via
-    /// `rbCoachConnected` (see `RaceImportSheet.unlocked`).
+    /// Input shown with a connected key, or when a scenario declares the
+    /// connection shape (see `RaceImportSheet.unlocked`).
     private var unlocked: Bool {
-        keyStore.key != nil || UserDefaults.standard.bool(forKey: "rbCoachConnected")
+        keyStore.isConnected
     }
 
     var body: some View {
@@ -211,14 +211,14 @@ struct RaceSearchSheet: View {
     }
 
     private func runSearch() {
-        guard let apiKey = keyStore.key else { onManual(); return }
+        guard let provider = keyStore.activeProvider, let apiKey = keyStore.activeKey else { onManual(); return }
         let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
         errText = nil
         working = true
         Task { @MainActor in
             defer { working = false; searched = true }
             do {
-                results = try await client.searchRaces(query: q, apiKey: apiKey)
+                results = try await client.searchRaces(query: q, apiKey: apiKey, provider: provider)
             } catch CoachError.invalidKey {
                 errText = "Your AI coach key was rejected. Reconnect it in Settings, then try again."
             } catch {

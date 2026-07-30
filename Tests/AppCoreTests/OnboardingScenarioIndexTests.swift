@@ -26,6 +26,10 @@ final class OnboardingScenarioIndexTests: XCTestCase {
         "welcome-day-by-day-coaching": 1,
         "welcome-ask-me-anything": 2,
         "welcome-large-text": 2,
+        // Per-theme captures of the same two intro pages, so they pin the same
+        // indices as the welcome-* scenarios they mirror.
+        "onboarding-intro-garden-day-by-day": 1,
+        "onboarding-intro-fieldnote-ask-me-anything": 2,
         // personalization steps
         "onboarding-choose-your-look": 3,
         "onboarding-choose-your-look-otter": 3,

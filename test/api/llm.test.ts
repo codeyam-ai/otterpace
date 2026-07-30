@@ -1,0 +1,270 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+// The router calls Anthropic through the SDK and OpenAI/Gemini over fetch.
+// Mock the SDK here; each fetch-based test stubs global fetch itself.
+const createMock = vi.fn();
+vi.mock("@anthropic-ai/sdk", () => ({
+  default: class {
+    messages = { create: createMock };
+    constructor(_opts: unknown) {}
+  },
+}));
+
+import {
+  complete,
+  credentialsFromHeaders,
+  isLlmProvider,
+  LlmError,
+  modelFor,
+  type LlmProvider,
+} from "../../api/_lib/llm.ts";
+
+const SCHEMA = {
+  type: "object",
+  properties: { text: { type: "string" } },
+  required: ["text"],
+  additionalProperties: false,
+};
+
+function request(overrides: Record<string, unknown> = {}) {
+  return {
+    system: "You are Buddy.",
+    messages: [{ role: "user" as const, content: "What should I do today?" }],
+    schema: SCHEMA,
+    schemaName: "coach_reply",
+    ...overrides,
+  };
+}
+
+/** A fetch stub returning one canned response. */
+function stubFetch(body: unknown, init: { ok?: boolean; status?: number } = {}) {
+  const fn = vi.fn().mockResolvedValue({
+    ok: init.ok ?? true,
+    status: init.status ?? 200,
+    json: async () => body,
+  });
+  vi.stubGlobal("fetch", fn);
+  return fn;
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("credentialsFromHeaders", () => {
+  it("reads the provider and key from the current headers", () => {
+    expect(
+      credentialsFromHeaders({ "x-ai-provider": "openai", "x-ai-key": "sk-openai-123" }),
+    ).toEqual({ provider: "openai", apiKey: "sk-openai-123" });
+  });
+
+  // An already-installed app sends only the old header and no provider. It must
+  // keep working, since app and backend can't deploy atomically.
+  it("treats the legacy Anthropic header as an Anthropic request", () => {
+    expect(credentialsFromHeaders({ "x-anthropic-key": "sk-ant-legacy" })).toEqual({
+      provider: "anthropic",
+      apiKey: "sk-ant-legacy",
+    });
+  });
+
+  // The new app sends both headers for an Anthropic key; the explicit one wins
+  // and the two agree, so this is just belt-and-braces.
+  it("prefers the explicit provider when both headers are present", () => {
+    expect(
+      credentialsFromHeaders({
+        "x-ai-provider": "anthropic",
+        "x-ai-key": "sk-ant-new",
+        "x-anthropic-key": "sk-ant-new",
+      }),
+    ).toEqual({ provider: "anthropic", apiKey: "sk-ant-new" });
+  });
+
+  it("rejects a missing, short, or non-string key", () => {
+    expect(credentialsFromHeaders({})).toBeNull();
+    expect(credentialsFromHeaders({ "x-ai-key": "short" })).toBeNull();
+    expect(credentialsFromHeaders({ "x-ai-key": ["sk-array-key"] })).toBeNull();
+  });
+
+  // An unknown provider is rejected rather than silently falling back to
+  // Anthropic, which would spend the user's key on the wrong service.
+  it("rejects an unrecognized provider instead of defaulting", () => {
+    expect(credentialsFromHeaders({ "x-ai-provider": "llama", "x-ai-key": "sk-whatever" })).toBeNull();
+  });
+
+  it("trims whitespace around the key", () => {
+    expect(credentialsFromHeaders({ "x-ai-key": "  sk-padded-key  " })?.apiKey).toBe("sk-padded-key");
+  });
+});
+
+describe("isLlmProvider / modelFor", () => {
+  it("recognizes exactly the three supported providers", () => {
+    expect(["anthropic", "openai", "gemini"].every(isLlmProvider)).toBe(true);
+    expect(isLlmProvider("llama")).toBe(false);
+    expect(isLlmProvider(undefined)).toBe(false);
+  });
+
+  it("has a non-empty model for every provider", () => {
+    for (const p of ["anthropic", "openai", "gemini"] as LlmProvider[]) {
+      expect(modelFor(p).length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("complete — Anthropic", () => {
+  beforeEach(() => createMock.mockReset());
+
+  it("returns parsed JSON from the text block", async () => {
+    createMock.mockResolvedValue({
+      stop_reason: "end_turn",
+      content: [{ type: "text", text: '{"text":"Easy walk today."}' }],
+    });
+    const result = await complete({ provider: "anthropic", apiKey: "sk-ant-x" }, request());
+    expect(result).toEqual({ kind: "json", value: { text: "Easy walk today." } });
+  });
+
+  it("reports a refusal", async () => {
+    createMock.mockResolvedValue({ stop_reason: "refusal", content: [] });
+    expect(await complete({ provider: "anthropic", apiKey: "sk-ant-x" }, request())).toEqual({
+      kind: "refusal",
+    });
+  });
+
+  // No text at all and unparseable text are different failures: one is an
+  // upstream fault, the other is content the user can retry past.
+  it("distinguishes an empty reply from an unparseable one", async () => {
+    createMock.mockResolvedValue({ stop_reason: "end_turn", content: [] });
+    expect(await complete({ provider: "anthropic", apiKey: "sk-ant-x" }, request())).toEqual({
+      kind: "empty",
+    });
+
+    createMock.mockResolvedValue({
+      stop_reason: "end_turn",
+      content: [{ type: "text", text: "not json at all" }],
+    });
+    expect(await complete({ provider: "anthropic", apiKey: "sk-ant-x" }, request())).toEqual({
+      kind: "unusable",
+    });
+  });
+
+  // Anthropic's error-status mapping is covered end-to-end through the handler
+  // in coach.test.ts ("maps a 401 to invalid_key" / "maps a 429 to
+  // rate_limited"), which exercises this same `throwForStatus` path. Asserting it
+  // again by calling `complete` directly added no coverage.
+});
+
+describe("complete — OpenAI", () => {
+  it("sends the key as a bearer token and a strict json_schema format", async () => {
+    const fetchMock = stubFetch({ choices: [{ message: { content: '{"text":"Rest day."}' } }] });
+    const result = await complete({ provider: "openai", apiKey: "sk-openai-1" }, request());
+
+    expect(result).toEqual({ kind: "json", value: { text: "Rest day." } });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("https://api.openai.com/v1/chat/completions");
+    expect((init.headers as Record<string, string>).authorization).toBe("Bearer sk-openai-1");
+    const sent = JSON.parse(init.body as string);
+    expect(sent.response_format.json_schema.strict).toBe(true);
+    expect(sent.response_format.json_schema.schema).toEqual(SCHEMA);
+    // The system prompt must ride as a system message, not be folded into the
+    // user turn — coaching quality depends on it staying a system instruction.
+    expect(sent.messages[0]).toEqual({ role: "system", content: "You are Buddy." });
+  });
+
+  it("reports a strict-schema refusal", async () => {
+    stubFetch({ choices: [{ message: { content: null, refusal: "I can't help with that." } }] });
+    expect(await complete({ provider: "openai", apiKey: "sk-openai-1" }, request())).toEqual({
+      kind: "refusal",
+    });
+  });
+
+  it("maps 401 and 429 to the statuses the app already handles", async () => {
+    stubFetch({}, { ok: false, status: 401 });
+    await expect(complete({ provider: "openai", apiKey: "sk-x" }, request())).rejects.toMatchObject({
+      status: 401,
+      code: "invalid_key",
+    });
+
+    stubFetch({}, { ok: false, status: 429 });
+    await expect(complete({ provider: "openai", apiKey: "sk-x" }, request())).rejects.toMatchObject({
+      status: 429,
+      code: "rate_limited",
+    });
+  });
+
+  it("names OpenAI, not Anthropic, in a rejected-key message", async () => {
+    stubFetch({}, { ok: false, status: 401 });
+    await expect(complete({ provider: "openai", apiKey: "sk-x" }, request())).rejects.toThrow(/OpenAI/);
+  });
+
+  it("turns a network failure into a 502", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(async () => {
+      throw new Error("ECONNRESET");
+    }));
+    await expect(complete({ provider: "openai", apiKey: "sk-x" }, request())).rejects.toBeInstanceOf(LlmError);
+  });
+});
+
+describe("complete — Gemini", () => {
+  it("sends the system prompt as systemInstruction and maps assistant to model", async () => {
+    const fetchMock = stubFetch({
+      candidates: [{ content: { parts: [{ text: '{"text":"Nice easy miles."}' }] } }],
+    });
+    const result = await complete(
+      { provider: "gemini", apiKey: "AIza-1" },
+      request({
+        messages: [
+          { role: "user", content: "Can I run?" },
+          { role: "assistant", content: "How do the legs feel?" },
+          { role: "user", content: "Good." },
+        ],
+      }),
+    );
+
+    expect(result).toEqual({ kind: "json", value: { text: "Nice easy miles." } });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toContain("generativelanguage.googleapis.com");
+    expect((init.headers as Record<string, string>)["x-goog-api-key"]).toBe("AIza-1");
+    const sent = JSON.parse(init.body as string);
+    expect(sent.systemInstruction.parts[0].text).toBe("You are Buddy.");
+    expect(sent.contents.map((c: { role: string }) => c.role)).toEqual(["user", "model", "user"]);
+  });
+
+  // Gemini's schema dialect rejects additionalProperties, so it has to be
+  // stripped recursively or every structured call 400s.
+  it("strips additionalProperties from the response schema, at every depth", async () => {
+    const fetchMock = stubFetch({ candidates: [{ content: { parts: [{ text: "{}" }] } }] });
+    await complete(
+      { provider: "gemini", apiKey: "AIza-1" },
+      request({
+        schema: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            race: { type: "object", additionalProperties: false, properties: { name: { type: "string" } } },
+          },
+        },
+      }),
+    );
+    const sent = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(JSON.stringify(sent.generationConfig.responseSchema)).not.toContain("additionalProperties");
+    // Stripping must not damage the rest of the schema.
+    expect(sent.generationConfig.responseSchema.properties.race.properties.name).toEqual({ type: "string" });
+  });
+
+  // A blocked generation arrives as a finishReason on a 200, not an error status.
+  it("treats a safety-blocked candidate as a refusal", async () => {
+    stubFetch({ candidates: [{ finishReason: "SAFETY", content: { parts: [] } }] });
+    expect(await complete({ provider: "gemini", apiKey: "AIza-1" }, request())).toEqual({
+      kind: "refusal",
+    });
+  });
+
+  it("reports an empty candidate as empty", async () => {
+    stubFetch({ candidates: [{ content: { parts: [] } }] });
+    expect(await complete({ provider: "gemini", apiKey: "AIza-1" }, request())).toEqual({ kind: "empty" });
+  });
+
+  it("names Gemini in a rejected-key message", async () => {
+    stubFetch({}, { ok: false, status: 403 });
+    await expect(complete({ provider: "gemini", apiKey: "AIza-1" }, request())).rejects.toThrow(/Gemini/);
+  });
+});
