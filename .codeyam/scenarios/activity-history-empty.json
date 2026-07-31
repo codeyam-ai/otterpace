@@ -18,7 +18,9 @@
       "rbShowWeeklyReview": false,
       "rbDate": "2026-06-22",
       "rbWorkoutsJSON": "",
-      "rbSteps": 8200
+      "rbSteps": 8200,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

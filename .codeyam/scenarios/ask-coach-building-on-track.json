@@ -32,7 +32,9 @@
       "rbShowSettings": false,
       "rbCoachConnected": true,
       "rbCoachProfileJSON": "{\"walkVolume\":\"mostDays\",\"walkTime\":\"mornings\",\"otherTraining\":[\"running\"],\"trainingPhase\":\"building\"}",
-      "rbContentSize": ""
+      "rbContentSize": "",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

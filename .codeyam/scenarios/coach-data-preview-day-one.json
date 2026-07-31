@@ -1,0 +1,52 @@
+{
+  "name": "Coach Data Preview — Day One",
+  "id": "61e1e704-30be-49a7-8bfc-5ea46c0e34c0",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbActiveEnergyKcal": 0,
+      "rbDistanceMiles": 0,
+      "rbCoachPreviewScroll": "",
+      "rbPreviewMode": "",
+      "rbShowRaceEditor": false,
+      "rbSteps": 0,
+      "rbRacesJSON": "[]",
+      "rbActiveMinutes": 0,
+      "rbWorkoutsJSON": "[]",
+      "rbShowSettings": true,
+      "otterpaceRemindInactivity": false,
+      "rbLoadHistoryJSON": "[]",
+      "rbRaceEditorCustomUnit": "",
+      "rbDate": "2026-06-22",
+      "rbCoachProfileJSON": "{}",
+      "rbCoachConnectedProviders": "anthropic,openai",
+      "rbDailyStepsJSON": "{}",
+      "rbShowRacePrompt": false,
+      "rbMinutesSinceMovement": 0,
+      "otterpaceRemindGoal": false,
+      "rbSignedInUserID": "",
+      "rbCoachActiveProvider": "openai",
+      "otterpaceRemindDaily": false,
+      "rbStartScreen": "",
+      "rbSyncHealth": false,
+      "rbShowCoachDataPreview": true,
+      "rbSettingsScroll": "coach",
+      "rbShowHistory": false,
+      "rbStartTab": "today",
+      "rbSyncSettings": false,
+      "rbContentSize": "",
+      "rbCoachConnected": true,
+      "rbTheme": "default",
+      "rbConnected": true,
+      "rbShowWeeklyReview": false,
+      "rbGoalSteps": 10000,
+      "rbRaceEditorCustomValue": ""
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/CoachDataPreview.swift"
+}

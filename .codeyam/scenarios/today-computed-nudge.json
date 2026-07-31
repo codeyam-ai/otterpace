@@ -30,7 +30,9 @@
       "rbLoadTrend": "",
       "rbCoachType": "",
       "rbConnected": true,
-      "otterpaceRacePromptDismissed": true
+      "otterpaceRacePromptDismissed": true,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

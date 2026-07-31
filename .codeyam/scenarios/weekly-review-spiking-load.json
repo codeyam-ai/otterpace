@@ -23,7 +23,9 @@
       "rbContentSize": "",
       "rbDaysRunThisWeek": 5,
       "rbGoalSteps": 10000,
-      "rbWorkoutType": ""
+      "rbWorkoutType": "",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

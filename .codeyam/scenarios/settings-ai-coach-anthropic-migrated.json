@@ -32,7 +32,9 @@
       "otterpaceRemindDaily": false,
       "rbConnected": true,
       "rbContentSize": "",
-      "rbRaceEditorCustomValue": ""
+      "rbRaceEditorCustomValue": "",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

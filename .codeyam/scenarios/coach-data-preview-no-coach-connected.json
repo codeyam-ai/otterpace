@@ -1,0 +1,50 @@
+{
+  "name": "Coach Data Preview — No Coach Connected",
+  "id": "53adbd24-5538-4064-98dc-b9291281fa81",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbPreviewMode": "",
+      "rbConnected": true,
+      "rbRaceEditorCustomUnit": "",
+      "rbShowHistory": false,
+      "rbActiveMinutes": 42,
+      "rbStartScreen": "",
+      "rbCoachConnectedProviders": "",
+      "rbSignedInUserID": "",
+      "rbCoachProfileJSON": "{\"walkVolume\":\"mostDays\",\"walkTime\":\"mornings\",\"otherTraining\":[\"strength\",\"mobility\"],\"trainingPhase\":\"building\"}",
+      "rbShowRacePrompt": false,
+      "rbWorkoutsJSON": "[{\"type\":\"run\",\"distanceMiles\":4.2,\"durationMinutes\":43,\"pace\":\"10:15/mi\",\"date\":\"2026-06-21\",\"source\":\"healthkit\"},{\"type\":\"walk\",\"distanceMiles\":2.1,\"durationMinutes\":38,\"pace\":\"18:05/mi\",\"date\":\"2026-06-19\",\"source\":\"healthkit\"},{\"type\":\"run\",\"distanceMiles\":6.0,\"durationMinutes\":62,\"pace\":\"10:20/mi\",\"date\":\"2026-06-17\",\"source\":\"strava\"},{\"type\":\"run\",\"distanceMiles\":3.1,\"durationMinutes\":31,\"pace\":\"10:00/mi\",\"date\":\"2026-06-15\",\"source\":\"healthkit\"},{\"type\":\"walk\",\"distanceMiles\":1.8,\"durationMinutes\":33,\"pace\":\"18:20/mi\",\"date\":\"2026-06-13\",\"source\":\"healthkit\"}]",
+      "rbRacesJSON": "[{\"id\":\"3F2504E0-4F89-11D3-9A0C-0305E82C3301\",\"name\":\"Marin Headlands Trail Half\",\"distanceMiles\":13.1,\"date\":\"2026-10-10\",\"location\":\"Sausalito, CA\",\"notes\":\"Goal: finish strong, under 2:30\"}]",
+      "rbSettingsScroll": "coach",
+      "rbShowRaceEditor": false,
+      "rbSteps": 6420,
+      "rbSyncSettings": false,
+      "otterpaceRemindInactivity": false,
+      "rbShowSettings": true,
+      "rbContentSize": "",
+      "rbShowCoachDataPreview": true,
+      "rbRaceEditorCustomValue": "",
+      "rbActiveEnergyKcal": 310,
+      "rbCoachConnected": false,
+      "otterpaceRemindGoal": false,
+      "rbShowWeeklyReview": false,
+      "rbMinutesSinceMovement": 92,
+      "rbCoachPreviewScroll": "",
+      "rbDate": "2026-06-22",
+      "rbSyncHealth": false,
+      "rbGoalSteps": 10000,
+      "rbCoachActiveProvider": "",
+      "rbDistanceMiles": 2.8,
+      "otterpaceRemindDaily": false,
+      "rbTheme": "default",
+      "rbStartTab": "today"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/CoachDataPreview.swift"
+}

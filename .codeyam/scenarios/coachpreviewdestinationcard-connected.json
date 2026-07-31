@@ -1,0 +1,16 @@
+{
+  "name": "CoachPreviewDestinationCard - Connected",
+  "id": "15bbc734-9c21-4370-aa47-eb31649f480f",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Connected",
+      "CODEYAM_ISOLATE_COMPONENT": "CoachPreviewDestinationCard"
+    }
+  },
+  "componentName": "CoachPreviewDestinationCard",
+  "scenarioType": "component"
+}

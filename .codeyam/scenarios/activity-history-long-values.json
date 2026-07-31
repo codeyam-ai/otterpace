@@ -18,7 +18,9 @@
       "rbSteps": 8200,
       "rbShowHistory": true,
       "rbPreviewMode": "",
-      "rbConnected": true
+      "rbConnected": true,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

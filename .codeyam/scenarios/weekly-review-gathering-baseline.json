@@ -26,7 +26,9 @@
       "rbLoadTrend": "insufficient",
       "rbShowHistory": false,
       "rbLongestRunMiles": 4.5,
-      "rbDate": "2026-06-22"
+      "rbDate": "2026-06-22",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

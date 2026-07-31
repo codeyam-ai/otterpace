@@ -40,7 +40,9 @@
       "rbWorkoutDate": "2026-06-22",
       "rbBuddyMood": "celebrating",
       "otterpaceRacePromptDismissed": true,
-      "rbTheme": "default"
+      "rbTheme": "default",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

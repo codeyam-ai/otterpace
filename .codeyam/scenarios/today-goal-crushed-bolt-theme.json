@@ -42,7 +42,9 @@
       "rbShowWeeklyReview": false,
       "rbContentSize": "",
       "rbWorkoutDurationMinutes": 43,
-      "rbPreviewMode": ""
+      "rbPreviewMode": "",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

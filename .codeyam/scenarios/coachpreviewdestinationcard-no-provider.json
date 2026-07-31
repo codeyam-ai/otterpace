@@ -1,0 +1,16 @@
+{
+  "name": "CoachPreviewDestinationCard - No Provider",
+  "id": "b9f5746c-2ac1-4fb8-b8fc-f95fd2fb6a48",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "CoachPreviewDestinationCard",
+      "CODEYAM_ISOLATE_SCENARIO": "No Provider"
+    }
+  },
+  "componentName": "CoachPreviewDestinationCard",
+  "scenarioType": "component"
+}

@@ -645,6 +645,69 @@
       "runner": "tests"
     },
     {
+      "description": "An empty workout list names Apple Health only, so an empty summary never implies Strava was involved.",
+      "file": "Tests/AppCoreTests/CoachDataPreviewTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachDataPreviewTests › testNoWorkoutsNamesAppleHealthOnly",
+      "line": 18,
+      "registeredAt": "2026-07-30T21:14:27.513054+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Source order follows first appearance in the workout list, not a fixed alphabet, so the sentence matches the order shown above it.",
+      "file": "Tests/AppCoreTests/CoachDataPreviewTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachDataPreviewTests › testOrderFollowsFirstAppearance",
+      "line": 43,
+      "registeredAt": "2026-07-30T21:14:44.466762+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Repeated workouts from one source collapse to a single source name rather than repeating it.",
+      "file": "Tests/AppCoreTests/CoachDataPreviewTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachDataPreviewTests › testRepeatedSourceDeduplicates",
+      "line": 29,
+      "registeredAt": "2026-07-30T21:14:36.430504+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A single workout source reads as itself with no dangling 'and'.",
+      "file": "Tests/AppCoreTests/CoachDataPreviewTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachDataPreviewTests › testSingleSourceHasNoConjunction",
+      "line": 23,
+      "registeredAt": "2026-07-30T21:14:32.326181+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "TodayState round-trips through the payload encoder unchanged, pinning that the preview renders the same value the coach receives.",
+      "file": "Tests/AppCoreTests/CoachDataPreviewTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachDataPreviewTests › testTodayStateIsTheSameShapeTheCoachReceives",
+      "line": 59,
+      "registeredAt": "2026-07-30T21:14:52.378207+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Two distinct sources join with 'and' so the preview sentence reads as a sentence.",
+      "file": "Tests/AppCoreTests/CoachDataPreviewTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachDataPreviewTests › testTwoSourcesJoinWithAnd",
+      "line": 36,
+      "registeredAt": "2026-07-30T21:14:40.663579+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An unknown or absent workout source falls back to Apple Health rather than inventing a provider name the app cannot back.",
+      "file": "Tests/AppCoreTests/CoachDataPreviewTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachDataPreviewTests › testUnknownSourceFallsBackToAppleHealth",
+      "line": 50,
+      "registeredAt": "2026-07-30T21:14:48.333562+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "The closing check-in question rotates across turns and does not repeat the question the coach just asked.",
       "file": "Tests/AppCoreTests/CoachEngineTests.swift",
       "format": "junit-xml",

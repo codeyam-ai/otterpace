@@ -19,7 +19,9 @@
       "rbWorkoutsJSON": "[{\"type\": \"run\", \"distanceMiles\": 3.1, \"durationMinutes\": 32, \"pace\": \"10:19/mi\", \"date\": \"2026-06-22\", \"source\": \"healthkit\"}, {\"type\": \"run\", \"distanceMiles\": 4.2, \"durationMinutes\": 44, \"pace\": \"10:28/mi\", \"date\": \"2026-06-21\", \"source\": \"strava\"}, {\"type\": \"run\", \"distanceMiles\": 5.0, \"durationMinutes\": 52, \"pace\": \"10:24/mi\", \"date\": \"2026-06-20\", \"source\": \"strava\"}, {\"type\": \"walk\", \"distanceMiles\": 2.0, \"durationMinutes\": 30, \"pace\": \"15:00/mi\", \"date\": \"2026-06-18\", \"source\": \"healthkit\"}, {\"type\": \"run\", \"distanceMiles\": 3.5, \"durationMinutes\": 36, \"pace\": \"10:17/mi\", \"date\": \"2026-06-16\", \"source\": \"healthkit\"}, {\"type\": \"run\", \"distanceMiles\": 6.1, \"durationMinutes\": 61, \"pace\": \"10:00/mi\", \"date\": \"2026-06-13\", \"source\": \"strava\"}, {\"type\": \"walk\", \"distanceMiles\": 1.8, \"durationMinutes\": 27, \"pace\": \"15:00/mi\", \"date\": \"2026-06-11\", \"source\": \"healthkit\"}, {\"type\": \"run\", \"distanceMiles\": 3.2, \"durationMinutes\": 33, \"pace\": \"10:18/mi\", \"date\": \"2026-06-09\", \"source\": \"healthkit\"}, {\"type\": \"ride\", \"distanceMiles\": 12.0, \"durationMinutes\": 48, \"pace\": \"4:00/mi\", \"date\": \"2026-06-05\", \"source\": \"strava\"}, {\"type\": \"run\", \"distanceMiles\": 4.0, \"durationMinutes\": 41, \"pace\": \"10:15/mi\", \"date\": \"2026-06-02\", \"source\": \"healthkit\"}]",
       "rbConnected": true,
       "rbGoalSteps": 10000,
-      "rbStartTab": "today"
+      "rbStartTab": "today",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

@@ -22,7 +22,9 @@
       "rbSteps": 6400,
       "rbContentSize": "",
       "rbDate": "2026-06-22",
-      "rbConnected": true
+      "rbConnected": true,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

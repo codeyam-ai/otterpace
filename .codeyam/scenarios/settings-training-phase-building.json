@@ -21,7 +21,9 @@
       "rbPreviewMode": "",
       "rbSettingsScroll": "training",
       "rbDate": "2026-06-22",
-      "rbShowRacePrompt": false
+      "rbShowRacePrompt": false,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

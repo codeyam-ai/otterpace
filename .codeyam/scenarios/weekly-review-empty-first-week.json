@@ -23,7 +23,9 @@
       "rbSteps": 1200,
       "rbGoalSteps": 10000,
       "rbDate": "2026-06-22",
-      "rbShowWeeklyReview": true
+      "rbShowWeeklyReview": true,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

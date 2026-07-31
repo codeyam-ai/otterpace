@@ -33,7 +33,9 @@
       "rbGoalSteps": 10000,
       "rbShowHistory": false,
       "rbWorkoutDurationMinutes": 42,
-      "rbWorkoutPace": "10:00/mi"
+      "rbWorkoutPace": "10:00/mi",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

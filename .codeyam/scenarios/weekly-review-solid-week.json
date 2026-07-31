@@ -23,7 +23,9 @@
       "rbWorkoutType": "",
       "rbContentSize": "",
       "rbConnected": true,
-      "rbDaysRunThisWeek": 4
+      "rbDaysRunThisWeek": 4,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

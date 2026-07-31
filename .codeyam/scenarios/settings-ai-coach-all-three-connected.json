@@ -32,7 +32,9 @@
       "rbSyncHealth": false,
       "otterpaceRemindInactivity": false,
       "rbCoachConnectedProviders": "anthropic,openai,gemini",
-      "otterpaceRemindGoal": false
+      "otterpaceRemindGoal": false,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

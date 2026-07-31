@@ -11,7 +11,9 @@
       "rbContentSize": "",
       "rbShowWeeklyReview": false,
       "rbPreviewMode": "app-icon",
-      "rbShowHistory": false
+      "rbShowHistory": false,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

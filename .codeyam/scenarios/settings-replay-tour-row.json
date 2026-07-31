@@ -29,7 +29,9 @@
       "otterpaceRemindGoal": false,
       "otterpaceRemindInactivity": false,
       "rbShowHistory": false,
-      "rbSignedInUserID": ""
+      "rbSignedInUserID": "",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

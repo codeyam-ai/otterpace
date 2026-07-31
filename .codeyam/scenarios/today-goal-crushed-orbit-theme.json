@@ -42,7 +42,9 @@
       "rbActiveMinutes": 68,
       "rbBuddyMood": "celebrating",
       "rbWeeklyMileage": 14.6,
-      "rbWorkoutDurationMinutes": 43
+      "rbWorkoutDurationMinutes": 43,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

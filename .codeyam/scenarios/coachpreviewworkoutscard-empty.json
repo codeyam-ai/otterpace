@@ -1,0 +1,16 @@
+{
+  "name": "CoachPreviewWorkoutsCard - Empty",
+  "id": "44c7b1d0-e489-4178-a0a6-0f9de1056c83",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Empty",
+      "CODEYAM_ISOLATE_COMPONENT": "CoachPreviewWorkoutsCard"
+    }
+  },
+  "componentName": "CoachPreviewWorkoutsCard",
+  "scenarioType": "component"
+}

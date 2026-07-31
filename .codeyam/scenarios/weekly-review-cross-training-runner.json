@@ -25,7 +25,9 @@
       "rbDate": "2026-06-22",
       "rbWorkoutType": "",
       "rbShowSettings": false,
-      "rbPreviewMode": ""
+      "rbPreviewMode": "",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

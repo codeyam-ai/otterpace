@@ -32,7 +32,9 @@
       "rbSyncSettings": true,
       "rbRaceEditorCustomValue": "",
       "rbConnected": true,
-      "rbDate": "2026-06-22"
+      "rbDate": "2026-06-22",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

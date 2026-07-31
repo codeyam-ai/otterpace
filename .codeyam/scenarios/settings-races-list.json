@@ -19,7 +19,9 @@
       "rbRaceEditorCustomValue": "",
       "rbSteps": 8000,
       "rbShowSettings": true,
-      "rbGoalSteps": 10000
+      "rbGoalSteps": 10000,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

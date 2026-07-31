@@ -34,7 +34,9 @@
       "rbGoalSteps": 10000,
       "rbLongestRunMiles": 4.0,
       "rbPreviewMode": "",
-      "otterpaceRacePromptDismissed": true
+      "otterpaceRacePromptDismissed": true,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

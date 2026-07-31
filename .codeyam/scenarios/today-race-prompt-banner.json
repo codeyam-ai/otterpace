@@ -32,7 +32,9 @@
       "rbCoachBody": "You're at 6,400 steps with easy movement in the bank. A short evening walk would top you off without adding training stress.",
       "rbBuddyMood": "ready",
       "rbConnected": true,
-      "rbLongestRunMiles": 4.2
+      "rbLongestRunMiles": 4.2,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

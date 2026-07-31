@@ -20,7 +20,9 @@
       "rbAskSeedQuestion": "",
       "rbGoalSteps": 10000,
       "rbActiveMinutes": 28,
-      "rbDistanceMiles": 3.1
+      "rbDistanceMiles": 3.1,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

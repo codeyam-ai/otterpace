@@ -23,7 +23,9 @@
       "rbPreviewMode": "",
       "rbWeeklyMileage": 3.5,
       "rbGoalSteps": 10000,
-      "rbRestDaysThisWeek": 5
+      "rbRestDaysThisWeek": 5,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

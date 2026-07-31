@@ -1,0 +1,16 @@
+{
+  "name": "CoachPreviewActivityCard - Health Denied",
+  "id": "9fd92f92-c09a-4a0f-ac2a-e5c99bb7706e",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Health Denied",
+      "CODEYAM_ISOLATE_COMPONENT": "CoachPreviewActivityCard"
+    }
+  },
+  "componentName": "CoachPreviewActivityCard",
+  "scenarioType": "component"
+}

@@ -20,7 +20,9 @@
       "rbRacesJSON": "",
       "rbShowRaceEditor": false,
       "rbGoalSteps": 12000,
-      "rbDate": "2026-06-22"
+      "rbDate": "2026-06-22",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

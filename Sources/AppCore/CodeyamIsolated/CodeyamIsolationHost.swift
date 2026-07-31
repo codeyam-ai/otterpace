@@ -17,8 +17,22 @@ public enum CodeyamIsolationHost {
         switch component {
         case "AskCoachHeader":
             return AnyView(AskCoachHeaderIsolated(scenario: scenario))
+        case "CoachDataRow":
+            return AnyView(CoachDataRowIsolated(scenario: scenario))
         case "CoachKeyField":
             return AnyView(CoachKeyFieldIsolated(scenario: scenario))
+        case "CoachPreviewAboutYouCard":
+            return AnyView(CoachPreviewAboutYouCardIsolated(scenario: scenario))
+        case "CoachPreviewActivityCard":
+            return AnyView(CoachPreviewActivityCardIsolated(scenario: scenario))
+        case "CoachPreviewDestinationCard":
+            return AnyView(CoachPreviewDestinationCardIsolated(scenario: scenario))
+        case "CoachPreviewLoadCard":
+            return AnyView(CoachPreviewLoadCardIsolated(scenario: scenario))
+        case "CoachPreviewRacesCard":
+            return AnyView(CoachPreviewRacesCardIsolated(scenario: scenario))
+        case "CoachPreviewWorkoutsCard":
+            return AnyView(CoachPreviewWorkoutsCardIsolated(scenario: scenario))
         case "CoachProviderRow":
             return AnyView(CoachProviderRowIsolated(scenario: scenario))
         case "RaceImportSheet":

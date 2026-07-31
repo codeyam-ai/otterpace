@@ -42,7 +42,9 @@
       "rbShowWeeklyReview": false,
       "rbRestDaysThisWeek": 2,
       "rbStartScreen": "",
-      "rbWorkoutSource": "strava"
+      "rbWorkoutSource": "strava",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

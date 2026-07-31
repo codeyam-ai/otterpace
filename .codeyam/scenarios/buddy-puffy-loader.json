@@ -11,7 +11,9 @@
       "rbPreviewMode": "puffy-loader",
       "rbShowHistory": false,
       "rbShowWeeklyReview": false,
-      "rbContentSize": ""
+      "rbContentSize": "",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

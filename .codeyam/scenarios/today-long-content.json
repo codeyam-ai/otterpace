@@ -40,7 +40,9 @@
       "rbPreviewMode": "",
       "rbDate": "2026-06-23",
       "otterpaceRacePromptDismissed": true,
-      "rbTheme": "default"
+      "rbTheme": "default",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

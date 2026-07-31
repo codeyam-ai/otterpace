@@ -29,7 +29,9 @@
       "rbSteps": 8000,
       "rbShowRaceEditor": false,
       "rbRacesJSON": "",
-      "rbSettingsScroll": "goal"
+      "rbSettingsScroll": "goal",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

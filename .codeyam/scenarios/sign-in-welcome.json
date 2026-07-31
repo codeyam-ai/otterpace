@@ -12,7 +12,9 @@
       "rbShowWeeklyReview": false,
       "rbShowHistory": false,
       "rbStartScreen": "signin",
-      "rbContentSize": ""
+      "rbContentSize": "",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

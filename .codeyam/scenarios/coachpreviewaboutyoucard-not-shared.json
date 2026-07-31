@@ -1,0 +1,16 @@
+{
+  "name": "CoachPreviewAboutYouCard - Not Shared",
+  "id": "ede5e469-cf41-4a3d-a034-6d51e76a0f6e",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "CoachPreviewAboutYouCard",
+      "CODEYAM_ISOLATE_SCENARIO": "Not Shared"
+    }
+  },
+  "componentName": "CoachPreviewAboutYouCard",
+  "scenarioType": "component"
+}

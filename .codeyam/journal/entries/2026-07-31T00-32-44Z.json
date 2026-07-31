@@ -1,0 +1,811 @@
+{
+  "timestamp": "2026-07-31T00:32:44Z",
+  "title": "Coach Data Preview — What Buddy Sees",
+  "type": "feature",
+  "userRequest": "push it",
+  "description": "A 'What Buddy sees' row in Settings > AI Coach opens a read-only screen showing, in plain English, exactly what would be sent to the user's AI provider right now: where it goes, today's activity totals, recent runs and walks, the weekly load series, races, the onboarding profile, and a closing list of what is never sent. This closes the privacy principle 'users can inspect what data is sent to the coach', which the product spec has always stated and which had no UI.\n\nThe load-bearing decision: the screen reads model.today — the SAME TodayState value AskCoachView hands to RemoteCoach — rather than assembling its own snapshot. A parallel assembly could drift from the real payload and quietly start lying about what leaves the device; sharing the value makes drift impossible by construction. Absent data renders 'Not shared' rather than disappearing, because a field that vanishes when empty leaves the reader unable to tell 'we don't send this' from 'we forgot to list it'.\n\nThe 'Never sent' claims were verified rather than asserted: api/coach.ts and api/_lib/llm.ts contain zero console statements and import no database, the key travels as the x-ai-key request header, and RemoteCoach.RequestBody carries only question, context, and history with no identity fields. If any of that changes, the copy becomes wrong and must change with it.\n\nExtracted into ten components (CardSection, CoachDataRow, a header, and seven cards), taking CoachDataPreview.swift from 291 lines to 96 of pure composition; the refactor was byte-identical in render. coachWorkoutSources was pulled out SwiftUI-free so the source-attribution sentence — itself a privacy claim — is provable in a unit test rather than only observable in a screenshot.\n\nTwo capture hazards worth recording. First, adding a scenario-only nav key means seeding its OFF value in every scenario: rbShowCoachDataPreview and rbCoachPreviewScroll went into all 58 application scenarios, because an omitted rb* key persists from whichever scenario ran previously and hijacks the next first frame — without it, any Settings scenario running after these would have popped the sheet open. Second, the register/preview built-in capture races the app relaunch on this simulator stack and repeatedly committed the previous scenario's frame; the reliable recipe is terminate, wipe the defaults domain, seed, settle, then screenshot directly, with an md5 check afterwards. Three screenshot collisions were caught and fixed that way.\n\nKnown and deliberate: SettingsView still holds its own private card() helper rather than adopting the extracted CardSection, because migrating it would touch every card on that screen and re-render all twelve of its committed screenshots — a large unrelated diff. The weekly-load row can read '1.8 mi · 0 runs' for a walk-only week; that pairing is what the coach actually receives, so it is shown as-is rather than smoothed.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/accessibility-large-text-today.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-empty.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-long-values.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-partial-week-mid-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-rich-multi-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-sparse.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/app-icon-showcase.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-building-on-track.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-empty-chat.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-hit-10k.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-knee-pain.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-mileage-spike.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-no-key-connect-prompt.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-run-or-rest.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-sore-not-hurt.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-still-learning-thin-data.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/buddy-puffy-loader.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/buddy-puffy-moods.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-all-three-connected--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-all-three-connected--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-anthropic-migrated--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-anthropic-migrated--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-no-key--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-no-key--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-appearance-picker-bolt--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-appearance-picker-bolt--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-custom-goal--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-custom-goal--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-races-list--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-races-list--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-replay-tour-row--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-replay-tour-row--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-training-phase-building--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-training-phase-building--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-account-sync.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-ai-coach-all-three-connected.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-ai-coach-anthropic-migrated.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-ai-coach-no-key.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-appearance-picker-bolt.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-custom-goal.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-health-sync-on.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-import-race-review.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-race-editor-custom-distance.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-races-list.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-reminders-on.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-replay-tour-row.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-training-phase-building.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/sign-in-welcome.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-almost-there.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-computed-nudge.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-custom-goal.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-day-one-connect.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-fresh-start.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed-bolt-theme.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed-fieldnote-theme.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed-garden-theme.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed-orbit-theme.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-long-content.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-midday-nudge.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-past-race-banner-returns.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-race-prompt-banner.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-recovery-caution.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-strong-weekend-fresh-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-walking-focused-nudge.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-zero-step-morning.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-cross-training-runner.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-empty-first-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-gathering-baseline.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-solid-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-sparse-mostly-rest.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-spiking-load.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-walking-focused-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CodeyamIsolationHost.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/SettingsView.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/coach-data-preview-day-one.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coach-data-preview-fully-personalized.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coach-data-preview-health-not-connected.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coach-data-preview-never-sent.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coach-data-preview-no-coach-connected.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachdatarow-not-shared.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachdatarow-shared.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachpreviewaboutyoucard-not-shared.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachpreviewaboutyoucard-shared.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachpreviewactivitycard-connected.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachpreviewactivitycard-health-denied.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachpreviewdestinationcard-connected.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachpreviewdestinationcard-no-provider.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachpreviewloadcard-empty.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachpreviewloadcard-populated.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachpreviewracescard-empty.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachpreviewracescard-populated.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachpreviewworkoutscard-empty.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachpreviewworkoutscard-populated.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coach-data-preview-day-one--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coach-data-preview-day-one--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coach-data-preview-fully-personalized--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coach-data-preview-fully-personalized--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coach-data-preview-health-not-connected--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coach-data-preview-health-not-connected--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coach-data-preview-never-sent--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coach-data-preview-never-sent--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coach-data-preview-no-coach-connected--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coach-data-preview-no-coach-connected--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachdatarow-not-shared--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachdatarow-not-shared--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachdatarow-shared--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachdatarow-shared--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewaboutyoucard-not-shared--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewaboutyoucard-not-shared--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewaboutyoucard-shared--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewaboutyoucard-shared--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewactivitycard-connected--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewactivitycard-connected--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewactivitycard-health-denied--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewactivitycard-health-denied--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewdestinationcard-connected--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewdestinationcard-connected--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewdestinationcard-no-provider--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewdestinationcard-no-provider--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewloadcard-empty--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewloadcard-empty--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewloadcard-populated--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewloadcard-populated--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewracescard-empty--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewracescard-empty--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewracescard-populated--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewracescard-populated--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewworkoutscard-empty--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewworkoutscard-empty--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewworkoutscard-populated--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachpreviewworkoutscard-populated--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CardSection.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CoachDataPreview.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CoachDataRow.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CoachPreviewAboutYouCard.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CoachPreviewActivityCard.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CoachPreviewDestinationCard.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CoachPreviewHeader.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CoachPreviewLoadCard.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CoachPreviewNeverSentCard.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CoachPreviewRacesCard.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CoachPreviewWorkoutsCard.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CoachDataRowIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CoachPreviewAboutYouCardIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CoachPreviewActivityCardIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CoachPreviewDestinationCardIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CoachPreviewFixtures.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CoachPreviewLoadCardIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CoachPreviewRacesCardIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CoachPreviewWorkoutsCardIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/CoachDataPreviewTests.swift",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Coach Data Preview — Day One",
+      "screenshotPath": "coach-data-preview-day-one--iphone-16.png"
+    },
+    {
+      "name": "Coach Data Preview — Fully Personalized",
+      "screenshotPath": "coach-data-preview-fully-personalized--iphone-16.png"
+    },
+    {
+      "name": "Coach Data Preview — Health Not Connected",
+      "screenshotPath": "coach-data-preview-health-not-connected--iphone-16.png"
+    },
+    {
+      "name": "Coach Data Preview — Never Sent",
+      "screenshotPath": "coach-data-preview-never-sent--iphone-16.png"
+    },
+    {
+      "name": "Coach Data Preview — No Coach Connected",
+      "screenshotPath": "coach-data-preview-no-coach-connected--iphone-16.png"
+    },
+    {
+      "name": "CoachDataRow - Not Shared",
+      "screenshotPath": "coachdatarow-not-shared--iphone-16.png"
+    },
+    {
+      "name": "CoachDataRow - Shared",
+      "screenshotPath": "coachdatarow-shared--iphone-16.png"
+    },
+    {
+      "name": "CoachPreviewAboutYouCard - Not Shared",
+      "screenshotPath": "coachpreviewaboutyoucard-not-shared--iphone-16.png"
+    },
+    {
+      "name": "CoachPreviewAboutYouCard - Shared",
+      "screenshotPath": "coachpreviewaboutyoucard-shared--iphone-16.png"
+    },
+    {
+      "name": "CoachPreviewActivityCard - Connected",
+      "screenshotPath": "coachpreviewactivitycard-connected--iphone-16.png"
+    },
+    {
+      "name": "CoachPreviewActivityCard - Health Denied",
+      "screenshotPath": "coachpreviewactivitycard-health-denied--iphone-16.png"
+    },
+    {
+      "name": "CoachPreviewDestinationCard - Connected",
+      "screenshotPath": "coachpreviewdestinationcard-connected--iphone-16.png"
+    },
+    {
+      "name": "CoachPreviewDestinationCard - No Provider",
+      "screenshotPath": "coachpreviewdestinationcard-no-provider--iphone-16.png"
+    },
+    {
+      "name": "CoachPreviewLoadCard - Empty",
+      "screenshotPath": "coachpreviewloadcard-empty--iphone-16.png"
+    },
+    {
+      "name": "CoachPreviewLoadCard - Populated",
+      "screenshotPath": "coachpreviewloadcard-populated--iphone-16.png"
+    },
+    {
+      "name": "CoachPreviewRacesCard - Empty",
+      "screenshotPath": "coachpreviewracescard-empty--iphone-16.png"
+    },
+    {
+      "name": "CoachPreviewRacesCard - Populated",
+      "screenshotPath": "coachpreviewracescard-populated--iphone-16.png"
+    },
+    {
+      "name": "CoachPreviewWorkoutsCard - Empty",
+      "screenshotPath": "coachpreviewworkoutscard-empty--iphone-16.png"
+    },
+    {
+      "name": "CoachPreviewWorkoutsCard - Populated",
+      "screenshotPath": "coachpreviewworkoutscard-populated--iphone-16.png"
+    },
+    {
+      "name": "Settings",
+      "screenshotPath": "settings--iphone-16.png"
+    },
+    {
+      "name": "Settings - Appearance Picker - Bolt",
+      "screenshotPath": "settings-appearance-picker-bolt--iphone-16.png"
+    },
+    {
+      "name": "Settings — AI Coach All Three Connected",
+      "screenshotPath": "settings-ai-coach-all-three-connected--iphone-16.png"
+    },
+    {
+      "name": "Settings — AI Coach Anthropic Migrated",
+      "screenshotPath": "settings-ai-coach-anthropic-migrated--iphone-16.png"
+    },
+    {
+      "name": "Settings — AI Coach No Key",
+      "screenshotPath": "settings-ai-coach-no-key--iphone-16.png"
+    },
+    {
+      "name": "Settings — Account Sync",
+      "screenshotPath": "settings-account-sync--iphone-16.png"
+    },
+    {
+      "name": "Settings — Custom Goal",
+      "screenshotPath": "settings-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Settings — Health Sync On",
+      "screenshotPath": "settings-health-sync-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Races List",
+      "screenshotPath": "settings-races-list--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders On",
+      "screenshotPath": "settings-reminders-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Replay Tour Row",
+      "screenshotPath": "settings-replay-tour-row--iphone-16.png"
+    },
+    {
+      "name": "Settings — Training Phase (Building)",
+      "screenshotPath": "settings-training-phase-building--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 304,
+    "passed": 304,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 304,
+        "passed": 304
+      }
+    ]
+  }
+}

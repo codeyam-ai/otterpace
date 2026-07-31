@@ -31,7 +31,9 @@
       "rbShowWeeklyReview": false,
       "rbGoalSteps": 10000,
       "rbStartTab": "coach",
-      "rbWeeklyMileage": 9.0
+      "rbWeeklyMileage": 9.0,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

@@ -29,7 +29,9 @@
       "rbWorkoutPace": "10:24/mi",
       "rbSteps": 4200,
       "rbWorkoutSource": "healthkit",
-      "rbWorkoutType": "run"
+      "rbWorkoutType": "run",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

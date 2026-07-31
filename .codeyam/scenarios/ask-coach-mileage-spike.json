@@ -27,7 +27,9 @@
       "rbLongestRunMiles": 9.0,
       "rbConnected": true,
       "rbDistanceMiles": 3.4,
-      "rbStartTab": "coach"
+      "rbStartTab": "coach",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

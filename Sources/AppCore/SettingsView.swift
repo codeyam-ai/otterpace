@@ -66,6 +66,13 @@ public struct SettingsView: View {
     @State private var activeRaceSheet: RaceSheet? =
         UserDefaults.standard.bool(forKey: "rbShowRaceEditor") ? .editor : nil
     @State private var editingRace: RaceGoal?
+
+    // "What Buddy sees" — the read-only preview of everything that would be sent
+    // to the AI coach. Seeded from `rbShowCoachDataPreview` in `init` (not
+    // `.onAppear`) so a scenario capture catches it on the FIRST frame; the
+    // simulator screenshots before a post-appear transition would land.
+    @State private var showCoachDataPreview =
+        UserDefaults.standard.bool(forKey: "rbShowCoachDataPreview")
     // Prefill + review-flags carried into the editor when it opens from import/search.
     // Scenario hook: `rbRaceEditorSeedJSON` (a JSON RaceGoal) + `rbRaceEditorFlagged`
     // (comma-separated field names) open the editor pre-filled from a web import, so
@@ -159,6 +166,17 @@ public struct SettingsView: View {
             Text("This removes your sign-in from this device and deletes any data synced to your account. Health data is only ever synced if you turned it on.")
         }
         .sheet(isPresented: $showHealthConsent) { healthConsentSheet }
+        // Reads `model.today` — the same value AskCoachView hands to RemoteCoach —
+        // so the preview cannot drift from the payload it describes. A sheet, not
+        // a fullScreenCover: the latter is unavailable on macOS and this package
+        // builds for both, which is why every other overlay here is a sheet too.
+        .sheet(isPresented: $showCoachDataPreview) {
+            CoachDataPreview(
+                state: model.today,
+                activeProvider: coachActive,
+                onClose: { showCoachDataPreview = false }
+            )
+        }
         .sheet(item: $activeRaceSheet) { sheet in
             switch sheet {
             case .editor:
@@ -480,6 +498,15 @@ public struct SettingsView: View {
                         onConnect: { connectCoachKey(as: $0) },
                         onUnrecognized: { coachKeyUnrecognized = true }
                     )
+                }
+
+                // The privacy counterpart to connecting a key: see exactly what
+                // would be sent before deciding to send it. Available with or
+                // without a key connected — "nothing is being sent" is itself
+                // an answer worth being able to check.
+                Divider().opacity(0.25)
+                actionRow("What Buddy sees", icon: "eye", tint: Palette.sky) {
+                    showCoachDataPreview = true
                 }
             }
         }

@@ -35,7 +35,9 @@
       "rbSteps": 0,
       "rbWeeklyMileage": 5.4,
       "otterpaceRacePromptDismissed": true,
-      "rbTheme": "default"
+      "rbTheme": "default",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

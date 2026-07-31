@@ -35,7 +35,9 @@
       "rbLoadTrend": "steady",
       "rbSteps": 8200,
       "rbShowRacePrompt": false,
-      "rbTheme": "default"
+      "rbTheme": "default",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

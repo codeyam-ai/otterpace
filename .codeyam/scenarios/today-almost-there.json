@@ -40,7 +40,9 @@
       "rbMinutesSinceMovement": 18,
       "rbWorkoutType": "walk",
       "otterpaceRacePromptDismissed": true,
-      "rbTheme": "default"
+      "rbTheme": "default",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

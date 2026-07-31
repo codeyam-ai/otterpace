@@ -170,6 +170,16 @@
     }
   },
   {
+    "conformsToView": true,
+    "description": "A titled card: an uppercase caption over arbitrary content on the shared cardStyle() surface. Extracted because the same container existed as a private helper in SettingsView and was then copied into CoachDataPreview — two private copies of one container is how two screens start drifting apart visually. SettingsView still holds its own copy on purpose: migrating it would touch every card on that screen and re-render all twelve of its committed scenario screenshots, a large unrelated diff, so that migration is tracked separately rather than smuggled into an unrelated feature.",
+    "filePath": "Sources/AppCore/CardSection.swift",
+    "name": "CardSection",
+    "untestabilityReason": {
+      "justification": "A generic titled-card container with no branching logic: it renders a caption over whatever content it is given. Its appearance is covered wherever any card using it is captured.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
     "description": "A single chat row. User messages hug the trailing edge in a coral card; coach messages lead with a small Buddy and tint to the reply's mood, with an amber SAFETY FIRST shield when the answer carries a safety flag.",
     "filePath": "Sources/AppCore/ChatBubble.swift",
     "name": "ChatBubble",
@@ -207,6 +217,29 @@
       "config"
     ],
     "testFile": "Tests/AppCoreTests/IntegrationModuleTests.swift"
+  },
+  {
+    "conformsToView": true,
+    "description": "The read-only 'What Buddy sees' screen, reached from the Settings AI Coach card. Shows, in plain English, exactly what would be sent to the user's AI provider right now: where it goes, today's activity totals, recent runs and walks, the weekly load series, races, the onboarding profile, and a closing list of what is never sent. It reads the SAME TodayState that AskCoachView hands to RemoteCoach (`let context = model.today`) rather than assembling its own snapshot — a parallel assembly could drift from the real payload and quietly start lying about what leaves the device, so sharing the value makes drift impossible by construction. Composes seven card components and holds no markup of its own. Carries one scenario-only hook, `rbCoachPreviewScroll`, mirroring SettingsView's `rbSettingsScroll`, so a capture can open the screen scrolled to a below-the-fold card.",
+    "filePath": "Sources/AppCore/CoachDataPreview.swift",
+    "name": "CoachDataPreview",
+    "scenarios": [
+      "coach-data-preview-fully-personalized",
+      "coach-data-preview-day-one",
+      "coach-data-preview-health-not-connected",
+      "coach-data-preview-no-coach-connected",
+      "coach-data-preview-never-sent"
+    ]
+  },
+  {
+    "conformsToView": true,
+    "description": "One labelled fact in the Coach Data Preview: what the field is, and what would be sent for it. A nil value renders 'Not shared' in subdued ink rather than hiding the row — on a screen whose job is to show what leaves the device, a field that silently disappears when empty leaves the reader unable to tell 'we don't send this' from 'we forgot to list it', so absence is rendered rather than omitted. Purely props-driven, so both states capture in isolation.",
+    "filePath": "Sources/AppCore/CoachDataRow.swift",
+    "name": "CoachDataRow",
+    "scenarios": [
+      "coachdatarow-shared",
+      "coachdatarow-not-shared"
+    ]
   },
   {
     "description": "Buddy mock AI coach. Given a free-text question, the current TodayState, and the recent conversation history, it routes through CoachIntent and builds a curated, context-aware, safety-aware CoachReply. Pure and deterministic. Genuine safety signals still win: a genuinely hard run or a true load spike tilts recovery-ward with the safety flag, and sharp or worsening pain triggers the clinician-caution lockdown. But it trusts the athlete by default: ordinary post-run soreness gets calm reassurance without a flag, a routine easy run is no longer treated as hard, and a declared build is affirmed rather than rested. It threads conversation history to vary and de-repeat the closing check-in question, and abstains honestly when the load trend is insufficient.",
@@ -254,6 +287,86 @@
       "keychain"
     ],
     "testFile": "Tests/AppCoreTests/IntegrationModuleTests.swift"
+  },
+  {
+    "conformsToView": true,
+    "description": "The onboarding personalization forwarded to the coach: walking habit, usual time of day, other training, and training phase. This is the section people forget they filled in — collected once, screens away, then quietly travelling with every question — so the copy reconnects the data to the moment it was given, which is the difference between a disclosure and a reminder.",
+    "filePath": "Sources/AppCore/CoachPreviewAboutYouCard.swift",
+    "name": "CoachPreviewAboutYouCard",
+    "scenarios": [
+      "coachpreviewaboutyoucard-shared",
+      "coachpreviewaboutyoucard-not-shared"
+    ]
+  },
+  {
+    "conformsToView": true,
+    "description": "Today's activity totals as the coach would receive them: date, steps against goal, active minutes, distance, energy, and time since last movement. When Apple Health is not connected every row reads 'Not shared' and a caption explains why, rather than the card vanishing — 'nothing is shared from Health' is itself a fact worth showing on a screen about what gets shared.",
+    "filePath": "Sources/AppCore/CoachPreviewActivityCard.swift",
+    "name": "CoachPreviewActivityCard",
+    "scenarios": [
+      "coachpreviewactivitycard-connected",
+      "coachpreviewactivitycard-health-denied"
+    ]
+  },
+  {
+    "conformsToView": true,
+    "description": "Where the data goes — the first card on the Coach Data Preview, naming the active provider and stating that Otterpace does not store the payload. It leads because the answer reframes everything below it: with no provider connected nothing is sent anywhere at all, and a reader who learns that first reads the rest as 'what would be shared' rather than 'what is being taken from me right now'.",
+    "filePath": "Sources/AppCore/CoachPreviewDestinationCard.swift",
+    "name": "CoachPreviewDestinationCard",
+    "scenarios": [
+      "coachpreviewdestinationcard-connected",
+      "coachpreviewdestinationcard-no-provider"
+    ]
+  },
+  {
+    "conformsToView": true,
+    "description": "The Coach Data Preview's title bar: Buddy, the screen name, and Done. Mirrors SettingsView's header so arriving here from Settings reads as the same surface rather than a different app.",
+    "filePath": "Sources/AppCore/CoachPreviewHeader.swift",
+    "name": "CoachPreviewHeader",
+    "untestabilityReason": {
+      "justification": "Static title bar with a single close callback and no branching; visible in every Coach Data Preview scenario capture.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "The weekly mileage series the coach uses to judge training trend. daysRun counts runs only while miles includes walks, so a walk-only week legitimately reads '1.8 mi · 0 runs'; that pairing is what the coach actually receives, so it is shown as-is rather than smoothed into something tidier.",
+    "filePath": "Sources/AppCore/CoachPreviewLoadCard.swift",
+    "name": "CoachPreviewLoadCard",
+    "scenarios": [
+      "coachpreviewloadcard-populated",
+      "coachpreviewloadcard-empty"
+    ]
+  },
+  {
+    "conformsToView": true,
+    "description": "The honest counterpart to everything above: what never leaves the device. Every claim is one the code actually keeps and was verified rather than asserted — the key travels as the x-ai-key request header and never inside the JSON body, api/coach.ts and api/_lib/llm.ts contain no logging and no persistence, and RemoteCoach.RequestBody carries only question, context, and history with no identity fields. If any of those change this copy becomes wrong and must change with them, which is why the claims are enumerated rather than left as a vague reassurance.",
+    "filePath": "Sources/AppCore/CoachPreviewNeverSentCard.swift",
+    "name": "CoachPreviewNeverSentCard",
+    "untestabilityReason": {
+      "justification": "Static text with no props and a single visual state — it renders four fixed claims. Visually covered by the coach-data-preview-never-sent page capture.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "Upcoming races shared with the coach so it can shape advice toward a goal. Calls out the goal-time note explicitly because it is free text the user typed, and free text is the field people are most surprised to learn was forwarded.",
+    "filePath": "Sources/AppCore/CoachPreviewRacesCard.swift",
+    "name": "CoachPreviewRacesCard",
+    "scenarios": [
+      "coachpreviewracescard-populated",
+      "coachpreviewracescard-empty"
+    ]
+  },
+  {
+    "conformsToView": true,
+    "description": "The recent runs and walks included in the coach payload, newest first, with distance and pace. Names the data sources via coachWorkoutSources because 'where did this come from' is a different question from 'what is it' — a Strava-imported run is data the user connected a second service to share.",
+    "filePath": "Sources/AppCore/CoachPreviewWorkoutsCard.swift",
+    "name": "CoachPreviewWorkoutsCard",
+    "scenarios": [
+      "coachpreviewworkoutscard-populated",
+      "coachpreviewworkoutscard-empty"
+    ]
   },
   {
     "conformsToView": false,
@@ -1160,6 +1273,12 @@
       "ratelimit"
     ],
     "testFile": "test/api/coach.test.ts"
+  },
+  {
+    "description": "The distinct sources behind a workout list, named the way a person would say them: 'Apple Health', or 'Apple Health and Strava' once an import is present. Deduplicates, preserves first-seen order so the sentence matches the order shown above it, and falls back to Apple Health for an unknown or absent source rather than inventing a provider name. Kept free of SwiftUI (like the helpers in Formatters.swift) because this string is a privacy claim about where data came from, so it should be provable in a unit test rather than only observable in a screenshot.",
+    "filePath": "Sources/AppCore/CoachDataPreview.swift",
+    "name": "coachWorkoutSources",
+    "testFile": "Tests/AppCoreTests/CoachDataPreviewTests.swift"
   },
   {
     "description": "Send one structured-output request on the user's own key, routing to Anthropic (via the SDK) or OpenAI / Gemini (over plain fetch, so no extra dependency weighs down the serverless bundle). The system prompt does NOT vary by provider — Otterpace's coaching and safety rules are the product, and the provider only changes which model generates the words. Normalizes every provider's reply into one LlmResult: json, refusal, unusable (text arrived but was not parseable, so the caller degrades gracefully because the key was already billed), or empty (no text at all, an upstream fault the caller treats as a failed call).",

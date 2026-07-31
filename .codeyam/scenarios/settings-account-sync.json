@@ -20,7 +20,9 @@
       "rbRaceEditorCustomValue": "",
       "rbSteps": 8000,
       "rbStartTab": "today",
-      "rbRacesJSON": ""
+      "rbRacesJSON": "",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

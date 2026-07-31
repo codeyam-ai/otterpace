@@ -29,7 +29,9 @@
       "rbSignedInUserID": "",
       "rbSteps": 8000,
       "rbShowHistory": false,
-      "otterpaceRemindInactivity": false
+      "otterpaceRemindInactivity": false,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

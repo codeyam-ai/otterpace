@@ -35,7 +35,9 @@
       "rbShowHistory": false,
       "rbWorkoutType": "",
       "otterpaceRacePromptDismissed": true,
-      "rbTheme": "default"
+      "rbTheme": "default",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

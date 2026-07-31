@@ -27,7 +27,9 @@
       "rbActiveMinutes": 30,
       "rbWeeklyMileage": 11.0,
       "rbCoachConnected": true,
-      "rbDistanceMiles": 3.0
+      "rbDistanceMiles": 3.0,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

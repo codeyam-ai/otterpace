@@ -33,7 +33,9 @@
       "rbShowWeeklyReview": false,
       "rbSteps": 8000,
       "rbShowRaceEditor": false,
-      "rbGoalSteps": 10000
+      "rbGoalSteps": 10000,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

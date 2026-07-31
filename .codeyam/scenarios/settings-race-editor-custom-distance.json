@@ -18,7 +18,9 @@
       "rbShowRaceEditor": true,
       "rbSteps": 8000,
       "rbSettingsScroll": "races",
-      "rbConnected": true
+      "rbConnected": true,
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

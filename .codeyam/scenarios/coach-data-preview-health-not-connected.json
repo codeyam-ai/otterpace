@@ -1,0 +1,52 @@
+{
+  "name": "Coach Data Preview — Health Not Connected",
+  "id": "8564b228-4415-4a7d-bd3f-462c5e36c7fc",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbStartTab": "today",
+      "rbDate": "2026-06-22",
+      "rbPreviewMode": "",
+      "rbSignedInUserID": "",
+      "rbActiveMinutes": 42,
+      "rbRacesJSON": "[{\"id\":\"3F2504E0-4F89-11D3-9A0C-0305E82C3301\",\"name\":\"Marin Headlands Trail Half\",\"distanceMiles\":13.1,\"date\":\"2026-10-10\",\"location\":\"Sausalito, CA\",\"notes\":\"Goal: finish strong, under 2:30\"}]",
+      "rbContentSize": "",
+      "rbSettingsScroll": "coach",
+      "rbShowCoachDataPreview": true,
+      "rbSteps": 6420,
+      "otterpaceRemindDaily": false,
+      "rbShowSettings": true,
+      "rbCoachActiveProvider": "openai",
+      "rbConnected": false,
+      "rbStartScreen": "",
+      "rbDailyStepsJSON": "{}",
+      "rbActiveEnergyKcal": 310,
+      "rbGoalSteps": 10000,
+      "otterpaceRemindGoal": false,
+      "rbCoachProfileJSON": "{\"walkVolume\":\"mostDays\",\"walkTime\":\"mornings\",\"otherTraining\":[\"strength\",\"mobility\"],\"trainingPhase\":\"building\"}",
+      "rbLoadHistoryJSON": "[]",
+      "rbShowWeeklyReview": false,
+      "rbWorkoutsJSON": "[]",
+      "rbSyncHealth": false,
+      "rbShowRaceEditor": false,
+      "rbCoachConnectedProviders": "anthropic,openai",
+      "otterpaceRemindInactivity": false,
+      "rbCoachPreviewScroll": "",
+      "rbMinutesSinceMovement": 92,
+      "rbShowHistory": false,
+      "rbDistanceMiles": 2.8,
+      "rbRaceEditorCustomValue": "",
+      "rbShowRacePrompt": false,
+      "rbRaceEditorCustomUnit": "",
+      "rbSyncSettings": false,
+      "rbCoachConnected": true,
+      "rbTheme": "default"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/CoachDataPreview.swift"
+}

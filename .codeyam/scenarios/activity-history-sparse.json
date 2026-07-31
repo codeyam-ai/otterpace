@@ -18,7 +18,9 @@
       "rbShowWeeklyReview": false,
       "rbStartTab": "today",
       "rbSteps": 8200,
-      "rbAskSeedQuestion": ""
+      "rbAskSeedQuestion": "",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

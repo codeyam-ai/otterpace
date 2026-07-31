@@ -1,0 +1,50 @@
+{
+  "name": "Coach Data Preview — Fully Personalized",
+  "id": "92811f28-9316-4afe-ac1e-3d1c636afcac",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbActiveMinutes": 42,
+      "otterpaceRemindDaily": false,
+      "rbShowRacePrompt": false,
+      "rbCoachConnected": true,
+      "rbPreviewMode": "",
+      "rbStartScreen": "",
+      "rbGoalSteps": 10000,
+      "rbStartTab": "today",
+      "rbActiveEnergyKcal": 310,
+      "rbContentSize": "",
+      "rbRaceEditorCustomValue": "",
+      "rbShowCoachDataPreview": true,
+      "otterpaceRemindGoal": false,
+      "rbShowRaceEditor": false,
+      "rbSyncHealth": false,
+      "rbDate": "2026-06-22",
+      "rbSyncSettings": false,
+      "rbCoachPreviewScroll": "",
+      "rbShowHistory": false,
+      "otterpaceRemindInactivity": false,
+      "rbCoachConnectedProviders": "anthropic,openai",
+      "rbSteps": 6420,
+      "rbTheme": "default",
+      "rbDistanceMiles": 2.8,
+      "rbRacesJSON": "[{\"id\":\"3F2504E0-4F89-11D3-9A0C-0305E82C3301\",\"name\":\"Marin Headlands Trail Half\",\"distanceMiles\":13.1,\"date\":\"2026-10-10\",\"location\":\"Sausalito, CA\",\"notes\":\"Goal: finish strong, under 2:30\"}]",
+      "rbShowSettings": true,
+      "rbShowWeeklyReview": false,
+      "rbConnected": true,
+      "rbWorkoutsJSON": "[{\"type\":\"run\",\"distanceMiles\":4.2,\"durationMinutes\":43,\"pace\":\"10:15/mi\",\"date\":\"2026-06-21\",\"source\":\"healthkit\"},{\"type\":\"walk\",\"distanceMiles\":2.1,\"durationMinutes\":38,\"pace\":\"18:05/mi\",\"date\":\"2026-06-19\",\"source\":\"healthkit\"},{\"type\":\"run\",\"distanceMiles\":6.0,\"durationMinutes\":62,\"pace\":\"10:20/mi\",\"date\":\"2026-06-17\",\"source\":\"strava\"},{\"type\":\"run\",\"distanceMiles\":3.1,\"durationMinutes\":31,\"pace\":\"10:00/mi\",\"date\":\"2026-06-15\",\"source\":\"healthkit\"},{\"type\":\"walk\",\"distanceMiles\":1.8,\"durationMinutes\":33,\"pace\":\"18:20/mi\",\"date\":\"2026-06-13\",\"source\":\"healthkit\"}]",
+      "rbCoachActiveProvider": "openai",
+      "rbSettingsScroll": "coach",
+      "rbMinutesSinceMovement": 92,
+      "rbRaceEditorCustomUnit": "",
+      "rbSignedInUserID": "",
+      "rbCoachProfileJSON": "{\"walkVolume\":\"mostDays\",\"walkTime\":\"mornings\",\"otherTraining\":[\"strength\",\"mobility\"],\"trainingPhase\":\"building\"}"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/CoachDataPreview.swift"
+}

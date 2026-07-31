@@ -1,0 +1,16 @@
+{
+  "name": "CoachDataRow - Shared",
+  "id": "3154fd2c-40e8-4e4a-83d8-f620ea85a43d",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Shared",
+      "CODEYAM_ISOLATE_COMPONENT": "CoachDataRow"
+    }
+  },
+  "componentName": "CoachDataRow",
+  "scenarioType": "component"
+}

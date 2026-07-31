@@ -18,7 +18,9 @@
       "rbShowSettings": true,
       "rbSteps": 8000,
       "rbConnected": true,
-      "rbRaceEditorSeedJSON": "{\"id\":\"44444444-4444-4444-4444-444444444444\",\"name\":\"Portland Marathon\",\"distanceMiles\":26.2,\"date\":\"2026-10-04\",\"location\":\"\",\"unit\":\"miles\"}"
+      "rbRaceEditorSeedJSON": "{\"id\":\"44444444-4444-4444-4444-444444444444\",\"name\":\"Portland Marathon\",\"distanceMiles\":26.2,\"date\":\"2026-10-04\",\"location\":\"\",\"unit\":\"miles\"}",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

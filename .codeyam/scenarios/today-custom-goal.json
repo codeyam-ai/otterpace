@@ -40,7 +40,9 @@
       "rbWorkoutDistanceMiles": 2.0,
       "rbContentSize": "",
       "otterpaceRacePromptDismissed": true,
-      "rbTheme": "default"
+      "rbTheme": "default",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",

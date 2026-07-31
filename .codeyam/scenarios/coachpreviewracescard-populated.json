@@ -1,0 +1,16 @@
+{
+  "name": "CoachPreviewRacesCard - Populated",
+  "id": "2890ff5e-3c63-4ae5-bfad-63e68f06ebf1",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "CoachPreviewRacesCard",
+      "CODEYAM_ISOLATE_SCENARIO": "Populated"
+    }
+  },
+  "componentName": "CoachPreviewRacesCard",
+  "scenarioType": "component"
+}

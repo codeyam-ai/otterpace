@@ -33,7 +33,9 @@
       "rbSteps": 5400,
       "rbLongestRunMiles": 8.1,
       "rbWorkoutPace": "9:30/mi",
-      "rbWorkoutType": "run"
+      "rbWorkoutType": "run",
+      "rbShowCoachDataPreview": false,
+      "rbCoachPreviewScroll": ""
     }
   },
   "scenarioType": "application",
