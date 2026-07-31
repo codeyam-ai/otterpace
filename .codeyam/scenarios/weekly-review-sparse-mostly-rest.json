@@ -25,7 +25,8 @@
       "rbGoalSteps": 10000,
       "rbRestDaysThisWeek": 5,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

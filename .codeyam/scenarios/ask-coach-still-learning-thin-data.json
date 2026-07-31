@@ -33,7 +33,8 @@
       "rbStartTab": "coach",
       "rbWeeklyMileage": 9.0,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

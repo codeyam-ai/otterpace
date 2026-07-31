@@ -20,7 +20,8 @@
       "rbSteps": 8200,
       "rbAskSeedQuestion": "",
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

@@ -220,6 +220,16 @@
   },
   {
     "conformsToView": true,
+    "description": "The 'Get an API key' row in the Settings AI Coach card, opening a chooser for all three provider consoles. It replaced a link that pointed at whichever provider was detected in the pasted key, falling back to Anthropic while the field was empty — which inverted the actual journey, because you visit a console in order to CREATE a key you don't have yet, so keying the destination off a key already pasted offered the link at exactly the moment it was useless and left OpenAI and Gemini unreachable for anyone who had neither. Rows are built from CoachProvider.displayOrder and consoleURL, so a fourth provider needs no change here; because rows render conditionally on a non-nil consoleURL, a provider missing one would disappear silently, which CoachProviderConsoleTests guards against. Self-contained — it holds no reference to the key field's draft or detection state, which is why it lives outside CoachKeyField. Takes an optional forcePickerOpen so the open state is capturable without depending on a preference surviving injection.",
+    "filePath": "Sources/AppCore/CoachConsoleLinkRow.swift",
+    "name": "CoachConsoleLinkRow",
+    "scenarios": [
+      "coachconsolelinkrow-collapsed",
+      "coachconsolelinkrow-picker-open"
+    ]
+  },
+  {
+    "conformsToView": true,
     "description": "The read-only 'What Buddy sees' screen, reached from the Settings AI Coach card. Shows, in plain English, exactly what would be sent to the user's AI provider right now: where it goes, today's activity totals, recent runs and walks, the weekly load series, races, the onboarding profile, and a closing list of what is never sent. It reads the SAME TodayState that AskCoachView hands to RemoteCoach (`let context = model.today`) rather than assembling its own snapshot — a parallel assembly could drift from the real payload and quietly start lying about what leaves the device, so sharing the value makes drift impossible by construction. Composes seven card components and holds no markup of its own. Carries one scenario-only hook, `rbCoachPreviewScroll`, mirroring SettingsView's `rbSettingsScroll`, so a capture can open the screen scrolled to a below-the-fold card.",
     "filePath": "Sources/AppCore/CoachDataPreview.swift",
     "name": "CoachDataPreview",

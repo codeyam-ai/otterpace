@@ -23,6 +23,7 @@ struct CoachKeyField: View {
     private var trimmed: String { draft.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var detected: CoachProvider? { CoachProvider.detect(fromKey: trimmed) }
 
+
     var body: some View {
         SecureField("sk-ant-…, sk-…, or AIza…", text: $draft)
             .textFieldStyle(.roundedBorder)
@@ -56,16 +57,8 @@ struct CoachKeyField: View {
             }
         }
 
-        // Point at the console for whichever provider was detected, falling back
-        // to Anthropic while the field is empty, so this always goes somewhere
-        // useful rather than disappearing.
-        let linkProvider = detected ?? .anthropic
-        if let url = linkProvider.consoleURL {
-            Link(destination: url) {
-                SettingsActionRowLabel(title: "Get \(linkProvider.article) \(linkProvider.displayName) API key",
-                                       icon: "key", tint: Palette.sky, external: true)
-            }
-            .accessibilityLabel("Get \(linkProvider.article) \(linkProvider.displayName) API key")
-        }
+        // Where to go if you don't have a key yet. Self-contained — it takes
+        // nothing from this field's draft or detection state.
+        CoachConsoleLinkRow()
     }
 }

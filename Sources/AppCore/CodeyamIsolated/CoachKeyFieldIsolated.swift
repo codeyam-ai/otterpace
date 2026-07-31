@@ -4,11 +4,12 @@ import SwiftUI
 // booted iOS simulator. CODEYAM_ISOLATE_COMPONENT=CoachKeyField selects this struct in
 // CodeyamIsolationHost.swift; CODEYAM_ISOLATE_SCENARIO picks the scenario below.
 //
-// The field has three states worth seeing: empty (the combined placeholder plus the
-// default Anthropic key link), a recognized key (the detection confirmation, and the
-// link retargeted to that provider), and an unrecognized key (the "which provider is
-// it from?" picker instead of a rejection). The draft is held here so each scenario
-// renders its state on the first frame, with no typing required.
+// The field has four states worth seeing: empty (the combined placeholder plus the
+// "Get an API key" row), a recognized key (the detection confirmation), an
+// unrecognized key (the "which provider is it from?" picker instead of a rejection),
+// and the console chooser open. The draft is held here so each scenario renders its
+// state on the first frame, with no typing required; the chooser's open state comes
+// from the `rbShowKeyProviderPicker` default, seeded by the scenario itself.
 struct CoachKeyFieldIsolated: View {
     let scenario: String
 

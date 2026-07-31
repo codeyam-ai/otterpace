@@ -1234,6 +1234,51 @@
       "runner": "tests"
     },
     {
+      "description": "Anthropic stays first in the display order as the provider Otterpace shipped with, even though the chooser no longer defaults to it.",
+      "file": "Tests/AppCoreTests/CoachProviderConsoleTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProviderConsoleTests › testAnthropicLeadsTheDisplayOrder",
+      "line": 29,
+      "registeredAt": "2026-07-31T14:46:01.111242+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Each provider's console URL points at that vendor's own host over HTTPS, so a link never sends someone to the wrong vendor.",
+      "file": "Tests/AppCoreTests/CoachProviderConsoleTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProviderConsoleTests › testConsoleURLsPointAtTheRightHost",
+      "line": 35,
+      "registeredAt": "2026-07-31T14:46:05.006737+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Provider display names are unique, since the chooser labels its rows with the display name alone.",
+      "file": "Tests/AppCoreTests/CoachProviderConsoleTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProviderConsoleTests › testDisplayNamesAreDistinct",
+      "line": 50,
+      "registeredAt": "2026-07-31T14:46:08.921737+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The chooser's display order covers all three providers, which is the whole point of replacing the single adaptive link.",
+      "file": "Tests/AppCoreTests/CoachProviderConsoleTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProviderConsoleTests › testDisplayOrderCoversEveryProvider",
+      "line": 22,
+      "registeredAt": "2026-07-31T14:45:56.848476+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Every provider has a console URL, so none can silently vanish from the Get an API key chooser, which renders rows conditionally on that URL.",
+      "file": "Tests/AppCoreTests/CoachProviderConsoleTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProviderConsoleTests › testEveryProviderHasAConsoleURL",
+      "line": 14,
+      "registeredAt": "2026-07-31T14:45:52.782190+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "An Anthropic key also rides the legacy x-anthropic-key header, so an app build shipping ahead of the backend keeps working.",
       "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
       "format": "junit-xml",

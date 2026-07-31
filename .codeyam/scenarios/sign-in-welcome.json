@@ -14,7 +14,8 @@
       "rbStartScreen": "signin",
       "rbContentSize": "",
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

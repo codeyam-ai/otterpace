@@ -21,7 +21,8 @@
       "rbShowSettings": true,
       "rbGoalSteps": 10000,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

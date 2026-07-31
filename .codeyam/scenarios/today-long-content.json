@@ -42,7 +42,8 @@
       "otterpaceRacePromptDismissed": true,
       "rbTheme": "default",
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

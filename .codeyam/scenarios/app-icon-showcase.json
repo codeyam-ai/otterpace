@@ -13,7 +13,8 @@
       "rbPreviewMode": "app-icon",
       "rbShowHistory": false,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

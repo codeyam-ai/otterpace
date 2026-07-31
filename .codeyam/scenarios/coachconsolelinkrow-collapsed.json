@@ -1,0 +1,16 @@
+{
+  "name": "CoachConsoleLinkRow - Collapsed",
+  "id": "5e5833ab-dd39-4d27-aaa3-762931134940",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Collapsed",
+      "CODEYAM_ISOLATE_COMPONENT": "CoachConsoleLinkRow"
+    }
+  },
+  "componentName": "CoachConsoleLinkRow",
+  "scenarioType": "component"
+}

@@ -25,7 +25,8 @@
       "rbGoalSteps": 10000,
       "rbWorkoutType": "",
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

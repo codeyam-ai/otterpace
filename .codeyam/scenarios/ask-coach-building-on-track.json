@@ -34,7 +34,8 @@
       "rbCoachProfileJSON": "{\"walkVolume\":\"mostDays\",\"walkTime\":\"mornings\",\"otherTraining\":[\"running\"],\"trainingPhase\":\"building\"}",
       "rbContentSize": "",
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

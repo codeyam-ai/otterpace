@@ -21,7 +21,8 @@
       "rbGoalSteps": 10000,
       "rbStartTab": "today",
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

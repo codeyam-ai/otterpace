@@ -31,7 +31,8 @@
       "rbWorkoutSource": "healthkit",
       "rbWorkoutType": "run",
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

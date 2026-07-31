@@ -23,7 +23,8 @@
       "rbDate": "2026-06-22",
       "rbShowRacePrompt": false,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

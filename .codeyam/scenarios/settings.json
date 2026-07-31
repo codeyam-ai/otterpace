@@ -31,7 +31,8 @@
       "rbShowHistory": false,
       "otterpaceRemindInactivity": false,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

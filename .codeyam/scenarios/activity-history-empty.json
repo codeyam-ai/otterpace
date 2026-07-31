@@ -20,7 +20,8 @@
       "rbWorkoutsJSON": "",
       "rbSteps": 8200,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

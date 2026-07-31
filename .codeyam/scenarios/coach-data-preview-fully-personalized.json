@@ -42,7 +42,8 @@
       "rbMinutesSinceMovement": 92,
       "rbRaceEditorCustomUnit": "",
       "rbSignedInUserID": "",
-      "rbCoachProfileJSON": "{\"walkVolume\":\"mostDays\",\"walkTime\":\"mornings\",\"otherTraining\":[\"strength\",\"mobility\"],\"trainingPhase\":\"building\"}"
+      "rbCoachProfileJSON": "{\"walkVolume\":\"mostDays\",\"walkTime\":\"mornings\",\"otherTraining\":[\"strength\",\"mobility\"],\"trainingPhase\":\"building\"}",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

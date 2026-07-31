@@ -34,7 +34,8 @@
       "rbConnected": true,
       "rbLongestRunMiles": 4.2,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

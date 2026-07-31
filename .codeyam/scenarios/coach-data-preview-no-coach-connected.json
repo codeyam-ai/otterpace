@@ -42,7 +42,8 @@
       "rbDistanceMiles": 2.8,
       "otterpaceRemindDaily": false,
       "rbTheme": "default",
-      "rbStartTab": "today"
+      "rbStartTab": "today",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

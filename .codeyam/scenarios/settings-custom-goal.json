@@ -31,7 +31,8 @@
       "rbRacesJSON": "",
       "rbSettingsScroll": "goal",
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

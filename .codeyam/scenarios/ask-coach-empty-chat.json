@@ -24,7 +24,8 @@
       "rbDate": "2026-06-22",
       "rbConnected": true,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

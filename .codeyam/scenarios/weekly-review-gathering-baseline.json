@@ -28,7 +28,8 @@
       "rbLongestRunMiles": 4.5,
       "rbDate": "2026-06-22",
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

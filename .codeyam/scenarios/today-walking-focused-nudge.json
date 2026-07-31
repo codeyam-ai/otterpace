@@ -37,7 +37,8 @@
       "rbCoachSafety": false,
       "otterpaceRacePromptDismissed": true,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

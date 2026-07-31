@@ -44,7 +44,8 @@
       "rbStartScreen": "",
       "rbWorkoutSource": "strava",
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

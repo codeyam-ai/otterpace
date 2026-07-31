@@ -42,7 +42,8 @@
       "rbDate": "2026-06-23",
       "rbTheme": "default",
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

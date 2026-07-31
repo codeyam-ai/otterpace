@@ -22,7 +22,8 @@
       "rbActiveMinutes": 28,
       "rbDistanceMiles": 3.1,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

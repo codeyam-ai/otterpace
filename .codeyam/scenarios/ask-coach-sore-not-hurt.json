@@ -35,7 +35,8 @@
       "rbWorkoutDurationMinutes": 42,
       "rbWorkoutPace": "10:00/mi",
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

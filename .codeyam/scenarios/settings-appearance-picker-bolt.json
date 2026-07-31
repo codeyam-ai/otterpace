@@ -33,7 +33,8 @@
       "rbShowRaceEditor": false,
       "rbConnected": true,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

@@ -29,7 +29,8 @@
       "rbCoachConnected": true,
       "rbDistanceMiles": 3.0,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

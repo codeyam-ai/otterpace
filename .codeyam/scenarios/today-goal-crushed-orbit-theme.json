@@ -44,7 +44,8 @@
       "rbWeeklyMileage": 14.6,
       "rbWorkoutDurationMinutes": 43,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

@@ -1,0 +1,411 @@
+{
+  "timestamp": "2026-07-31T15:31:00Z",
+  "title": "Get an API Key — Reach All Three Providers",
+  "type": "feature",
+  "userRequest": "## Summary\n\nThe Settings → AI Coach card can only send you to the **Anthropic** console in\npractice, even though Otterpace has supported OpenAI and Gemini keys since the\nMulti-Provider BYOK release (`936b346`).\n\n`CoachKeyField.swift:62` picks the link target from whichever provider it detects\nin the pasted key, falling back to Anthropic while the field is empty:\n\n```swift\nlet linkProvider = detected ?? .anthropic\n```\n\nThat looks adaptive, and it is — but it inverts the actual user journey. You reach\nthe OpenAI or Gemini console link **only after pasting one of their keys**, and the\nreason to visit that console is to *create a key you don't have yet*. So a user who\nwants to use GPT or Gemini sees a row offering them an Anthropic key, with no path\nto the other two. The links exist and are unreachable exactly when they're needed.\n\n## What to build\n\nReplace the single detected-provider link with one row — **\"Get an API key\"** —\nthat opens a `.confirmationDialog` listing all three providers. Tapping one opens\nthat provider's `consoleURL`.\n\n- Same vertical space as the row it replaces (the card is already dense: provider\n  rows, key field, Connect, and now \"What Buddy sees\").\n- Uses the existing `CoachProvider.displayOrder` and `CoachProvider.consoleURL` —\n  no new provider metadata.\n- Keep the adaptive behavior where it genuinely helps: once a key **is** detected,\n  the row may still lead with that provider, but every provider stays reachable.\n\n## Scenarios\n\nThe dialog is a presentation, so seed its open state the way the codebase already\ndoes for first-frame capture (`rbShowRaceEditor` / `rbShowCoachDataPreview`) rather\nthan via `.onAppear`:\n\n| Scenario | State |\n|---|---|\n| Key Links — Picker Open | the dialog up, all three providers listed |\n| Key Links — Row Closed | the collapsed row in the card, no key connected |\n\n## Tests\n\n`consoleURL` is non-nil for all three providers, and `displayOrder` yields the\nstable Anthropic-first order the dialog renders — both pure logic, no view needed.\n\n## Notes\n\nFound while building Coach Data Preview, which added a row to this same card.\nDeliberately kept out of that feature so each one's tests, scenarios, and journal\nstay scoped to a single change.",
+  "description": "The Settings > AI Coach card could only ever send you to the Anthropic console. The row linked to whichever provider was detected in the pasted key, falling back to Anthropic while the field was empty — which inverted the actual journey, because you visit a provider's console in order to CREATE a key you don't have yet. Keying the destination off a key you had already pasted offered the link at exactly the moment it was useless, and left OpenAI and Gemini unreachable for anyone who had neither. Otterpace has accepted all three since the Multi-Provider BYOK release; only the way in was missing.\n\nOne 'Get an API key' row now opens a confirmation dialog listing all three consoles, reachable from the empty-handed state that actually needs them. The dialog carries the context a first-time BYOK user is actually weighing: each provider bills you directly, and the key stays on the device.\n\nExtracted as CoachConsoleLinkRow rather than left inline, because the block takes nothing from the key field's draft or detection state — CoachKeyField drops from 92 to 64 lines and becomes single-purpose. Rows are built from CoachProvider.displayOrder and consoleURL, so a fourth provider needs no change here.\n\nThe five new tests target the failure mode this design could silently reintroduce: the dialog renders rows via `if let url = provider.consoleURL`, so a provider missing a URL would vanish from the list with no error — the original bug, invisibly. testEveryProviderHasAConsoleURL makes that a red test, and the others pin display order, per-vendor hosts over HTTPS, and label uniqueness.\n\nTwo findings worth recording beyond the change itself. First, scenario staleness under-reports on this repo: only the four CoachKeyField component scenarios were flagged, while settings-ai-coach-no-key was reported fresh despite genuinely changing. This is a single-module Swift package, so files reference each other with no import statements and analyze-imports has no edge from SettingsView to CoachKeyField to follow. The gap was caught by recapturing all twelve Settings scenarios and diffing hashes rather than trusting the report; any future component change here will hit the same blind spot. Second, the wipe-then-seed recapture recipe re-themes any scenario that does not pin rbTheme — it silently re-themed settings-import-race-review, an unrelated scenario, from cream to beige. That recapture was reverted so the diff contains only frames this change actually affects.\n\nDeliberate omission: the chooser does not mark which providers are already connected. The card lists connected providers in the rows directly above it, and duplicating that state inside the sheet would add a prop and a second source of truth that can drift.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/coach-key-links-provider-picker.md\t.codeyam/plans/completed/coach-key-links-provider-picker.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/accessibility-large-text-today.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-empty.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-long-values.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-partial-week-mid-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-rich-multi-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/activity-history-sparse.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/app-icon-showcase.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-building-on-track.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-empty-chat.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-hit-10k.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-knee-pain.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-mileage-spike.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-no-key-connect-prompt.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-run-or-rest.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-sore-not-hurt.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/ask-coach-still-learning-thin-data.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/buddy-puffy-loader.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/buddy-puffy-moods.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/coach-data-preview-day-one.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/coach-data-preview-fully-personalized.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/coach-data-preview-health-not-connected.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/coach-data-preview-never-sent.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/coach-data-preview-no-coach-connected.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-detected-gemini--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-detected-gemini--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-detected-openai--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-detected-openai--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-empty--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-empty--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-unrecognized-key--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachkeyfield-unrecognized-key--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-anthropic-migrated--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-no-key--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-account-sync.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-ai-coach-all-three-connected.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-ai-coach-anthropic-migrated.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-ai-coach-no-key.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-appearance-picker-bolt.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-custom-goal.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-health-sync-on.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-import-race-review.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-race-editor-custom-distance.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-races-list.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-reminders-on.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-replay-tour-row.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-training-phase-building.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/sign-in-welcome.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-almost-there.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-computed-nudge.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-custom-goal.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-day-one-connect.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-fresh-start.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed-bolt-theme.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed-fieldnote-theme.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed-garden-theme.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed-orbit-theme.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-goal-crushed.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-long-content.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-midday-nudge.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-past-race-banner-returns.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-race-prompt-banner.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-recovery-caution.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-strong-weekend-fresh-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-walking-focused-nudge.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/today-zero-step-morning.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-cross-training-runner.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-empty-first-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-gathering-baseline.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-solid-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-sparse-mostly-rest.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-spiking-load.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-walking-focused-week.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CoachKeyField.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CoachKeyFieldIsolated.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CodeyamIsolationHost.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/coachconsolelinkrow-collapsed.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/coachconsolelinkrow-picker-open.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachconsolelinkrow-collapsed--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachconsolelinkrow-collapsed--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachconsolelinkrow-picker-open--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/coachconsolelinkrow-picker-open--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CoachConsoleLinkRow.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CoachConsoleLinkRowIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/CoachProviderConsoleTests.swift",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "CoachConsoleLinkRow - Collapsed",
+      "screenshotPath": "coachconsolelinkrow-collapsed--iphone-16.png"
+    },
+    {
+      "name": "CoachConsoleLinkRow - Picker Open",
+      "screenshotPath": "coachconsolelinkrow-picker-open--iphone-16.png"
+    },
+    {
+      "name": "CoachKeyField - Detected Gemini",
+      "screenshotPath": "coachkeyfield-detected-gemini--iphone-16.png"
+    },
+    {
+      "name": "CoachKeyField - Detected OpenAI",
+      "screenshotPath": "coachkeyfield-detected-openai--iphone-16.png"
+    },
+    {
+      "name": "CoachKeyField - Empty",
+      "screenshotPath": "coachkeyfield-empty--iphone-16.png"
+    },
+    {
+      "name": "CoachKeyField - Unrecognized Key",
+      "screenshotPath": "coachkeyfield-unrecognized-key--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 309,
+    "passed": 309,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 309,
+        "passed": 309
+      }
+    ]
+  }
+}

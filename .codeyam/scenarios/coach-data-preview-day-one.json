@@ -44,7 +44,8 @@
       "rbConnected": true,
       "rbShowWeeklyReview": false,
       "rbGoalSteps": 10000,
-      "rbRaceEditorCustomValue": ""
+      "rbRaceEditorCustomValue": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

@@ -34,7 +34,8 @@
       "rbCoachConnectedProviders": "anthropic,openai,gemini",
       "otterpaceRemindGoal": false,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

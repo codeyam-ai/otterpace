@@ -25,7 +25,8 @@
       "rbConnected": true,
       "rbDaysRunThisWeek": 4,
       "rbShowCoachDataPreview": false,
-      "rbCoachPreviewScroll": ""
+      "rbCoachPreviewScroll": "",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",

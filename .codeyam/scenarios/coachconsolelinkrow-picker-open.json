@@ -1,0 +1,16 @@
+{
+  "name": "CoachConsoleLinkRow - Picker Open",
+  "id": "ccf6848b-24fc-40bc-9bf6-cf393b4c17f8",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "CoachConsoleLinkRow",
+      "CODEYAM_ISOLATE_SCENARIO": "Picker Open"
+    }
+  },
+  "componentName": "CoachConsoleLinkRow",
+  "scenarioType": "component"
+}

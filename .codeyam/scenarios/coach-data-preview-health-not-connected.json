@@ -44,7 +44,8 @@
       "rbRaceEditorCustomUnit": "",
       "rbSyncSettings": false,
       "rbCoachConnected": true,
-      "rbTheme": "default"
+      "rbTheme": "default",
+      "rbShowKeyProviderPicker": false
     }
   },
   "scenarioType": "application",
