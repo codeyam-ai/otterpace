@@ -107,33 +107,6 @@ Because a sibling can commit between any two of your commands:
 > errors. Every queue bail names its own recovery command — read the bail body
 > and run exactly what it says; do not hand-stitch a workaround. On a solo
 > branch with no upstream the queue is disabled and this block is inert.
->
-> **EXCEPTION — the named recovery does not cover an enqueue that never created
-> its ref.** When `pre-commit-sync` dies with:
->
-> ```
-> error: src refspec refs/codeyam/queue/<branch>/<uuid> does not match any
-> fatal: the remote end hung up unexpectedly
-> ```
->
-> the enqueue pushed a queue ref it never created locally. `--recover` does
-> **not** fix this — it is built for dirty-tree rebase refusals and duplicate
-> plan slugs, so it runs the full `post-merge-drift-sweep` (minutes) and then
-> re-attempts the identical failing enqueue. Do not spend that cycle.
->
-> Instead, prove the queue is genuinely empty — **all three** must agree:
->
-> ```bash
-> git for-each-ref refs/codeyam/                  # expect: no output
-> git ls-remote origin 'refs/codeyam/*'           # expect: no output
-> codeyam-editor-dev editor branch-queue status   # expect: "Queue empty on <branch>"
-> ```
->
-> Then take the documented one-shot bypass `pre-commit-sync --skip-queue`. It is
-> loud, not silent: a WARN banner at acquisition and at every downstream slug,
-> plus an audit entry in `.codeyam/logs/branch-queue.jsonl`. A *second* identical
-> failure is a reproducible bug, never a flake — do not retry a third time hoping
-> it clears.
 
 ---
 
@@ -307,21 +280,6 @@ codeyam-editor-dev editor pre-commit-sync          # claims the commit queue; --
 codeyam-editor-dev editor session-finalize 2>&1 | tee /tmp/codeyam-audit-finalize.log
 ```
 
-> GOTCHA — **the wrapper's exit code is not the finalize verdict.**
-> `session-finalize` can exit **0** while the finalize itself failed. The only
-> trustworthy signal is its terminal status line:
->
-> ```bash
-> grep "session-finalize finished:" /tmp/codeyam-audit-finalize.log | tail -1
-> ```
->
-> A real pass reads `status=ok, phase1=passed … phase5=passed` and takes minutes.
-> A masked failure reads `status=failed, phase1=pending … phase5=pending,
-> elapsed=0.1s` — an instant return with every phase `pending` is the tell, and
-> the cause is printed on the following line (e.g. "finalize ran without holding
-> the queue head"). **Never chain a commit, a push, or a merge-ready claim off
-> the wrapper's exit code alone.**
-
 > GOTCHA — **the marker-stamp trap.** A `session-finalize` that *skips* the
 > comprehensive whole-repo phase can leave `lastFullFinalizeSha` unstamped even
 > though it exited 0 — and then the merge-readiness gate still fails. Always
@@ -355,33 +313,6 @@ codeyam-editor-dev editor push                     # the wrapper runs the deferr
 If the pre-push gate complains of deferred commits, do **not** override with
 `--allow-deferred`; it means finalize didn't cover the range — go back to the
 marker-stamp trap above.
-
-> GOTCHA — **`editor push` refuses outside a feature workflow.** The wrapper also
-> enforces feature-workflow step ordering and bails with `Cannot proceed at step
-> N. The workflow must reach step 25 first.` An audit run that lands a
-> release/ops commit (a version bump, a build cut) has no plan and no feature, so
-> it can never reach step 25 — the check is workflow *progression*, not
-> correctness, and waiting it out is not an option.
->
-> Verify the two real gates by hand instead, and push directly only when both
-> exit 0:
->
-> ```bash
-> codeyam-editor-dev editor verify-full-finalize    # HEAD covered by a full finalize
-> codeyam-editor-dev editor verify-completed-plans  # no dropped plan implementations
-> git push origin <branch>                          # managed pre-push hook re-runs both
-> ```
->
-> This is a bypass of the wrapper, not of the gates — the managed pre-push hook
-> still runs them. If either verify exits 1, stop and fix; do not push.
->
-> **The same slug gating blocks the commit itself.** `git commit` / `git add` are
-> refused unless the current step slug is in `commitSlugs`
-> (`.claude/hooks/editor-pretool-hook.py`); only `.codeyam/plans/*.md` is exempt
-> at any step. Clear it with `codeyam-editor-dev editor session-reset` —
-> **without** `--discard-changes`, which touches only `.codeyam/` session state
-> and preserves your uncommitted code. Confirm `git status` still shows your
-> changes before committing.
 
 ---
 
