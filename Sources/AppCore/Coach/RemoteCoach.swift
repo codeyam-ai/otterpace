@@ -213,6 +213,12 @@ public enum CoachError: Error, Equatable {
     case rateLimited
     case server
     case network
+    /// The backend reached the provider and the provider refused for a reason the
+    /// user can act on (an unavailable model, an exhausted token budget). Carries
+    /// the backend's own message: collapsing these into `.server` is what made a
+    /// misconfigured provider read as "check your connection" in the chat, which
+    /// pointed the user at the one thing that was not wrong.
+    case upstream(String)
 }
 
 /// Calls the backend coach proxy. Stateless; safe to construct per request.
@@ -243,6 +249,31 @@ public struct RemoteCoach {
         let text: String
         let mood: String
         let safetyFlag: Bool
+    }
+
+    /// The backend's error envelope: `{ "error": "<code>", "message": "<why>" }`.
+    private struct ErrorBody: Decodable {
+        let error: String
+        let message: String?
+    }
+
+    /// The actionable reason from a non-2xx body, when the backend supplied one.
+    /// Only codes the user can actually do something about are surfaced; a bare
+    /// `upstream_error` stays a generic failure so a real outage still reads as one.
+    static func errorMessage(from data: Data) -> String? {
+        guard let body = try? JSONDecoder().decode(ErrorBody.self, from: data) else { return nil }
+        let actionable: Set<String> = [
+            "model_unavailable",
+            "token_budget_exhausted",
+            // An exhausted balance is the single most likely real-world failure
+            // and the one the user can actually fix, so it must never be
+            // flattened into a retry or connection message.
+            "insufficient_quota",
+        ]
+        guard actionable.contains(body.error), let message = body.message, !message.isEmpty else {
+            return nil
+        }
+        return message
     }
 
     /// The context actually put on the wire. The journal is projected down to its
@@ -291,7 +322,14 @@ public struct RemoteCoach {
         case 200: break
         case 401: throw CoachError.invalidKey  // only a rejected key surfaces to the user; a 400 (bad request) is our bug, not theirs
         case 429: throw CoachError.rateLimited
-        default: throw CoachError.server
+        default:
+            // The backend distinguishes a provider misconfiguration (unavailable
+            // model, exhausted token budget) from an outage. Carry that reason
+            // through rather than flattening it into a generic failure.
+            if let message = Self.errorMessage(from: data) {
+                throw CoachError.upstream(message)
+            }
+            throw CoachError.server
         }
 
         guard let decoded = try? JSONDecoder().decode(ResponseBody.self, from: data) else {

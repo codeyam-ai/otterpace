@@ -150,16 +150,90 @@ function parseJsonReply(text: string): LlmResult {
   }
 }
 
-/** Map any provider's HTTP status onto the status the app already handles. */
-function throwForStatus(status: number | undefined, provider: LlmProvider): never {
+/**
+ * Map any provider's HTTP status onto the status the app already handles.
+ *
+ * `detail` carries the provider's own error text when we have it. Without it a
+ * misconfigured model id and a genuine outage both surfaced as "could not be
+ * reached", which is what made a broken OpenAI key impossible to diagnose from
+ * the app: the user saw a network-sounding message for a config bug.
+ */
+function throwForStatus(
+  status: number | undefined,
+  provider: LlmProvider,
+  detail?: ProviderError,
+): never {
   const name = provider === "anthropic" ? "Anthropic" : provider === "openai" ? "OpenAI" : "Gemini";
+  const suffix = detail?.message ? ` ${detail.message}` : "";
   if (status === 401 || status === 403) {
     throw new LlmError(401, "invalid_key", `That API key was rejected by ${name}.`);
   }
   if (status === 429) {
+    // An empty balance is NOT a transient limit and never clears on its own.
+    // 402 (not 429) so the app parses the body instead of routing it to the
+    // retry path — "try again shortly" is unactionable when the account is dry.
+    if (isQuotaExhausted(detail)) {
+      throw new LlmError(
+        402,
+        "insufficient_quota",
+        `Your ${name} account is out of credits, so it declined the request. Add credits to your ${name} account and ask again.`,
+      );
+    }
     throw new LlmError(429, "rate_limited", `Your ${name} account is rate limited. Try again shortly.`);
   }
-  throw new LlmError(502, "upstream_error", `${name} could not be reached.`);
+  // 400/404 are OUR bug (unknown model, malformed request), not an outage, and
+  // not something the user can retry past. Say so, and pass the provider's
+  // reason through so the cause is visible without reproducing locally.
+  if (status === 400 || status === 404) {
+    throw new LlmError(
+      502,
+      "model_unavailable",
+      `${name} rejected the request: model "${modelFor(provider)}" may be unavailable to this key.${suffix}`,
+    );
+  }
+  throw new LlmError(502, "upstream_error", `${name} could not be reached.${suffix}`);
+}
+
+/** A provider's error body, normalized to the bits we route on. */
+interface ProviderError {
+  message?: string;
+  /** Provider's own classifier, e.g. "insufficient_quota". */
+  type?: string;
+  /** Provider's own code, e.g. "credit_balance_exhausted". */
+  code?: string;
+}
+
+/** Best-effort extraction of a provider's error from its response body. */
+async function errorDetail(response: Response): Promise<ProviderError | undefined> {
+  const body = (await response.json().catch(() => null)) as
+    | { error?: { message?: string; type?: string; code?: string } | string }
+    | null;
+  if (!body) return undefined;
+  const err = body.error;
+  if (typeof err === "string") return { message: err.slice(0, 300) };
+  if (!err) return undefined;
+  return {
+    message: typeof err.message === "string" ? err.message.slice(0, 300) : undefined,
+    type: typeof err.type === "string" ? err.type : undefined,
+    code: typeof err.code === "string" ? err.code : undefined,
+  };
+}
+
+/**
+ * Whether a 429 is an exhausted balance rather than a burst limit.
+ *
+ * These are opposite problems wearing the same status code: a burst limit clears
+ * on its own in seconds, an empty balance never does. Telling someone with no
+ * credits to "try again shortly" is advice that cannot work, so they get routed
+ * apart here.
+ */
+function isQuotaExhausted(detail?: ProviderError): boolean {
+  const needles = ["insufficient_quota", "credit_balance_exhausted", "billing_hard_limit_reached"];
+  const haystack = `${detail?.type ?? ""} ${detail?.code ?? ""}`.toLowerCase();
+  if (needles.some((n) => haystack.includes(n))) return true;
+  // Gemini/others don't use OpenAI's type/code vocabulary; fall back to prose.
+  const message = (detail?.message ?? "").toLowerCase();
+  return message.includes("no credits remaining") || message.includes("exceeded your current quota");
 }
 
 // MARK: - Anthropic
@@ -182,7 +256,10 @@ async function completeAnthropic(apiKey: string, request: LlmRequest): Promise<L
     return parseJsonReply(textBlock.text);
   } catch (err) {
     if (err instanceof LlmError) throw err;
-    throwForStatus((err as { status?: number }).status, "anthropic");
+    // The SDK surfaces the provider's error body on `.error`; pass it through so
+    // an exhausted balance is told apart from a burst limit here too.
+    const e = err as { status?: number; error?: { error?: ProviderError } };
+    throwForStatus(e.status, "anthropic", e.error?.error);
   }
 }
 
@@ -191,6 +268,19 @@ async function completeAnthropic(apiKey: string, request: LlmRequest): Promise<L
 // Chat Completions with a strict json_schema response format. Reached over plain
 // fetch rather than the SDK: it is one request shape, and every extra dependency
 // is weight in a serverless bundle that cold-starts on each user's key.
+
+/**
+ * Headroom for the reply itself, on top of whatever the model spends thinking.
+ *
+ * `max_completion_tokens` is a budget for reasoning tokens AND visible output.
+ * On a reasoning model the thinking is invoiced against the same allowance, so a
+ * budget sized for a 2-4 sentence answer (1024) can be consumed entirely before
+ * a single visible character is emitted — the call then returns `content: ""`
+ * with `finish_reason: "length"`, which read as "no text" and surfaced to the
+ * user as a connection failure. The reply is small; the thinking is not, so this
+ * is sized for the thinking.
+ */
+const OPENAI_MIN_COMPLETION_TOKENS = 16000;
 
 async function completeOpenAI(apiKey: string, request: LlmRequest): Promise<LlmResult> {
   let response: Response;
@@ -203,7 +293,7 @@ async function completeOpenAI(apiKey: string, request: LlmRequest): Promise<LlmR
       },
       body: JSON.stringify({
         model: MODELS.openai,
-        max_completion_tokens: request.maxTokens ?? 1024,
+        max_completion_tokens: Math.max(request.maxTokens ?? 1024, OPENAI_MIN_COMPLETION_TOKENS),
         messages: [
           { role: "system", content: request.system },
           ...request.messages.map((t) => ({ role: t.role, content: t.content })),
@@ -218,15 +308,30 @@ async function completeOpenAI(apiKey: string, request: LlmRequest): Promise<LlmR
     throw new LlmError(502, "upstream_error", "OpenAI could not be reached.");
   }
 
-  if (!response.ok) throwForStatus(response.status, "openai");
+  if (!response.ok) throwForStatus(response.status, "openai", await errorDetail(response));
 
   const body = (await response.json().catch(() => null)) as {
-    choices?: Array<{ message?: { content?: string | null; refusal?: string | null } }>;
+    choices?: Array<{
+      finish_reason?: string;
+      message?: { content?: string | null; refusal?: string | null };
+    }>;
   } | null;
-  const choice = body?.choices?.[0]?.message;
+  const first = body?.choices?.[0];
+  const choice = first?.message;
   // A strict-schema refusal comes back in its own field, with content null.
   if (choice?.refusal) return { kind: "refusal" };
-  if (typeof choice?.content !== "string" || !choice.content) return { kind: "empty" };
+  if (typeof choice?.content !== "string" || !choice.content) {
+    // Empty output because the budget ran out is a fixable configuration fault,
+    // not an upstream outage — name it so it can't hide behind "no text" again.
+    if (first?.finish_reason === "length") {
+      throw new LlmError(
+        502,
+        "token_budget_exhausted",
+        `OpenAI used its entire token budget before answering (model "${MODELS.openai}"). Raise max_completion_tokens.`,
+      );
+    }
+    return { kind: "empty" };
+  }
   return parseJsonReply(choice.content);
 }
 
@@ -274,7 +379,7 @@ async function completeGemini(apiKey: string, request: LlmRequest): Promise<LlmR
     throw new LlmError(502, "upstream_error", "Gemini could not be reached.");
   }
 
-  if (!response.ok) throwForStatus(response.status, "gemini");
+  if (!response.ok) throwForStatus(response.status, "gemini", await errorDetail(response));
 
   const body = (await response.json().catch(() => null)) as {
     candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }>;
