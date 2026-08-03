@@ -1,6 +1,6 @@
 {
-  "feature": "post-run-journal-and-check-ins",
-  "maxStep": 26,
-  "version": 1049,
-  "updatedAt": "2026-08-03T17:59:34.679286+00:00"
+  "feature": "first-run-clarity-guided-tour-and-starter-questions",
+  "maxStep": 1,
+  "version": 22,
+  "updatedAt": "2026-08-03T18:02:44.689480+00:00"
 }
