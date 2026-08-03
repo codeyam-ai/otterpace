@@ -262,7 +262,14 @@ public struct RemoteCoach {
     /// `upstream_error` stays a generic failure so a real outage still reads as one.
     static func errorMessage(from data: Data) -> String? {
         guard let body = try? JSONDecoder().decode(ErrorBody.self, from: data) else { return nil }
-        let actionable: Set<String> = ["model_unavailable", "token_budget_exhausted"]
+        let actionable: Set<String> = [
+            "model_unavailable",
+            "token_budget_exhausted",
+            // An exhausted balance is the single most likely real-world failure
+            // and the one the user can actually fix, so it must never be
+            // flattened into a retry or connection message.
+            "insufficient_quota",
+        ]
         guard actionable.contains(body.error), let message = body.message, !message.isEmpty else {
             return nil
         }

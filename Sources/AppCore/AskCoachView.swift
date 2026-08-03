@@ -150,6 +150,12 @@ public struct AskCoachView: View {
                 reply = CoachReply(intent: .general,
                     text: "Your AI coach key was rejected. Reconnect it in Settings, then ask again.",
                     mood: .concerned)
+            } catch CoachError.rateLimited {
+                // Previously fell through to the connection copy, which sent the
+                // user to check their wifi over a provider-side throttle.
+                reply = CoachReply(intent: .general,
+                    text: "Your AI provider is rate limiting requests right now. Give it a minute and ask again.",
+                    mood: .concerned)
             } catch CoachError.upstream(let message) {
                 // A provider-side configuration fault. Saying "check your
                 // connection" here sent the user chasing a network problem that

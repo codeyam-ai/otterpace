@@ -161,14 +161,24 @@ function parseJsonReply(text: string): LlmResult {
 function throwForStatus(
   status: number | undefined,
   provider: LlmProvider,
-  detail?: string,
+  detail?: ProviderError,
 ): never {
   const name = provider === "anthropic" ? "Anthropic" : provider === "openai" ? "OpenAI" : "Gemini";
-  const suffix = detail ? ` ${detail}` : "";
+  const suffix = detail?.message ? ` ${detail.message}` : "";
   if (status === 401 || status === 403) {
     throw new LlmError(401, "invalid_key", `That API key was rejected by ${name}.`);
   }
   if (status === 429) {
+    // An empty balance is NOT a transient limit and never clears on its own.
+    // 402 (not 429) so the app parses the body instead of routing it to the
+    // retry path — "try again shortly" is unactionable when the account is dry.
+    if (isQuotaExhausted(detail)) {
+      throw new LlmError(
+        402,
+        "insufficient_quota",
+        `Your ${name} account is out of credits, so it declined the request. Add credits to your ${name} account and ask again.`,
+      );
+    }
     throw new LlmError(429, "rate_limited", `Your ${name} account is rate limited. Try again shortly.`);
   }
   // 400/404 are OUR bug (unknown model, malformed request), not an outage, and
@@ -184,15 +194,46 @@ function throwForStatus(
   throw new LlmError(502, "upstream_error", `${name} could not be reached.${suffix}`);
 }
 
-/** Best-effort extraction of a provider's error message from its response body. */
-async function errorDetail(response: Response): Promise<string | undefined> {
+/** A provider's error body, normalized to the bits we route on. */
+interface ProviderError {
+  message?: string;
+  /** Provider's own classifier, e.g. "insufficient_quota". */
+  type?: string;
+  /** Provider's own code, e.g. "credit_balance_exhausted". */
+  code?: string;
+}
+
+/** Best-effort extraction of a provider's error from its response body. */
+async function errorDetail(response: Response): Promise<ProviderError | undefined> {
   const body = (await response.json().catch(() => null)) as
-    | { error?: { message?: string } | string }
+    | { error?: { message?: string; type?: string; code?: string } | string }
     | null;
   if (!body) return undefined;
   const err = body.error;
-  const message = typeof err === "string" ? err : err?.message;
-  return typeof message === "string" && message ? message.slice(0, 300) : undefined;
+  if (typeof err === "string") return { message: err.slice(0, 300) };
+  if (!err) return undefined;
+  return {
+    message: typeof err.message === "string" ? err.message.slice(0, 300) : undefined,
+    type: typeof err.type === "string" ? err.type : undefined,
+    code: typeof err.code === "string" ? err.code : undefined,
+  };
+}
+
+/**
+ * Whether a 429 is an exhausted balance rather than a burst limit.
+ *
+ * These are opposite problems wearing the same status code: a burst limit clears
+ * on its own in seconds, an empty balance never does. Telling someone with no
+ * credits to "try again shortly" is advice that cannot work, so they get routed
+ * apart here.
+ */
+function isQuotaExhausted(detail?: ProviderError): boolean {
+  const needles = ["insufficient_quota", "credit_balance_exhausted", "billing_hard_limit_reached"];
+  const haystack = `${detail?.type ?? ""} ${detail?.code ?? ""}`.toLowerCase();
+  if (needles.some((n) => haystack.includes(n))) return true;
+  // Gemini/others don't use OpenAI's type/code vocabulary; fall back to prose.
+  const message = (detail?.message ?? "").toLowerCase();
+  return message.includes("no credits remaining") || message.includes("exceeded your current quota");
 }
 
 // MARK: - Anthropic
@@ -215,7 +256,10 @@ async function completeAnthropic(apiKey: string, request: LlmRequest): Promise<L
     return parseJsonReply(textBlock.text);
   } catch (err) {
     if (err instanceof LlmError) throw err;
-    throwForStatus((err as { status?: number }).status, "anthropic");
+    // The SDK surfaces the provider's error body on `.error`; pass it through so
+    // an exhausted balance is told apart from a burst limit here too.
+    const e = err as { status?: number; error?: { error?: ProviderError } };
+    throwForStatus(e.status, "anthropic", e.error?.error);
   }
 }
 

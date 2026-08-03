@@ -260,6 +260,55 @@ describe("complete — OpenAI", () => {
       complete({ provider: "openai", apiKey: "sk-x" }, request()),
     ).rejects.toMatchObject({ code: "upstream_error" });
   });
+
+  // Regression: the actual cause of the reported outage. An account with no
+  // credits returns 429 — the same status as a burst limit — and was reported as
+  // "rate limited, try again shortly". That advice can never succeed: the balance
+  // does not refill on its own. The app then degraded it further into "check your
+  // connection", so three layers each pointed further from the real problem.
+  //
+  // This payload is verbatim what OpenAI returned for the reported failure.
+  const NO_CREDITS = {
+    error: {
+      message:
+        "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      type: "insufficient_quota",
+      param: null,
+      code: "credit_balance_exhausted",
+    },
+  };
+
+  it("tells an exhausted balance apart from a burst rate limit", async () => {
+    stubFetch(NO_CREDITS, { ok: false, status: 429 });
+    const err = await complete({ provider: "openai", apiKey: "sk-x" }, request()).catch((e) => e);
+
+    expect(err).toMatchObject({ status: 402, code: "insufficient_quota" });
+    // 402, not 429: the app routes 429 to a retry path, and retrying is exactly
+    // what cannot help here.
+    expect(err.status).not.toBe(429);
+    expect(err.message).toMatch(/out of credits/i);
+    expect(err.message).not.toMatch(/try again shortly/i);
+  });
+
+  it("still reports a genuine burst limit as retryable", async () => {
+    stubFetch(
+      { error: { message: "Rate limit reached for requests", type: "requests", code: "rate_limit_exceeded" } },
+      { ok: false, status: 429 },
+    );
+    await expect(
+      complete({ provider: "openai", apiKey: "sk-x" }, request()),
+    ).rejects.toMatchObject({ status: 429, code: "rate_limited" });
+  });
+
+  it("recognizes an exhausted balance from prose when there is no type or code", async () => {
+    stubFetch(
+      { error: { message: "You exceeded your current quota, please check your plan and billing details." } },
+      { ok: false, status: 429 },
+    );
+    await expect(
+      complete({ provider: "openai", apiKey: "sk-x" }, request()),
+    ).rejects.toMatchObject({ status: 402, code: "insufficient_quota" });
+  });
 });
 
 describe("complete — Gemini", () => {

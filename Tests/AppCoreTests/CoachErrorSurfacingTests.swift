@@ -20,6 +20,20 @@ final class CoachErrorSurfacingTests: XCTestCase {
                        "OpenAI rejected the request: model \"gpt-5\" may be unavailable to this key.")
     }
 
+    /// The real cause of the reported outage: an OpenAI account with no credits.
+    /// The user can fix this in a minute, but only if they are told what it is.
+    func testOutOfCreditsIsSurfaced() {
+        let data = body("""
+        {"error":"insufficient_quota","message":"Your OpenAI account is out of credits, so it declined the request. Add credits to your OpenAI account and ask again."}
+        """)
+        let message = RemoteCoach.errorMessage(from: data)
+        XCTAssertNotNil(message)
+        XCTAssertTrue(message!.contains("out of credits"))
+        // The two messages this used to be mistaken for.
+        XCTAssertFalse(message!.contains("connection"))
+        XCTAssertFalse(message!.contains("try again shortly"))
+    }
+
     func testExhaustedBudgetIsSurfaced() {
         let data = body("""
         {"error":"token_budget_exhausted","message":"OpenAI used its entire token budget before answering."}
