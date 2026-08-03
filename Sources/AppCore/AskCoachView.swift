@@ -163,6 +163,11 @@ public struct AskCoachView: View {
                 reply = CoachReply(intent: .general,
                     text: "Your AI coach key was rejected. Reconnect it in Settings, then ask again.",
                     mood: .concerned)
+            } catch CoachError.upstream(let message) {
+                // A provider-side configuration fault. Saying "check your
+                // connection" here sent the user chasing a network problem that
+                // did not exist, so state what actually happened.
+                reply = CoachReply(intent: .general, text: message, mood: .concerned)
             } catch {
                 reply = CoachReply(intent: .general,
                     text: "I couldn't reach Buddy just now. Check your connection and try again.",
