@@ -10,7 +10,7 @@ import SwiftUI
 //
 // Both funnel into `RaceEditorView` pre-filled (via `onPrefill`), so the user
 // always confirms and edits before saving — we never auto-save a machine-extracted
-// race. Both reuse the BYO Anthropic key (`CoachKeyStore`) and degrade like
+// race. Both reuse whichever BYO provider key is active (`CoachKeyStore`) and degrade like
 // `AskCoachView`: with no key or on any failure, the sheet offers manual entry.
 
 /// Paste-a-URL import. On success it hands a prefilled `RaceGoal` seed plus the
@@ -286,7 +286,11 @@ private struct RaceImportNoKey: View {
                 Image(systemName: "sparkles").foregroundColor(Palette.brand)
                 Text("Connect an AI coach key first").font(Typography.headline).foregroundColor(Palette.ink)
             }
-            Text("\(action) races from the web uses your Anthropic API key. Connect one in the AI Coach section of Settings, or add a race manually.")
+            // Names every supported provider, not just Anthropic: import and
+            // search go through the same BYO-key router the coach uses, so any
+            // connected provider works. The old copy named Anthropic alone and
+            // read as "your OpenAI key won't work here", which was never true.
+            Text("\(action) races from the web uses your own AI key, from Anthropic, OpenAI, or Gemini. Connect one in the AI Coach section of Settings, or add a race manually.")
                 .font(Typography.callout).foregroundColor(Palette.ink)
                 .fixedSize(horizontal: false, vertical: true)
             Button("Add a race manually", action: onManual)

@@ -19,7 +19,7 @@ struct SettingsActionRowIsolated: View {
                               tint: Palette.brandDeep, destructive: true) {}
             Divider().opacity(0.25)
             // The label alone is what a Link wraps for an external destination.
-            SettingsActionRowLabel(title: "Get an Anthropic API key", icon: "key",
+            SettingsActionRowLabel(title: "Get an API key", icon: "key",
                                    tint: Palette.sky, external: true)
         }
         .padding(20)
