@@ -150,16 +150,49 @@ function parseJsonReply(text: string): LlmResult {
   }
 }
 
-/** Map any provider's HTTP status onto the status the app already handles. */
-function throwForStatus(status: number | undefined, provider: LlmProvider): never {
+/**
+ * Map any provider's HTTP status onto the status the app already handles.
+ *
+ * `detail` carries the provider's own error text when we have it. Without it a
+ * misconfigured model id and a genuine outage both surfaced as "could not be
+ * reached", which is what made a broken OpenAI key impossible to diagnose from
+ * the app: the user saw a network-sounding message for a config bug.
+ */
+function throwForStatus(
+  status: number | undefined,
+  provider: LlmProvider,
+  detail?: string,
+): never {
   const name = provider === "anthropic" ? "Anthropic" : provider === "openai" ? "OpenAI" : "Gemini";
+  const suffix = detail ? ` ${detail}` : "";
   if (status === 401 || status === 403) {
     throw new LlmError(401, "invalid_key", `That API key was rejected by ${name}.`);
   }
   if (status === 429) {
     throw new LlmError(429, "rate_limited", `Your ${name} account is rate limited. Try again shortly.`);
   }
-  throw new LlmError(502, "upstream_error", `${name} could not be reached.`);
+  // 400/404 are OUR bug (unknown model, malformed request), not an outage, and
+  // not something the user can retry past. Say so, and pass the provider's
+  // reason through so the cause is visible without reproducing locally.
+  if (status === 400 || status === 404) {
+    throw new LlmError(
+      502,
+      "model_unavailable",
+      `${name} rejected the request: model "${modelFor(provider)}" may be unavailable to this key.${suffix}`,
+    );
+  }
+  throw new LlmError(502, "upstream_error", `${name} could not be reached.${suffix}`);
+}
+
+/** Best-effort extraction of a provider's error message from its response body. */
+async function errorDetail(response: Response): Promise<string | undefined> {
+  const body = (await response.json().catch(() => null)) as
+    | { error?: { message?: string } | string }
+    | null;
+  if (!body) return undefined;
+  const err = body.error;
+  const message = typeof err === "string" ? err : err?.message;
+  return typeof message === "string" && message ? message.slice(0, 300) : undefined;
 }
 
 // MARK: - Anthropic
@@ -192,6 +225,19 @@ async function completeAnthropic(apiKey: string, request: LlmRequest): Promise<L
 // fetch rather than the SDK: it is one request shape, and every extra dependency
 // is weight in a serverless bundle that cold-starts on each user's key.
 
+/**
+ * Headroom for the reply itself, on top of whatever the model spends thinking.
+ *
+ * `max_completion_tokens` is a budget for reasoning tokens AND visible output.
+ * On a reasoning model the thinking is invoiced against the same allowance, so a
+ * budget sized for a 2-4 sentence answer (1024) can be consumed entirely before
+ * a single visible character is emitted — the call then returns `content: ""`
+ * with `finish_reason: "length"`, which read as "no text" and surfaced to the
+ * user as a connection failure. The reply is small; the thinking is not, so this
+ * is sized for the thinking.
+ */
+const OPENAI_MIN_COMPLETION_TOKENS = 16000;
+
 async function completeOpenAI(apiKey: string, request: LlmRequest): Promise<LlmResult> {
   let response: Response;
   try {
@@ -203,7 +249,7 @@ async function completeOpenAI(apiKey: string, request: LlmRequest): Promise<LlmR
       },
       body: JSON.stringify({
         model: MODELS.openai,
-        max_completion_tokens: request.maxTokens ?? 1024,
+        max_completion_tokens: Math.max(request.maxTokens ?? 1024, OPENAI_MIN_COMPLETION_TOKENS),
         messages: [
           { role: "system", content: request.system },
           ...request.messages.map((t) => ({ role: t.role, content: t.content })),
@@ -218,15 +264,30 @@ async function completeOpenAI(apiKey: string, request: LlmRequest): Promise<LlmR
     throw new LlmError(502, "upstream_error", "OpenAI could not be reached.");
   }
 
-  if (!response.ok) throwForStatus(response.status, "openai");
+  if (!response.ok) throwForStatus(response.status, "openai", await errorDetail(response));
 
   const body = (await response.json().catch(() => null)) as {
-    choices?: Array<{ message?: { content?: string | null; refusal?: string | null } }>;
+    choices?: Array<{
+      finish_reason?: string;
+      message?: { content?: string | null; refusal?: string | null };
+    }>;
   } | null;
-  const choice = body?.choices?.[0]?.message;
+  const first = body?.choices?.[0];
+  const choice = first?.message;
   // A strict-schema refusal comes back in its own field, with content null.
   if (choice?.refusal) return { kind: "refusal" };
-  if (typeof choice?.content !== "string" || !choice.content) return { kind: "empty" };
+  if (typeof choice?.content !== "string" || !choice.content) {
+    // Empty output because the budget ran out is a fixable configuration fault,
+    // not an upstream outage — name it so it can't hide behind "no text" again.
+    if (first?.finish_reason === "length") {
+      throw new LlmError(
+        502,
+        "token_budget_exhausted",
+        `OpenAI used its entire token budget before answering (model "${MODELS.openai}"). Raise max_completion_tokens.`,
+      );
+    }
+    return { kind: "empty" };
+  }
   return parseJsonReply(choice.content);
 }
 
@@ -274,7 +335,7 @@ async function completeGemini(apiKey: string, request: LlmRequest): Promise<LlmR
     throw new LlmError(502, "upstream_error", "Gemini could not be reached.");
   }
 
-  if (!response.ok) throwForStatus(response.status, "gemini");
+  if (!response.ok) throwForStatus(response.status, "gemini", await errorDetail(response));
 
   const body = (await response.json().catch(() => null)) as {
     candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }>;

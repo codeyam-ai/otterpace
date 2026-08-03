@@ -201,6 +201,65 @@ describe("complete — OpenAI", () => {
     }));
     await expect(complete({ provider: "openai", apiKey: "sk-x" }, request())).rejects.toBeInstanceOf(LlmError);
   });
+
+  // Regression: a connected OpenAI key produced "I couldn't reach Buddy just
+  // now. Check your connection and try again." The key was fine and the network
+  // was fine — the reply budget was being consumed by reasoning tokens, and the
+  // resulting empty completion was indistinguishable from an outage.
+
+  it("gives the reply real headroom beyond the reasoning budget", async () => {
+    const fetchMock = stubFetch({ choices: [{ message: { content: '{"text":"Rest day."}' } }] });
+    await complete({ provider: "openai", apiKey: "sk-openai-1" }, request());
+    const sent = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    // `max_completion_tokens` covers reasoning AND visible output, so a budget
+    // sized for a 2-4 sentence answer can be spent before any text is emitted.
+    expect(sent.max_completion_tokens).toBeGreaterThanOrEqual(16000);
+    expect(sent.max_tokens).toBeUndefined();
+  });
+
+  it("reports an exhausted token budget as its own fault, not an outage", async () => {
+    stubFetch({ choices: [{ finish_reason: "length", message: { content: "" } }] });
+    await expect(
+      complete({ provider: "openai", apiKey: "sk-x" }, request()),
+    ).rejects.toMatchObject({ status: 502, code: "token_budget_exhausted" });
+  });
+
+  it("still reports a plain empty completion as empty", async () => {
+    stubFetch({ choices: [{ finish_reason: "stop", message: { content: "" } }] });
+    expect(await complete({ provider: "openai", apiKey: "sk-x" }, request())).toEqual({
+      kind: "empty",
+    });
+  });
+
+  it("names an unavailable model instead of claiming the provider is unreachable", async () => {
+    stubFetch(
+      { error: { message: "The model `gpt-5` does not exist or you do not have access to it." } },
+      { ok: false, status: 404 },
+    );
+    const err = await complete({ provider: "openai", apiKey: "sk-x" }, request()).catch((e) => e);
+    expect(err).toMatchObject({ status: 502, code: "model_unavailable" });
+    // The provider's own reason must survive, or this is undiagnosable from the app.
+    expect(err.message).toMatch(/does not exist or you do not have access/);
+    expect(err.message).not.toMatch(/could not be reached/);
+  });
+
+  it("passes the provider's reason through on a 400", async () => {
+    stubFetch(
+      { error: { message: "Unsupported parameter: 'max_tokens'." } },
+      { ok: false, status: 400 },
+    );
+    await expect(
+      complete({ provider: "openai", apiKey: "sk-x" }, request()),
+    ).rejects.toThrow(/Unsupported parameter/);
+  });
+
+  // A genuine outage must still read as one, so the new codes stay meaningful.
+  it("still reports a 500 as an unreachable provider", async () => {
+    stubFetch({}, { ok: false, status: 500 });
+    await expect(
+      complete({ provider: "openai", apiKey: "sk-x" }, request()),
+    ).rejects.toMatchObject({ code: "upstream_error" });
+  });
 });
 
 describe("complete — Gemini", () => {
