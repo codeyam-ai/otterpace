@@ -446,6 +446,13 @@
     "testFile": "Tests/AppCoreTests/CoachEngineTests.swift"
   },
   {
+    "conformsToView": false,
+    "description": "Buddy's scripted opening in the Coach tab: who Buddy is, what data it can actually see, what it cannot see, the not-a-doctor boundary, and an invitation to ask. App-authored copy that never claims to be a generated reply, which is what makes it honest to render in the locked (no key) state too, preserving the rule AskCoachLockedState already follows. The data turn adapts to a day-one context so it never promises run analysis for runs that do not exist yet, and the closing turn names the connect step when no key is connected. Pure and deterministic, like CoachEngine.",
+    "filePath": "Sources/AppCore/Coach/CoachTutorial.swift",
+    "name": "CoachTutorial",
+    "testFile": "Tests/AppCoreTests/CoachTutorialTests.swift"
+  },
+  {
     "description": "The day-one empty state shown before Apple Health is connected: Buddy waving, a warm explainer, the connect call-to-action, and a privacy reassurance.",
     "filePath": "Sources/AppCore/ConnectHero.swift",
     "name": "ConnectHero",
@@ -611,6 +618,50 @@
     "name": "HeatmapRangePicker",
     "untestabilityReason": {
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Scenario hook naming which hint renders already expanded at launch, read from the rbOpenHint seed. A hint is a tap-to-reveal disclosure and a simulator capture cannot tap, so this is the same trick rbShowHistory/rbShowJournalEditor use for the overlays: seed the open state so the first frame renders it complete rather than mid-animation.",
+    "filePath": "Sources/AppCore/HintCopy.swift",
+    "name": "HintSeed",
+    "testFile": "Tests/AppCoreTests/HintCopyTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "The set of Today-dashboard elements that can explain themselves, each carrying a short title and a plain-language body. Pure and SwiftUI-free so the copy is unit-testable without rendering a view, and so one table owns every explanation instead of scattering strings through the section components. Covers buddyMood, stepRing, activeMinutes, distance, sinceMoving, coachCard, checkIn and weeklyLoad. Copy answers the literal questions a first-time user asks (what does 'Ready' refer to, why is active-min zero, what is 'since moving' measured from) and follows the house no-em-dash convention.",
+    "filePath": "Sources/AppCore/HintCopy.swift",
+    "name": "HintTopic",
+    "testFile": "Tests/AppCoreTests/HintCopyTests.swift"
+  },
+  {
+    "conformsToView": true,
+    "description": "Self-contained tap-to-reveal hint: an info button, an optional lead-in caption, and the explanatory text revealed beneath it. Deliberately NOT a popover or .help() (the macOS 12 test build has no .help() and popovers need anchor math) so it compiles everywhere, captures deterministically in a scenario, and reflows at accessibility text sizes. Seeds its expanded state from HintSeed in init so a launch-seeded capture renders the revealed caption on the first frame.",
+    "filePath": "Sources/AppCore/InfoHint.swift",
+    "name": "InfoHint",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the today-hint-* application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "The info affordance on its own, for hosts that place the revealed caption themselves (the stat tiles). Pads a small glyph out to a comfortable tap target without moving it in the layout, and carries an 'Explain <topic>' accessibility label plus a hint describing what tapping does.",
+    "filePath": "Sources/AppCore/InfoHint.swift",
+    "name": "InfoHintButton",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the today-hint-* application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "The revealed explanation itself, rendered in the host's own layout so it never overlaps neighbouring cards and needs no anchor. Speaks its topic and body as one combined accessibility label.",
+    "filePath": "Sources/AppCore/InfoHint.swift",
+    "name": "InfoHintCaption",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the today-hint-* application scenarios.",
       "kind": "no-isolation-harness"
     }
   },
@@ -951,6 +1002,30 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "One Ask Coach ice-breaker: the question text plus the CoachIntent it is written to reach. Pairing the two is what lets a test assert the round-trip, so a suggestion can never quietly drift into the wrong intent as the classifier's keywords evolve.",
+    "filePath": "Sources/AppCore/StarterQuestions.swift",
+    "name": "StarterQuestion",
+    "testFile": "Tests/AppCoreTests/StarterQuestionsTests.swift"
+  },
+  {
+    "conformsToView": true,
+    "description": "The ice-breaker chip row shared by the Ask Coach empty and locked states. With an onPick handler the chips are tappable and send the question through the normal submit path; without one they render as inert examples, which is how the locked state teaches a good question without implying the app will answer it before a key is connected.",
+    "filePath": "Sources/AppCore/StarterQuestionChips.swift",
+    "name": "StarterQuestionChips",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the ask-coach-starter-* and ask-coach-tutorial-* application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Derives the Ask Coach ice-breaker chips from the day's TodayState. A blank text field tells a new user nothing about what Buddy can answer, so these show the shape of a good question. Run-or-rest and hit-10K are always offered; post-run reflection, race planning and mileage-pace questions appear only when the data behind them exists, because offering a question the app cannot answer well is the same first-run confusion this feature exists to fix. De-duplicated and capped at maxCount so the row never dominates the screen. Every suggestion is asserted to classify through CoachIntent.classify to the intent it declares, and never to injuryPain.",
+    "filePath": "Sources/AppCore/StarterQuestions.swift",
+    "name": "StarterQuestions",
+    "testFile": "Tests/AppCoreTests/StarterQuestionsTests.swift"
+  },
+  {
     "description": "A single labeled metric tile with an icon, value, and caption.",
     "filePath": "Sources/AppCore/StatTile.swift",
     "name": "StatTile",
@@ -1048,6 +1123,40 @@
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
       "kind": "no-isolation-harness"
     }
+  },
+  {
+    "conformsToView": true,
+    "description": "The spotlight tour itself: a scrim, a highlight ring around the anchored section, and a themed callout naming it, with step dots, a Next/Got it primary and a Skip tour secondary. Positions the callout below the highlighted element when there is room and above it otherwise, and falls back to a centered card when no anchor has resolved, so a launch-seeded capture is never blank.",
+    "filePath": "Sources/AppCore/Tour/TodayTourOverlay.swift",
+    "name": "TodayTourOverlay",
+    "untestabilityReason": {
+      "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the tour-step-* application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Preference key collecting the bounds of each tour-anchored Today section, keyed by TourStep anchor id, so the callout can position itself near the element it describes. Paired with the tourAnchor(_:) view modifier that tags a section.",
+    "filePath": "Sources/AppCore/Tour/TodayTourOverlay.swift",
+    "name": "TourAnchorKey",
+    "untestabilityReason": {
+      "justification": "SwiftUI PreferenceKey exercised only through the rendered Today surface; shown via the tour-step-* application scenarios.",
+      "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Launch gating and persistence for the Today spotlight tour, modeled directly on OnboardingState: UserDefaults-backed with injectable defaults so the decision is pure and unit-testable. shouldShow is forced by rbStartScreen=tour, suppressed once seen, suppressed before Health is connected (the tour points at cards that are not on screen behind the ConnectHero), and suppressed under a scenario seed unless opted in. startStep reads and clamps rbTourStep so a capture can target any single step. clearSeen lets Settings replay the tour.",
+    "filePath": "Sources/AppCore/Tour/TourState.swift",
+    "name": "TourState",
+    "testFile": "Tests/AppCoreTests/TourStateTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "The ordered steps of the Today spotlight tour as pure data: buddy, stats, coachCard, checkIn, history, each with a title, body and anchor id. Mirrors the HintCopy style so the copy is testable without a view. Deliberately NOT modeled as onboarding steps, because OnboardingScenarioIndexTests pins every rbOnboardingPage seed against the onboarding order and inserting a step there would silently shift every later scenario onto the wrong screen.",
+    "filePath": "Sources/AppCore/Tour/TourStep.swift",
+    "name": "TourStep",
+    "testFile": "Tests/AppCoreTests/TourStateTests.swift"
   },
   {
     "description": "Colored pill describing the weeks training-load trend, with distinct colors for spiking, recovering, building, and steady, and a neutral Baseline label for the insufficient case when there is not yet enough history to judge.",
@@ -1370,6 +1479,13 @@
     "testFile": "test/api/session-lib.test.ts"
   },
   {
+    "conformsToView": false,
+    "description": "Where the user actually adds credits, per provider. Carried in the out-of-credits message so 'add credits' names a destination instead of sending the user hunting; the iOS ChatBubble lifts it into a tappable link.",
+    "filePath": "api/_lib/llm.ts",
+    "name": "billingURL",
+    "testFile": "test/api/llm.test.ts"
+  },
+  {
     "description": "Build the APNs alert payload (title/body + sound nested under aps).",
     "filePath": "api/_lib/apns.ts",
     "name": "buildAps",
@@ -1539,6 +1655,13 @@
     "filePath": "api/_lib/strava.ts",
     "name": "env",
     "testFile": "test/api/strava.test.ts"
+  },
+  {
+    "conformsToView": false,
+    "description": "Best-effort extraction of a provider's own error message, type and code from its response body, normalized to the fields the router routes on. Without it a misconfigured model id and a genuine outage both surfaced as 'could not be reached', which is what made a broken provider key impossible to diagnose from the app.",
+    "filePath": "api/_lib/llm.ts",
+    "name": "errorDetail",
+    "testFile": "test/api/llm.test.ts"
   },
   {
     "description": "Exchanges a Strava OAuth authorization code for tokens using the client secret, throwing on failure.",
@@ -1719,6 +1842,13 @@
     "testFile": "test/api/nudge.test.ts"
   },
   {
+    "conformsToView": false,
+    "description": "Whether a provider error means the account has no credits left, as opposed to a transient burst limit. These are opposite problems that can wear the same status code: OpenAI reports an empty balance as 429 (the burst-limit status) with type insufficient_quota, while Anthropic reports it as 400 with a plain invalid_request_error. Matches the provider's own type/code first, then falls back to prose ('no credits remaining', 'credit balance is too low', 'quota exceeded') for providers that classify it only in the message. Telling someone with an empty balance to 'try again shortly' is advice that can never work, which is what this exists to prevent.",
+    "filePath": "api/_lib/llm.ts",
+    "name": "isQuotaExhausted",
+    "testFile": "test/api/llm.test.ts"
+  },
+  {
     "description": "SSRF guard for the race-import URL. Accepts only http/https and rejects hosts pointing at the local network: localhost, .local, loopback, and private/link-local IPv4 ranges including the cloud metadata address 169.254.169.254. Returns the parsed URL when safe, or null to reject.",
     "filePath": "api/race-import.ts",
     "name": "isSafePublicUrl",
@@ -1810,6 +1940,13 @@
       "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
       "kind": "platform-glue"
     }
+  },
+  {
+    "conformsToView": false,
+    "description": "Turns bare provider URLs in coach prose into tappable links. Coach copy is plain text (the model returns a string, and app-authored error copy is a literal), so a billing link would otherwise render as something the user has to retype. Matches only the known provider hosts, upgrades a bare host to an absolute https URL, and applies edits back-to-front so earlier ranges stay valid. Returns the plain string unchanged when nothing matches, so no message can be lost here.",
+    "filePath": "Sources/AppCore/ChatBubble.swift",
+    "name": "linkified",
+    "testFile": "Tests/AppCoreTests/CoachErrorSurfacingTests.swift"
   },
   {
     "description": "Every push row with at least one token and a known last-movement time — the cron's scan set.",
