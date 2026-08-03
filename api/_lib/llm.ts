@@ -168,17 +168,23 @@ function throwForStatus(
   if (status === 401 || status === 403) {
     throw new LlmError(401, "invalid_key", `That API key was rejected by ${name}.`);
   }
+
+  // Checked BEFORE any status branch, because providers disagree on which status
+  // an empty balance deserves: OpenAI says 429, Anthropic says 400. Gating this
+  // on 429 alone sent an out-of-credits Anthropic user to the "unknown model"
+  // message, which is both wrong and unactionable.
+  //
+  // 402 (not 429) so the app parses the body instead of routing it to the retry
+  // path: "try again shortly" cannot work when the account is dry.
+  if (isQuotaExhausted(detail)) {
+    throw new LlmError(
+      402,
+      "insufficient_quota",
+      `Your ${name} account is out of credits, so it turned down my request. Add credits at ${billingURL(provider)} and ask me again.`,
+    );
+  }
+
   if (status === 429) {
-    // An empty balance is NOT a transient limit and never clears on its own.
-    // 402 (not 429) so the app parses the body instead of routing it to the
-    // retry path — "try again shortly" is unactionable when the account is dry.
-    if (isQuotaExhausted(detail)) {
-      throw new LlmError(
-        402,
-        "insufficient_quota",
-        `Your ${name} account is out of credits, so it declined the request. Add credits to your ${name} account and ask again.`,
-      );
-    }
     throw new LlmError(429, "rate_limited", `Your ${name} account is rate limited. Try again shortly.`);
   }
   // 400/404 are OUR bug (unknown model, malformed request), not an outage, and
@@ -231,9 +237,26 @@ function isQuotaExhausted(detail?: ProviderError): boolean {
   const needles = ["insufficient_quota", "credit_balance_exhausted", "billing_hard_limit_reached"];
   const haystack = `${detail?.type ?? ""} ${detail?.code ?? ""}`.toLowerCase();
   if (needles.some((n) => haystack.includes(n))) return true;
-  // Gemini/others don't use OpenAI's type/code vocabulary; fall back to prose.
+  // Only OpenAI puts this in `type`/`code`. Anthropic reports it as a plain
+  // invalid_request_error and Gemini as a quota message, so the prose is the
+  // only signal for them.
   const message = (detail?.message ?? "").toLowerCase();
-  return message.includes("no credits remaining") || message.includes("exceeded your current quota");
+  return [
+    "no credits remaining",
+    "exceeded your current quota",
+    "credit balance is too low",   // Anthropic
+    "purchase credits",            // Anthropic's remedy sentence
+    "quota exceeded",              // Gemini
+  ].some((n) => message.includes(n));
+}
+
+/** Where the user actually adds credits, per provider. */
+function billingURL(provider: LlmProvider): string {
+  switch (provider) {
+    case "anthropic": return "console.anthropic.com/settings/billing";
+    case "openai":    return "platform.openai.com/settings/organization/billing";
+    case "gemini":    return "aistudio.google.com/app/plan_information";
+  }
 }
 
 // MARK: - Anthropic

@@ -150,6 +150,51 @@ describe("complete — Anthropic", () => {
   // in coach.test.ts ("maps a 401 to invalid_key" / "maps a 429 to
   // rate_limited"), which exercises this same `throwForStatus` path. Asserting it
   // again by calling `complete` directly added no coverage.
+
+});
+
+describe("complete — quota exhaustion (Anthropic status shape)", () => {
+  beforeEach(() => {
+    createMock.mockReset();
+  });
+
+  // Regression: providers disagree on which status an empty balance deserves.
+  // OpenAI says 429; Anthropic says 400 with a plain invalid_request_error. When
+  // the quota check lived inside the 429 branch, an out-of-credits Anthropic user
+  // was told the MODEL was unavailable — wrong, and impossible to act on.
+  it("reports an exhausted Anthropic balance as out of credits, not an unknown model", async () => {
+    const err = Object.assign(new Error("400"), {
+      status: 400,
+      error: {
+        error: {
+          type: "invalid_request_error",
+          message:
+            "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.",
+        },
+      },
+    });
+    createMock.mockImplementation(async () => { throw err; });
+
+    const thrown = await complete({ provider: "anthropic", apiKey: "sk-ant-x" }, request()).catch((e) => e);
+    expect(thrown).toMatchObject({ status: 402, code: "insufficient_quota" });
+    expect(thrown.message).toMatch(/out of credits/i);
+    expect(thrown.message).toMatch(/console\.anthropic\.com/);
+    expect(thrown.message).not.toMatch(/unavailable to this key/);
+  });
+
+  // A real malformed request must still read as one, so the broadened quota
+  // matching cannot swallow genuine 400s.
+  it("still reports a non-quota 400 as a model/request problem", async () => {
+    createMock.mockImplementation(async () => {
+      throw Object.assign(new Error("400"), {
+        status: 400,
+        error: { error: { type: "invalid_request_error", message: "max_tokens is too large" } },
+      });
+    });
+    await expect(
+      complete({ provider: "anthropic", apiKey: "sk-ant-x" }, request()),
+    ).rejects.toMatchObject({ code: "model_unavailable" });
+  });
 });
 
 describe("complete — OpenAI", () => {
@@ -298,6 +343,13 @@ describe("complete — OpenAI", () => {
     await expect(
       complete({ provider: "openai", apiKey: "sk-x" }, request()),
     ).rejects.toMatchObject({ status: 429, code: "rate_limited" });
+  });
+
+  it("tells the user where to add credits", async () => {
+    stubFetch(NO_CREDITS, { ok: false, status: 429 });
+    const err = await complete({ provider: "openai", apiKey: "sk-x" }, request()).catch((e) => e);
+    // "Add credits" without a destination makes the user go hunting.
+    expect(err.message).toMatch(/platform\.openai\.com/);
   });
 
   it("recognizes an exhausted balance from prose when there is no type or code", async () => {

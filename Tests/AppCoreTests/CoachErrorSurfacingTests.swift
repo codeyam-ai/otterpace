@@ -21,17 +21,51 @@ final class CoachErrorSurfacingTests: XCTestCase {
     }
 
     /// The real cause of the reported outage: an OpenAI account with no credits.
-    /// The user can fix this in a minute, but only if they are told what it is.
+    /// The user can fix this in a minute, but only if they are told what it is
+    /// AND where to go.
     func testOutOfCreditsIsSurfaced() {
         let data = body("""
-        {"error":"insufficient_quota","message":"Your OpenAI account is out of credits, so it declined the request. Add credits to your OpenAI account and ask again."}
+        {"error":"insufficient_quota","message":"Your OpenAI account is out of credits, so it turned down my request. Add credits at platform.openai.com/settings/organization/billing and ask me again."}
         """)
         let message = RemoteCoach.errorMessage(from: data)
         XCTAssertNotNil(message)
         XCTAssertTrue(message!.contains("out of credits"))
+        XCTAssertTrue(message!.contains("platform.openai.com"), "must say where to add credits")
         // The two messages this used to be mistaken for.
         XCTAssertFalse(message!.contains("connection"))
         XCTAssertFalse(message!.contains("try again shortly"))
+    }
+
+    /// The message renders as a chat bubble from Buddy, so the billing URL has to
+    /// be tappable — a link the user must retype is barely better than none.
+    func testBillingLinkIsTappableInTheBubble() {
+        let text = "Your OpenAI account is out of credits, so it turned down my request. Add credits at platform.openai.com/settings/organization/billing and ask me again."
+        let attributed = ChatBubble.linkified(text)
+
+        let links = attributed.runs.compactMap { $0.link }
+        XCTAssertEqual(links.count, 1, "the billing URL should become exactly one link")
+        XCTAssertEqual(links.first?.scheme, "https", "a bare host must be upgraded to an absolute URL")
+        XCTAssertTrue(links.first?.absoluteString.contains("platform.openai.com") == true)
+
+        // The prose must survive untouched.
+        XCTAssertEqual(String(attributed.characters), text)
+    }
+
+    func testOrdinaryCoachReplyGetsNoLinks() {
+        let plain = "You ran yesterday, so an easy walk today keeps things moving without adding stress."
+        let attributed = ChatBubble.linkified(plain)
+        XCTAssertTrue(attributed.runs.allSatisfy { $0.link == nil })
+        XCTAssertEqual(String(attributed.characters), plain)
+    }
+
+    func testAnthropicAndGeminiBillingLinksAlsoResolve() {
+        for host in ["console.anthropic.com/settings/billing",
+                     "aistudio.google.com/app/plan_information"] {
+            let attributed = ChatBubble.linkified("Add credits at \(host) and ask me again.")
+            let links = attributed.runs.compactMap { $0.link }
+            XCTAssertEqual(links.count, 1, "\(host) should linkify")
+            XCTAssertTrue(links.first?.absoluteString.contains(host) == true)
+        }
     }
 
     func testExhaustedBudgetIsSurfaced() {
