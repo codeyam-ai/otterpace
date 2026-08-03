@@ -78,9 +78,22 @@ public struct AskCoachView: View {
                                onWeeklyReview: { withAnimation(Motion.overlay) { showReview = true } })
                 Divider().opacity(0.4)
                 if !chatUnlocked {
-                    AskCoachLockedState(onAddKey: onOpenSettings)
+                    AskCoachLockedState(context: model.today, onAddKey: onOpenSettings)
                 } else if messages.isEmpty {
-                    AskCoachEmptyState()
+                    // A tapped starter question goes through `submit` exactly like
+                    // a typed one: real coach when a key is connected, deterministic
+                    // `CoachEngine` fallback otherwise. No separate answer path.
+                    AskCoachEmptyState(
+                        context: model.today,
+                        connected: chatUnlocked,
+                        onPick: { question in
+                            Analytics.shared.capture(
+                                "starter_question_tapped",
+                                ["intent": CoachIntent.classify(question).rawValue]
+                            )
+                            submit(question)
+                        }
+                    )
                 } else {
                     ChatThread(messages: messages)
                 }

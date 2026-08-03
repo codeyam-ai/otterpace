@@ -28,6 +28,12 @@ public struct TodayDashboard: View {
     // scenario would otherwise hide it.
     private let forceRacePrompt = UserDefaults.standard.bool(forKey: "rbShowRacePrompt")
 
+    // The spotlight tour's current step, or nil when the tour isn't running.
+    // Seeded in `init` (like `showHistory` / `showJournalEditor`) so a
+    // launch-seeded capture renders the tour complete on the very first frame
+    // rather than mid-transition.
+    @State private var tourStep: Int?
+
     public init(model: OtterpaceModel, onAskCoach: @escaping () -> Void = {}, onSettings: @escaping () -> Void = {}) {
         self.model = model
         self.onAskCoach = onAskCoach
@@ -36,6 +42,12 @@ public struct TodayDashboard: View {
         _racePromptDismissed = State(initialValue: RacePromptState.isDismissed())
         _showJournalEditor = State(initialValue: UserDefaults.standard.bool(forKey: "rbShowJournalEditor"))
         _journalEditorIsPostRun = State(initialValue: UserDefaults.standard.bool(forKey: "rbJournalEditorPostRun"))
+
+        let showTour = TourState.shouldShow(
+            startScreen: UserDefaults.standard.string(forKey: "rbStartScreen") ?? "",
+            healthConnected: model.today.healthKitConnected
+        )
+        _tourStep = State(initialValue: showTour ? TourState.startStep() : nil)
     }
 
     // The "today" used for race math: the seeded/observed dashboard date when set
@@ -66,8 +78,12 @@ public struct TodayDashboard: View {
         return Journal.entry(forWorkoutOn: workout.date, in: model.today.journal)
     }
 
+    // Dismissal is a snooze now, not a self-destruct, and the banner stays quiet
+    // through the first session — see `RacePromptState.shouldShow`.
     private var showRacePrompt: Bool {
-        forceRacePrompt || (!RaceGoal.hasUpcoming(in: model.today.races, asOf: todayISO) && !racePromptDismissed)
+        forceRacePrompt
+            || (!racePromptDismissed
+                && RacePromptState.shouldShow(asOf: todayISO, races: model.today.races))
     }
 
     public var body: some View {
@@ -76,13 +92,18 @@ public struct TodayDashboard: View {
                 VStack(spacing: Layout.cardSpacing) {
                     TodayHeader(date: model.today.date, onSettings: onSettings)
                     BuddySummaryCard(model: model)
+                        .tourAnchor(.buddy)
                     StatsRow(today: model.today)
+                        .tourAnchor(.stats)
                     if showRacePrompt {
                         RacePromptBanner(
                             onTap: onSettings,
                             onDismiss: {
-                                RacePromptState.markDismissed()
-                                Analytics.shared.capture("race_prompt_dismissed")
+                                RacePromptState.snooze(asOf: todayISO)
+                                Analytics.shared.capture(
+                                    "race_prompt_snoozed",
+                                    ["count": "\(RacePromptState.dismissCount())"]
+                                )
                                 withAnimation(Motion.overlay) { racePromptDismissed = true }
                             }
                         )
@@ -91,6 +112,7 @@ public struct TodayDashboard: View {
                     // compute the honest nudge from the day's data (no key needed).
                     CoachCard(coach: model.today.coach ?? CoachEngine.dailyNudge(for: model.today),
                               onAskCoach: onAskCoach)
+                        .tourAnchor(.coachCard)
                     CheckInCard(
                         entry: todayCheckIn,
                         onQuickFeel: { feel in
@@ -104,6 +126,7 @@ public struct TodayDashboard: View {
                             withAnimation(Motion.overlay) { showJournalEditor = true }
                         }
                     )
+                    .tourAnchor(.checkIn)
                     if let workout = model.today.latestWorkout {
                         WorkoutCard(
                             workout: workout,
@@ -118,6 +141,7 @@ public struct TodayDashboard: View {
                         WeeklyLoadCard(load: load)
                     }
                     ActivityHistoryButton(onTap: { withAnimation(Motion.overlay) { showHistory = true } })
+                        .tourAnchor(.history)
                 }
                 .screenScrollContent()
             }
@@ -146,5 +170,47 @@ public struct TodayDashboard: View {
                 .zIndex(2)
             }
         }
+        // The tour sits above every other overlay, and reads the anchor bounds
+        // collected from the tagged sections. When no anchor has resolved yet the
+        // callout centers itself, so a launch-seeded capture is never blank.
+        .overlayPreferenceValue(TourAnchorKey.self) { anchors in
+            GeometryReader { proxy in
+                if let index = tourStep, index < TourStep.allCases.count {
+                    let step = TourStep.allCases[index]
+                    TodayTourOverlay(
+                        step: step,
+                        index: index,
+                        highlight: anchors[step.anchorID].map { proxy[$0] },
+                        onNext: { advanceTour(from: index) },
+                        onSkip: { endTour(step: step, completed: false) }
+                    )
+                }
+            }
+        }
+        .onAppear {
+            if let index = tourStep, index < TourStep.allCases.count {
+                Analytics.shared.capture("tour_started")
+                Analytics.shared.capture("tour_step_viewed", ["step": TourStep.allCases[index].rawValue])
+            }
+        }
+    }
+
+    // MARK: Tour
+
+    private func advanceTour(from index: Int) {
+        let next = index + 1
+        guard next < TourStep.allCases.count else {
+            endTour(step: TourStep.allCases[index], completed: true)
+            return
+        }
+        Analytics.shared.capture("tour_step_viewed", ["step": TourStep.allCases[next].rawValue])
+        withAnimation(Motion.overlay) { tourStep = next }
+    }
+
+    private func endTour(step: TourStep, completed: Bool) {
+        TourState.markSeen()
+        Analytics.shared.capture(completed ? "tour_completed" : "tour_skipped",
+                                 ["step": step.rawValue])
+        withAnimation(Motion.overlay) { tourStep = nil }
     }
 }

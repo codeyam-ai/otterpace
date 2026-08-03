@@ -153,4 +153,66 @@ final class FormattersTests: XCTestCase {
         let s = weekRollupSpoken(miles: 14.7, runCount: 3, restDays: 3, daysElapsed: 7)
         XCTAssertEqual(s, "14.7 miles, 3 runs, 3 rest days")
     }
+
+    // MARK: - Honest empty state
+    //
+    // The distinction that matters: "no data recorded" is not the same as "you did
+    // zero". A fresh install must not be told it walked zero miles; a real
+    // zero-step morning must still read 0, because that IS the day's data.
+
+    func testHasDayDataIsFalseOnlyWhenNothingWasObserved() {
+        XCTAssertFalse(hasDayData(steps: 0, activeMinutes: 0, distanceMiles: 0,
+                                  minutesSinceLastMovement: 0))
+        XCTAssertTrue(hasDayData(steps: 120, activeMinutes: 0, distanceMiles: 0))
+        XCTAssertTrue(hasDayData(steps: 0, activeMinutes: 4, distanceMiles: 0))
+        XCTAssertTrue(hasDayData(steps: 0, activeMinutes: 0, distanceMiles: 0.2))
+    }
+
+    // A movement timestamp is evidence Health observed the user, even when every
+    // metric is still zero. This is what keeps a real zero-step morning honest.
+    func testMovementTimestampCountsAsObservation() {
+        XCTAssertTrue(hasDayData(steps: 0, activeMinutes: 0, distanceMiles: 0,
+                                 minutesSinceLastMovement: 8))
+    }
+
+    func testStatValueDashesOnlyWithNoData() {
+        XCTAssertEqual(statValue("54", hasData: true), "54")
+        XCTAssertEqual(statValue("54", hasData: false), "—")
+    }
+
+    // The fresh-install bug this fixes: movementLabel(0) renders the
+    // cheerful-but-wrong "now" when nothing has ever been recorded.
+    func testMovementDisplayDoesNotClaimYouJustMovedOnAFreshInstall() {
+        XCTAssertEqual(movementLabel(0), "now")                             // the raw helper, unchanged
+        XCTAssertEqual(movementDisplay(minutes: 0, hasData: false), "—")    // but not what we show
+    }
+
+    func testMovementDisplayDelegatesWhenThereIsData() {
+        XCTAssertEqual(movementDisplay(minutes: 0, hasData: true), "now")
+        XCTAssertEqual(movementDisplay(minutes: 18, hasData: true), "18m")
+        XCTAssertEqual(movementDisplay(minutes: 92, hasData: true), "1h32m")
+    }
+
+    // A genuine zero-step morning is data, not the absence of it. These are the
+    // exact seeds of the `today-zero-step-morning` scenario, so the honest-empty
+    // change cannot silently swallow a true zero.
+    func testGenuineZeroStepMorningStillReadsZero() {
+        let observed = hasDayData(steps: 0, activeMinutes: 0, distanceMiles: 0.0,
+                                  minutesSinceLastMovement: 8)
+        XCTAssertTrue(observed, "a real zero-step morning has been observed by Health")
+
+        XCTAssertEqual(statValue("0", hasData: observed), "0")
+        XCTAssertEqual(statValue("0.0", hasData: observed), "0.0")
+        XCTAssertEqual(movementDisplay(minutes: 8, hasData: observed), "8m")
+    }
+
+    // The fresh install: nothing recorded at all, so nothing to report.
+    func testFreshInstallShowsDashesNotZeroes() {
+        let observed = hasDayData(steps: 0, activeMinutes: 0, distanceMiles: 0,
+                                  minutesSinceLastMovement: 0)
+        XCTAssertFalse(observed)
+
+        XCTAssertEqual(statValue("0", hasData: observed), "—")
+        XCTAssertEqual(movementDisplay(minutes: 0, hasData: observed), "—")
+    }
 }

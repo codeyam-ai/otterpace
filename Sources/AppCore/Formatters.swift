@@ -25,6 +25,43 @@ func movementLabel(_ minutes: Int) -> String {
     return m == 0 ? "\(h)h" : "\(h)h\(m)m"
 }
 
+// MARK: - Honest empty state
+//
+// A fresh install has no Health data at all, and rendering that as `0` reads like
+// a judgment ("you did nothing") rather than the truth ("nothing recorded yet").
+// These helpers draw the line between "no data" and a genuine zero: a real
+// zero-step morning must keep reading `0`, because that IS the day's data.
+
+/// The placeholder shown when the day genuinely has no recorded data.
+let noDataDash = "—"
+
+/// Whether Health has recorded anything at all for the day.
+///
+/// `minutesSinceLastMovement` is load-bearing, not decorative: a genuine
+/// zero-step morning seeds 0 steps, 0 active minutes and 0 miles, yet Health HAS
+/// observed the user (it knows they moved N minutes ago). Judging on the three
+/// metrics alone would collapse that real morning into the same bucket as a fresh
+/// install and swallow a true zero behind a dash. A never-observed install has no
+/// movement timestamp at all, which is the difference this reads.
+func hasDayData(steps: Int, activeMinutes: Int, distanceMiles: Double,
+                minutesSinceLastMovement: Int = 0) -> Bool {
+    steps > 0 || activeMinutes > 0 || distanceMiles > 0 || minutesSinceLastMovement > 0
+}
+
+/// A stat tile's value: the real value when the day has data, else `—`.
+/// Note this keys off the WHOLE day, not the individual metric, so a day with
+/// 4,000 steps and 0 active minutes still honestly shows `0` active minutes.
+func statValue(_ value: String, hasData: Bool) -> String {
+    hasData ? value : noDataDash
+}
+
+/// "Time since you moved", but honest on a fresh install. `movementLabel(0)`
+/// renders the cheerful-but-wrong "now" when nothing has ever been recorded;
+/// with no data to measure from there is no answer, so show `—` instead.
+func movementDisplay(minutes: Int, hasData: Bool) -> String {
+    hasData ? movementLabel(minutes) : noDataDash
+}
+
 /// Caption shown under the step count in the goal ring. Stays warm and
 /// celebratory once the goal is met — with extra cheer when it's been passed —
 /// and otherwise frames the goal the user is working toward.
