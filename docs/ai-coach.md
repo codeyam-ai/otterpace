@@ -5,8 +5,18 @@ The Ask Coach chat has two coaches behind one `CoachReply` shape:
 - **`CoachEngine`** (on-device, deterministic) — the always-on default. Used
   offline, when no key is connected, on any backend failure, and in every
   CodeYam scenario/seed so captures stay deterministic and network-free.
-- **`RemoteCoach`** (real Claude) — used for interactive sends when the user has
-  connected their own Anthropic key in **Settings → AI Coach**.
+- **`RemoteCoach`** (a real LLM) — used for interactive sends when the user has
+  connected their own API key from Anthropic, OpenAI, or Gemini in
+  **Settings → AI Coach**. The provider is recognized from the key's shape and
+  routed by the shared backend router; the prompt and safety rules never vary by
+  provider.
+
+Why BYO key at all, and why "just log in with my ChatGPT subscription" is not
+currently buildable, is recorded in
+[`codeyam/ai-connection-options.md`](codeyam/ai-connection-options.md). Note that
+an API key bills against a **separate** balance from a ChatGPT Plus or Claude Pro
+subscription — a connected key with no credits is the single most common reason
+the chat fails.
 
 ## How it connects (BYO key, proxied through a backend)
 

@@ -252,6 +252,10 @@ the architecture conventions and PR checklist, and note the
 
 States captured as runnable scenarios with codeyam-editor:
 
+### Accessibility - Large Text Tour
+
+![Accessibility - Large Text Tour](.codeyam/scenarios/screenshots/accessibility-large-text-tour--iphone-16.png)
+
 ### Accessibility — Large Text Today
 
 ![Accessibility — Large Text Today](.codeyam/scenarios/screenshots/accessibility-large-text-today--iphone-16.png)
@@ -279,8 +283,4 @@ States captured as runnable scenarios with codeyam-editor:
 ### App Icon — Showcase
 
 ![App Icon — Showcase](.codeyam/scenarios/screenshots/app-icon-showcase--iphone-16.png)
-
-### Ask Coach — Building On Track
-
-![Ask Coach — Building On Track](.codeyam/scenarios/screenshots/ask-coach-building-on-track--iphone-16.png)
 <!-- codeyam:scenario-gallery:end -->
