@@ -1005,6 +1005,87 @@
       "runner": "tests"
     },
     {
+      "description": "An actionable backend code (model_unavailable) reaches the chat with its message intact instead of being flattened into the generic failure copy.",
+      "file": "Tests/AppCoreTests/CoachErrorSurfacingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachErrorSurfacingTests › testActionableUpstreamReasonSurvives",
+      "line": 15,
+      "registeredAt": "2026-08-03T23:19:15.461455+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Anthropic and Gemini billing URLs linkify too, so the out-of-credits message is tappable for every provider, not just OpenAI.",
+      "file": "Tests/AppCoreTests/CoachErrorSurfacingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachErrorSurfacingTests › testAnthropicAndGeminiBillingLinksAlsoResolve",
+      "line": 61,
+      "registeredAt": "2026-08-03T23:19:19.324828+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The message renders as a chat bubble from Buddy, so the billing URL has to be tappable — a link the user must retype is barely better than none.",
+      "file": "Tests/AppCoreTests/CoachErrorSurfacingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachErrorSurfacingTests › testBillingLinkIsTappableInTheBubble",
+      "line": 41,
+      "registeredAt": "2026-08-03T23:19:23.290471+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A token_budget_exhausted error surfaces its own message rather than reading to the user as a connection failure.",
+      "file": "Tests/AppCoreTests/CoachErrorSurfacingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachErrorSurfacingTests › testExhaustedBudgetIsSurfaced",
+      "line": 71,
+      "registeredAt": "2026-08-03T23:19:27.280109+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A genuine outage stays generic — the caller falls back to the offline coach rather than showing the user backend jargon they cannot act on.",
+      "file": "Tests/AppCoreTests/CoachErrorSurfacingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachErrorSurfacingTests › testGenericUpstreamErrorIsNotSurfaced",
+      "line": 81,
+      "registeredAt": "2026-08-03T23:19:31.025949+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Unparseable, empty, or message-less error bodies surface nothing, so the chat falls back to generic copy instead of showing a blank reply.",
+      "file": "Tests/AppCoreTests/CoachErrorSurfacingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachErrorSurfacingTests › testMalformedOrEmptyBodiesAreIgnored",
+      "line": 86,
+      "registeredAt": "2026-08-03T23:19:35.092248+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Ordinary coaching prose passes through the linkifier untouched: no spurious links and no character changes.",
+      "file": "Tests/AppCoreTests/CoachErrorSurfacingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachErrorSurfacingTests › testOrdinaryCoachReplyGetsNoLinks",
+      "line": 54,
+      "registeredAt": "2026-08-03T23:19:39.193380+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The real cause of the reported outage: an OpenAI account with no credits. The user can fix this in a minute, but only if they are told what it is AND where to go.",
+      "file": "Tests/AppCoreTests/CoachErrorSurfacingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachErrorSurfacingTests › testOutOfCreditsIsSurfaced",
+      "line": 26,
+      "registeredAt": "2026-08-03T23:19:42.963521+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The error the chat renders must not be the connection copy.",
+      "file": "Tests/AppCoreTests/CoachErrorSurfacingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachErrorSurfacingTests › testUpstreamErrorIsDistinctFromNetworkError",
+      "line": 94,
+      "registeredAt": "2026-08-03T23:19:47.075642+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "With no seed key present at all, the store reports the real Keychain state, so production is unaffected by the scenario hooks.",
       "format": "junit-xml",
       "key": "AppCoreTests.CoachKeyStoreTests › testAbsentSeedFallsThroughToRealKeys",
@@ -1306,6 +1387,96 @@
       "runner": "tests"
     },
     {
+      "description": "No dangling separators from the list builder.",
+      "file": "Tests/AppCoreTests/CoachTutorialTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachTutorialTests › testDataTurnReadsAsASentence",
+      "line": 98,
+      "registeredAt": "2026-08-03T23:19:51.393511+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A day-one install has no runs, so the intro must not claim to analyze them.",
+      "file": "Tests/AppCoreTests/CoachTutorialTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachTutorialTests › testDayOneDoesNotPromiseRunAnalysis",
+      "line": 57,
+      "registeredAt": "2026-08-03T23:19:55.230968+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The scripted opening is deterministic: identical context and connection state always produce identical copy.",
+      "file": "Tests/AppCoreTests/CoachTutorialTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachTutorialTests › testDeterministic",
+      "line": 108,
+      "registeredAt": "2026-08-03T23:19:59.282592+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The opening names Buddy, so a first-time user knows who they are talking to.",
+      "file": "Tests/AppCoreTests/CoachTutorialTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachTutorialTests › testIntroducesBuddyByName",
+      "line": 42,
+      "registeredAt": "2026-08-03T23:20:03.315209+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Locked: point at the connect step, never at \"ask me something\".",
+      "file": "Tests/AppCoreTests/CoachTutorialTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachTutorialTests › testLockedVariantNamesTheConnectStep",
+      "line": 72,
+      "registeredAt": "2026-08-03T23:20:07.283834+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The whole point of the data turn: say what Buddy can actually see.",
+      "file": "Tests/AppCoreTests/CoachTutorialTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachTutorialTests › testNamesWhatItCanSee",
+      "line": 49,
+      "registeredAt": "2026-08-03T23:20:11.466737+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "No opening turn contains an em dash, matching the app-wide copy convention.",
+      "file": "Tests/AppCoreTests/CoachTutorialTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachTutorialTests › testNoEmDashes",
+      "line": 87,
+      "registeredAt": "2026-08-03T23:20:15.382306+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Connected and locked states both produce at least two non-empty turns, for day-one and data-rich contexts alike.",
+      "file": "Tests/AppCoreTests/CoachTutorialTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachTutorialTests › testOpeningTurnsAreNonEmptyForBothStates",
+      "line": 30,
+      "registeredAt": "2026-08-03T23:20:19.149249+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "With runs present the intro names the recent runs it can see and drops the day-one 'once you log' caveat.",
+      "file": "Tests/AppCoreTests/CoachTutorialTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachTutorialTests › testRichStateDescribesRealData",
+      "line": 65,
+      "registeredAt": "2026-08-03T23:20:22.954155+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Coaching is not medical advice, and the intro is where that is set.",
+      "file": "Tests/AppCoreTests/CoachTutorialTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachTutorialTests › testStatesTheSafetyBoundary",
+      "line": 82,
+      "registeredAt": "2026-08-03T23:20:26.863858+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "Accessibility aliases map to the matching accessibility sizes.",
       "file": "Tests/AppCoreTests/DynamicTypeOverrideTests.swift",
       "format": "junit-xml",
@@ -1378,6 +1549,51 @@
       "runner": "tests"
     },
     {
+      "description": "The fresh install: nothing recorded at all, so nothing to report.",
+      "file": "Tests/AppCoreTests/FormattersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testFreshInstallShowsDashesNotZeroes",
+      "line": 210,
+      "registeredAt": "2026-08-03T23:20:30.671749+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A genuine zero-step morning is data, not the absence of it. These are the exact seeds of the `today-zero-step-morning` scenario, so the honest-empty change cannot silently swallow a true zero.",
+      "file": "Tests/AppCoreTests/FormattersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testGenuineZeroStepMorningStillReadsZero",
+      "line": 199,
+      "registeredAt": "2026-08-03T23:20:34.714205+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The distinction that matters: \"no data recorded\" is not the same as \"you did zero\". A fresh install must not be told it walked zero miles; a real zero-step morning must still read 0, because that IS the day's data.",
+      "file": "Tests/AppCoreTests/FormattersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testHasDayDataIsFalseOnlyWhenNothingWasObserved",
+      "line": 163,
+      "registeredAt": "2026-08-03T23:20:38.737450+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "With recorded data movementDisplay delegates to movementLabel, preserving the now / 18m / 1h32m formatting.",
+      "file": "Tests/AppCoreTests/FormattersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testMovementDisplayDelegatesWhenThereIsData",
+      "line": 190,
+      "registeredAt": "2026-08-03T23:20:42.649726+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The fresh-install bug this fixes: movementLabel(0) renders the cheerful-but-wrong \"now\" when nothing has ever been recorded.",
+      "file": "Tests/AppCoreTests/FormattersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testMovementDisplayDoesNotClaimYouJustMovedOnAFreshInstall",
+      "line": 185,
+      "registeredAt": "2026-08-03T23:20:46.426111+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "movementLabel rolls into hours, dropping the minutes part when it is zero.",
       "file": "Tests/AppCoreTests/FormattersTests.swift",
       "format": "junit-xml",
@@ -1405,6 +1621,15 @@
       "runner": "tests"
     },
     {
+      "description": "A movement timestamp is evidence Health observed the user, even when every metric is still zero. This is what keeps a real zero-step morning honest.",
+      "file": "Tests/AppCoreTests/FormattersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testMovementTimestampCountsAsObservation",
+      "line": 173,
+      "registeredAt": "2026-08-03T23:20:50.473875+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "prettyDate returns the input unchanged when it is not a valid ISO date.",
       "file": "Tests/AppCoreTests/FormattersTests.swift",
       "format": "junit-xml",
@@ -1420,6 +1645,15 @@
       "key": "AppCoreTests.FormattersTests › testPrettyDateValid",
       "line": 42,
       "registeredAt": "2026-06-22T19:41:43.416701+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "statValue returns the real value when the day has data and the dash placeholder only when it has none.",
+      "file": "Tests/AppCoreTests/FormattersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.FormattersTests › testStatValueDashesOnlyWithNoData",
+      "line": 178,
+      "registeredAt": "2026-08-03T23:20:54.370300+00:00",
       "runner": "tests"
     },
     {
@@ -1601,6 +1835,60 @@
       "format": "junit-xml",
       "key": "AppCoreTests.HealthDataSourceTests › testSeededRequestAuthorizationGrants",
       "registeredAt": "2026-06-25T15:49:35Z",
+      "runner": "tests"
+    },
+    {
+      "description": "The three confusions that prompted this feature must each be answered.",
+      "file": "Tests/AppCoreTests/HintCopyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.HintCopyTests › testAnswersTheReportedConfusions",
+      "line": 43,
+      "registeredAt": "2026-08-03T23:20:58.206580+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "No two hint topics share a body, so each element explains itself rather than repeating a neighbour.",
+      "file": "Tests/AppCoreTests/HintCopyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.HintCopyTests › testBodiesAreDistinct",
+      "line": 37,
+      "registeredAt": "2026-08-03T23:21:02.449465+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The body should explain, not just restate the label.",
+      "file": "Tests/AppCoreTests/HintCopyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.HintCopyTests › testBodiesAreExplanatory",
+      "line": 25,
+      "registeredAt": "2026-08-03T23:21:06.344918+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Every HintTopic has a non-empty title and body, so tapping a hint can never reveal an empty caption.",
+      "file": "Tests/AppCoreTests/HintCopyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.HintCopyTests › testEveryTopicHasTitleAndBody",
+      "line": 8,
+      "registeredAt": "2026-08-03T23:21:10.162363+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "No hint copy contains an em dash, matching the app-wide copy convention.",
+      "file": "Tests/AppCoreTests/HintCopyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.HintCopyTests › testNoEmDashes",
+      "line": 17,
+      "registeredAt": "2026-08-03T23:21:13.994997+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "No two hint topics share a title, so the 'Explain <topic>' accessibility labels stay distinguishable.",
+      "file": "Tests/AppCoreTests/HintCopyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.HintCopyTests › testTitlesAreDistinct",
+      "line": 32,
+      "registeredAt": "2026-08-03T23:21:17.965311+00:00",
       "runner": "tests"
     },
     {
@@ -2539,6 +2827,15 @@
       "runner": "tests"
     },
     {
+      "description": "The Today spotlight tour ships as its own overlay with its own gate, deliberately NOT as an onboarding step. If it ever gets folded in here, every `rbOnboardingPage` seed at or after the insertion point shifts and those scenarios silently start capturing the wrong screen. This asserts the two...",
+      "file": "Tests/AppCoreTests/OnboardingStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.OnboardingStateTests › testTodayTourDidNotBecomeAnOnboardingStep",
+      "line": 71,
+      "registeredAt": "2026-08-03T23:21:21.737619+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "deregisterAll issues a DELETE to /account/push (the sign-out / health-off opt-out).",
       "file": "Tests/AppCoreTests/PushRegistrationServiceTests.swift",
       "format": "junit-xml",
@@ -2593,6 +2890,33 @@
       "runner": "tests"
     },
     {
+      "description": "The add-a-race banner appears the day after eligibility is first recorded, having stayed silent through day one.",
+      "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceGoalsTests › testBannerAppearsTheNextDay",
+      "line": 176,
+      "registeredAt": "2026-08-03T23:21:25.678823+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Day one records eligibility and stays quiet, so the banner never lands in the confusing first session.",
+      "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceGoalsTests › testBannerIsSilentOnTheFirstDay",
+      "line": 171,
+      "registeredAt": "2026-08-03T23:21:29.669903+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Nothing to ask for while a race is already on the calendar.",
+      "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceGoalsTests › testBannerSuppressedWhileAnUpcomingRaceExists",
+      "line": 183,
+      "registeredAt": "2026-08-03T23:21:33.744524+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "Classifies whether a chat message expresses race intent.",
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
@@ -2617,6 +2941,15 @@
       "key": "AppCoreTests.RaceGoalsTests › testDistancePresetsAndClamp",
       "line": 40,
       "registeredAt": "2026-06-26T21:11:33.212876+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The first dismissal snoozes rather than killing the banner: it is suppressed inside the window and returns after it.",
+      "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceGoalsTests › testFirstDismissSnoozesRatherThanKilling",
+      "line": 200,
+      "registeredAt": "2026-08-03T23:21:37.534438+00:00",
       "runner": "tests"
     },
     {
@@ -2645,12 +2978,30 @@
       "runner": "tests"
     },
     {
+      "description": "An install that already dismissed the banner under the old forever-flag must not see it come back.",
+      "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceGoalsTests › testLegacyDismissalIsStillHonored",
+      "line": 228,
+      "registeredAt": "2026-08-03T23:21:41.466483+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "Converts a typed distance value in miles or kilometers to clamped miles, keeping km at full precision so it round-trips.",
       "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.RaceGoalsTests › testMilesFromUnit",
       "line": 49,
       "registeredAt": "2026-07-06T16:43:03.331192+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A finished race does not suppress it — there is a next goal to set.",
+      "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceGoalsTests › testPastRaceDoesNotSuppressTheBanner",
+      "line": 192,
+      "registeredAt": "2026-08-03T23:21:45.439818+00:00",
       "runner": "tests"
     },
     {
@@ -2669,6 +3020,24 @@
       "key": "AppCoreTests.RaceGoalsTests › testReadStateDecodesSeededRaces",
       "line": 92,
       "registeredAt": "2026-06-26T21:11:53.327236+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The second dismissal reaches the cap and suppresses the banner for good.",
+      "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceGoalsTests › testSecondDismissIsPermanent",
+      "line": 215,
+      "registeredAt": "2026-08-03T23:21:49.280849+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A snooze advances the ISO date by exactly fourteen days.",
+      "file": "Tests/AppCoreTests/RaceGoalsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RaceGoalsTests › testSnoozeWindowIsFourteenDays",
+      "line": 234,
+      "registeredAt": "2026-08-03T23:21:53.349614+00:00",
       "runner": "tests"
     },
     {
@@ -2954,6 +3323,105 @@
       "runner": "tests"
     },
     {
+      "description": "Run-or-rest and hit-10K are offered in every state, including day one.",
+      "file": "Tests/AppCoreTests/StarterQuestionsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StarterQuestionsTests › testAlwaysOffersTheUniversalQuestions",
+      "line": 76,
+      "registeredAt": "2026-08-03T23:21:57.405865+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The richest state stays within maxCount, with no duplicate text and no two chips targeting the same intent.",
+      "file": "Tests/AppCoreTests/StarterQuestionsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StarterQuestionsTests › testCappedAndDuplicateFree",
+      "line": 109,
+      "registeredAt": "2026-08-03T23:22:01.208875+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "No suggestion contains an em dash, matching the app-wide copy convention.",
+      "file": "Tests/AppCoreTests/StarterQuestionsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StarterQuestionsTests › testCopyHasNoEmDashes",
+      "line": 126,
+      "registeredAt": "2026-08-03T23:22:04.925474+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A day-one user has no runs, so offering \"how did my last run go?\" would point at data the app does not have.",
+      "file": "Tests/AppCoreTests/StarterQuestionsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StarterQuestionsTests › testDayOneOffersNoPostRunOrRaceQuestion",
+      "line": 69,
+      "registeredAt": "2026-08-03T23:22:08.956912+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Suggestions are deterministic: the same TodayState always yields the same chips in the same order.",
+      "file": "Tests/AppCoreTests/StarterQuestionsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StarterQuestionsTests › testDeterministic",
+      "line": 134,
+      "registeredAt": "2026-08-03T23:22:12.893410+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Every suggestion, in every state, must classify to the intent it declares.",
+      "file": "Tests/AppCoreTests/StarterQuestionsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StarterQuestionsTests › testEverySuggestionClassifiesToItsDeclaredIntent",
+      "line": 39,
+      "registeredAt": "2026-08-03T23:22:16.942475+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The mileage-pace question appears only when there are at least two weekly load points to compare.",
+      "file": "Tests/AppCoreTests/StarterQuestionsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StarterQuestionsTests › testMileageQuestionNeedsTwoLoadPoints",
+      "line": 99,
+      "registeredAt": "2026-08-03T23:22:20.886372+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Some suggestion is always offered, so the chip row is never blank.",
+      "file": "Tests/AppCoreTests/StarterQuestionsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StarterQuestionsTests › testNeverEmpty",
+      "line": 122,
+      "registeredAt": "2026-08-03T23:22:24.696924+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A friendly ice-breaker must never trip the injury-caution path.",
+      "file": "Tests/AppCoreTests/StarterQuestionsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StarterQuestionsTests › testNoSuggestionRoutesToInjury",
+      "line": 56,
+      "registeredAt": "2026-08-03T23:22:28.663105+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The post-run reflection question appears once a latest workout exists to reflect on.",
+      "file": "Tests/AppCoreTests/StarterQuestionsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StarterQuestionsTests › testPostRunQuestionAppearsOnceThereIsARun",
+      "line": 84,
+      "registeredAt": "2026-08-03T23:22:33.068688+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Race planning is offered for an upcoming race and withheld when only a past race remains.",
+      "file": "Tests/AppCoreTests/StarterQuestionsTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StarterQuestionsTests › testRaceQuestionAppearsOnlyForAnUpcomingRace",
+      "line": 90,
+      "registeredAt": "2026-08-03T23:22:36.879333+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "Picking a theme persists it to UserDefaults until the user changes it again.",
       "file": "Tests/AppCoreTests/ThemeStoreTests.swift",
       "format": "junit-xml",
@@ -3005,6 +3473,150 @@
       "key": "AppCoreTests.ThemeStoreTests › testUnknownSavedValueFallsBackToDefault",
       "line": 43,
       "registeredAt": "2026-07-15T21:13:03.737681+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Only the last step commits; the rest continue.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testAdvanceTitleMarksTheFinalStep",
+      "line": 102,
+      "registeredAt": "2026-08-03T23:22:40.736527+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "clearSeen re-enables the tour, which is what the Settings replay row depends on.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testClearSeenMakesItShowAgain",
+      "line": 56,
+      "registeredAt": "2026-08-03T23:22:44.876949+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The tour points at the Buddy card, the stats row, and the coach card. None of those are on screen before Health is connected — `ConnectHero` is. So the tour must stay down until there is something to point at.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testDoesNotShowBeforeHealthIsConnected",
+      "line": 35,
+      "registeredAt": "2026-08-03T23:22:48.627416+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The tour stays down once seen, so it never repeats on ordinary launches.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testDoesNotShowOnceSeen",
+      "line": 26,
+      "registeredAt": "2026-08-03T23:22:55.859611+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Scenarios skip the tour by default, matching `OnboardingState.shouldShow`. Otherwise every seeded Today capture would render behind a scrim.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testDoesNotShowUnderAScenarioSeed",
+      "line": 42,
+      "registeredAt": "2026-08-03T23:23:00.459023+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Every tour step has a non-empty title and body and contains no em dashes.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testEveryStepHasCopy",
+      "line": 92,
+      "registeredAt": "2026-08-03T23:23:04.325666+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A new tour scenario must be registered here too, so it can't be added with an unchecked step index.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testEveryTourScenarioIsCovered",
+      "line": 170,
+      "registeredAt": "2026-08-03T23:23:09.023839+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Every seeded step must be addressable, so a stale seed can't be silently clamped onto a neighbouring step by `startStep`.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testSeededStepsAreInRange",
+      "line": 158,
+      "registeredAt": "2026-08-03T23:23:13.045281+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Each tour scenario seeds the rbTourStep its name claims, guarding captures against silent step-order drift.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testSeededTourStepsMatchNamedSteps",
+      "line": 138,
+      "registeredAt": "2026-08-03T23:23:17.163371+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The tour shows on a genuine first run once Health is connected.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testShowsOnFirstRunWhenHealthConnected",
+      "line": 21,
+      "registeredAt": "2026-08-03T23:23:21.275067+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The opt-in that lets a tour scenario capture the overlay on purpose. It wins over every other suppression, including `hasSeen`.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testStartScreenTourForcesItEvenWhenSeenAndSeeded",
+      "line": 49,
+      "registeredAt": "2026-08-03T23:23:25.075737+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An out-of-range rbTourStep clamps into the valid range instead of addressing a step that does not exist.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testStartStepClampsOutOfRangeSeeds",
+      "line": 76,
+      "registeredAt": "2026-08-03T23:23:29.099440+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "With no rbTourStep seed the tour starts at its first step.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testStartStepDefaultsToZero",
+      "line": 66,
+      "registeredAt": "2026-08-03T23:23:33.340539+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "startStep reads rbTourStep so a capture can target one specific step.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testStartStepReadsTheSeed",
+      "line": 70,
+      "registeredAt": "2026-08-03T23:23:37.242459+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "TourState.stepCount tracks the TourStep script length, so the pager and the clamp cannot drift from the steps themselves.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testStepCountMatchesTheScript",
+      "line": 85,
+      "registeredAt": "2026-08-03T23:23:41.509720+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A tour scenario must also opt in, or the gate suppresses the overlay under the scenario seed and the capture comes back with no tour at all.",
+      "file": "Tests/AppCoreTests/TourStateTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.TourStateTests › testTourScenariosOptInViaStartScreen",
+      "line": 148,
+      "registeredAt": "2026-08-03T23:23:45.908439+00:00",
       "runner": "tests"
     },
     {
