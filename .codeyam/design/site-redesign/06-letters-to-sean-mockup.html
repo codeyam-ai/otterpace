@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Otterpace — A note from Buddy</title>
+<style>
+  :root{--paper:#FBF4EA;--paper2:#F3E8D6;--ink:#33302A;--coral:#E4573C;--muted:#7c7466;--rule:#E0D3BE;--go:#3f9d6d}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--paper);color:var(--ink);line-height:1.68;-webkit-font-smoothing:antialiased;
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    background-image:radial-gradient(circle at 12% 18%,rgba(228,87,60,.05),transparent 30%),radial-gradient(circle at 88% 82%,rgba(63,157,109,.05),transparent 30%)}
+  .sans{font-family:-apple-system,"SF Pro Text",Segoe UI,sans-serif}
+  .wrap{max-width:720px;margin:0 auto;padding:0 26px}
+  .wide{max-width:1080px}
+  a{color:inherit}
+
+  nav{border-bottom:1px solid var(--rule)}
+  nav .row{max-width:1080px;margin:0 auto;padding:0 26px;height:64px;display:flex;align-items:center;gap:14px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;letter-spacing:.01em}
+  .brand img{width:30px;height:30px;border-radius:9px}
+  nav .sp{flex:1}
+  .nl{font-family:-apple-system,sans-serif;color:var(--muted);font-size:14px;font-weight:600}.nl:hover{color:var(--coral)}
+  .pill{font-family:-apple-system,sans-serif;background:var(--ink);color:var(--paper);font-weight:700;font-size:14px;padding:9px 16px;border-radius:100px}
+
+  .letter{padding:64px 0 20px}
+  .stamp{float:right;width:118px;height:118px;border:2px dashed var(--coral);border-radius:16px;display:grid;place-items:center;
+    text-align:center;margin:0 0 14px 22px;transform:rotate(3deg)}
+  .stamp img{width:66px;height:66px;border-radius:14px}
+  .stamp .s{font-family:-apple-system,sans-serif;font-size:10px;color:var(--coral);letter-spacing:.1em;text-transform:uppercase;margin-top:4px;font-weight:700}
+  .dear{font-size:34px;letter-spacing:-.01em;margin-bottom:20px}
+  .letter p{font-size:20px;margin-bottom:20px}
+  .letter p .hl{background:linear-gradient(transparent 60%,rgba(228,87,60,.22) 60%)}
+  .sign{margin-top:26px;font-size:20px}
+  .sign .name{font-size:40px;color:var(--coral);letter-spacing:-.01em;display:block;margin-top:2px;font-style:italic}
+  .badges{display:flex;gap:12px;margin:26px 0 8px;flex-wrap:wrap}
+  .badges img{height:48px;width:auto;display:block}
+  .ps{font-family:-apple-system,sans-serif;font-size:15px;color:var(--muted);border-left:3px solid var(--coral);padding-left:14px;margin-top:8px}
+
+  .divider{max-width:1080px;margin:48px auto;padding:0 26px;display:flex;align-items:center;gap:16px;color:var(--muted);font-family:-apple-system,sans-serif;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--rule)}
+
+  .showcase{max-width:1080px;margin:0 auto;padding:20px 26px 10px;display:grid;grid-template-columns:.9fr 1.1fr;gap:40px;align-items:center}
+  .showcase .imgs{display:flex;gap:-24px;justify-content:center}
+  .showcase img{width:200px;border-radius:28px;border:7px solid #23252f;background:#23252f;display:block;box-shadow:0 24px 46px rgba(51,48,42,.2)}
+  .showcase .imgs .back{width:170px;transform:rotate(-7deg) translateX(30px);opacity:.92}
+  .showcase h2{font-size:34px;letter-spacing:-.02em;margin-bottom:12px}
+  .showcase p{font-size:18px;color:#514c42}
+  .themes-line{font-family:-apple-system,sans-serif;display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+  .tchip{font-size:13px;font-weight:700;padding:6px 12px;border-radius:100px;color:#fff}
+
+  .cards{max-width:1080px;margin:44px auto;padding:0 26px;display:grid;grid-template-columns:1fr 1fr;gap:14px 40px}
+  .ci{display:grid;grid-template-columns:auto 1fr;gap:16px;padding:18px 0;border-top:1px solid var(--rule);align-items:start}
+  .ci .e{font-size:24px}
+  .ci h3{font-size:20px;margin-bottom:3px}
+  .ci p{font-family:-apple-system,sans-serif;font-size:15px;color:var(--muted);line-height:1.55}
+
+  .final{max-width:1080px;margin:20px auto 0;padding:0 26px}
+  .final .box{background:var(--ink);color:var(--paper);border-radius:26px;padding:48px 30px;text-align:center}
+  .final h2{font-size:38px;letter-spacing:-.02em}
+  .final p{font-family:-apple-system,sans-serif;color:#d8cebd;margin-top:8px}
+  .final .badges{justify-content:center;margin-top:22px}
+
+  footer{max-width:1080px;margin:0 auto;padding:36px 26px 60px;font-family:-apple-system,sans-serif;font-size:14px;color:var(--muted);text-align:center}
+  footer b{color:#514c42}
+  @media(max-width:820px){.showcase,.cards{grid-template-columns:1fr}.showcase .imgs .back{display:none}.nl{display:none}}
+</style>
+</head>
+<body>
+<nav><div class="row">
+  <a class="brand"><img src="shots/icon.png" alt="">Otterpace</a>
+  <span class="sp"></span>
+  <a class="nl" href="#more">The app</a><a class="nl" href="#themes">Themes</a><a class="nl" href="#">GitHub</a>
+  <a class="pill" href="#get">Get the app</a>
+</div></nav>
+
+<div class="letter"><div class="wrap">
+  <div class="stamp"><img src="shots/icon.png" alt="Buddy"><div class="s">Now on<br>App Store</div></div>
+  <div class="dear">Hey, it’s Buddy 🐾</div>
+  <p>I’m your running coach — a small otter who lives in your phone and genuinely just wants you to feel good moving. Not fast. Not perfect. <span class="hl">Good.</span></p>
+  <p>Here’s my whole deal: I read your steps and runs from Apple Health (on your device — I never send it anywhere), I nudge you gently toward your goal, and when your training load spikes, I’m the one who says <em>“hey, take it easy today.”</em> No diagnoses. No guilt. <span class="hl">Never any shame.</span></p>
+  <p>Ask me anything and I’ll answer like a friend, not a spreadsheet. And if you want a different vibe, I come in five whole looks — pick the one that feels like you.</p>
+  <div class="sign">Come run with me,<span class="name">Buddy</span></div>
+  <div class="badges" id="get">
+    <a href="https://apps.apple.com/us/app/otterpace/id6784287408"><img src="shots/app-store-badge.svg" alt="Download on the App Store"></a>
+    <a style="cursor:not-allowed"><img src="shots/play-badge-soon.svg" alt="Coming soon to Google Play"></a>
+  </div>
+  <div class="ps"><b>P.S.</b> I’m free, I’m open source, and Android friends — I’m coming for you soon. 💛</div>
+</div></div>
+
+<div class="divider">A quick look inside</div>
+
+<div class="showcase" id="more">
+  <div class="imgs">
+    <img class="back" src="shots/shot-garden.png" alt="Garden theme">
+    <img src="shots/shot-otter.png" alt="Otterpace Today">
+  </div>
+  <div>
+    <h2 id="themes">Five looks. Same Buddy.</h2>
+    <p>The entire app re-skins — colors, type, and even my face change with the theme. Set it when you start, switch it whenever.</p>
+    <div class="themes-line">
+      <span class="tchip" style="background:#FF7357">Otter</span>
+      <span class="tchip" style="background:#17B7A6">Bolt</span>
+      <span class="tchip" style="background:#3E7CA8">Orbit</span>
+      <span class="tchip" style="background:#1F7E8C">Fieldnote</span>
+      <span class="tchip" style="background:#4E6B54">Garden</span>
+    </div>
+  </div>
+</div>
+
+<div class="cards">
+  <div class="ci"><div class="e">🩺</div><div><h3>Injury-aware</h3><p>I back off when your load spikes — run/rest guidance, never a diagnosis.</p></div></div>
+  <div class="ci"><div class="e">💬</div><div><h3>Ask me anything</h3><p>Conversational coaching in plain words. I work offline; smarter with your own AI key.</p></div></div>
+  <div class="ci"><div class="e">👟</div><div><h3>Gentle daily nudges</h3><p>Little encouragements toward your step goal. No nagging, promise.</p></div></div>
+  <div class="ci"><div class="e">📅</div><div><h3>Weekly review</h3><p>What went well, what changed, and one kind focus for next week.</p></div></div>
+  <div class="ci"><div class="e">🔒</div><div><h3>On-device &amp; private</h3><p>Apple Health stays on your phone. No accounts, no ads, no data sold.</p></div></div>
+  <div class="ci"><div class="e">💛</div><div><h3>Open source</h3><p>Built in the open as a CodeYam showcase — peek at how I work.</p></div></div>
+</div>
+
+<div class="final"><div class="box">
+  <h2>Let’s go for a walk.</h2>
+  <p>Otterpace is live on the App Store. Android is on the way.</p>
+  <div class="badges">
+    <a href="https://apps.apple.com/us/app/otterpace/id6784287408"><img src="shots/app-store-badge.svg" alt="Download on the App Store"></a>
+    <a style="cursor:not-allowed"><img src="shots/play-badge-soon.svg" alt="Coming soon to Google Play"></a>
+  </div>
+</div></div>
+
+<footer><b>Otterpace</b> — a friendly AI running coach · Open source · Built with 💛 and CodeYam<br>github.com/nseldeib/otterpace · hello@otterpace.com · Privacy</footer>
+</body></html>

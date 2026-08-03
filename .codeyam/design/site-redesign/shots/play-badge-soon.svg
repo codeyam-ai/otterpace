@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="130" height="40" viewBox="0 0 130 40" role="img" aria-label="Coming soon to Google Play">
+  <title>Coming soon to Google Play</title>
+  <rect x="0.5" y="0.5" width="129" height="39" rx="6.5" fill="#000000" stroke="#4A4A4A" stroke-width="1"/>
+  <!-- Play triangle -->
+  <g transform="translate(11,10)">
+    <path fill="#00D3AA" d="M0 0.7 L11 10 L0 19.3 Z" opacity="0.55"/>
+    <path fill="#FFC94D" d="M0 0.7 L7.2 6.9 L4.4 10 Z" opacity="0.55"/>
+    <path fill="#FF6B6B" d="M0 19.3 L7.2 13.1 L4.4 10 Z" opacity="0.55"/>
+  </g>
+  <text x="30" y="15" fill="#9AA0A6" font-family="-apple-system, Helvetica, Arial, sans-serif" font-size="6" letter-spacing="0.3">COMING SOON TO</text>
+  <text x="29.5" y="30" fill="#E8EAED" font-family="-apple-system, Helvetica, Arial, sans-serif" font-size="14" font-weight="500" letter-spacing="-0.3">Google Play</text>
+</svg>
