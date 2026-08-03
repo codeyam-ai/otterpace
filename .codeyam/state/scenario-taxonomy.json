@@ -184,6 +184,36 @@
         "reason": "Only action is the Connect Apple Health CTA; its connected result is shown by the dashboard scenarios and its logic is covered by testConnectFlipsState."
       }
     },
+    "JournalEditorSheet": {
+      "empty": {
+        "status": "added"
+      },
+      "single": {
+        "status": "n-a",
+        "reason": "The editor always edits exactly one entry by construction — it is a fixed form (three chip rows plus a note field), not a list. There is no zero-to-many item boundary to show."
+      },
+      "typical": {
+        "status": "added"
+      },
+      "many": {
+        "status": "n-a",
+        "reason": "Fixed-length form: three chip rows with a bounded enum each, plus one note field. Nothing here grows with data. The one unbounded input is the note, whose overflow is covered by the edge archetype."
+      },
+      "loading": {
+        "status": "n-a",
+        "reason": "Opens over already-loaded TodayState; save and delete are synchronous local UserDefaults writes. There is no async work and so no pending state to render."
+      },
+      "edge": {
+        "status": "added"
+      },
+      "error": {
+        "status": "n-a",
+        "reason": "No validation or failure path: every field is optional and nothing is submitted anywhere. A blank draft is prevented by disabling Save, which is a disabled control rather than an error state."
+      },
+      "key-interaction": {
+        "status": "added"
+      }
+    },
     "OnboardingFlowView": {
       "empty": {
         "status": "n-a",

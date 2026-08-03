@@ -1,0 +1,19 @@
+{
+  "name": "JournalEditorSheet - Blank Check-In",
+  "id": "4123529c-7e60-4924-a0d2-06d8dea76915",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "JournalEditorSheet",
+      "CODEYAM_ISOLATE_SCENARIO": "Blank Check-In"
+    }
+  },
+  "componentName": "JournalEditorSheet",
+  "scenarioType": "component"
+}

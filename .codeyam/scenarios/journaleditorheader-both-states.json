@@ -1,0 +1,19 @@
+{
+  "name": "JournalEditorHeader - Both States",
+  "id": "bb6627f2-9d91-4f5c-8058-c7741bfcaae7",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Both States",
+      "CODEYAM_ISOLATE_COMPONENT": "JournalEditorHeader"
+    }
+  },
+  "componentName": "JournalEditorHeader",
+  "scenarioType": "component"
+}

@@ -28,6 +28,13 @@ public struct ActivityHistoryView: View {
                                     asOf: ActivityHistory.referenceDate(fromISO: model.today.date))
     }
 
+    // Journal entries bucketed onto the same Monday-start weeks the workouts use,
+    // so a note lands in the week section it belongs to.
+    private var entriesByWeek: [String: [JournalEntry]] {
+        Journal.byWeek(model.today.journal,
+                       asOf: ActivityHistory.referenceDate(fromISO: model.today.date))
+    }
+
     public var body: some View {
         ZStack {
             LinearGradient(colors: [Palette.bgTop, Palette.bgBottom],
@@ -43,7 +50,14 @@ public struct ActivityHistoryView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Layout.xl) {
                         ActivityHeatmapSection(model: model)
-                        ForEach(weeks) { ActivityWeekSection(group: $0) }
+                        ForEach(weeks) { week in
+                            ActivityWeekSection(group: week, journal: entriesByWeek[week.weekStartISO] ?? [])
+                        }
+                        // A runner with workouts but nothing written yet gets the
+                        // invitation once, at the end — never a per-week nag.
+                        if !weeks.isEmpty && model.today.journal.isEmpty {
+                            JournalEmptyState()
+                        }
                     }
                     .screenScrollContent()
                 }

@@ -1,0 +1,19 @@
+{
+  "name": "CheckInCard - Logged",
+  "id": "07f5db1b-63c7-4b03-8ccf-1c0c3c87881b",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "CheckInCard",
+      "CODEYAM_ISOLATE_SCENARIO": "Logged"
+    }
+  },
+  "componentName": "CheckInCard",
+  "scenarioType": "component"
+}

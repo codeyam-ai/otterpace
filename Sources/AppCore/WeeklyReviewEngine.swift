@@ -75,7 +75,46 @@ public enum WeeklyReviewEngine {
         }()
 
         applyRaceNote(&review, context: context, asOf: resolvedToday(today, context))
+        applyJournalNote(&review, context: context, asOf: resolvedToday(today, context))
         return review
+    }
+
+    // MARK: Journal awareness (additive; omitted entirely when nothing was written)
+
+    /// Fold in how the week actually FELT, from the runner's own entries. Purely
+    /// additive: a week with no journal entries leaves the review byte-identical
+    /// to before this feature existed, which is what keeps every existing
+    /// `WeeklyReviewEngineTests` case and capture valid.
+    ///
+    /// The numbers say what happened; only the journal says how it landed. A
+    /// four-run week that felt awful and a four-run week that felt great are the
+    /// same row in the load table and completely different weeks to live through.
+    private static func applyJournalNote(_ review: inout WeeklyReview, context: TodayState, asOf today: String) {
+        let s = Journal.summary(context.journal, asOf: today, days: 7)
+        guard s.count > 0 else { return }
+
+        // "What went well" gains the felt experience, when there's something
+        // genuinely good to name — never manufactured from a hard week.
+        if s.strongFeelDays >= 2 {
+            review.wentWell += " And in your own words: you felt strong on \(s.strongFeelDays) of the days you logged."
+        } else if s.strongFeelDays == 1 && s.lowFeelDays == 0 {
+            review.wentWell += " You also logged a day that felt genuinely good — worth noticing."
+        }
+
+        // "What changed" carries the honest read of a hard stretch, stated
+        // plainly and without judgment.
+        var felt: [String] = []
+        if s.soreDays >= 2 { felt.append("\(s.soreDays) sore days") }
+        if s.lowFeelDays >= 2 { felt.append("\(s.lowFeelDays) days you rated on the rough side") }
+        if s.poorSleepDays >= 2 { felt.append("\(s.poorSleepDays) nights of poor sleep") }
+        if !felt.isEmpty {
+            let joined = felt.count == 1 ? felt[0] : felt.dropLast().joined(separator: ", ") + " and " + (felt.last ?? "")
+            let note = "You logged \(joined) this week. That's worth weighing as heavily as the mileage — how training feels is data too."
+            review.whatChanged = review.whatChanged.isEmpty ? note : review.whatChanged + " " + note
+        } else if let avg = s.averageFeel {
+            let note = "Across \(s.count) \(s.count == 1 ? "entry" : "entries") you averaged \(String(format: "%.1f", avg)) out of 5 on how it felt."
+            review.whatChanged = review.whatChanged.isEmpty ? note : review.whatChanged + " " + note
+        }
     }
 
     // MARK: Race awareness (additive; never overrides the spiking caution)

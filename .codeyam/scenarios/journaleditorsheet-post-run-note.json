@@ -1,0 +1,19 @@
+{
+  "name": "JournalEditorSheet - Post-Run Note",
+  "id": "c0c9e6ab-0ae2-463f-ae98-66a02e881c36",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "JournalEditorSheet",
+      "CODEYAM_ISOLATE_SCENARIO": "Post-Run Note"
+    }
+  },
+  "componentName": "JournalEditorSheet",
+  "scenarioType": "component"
+}

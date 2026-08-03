@@ -5,6 +5,9 @@ import SwiftUI
 // workouts rendered as the shared WorkoutCard rows.
 struct ActivityWeekSection: View {
     let group: WeekGroup
+    /// This week's journal entries, newest-first. Defaulted so the isolated
+    /// component scenarios and any other caller keep compiling unchanged.
+    var journal: [JournalEntry] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -20,14 +23,45 @@ struct ActivityWeekSection: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(group.title). \(spokenRollup)")
 
-            // Positional identity: two genuinely identical workouts in the same
-            // week (same date/distance/duration/source) would collide on any
-            // content-derived id and SwiftUI would drop a row, so key on the
-            // index within this already-sorted, static week list instead.
-            ForEach(Array(group.workouts.enumerated()), id: \.offset) { _, workout in
-                WorkoutCard(workout: workout)
+            // Positional identity: two genuinely identical rows in the same week
+            // would collide on any content-derived id and SwiftUI would drop
+            // one, so key on the index within this already-sorted, static list.
+            ForEach(Array(timeline.enumerated()), id: \.offset) { _, item in
+                switch item {
+                case .workout(let workout, let note):
+                    // A post-run note renders INSIDE its workout's card rather
+                    // than as a separate row — the note is about that run, and
+                    // splitting them would say the same thing twice.
+                    WorkoutCard(workout: workout, note: note)
+                case .checkIn(let entry):
+                    JournalEntryRow(entry: entry)
+                }
             }
         }
+    }
+
+    /// One week's rows, newest-first: each workout carrying its own post-run
+    /// note, and each standalone check-in slotted in on its own date.
+    private enum TimelineItem {
+        case workout(LatestWorkout, JournalEntry?)
+        case checkIn(JournalEntry)
+
+        var date: String {
+            switch self {
+            case .workout(let w, _): return w.date
+            case .checkIn(let e):    return e.date
+            }
+        }
+    }
+
+    private var timeline: [TimelineItem] {
+        let workoutRows = group.workouts.map {
+            TimelineItem.workout($0, Journal.entry(forWorkoutOn: $0.date, in: journal))
+        }
+        let checkInRows = journal.filter { !$0.isPostRunNote }.map { TimelineItem.checkIn($0) }
+        // Stable: workouts keep their existing intra-week ordering, and a
+        // check-in sorts to the same date band rather than to the top.
+        return (workoutRows + checkInRows).sorted { $0.date > $1.date }
     }
 
     private var rollup: String {

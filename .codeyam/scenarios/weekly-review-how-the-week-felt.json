@@ -1,0 +1,39 @@
+{
+  "name": "Weekly Review — How The Week Felt",
+  "id": "f2ffbe5f-849c-484a-a266-22818bc79a6b",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbWorkoutType": "",
+      "rbJournalJSON": "[{\"id\":\"3F2A1C40-5555-4A01-9F01-0000000000F1\",\"date\":\"2026-06-22\",\"feel\":5,\"energy\":\"good\",\"soreness\":\"none\",\"sleep\":\"good\",\"note\":\"Best I've felt in weeks \\u2014 held the pace without thinking about it.\"},{\"id\":\"3F2A1C40-5555-4A01-9F01-0000000000F2\",\"date\":\"2026-06-20\",\"feel\":4,\"energy\":\"good\",\"soreness\":\"mild\",\"sleep\":\"good\",\"note\":\"Legs a bit heavy but it loosened up by mile two.\"},{\"id\":\"3F2A1C40-5555-4A01-9F01-0000000000F3\",\"date\":\"2026-06-18\",\"feel\":4,\"energy\":\"okay\",\"soreness\":\"none\",\"sleep\":\"okay\"}]",
+      "rbCoachPreviewScroll": "",
+      "rbRestDaysThisWeek": 2,
+      "rbShowHistory": false,
+      "rbShowJournalEditor": false,
+      "rbWeeklyMileage": 22.0,
+      "rbShowCoachDataPreview": false,
+      "rbTheme": "default",
+      "rbShowKeyProviderPicker": false,
+      "rbJournalEditorPostRun": false,
+      "rbStartTab": "coach",
+      "rbAskSeedQuestion": "",
+      "rbConnected": true,
+      "rbContentSize": "",
+      "rbLongestRunMiles": 8.0,
+      "rbSteps": 9100,
+      "rbDaysRunThisWeek": 4,
+      "rbGoalSteps": 10000,
+      "rbLoadTrend": "building",
+      "rbShowSettings": false,
+      "rbShowWeeklyReview": true,
+      "rbDate": "2026-06-22",
+      "rbPreviewMode": ""
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/WeeklyReviewView.swift"
+}

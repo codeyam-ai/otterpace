@@ -4,8 +4,13 @@ import SwiftUI
 struct BuddySummaryCard: View {
     @ObservedObject var model: OtterpaceModel
 
+    // Buddy's mood must come from the SAME recommendation the coach card is
+    // showing. `CoachCard` falls back to the computed `CoachEngine.dailyNudge`
+    // when a scenario hasn't pinned one; reading only `today.coach` here left
+    // Buddy stuck on "ready" while the card advised rest — the mascot and the
+    // advice visibly disagreeing on the same screen.
     private var mood: BuddyMood {
-        BuddyMood(raw: model.today.coach?.buddyMood ?? "ready")
+        BuddyMood(raw: (model.today.coach ?? CoachEngine.dailyNudge(for: model.today)).buddyMood)
     }
 
     var body: some View {

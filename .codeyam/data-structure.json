@@ -375,5 +375,68 @@
         "description": "Keychain account name holding the key, e.g. coach-anthropic-key. The account name is the only key-related value that appears here; the secret itself is never in this model, in UserDefaults, or in a scenario seed."
       }
     ]
+  },
+  {
+    "name": "JournalEntry",
+    "description": "One dated entry in the runner's journal, covering both surfaces of the feature: a post-run note bound to a workout (workoutDate set) and a standalone daily check-in (workoutDate nil). Stored entirely on-device as a UserDefaults-backed JSON array under the otterpaceJournalEntries key via JournalStore \u2014 the same pattern as RaceGoal/RaceStore \u2014 and seeded in scenarios via rbJournalJSON. Carried as a list on TodayState (default empty) so it flows with no new transport into the on-device CoachEngine, the remote AI coach (api/coach.ts), and the WeeklyReviewEngine. Only a bounded slice reaches the coach: the trailing 14 days, each note truncated to ~200 characters, so an unbounded journal cannot push loadHistory out of the 16 KB MAX_CONTEXT_BYTES coach-context cap. This is the most personal data in the app: it never syncs, never reaches a friend via SocialShare.redact, and Settings offers a destructive delete-all.",
+    "category": "datastore",
+    "order": 10,
+    "fields": [
+      {
+        "name": "id",
+        "type": "string",
+        "isId": true,
+        "required": true,
+        "description": "UUID identifying the entry; upsert replaces by id"
+      },
+      {
+        "name": "date",
+        "type": "string",
+        "required": true,
+        "description": "ISO yyyy-MM-dd date the entry is about, matching LatestWorkout.date; ISO strings sort lexicographically for newest-first and group into Monday-start weeks via the ActivityHistory.groupByWeek convention"
+      },
+      {
+        "name": "feel",
+        "type": "number",
+        "required": false,
+        "description": "How the day or run felt, 1\u20135; nil when not rated. Repeated values <= 2 soften the CoachEngine recommendation toward rest/walk"
+      },
+      {
+        "name": "energy",
+        "type": "string",
+        "required": false,
+        "description": "Energy level chip: low | okay | good; nil when not selected"
+      },
+      {
+        "name": "soreness",
+        "type": "string",
+        "required": false,
+        "description": "Soreness chip: none | mild | sore | painful; nil when not selected. Repeated sore/painful drives a recovery Buddy mood \u2014 layered below the existing hard safety rules, never replacing them"
+      },
+      {
+        "name": "sleep",
+        "type": "string",
+        "required": false,
+        "description": "Sleep quality chip: poor | okay | good; nil when not selected"
+      },
+      {
+        "name": "note",
+        "type": "string",
+        "required": false,
+        "description": "Optional free text in the runner's own words; never required. Truncated to ~200 characters in the coach slice"
+      },
+      {
+        "name": "workoutDate",
+        "type": "string",
+        "required": false,
+        "description": "ISO yyyy-MM-dd of the linked workout when this is a post-run note; nil for a standalone daily check-in"
+      },
+      {
+        "name": "workoutType",
+        "type": "string",
+        "required": false,
+        "description": "run | walk | ride of the linked workout, used for the row's icon in Activity History"
+      }
+    ]
   }
 ]

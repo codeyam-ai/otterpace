@@ -1,380 +1,29 @@
 {
   "files": {
-    "api/_lib/ratelimit.ts": {
+    "Tests/AppCoreTests/CoachEngineTests.swift": {
       "imports": [],
       "importedBy": []
     },
-    "api/coach.ts": {
-      "imports": [
-        "api/_lib/ratelimit.js",
-        "api/_lib/llm.js"
-      ],
-      "importedBy": [
-        "test/api/coach.test.ts"
-      ]
-    },
-    "Sources/AppCore/StepRing.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "api/strava/callback.ts": {
+    "api/_lib/apns.ts": {
       "imports": [
         "api/_lib/strava.js"
       ],
       "importedBy": [
-        "test/api/strava-handlers.test.ts"
+        "test/api/apns.test.ts"
       ]
     },
-    "Tests/AppCoreTests/IntegrationModuleTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Tests/AppCoreTests/MainTabTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/ActivityHeatmapSection.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Tests/AppCoreTests/ActivityHeatmapTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "api/_lib/llm.js": {
-      "imports": [],
-      "importedBy": [
-        "api/race-search.ts",
-        "api/race-import.ts",
-        "api/coach.ts"
-      ]
-    },
-    "test/api/apns.test.ts": {
-      "imports": [
-        "api/_lib/apns.ts"
-      ],
-      "importedBy": []
-    },
-    "Sources/AppCore/HealthDeniedView.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CodeyamIsolated/CodeyamIsolationHost.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/AskCoachEmptyState.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CodeyamIsolated/RollingWindowNoteIsolated.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Scripts/asc-submit-external.mjs": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/ActivityHistory.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CoachPreviewWorkoutsCard.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "api/account/sync.ts": {
+    "api/cron/movement-nudge.ts": {
       "imports": [
         "api/_lib/account.js",
-        "api/_lib/session.js"
-      ],
-      "importedBy": [
-        "test/api/account-handlers.test.ts"
-      ]
-    },
-    "test/api/session.test.ts": {
-      "imports": [
-        "api/account/session.ts"
-      ],
-      "importedBy": []
-    },
-    "Sources/AppCore/CardSection.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/Coach/RaceImportClient.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Tests/AppCoreTests/RaceImportPersistenceTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "api/strava/exchange.ts": {
-      "imports": [
+        "api/_lib/apns.js",
+        "api/_lib/nudge.js",
         "api/_lib/strava.js"
       ],
       "importedBy": [
-        "test/api/strava-handlers.test.ts"
+        "test/api/cron-handler.test.ts"
       ]
-    },
-    "Scripts/asc-submit-appstore.mjs": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CodeyamIsolated/CoachConsoleLinkRowIsolated.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Tests/AppCoreTests/ThemeStoreTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/HeatmapRamp.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Tests/AppCoreTests/ModelTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CoachConsoleLinkRow.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "api/_lib/apple.ts": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/RaceImportView.swift": {
-      "imports": [],
-      "importedBy": []
     },
     "Sources/AppCore/CoachProviderRow.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "api/_lib/account.ts": {
-      "imports": [
-        "api/_lib/strava.js"
-      ],
-      "importedBy": [
-        "test/api/account.test.ts",
-        "test/api/account-push.test.ts"
-      ]
-    },
-    "Sources/AppCore/HeatmapDayDetail.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/Onboarding/OnboardingFlowView.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Tests/AppCoreTests/CoachDataPreviewTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    ".claude/skills/review-session/scripts/find-last-session.mjs": {
-      "imports": [
-        ".claude/skills/review-session/scripts/find-last-session-helpers.mjs"
-      ],
-      "importedBy": []
-    },
-    "Scripts/asc-expire-build.mjs": {
-      "imports": [],
-      "importedBy": []
-    },
-    "test/api/push-handlers.test.ts": {
-      "imports": [
-        "api/account/push.ts"
-      ],
-      "importedBy": []
-    },
-    "Tests/AppCoreTests/OnboardingScenarioIndexTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    ".claude/hooks/editor-pretool-hook.py": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CoachPreviewRacesCard.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "test/api/strava.test.ts": {
-      "imports": [
-        "api/_lib/strava.ts"
-      ],
-      "importedBy": []
-    },
-    "Sources/AppCore/HeatmapLegend.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "api/_lib/llm.ts": {
-      "imports": [],
-      "importedBy": [
-        "test/api/llm.test.ts"
-      ]
-    },
-    "Sources/AppCore/CoachEngine.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/HeatmapGrid.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CoachPreviewLoadCard.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/Health/HealthDataSource.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/SettingsActionRow.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CoachPreviewHeader.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Tests/AppCoreTests/OnboardingStateTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/ActivityHistoryEmptyState.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Scripts/asc-version-probe.mjs": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/Formatters.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/Account/AccountSyncService.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CodeyamIsolated/CoachProviderRowIsolated.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CodeyamIsolated/SettingsActionRowLabelIsolated.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "test/api/account-handlers.test.ts": {
-      "imports": [
-        "api/account/sync.ts",
-        "api/account/health.ts"
-      ],
-      "importedBy": []
-    },
-    "test/api/nudge.test.ts": {
-      "imports": [
-        "api/_lib/nudge.ts"
-      ],
-      "importedBy": []
-    },
-    "Tests/AppCoreTests/CoachProviderConsoleTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/Account/PushRegistrationService.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/AskCoachHeader.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/Auth/SessionStore.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Tests/AppCoreTests/CoachProfileTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CodeyamIsolated/CoachKeyFieldIsolated.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Tests/AppCoreTests/PushRegistrationServiceTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "test/api/coach.test.ts": {
-      "imports": [
-        "api/coach.ts"
-      ],
-      "importedBy": []
-    },
-    "Sources/AppCore/Notifications/MovementActivityMonitor.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/HeatmapNote.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CoachKeyField.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "api/strava/disconnect.ts": {
-      "imports": [
-        "api/_lib/strava.js"
-      ],
-      "importedBy": [
-        "test/api/strava-handlers.test.ts"
-      ]
-    },
-    "Scripts/asc-build-status.mjs": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CoachPreviewAboutYouCard.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/WeeklyReviewEngine.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "vitest.config.ts": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/TrendBadge.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "api/_lib/nudge.ts": {
-      "imports": [],
-      "importedBy": [
-        "test/api/nudge.test.ts"
-      ]
-    },
-    "test/api/strava-handlers.test.ts": {
-      "imports": [
-        "api/_lib/strava.ts",
-        "api/strava/activities.ts",
-        "api/strava/callback.ts",
-        "api/strava/disconnect.ts",
-        "api/strava/exchange.ts"
-      ],
-      "importedBy": []
-    },
-    "Tests/AppCoreTests/ActivityHistoryTests.swift": {
       "imports": [],
       "importedBy": []
     },
@@ -384,99 +33,35 @@
       ],
       "importedBy": []
     },
-    "Sources/AppCore/ConnectHero.swift": {
+    "Sources/AppCore/Onboarding/OnboardingFlowView.swift": {
       "imports": [],
       "importedBy": []
     },
-    "Sources/AppCore/BuddySummaryCard.swift": {
+    "Sources/AppCore/CoachDataRow.swift": {
       "imports": [],
       "importedBy": []
     },
-    "Scripts/asc-setup-version.mjs": {
+    "Tests/AppCoreTests/WeeklyReviewEngineTests.swift": {
       "imports": [],
       "importedBy": []
     },
-    "Tests/AppCoreTests/RaceGoalsTests.swift": {
+    "Sources/AppCore/ActivityHistoryEmptyState.swift": {
       "imports": [],
       "importedBy": []
     },
-    "api/race-search.ts": {
-      "imports": [
-        "api/_lib/ratelimit.js",
-        "api/_lib/llm.js"
-      ],
-      "importedBy": [
-        "test/api/race-search.test.ts"
-      ]
-    },
-    "Sources/AppCore/Onboarding/OnboardingState.swift": {
+    "Scripts/asc-expire-build.mjs": {
       "imports": [],
       "importedBy": []
     },
-    "Sources/AppCore/CoachPreviewActivityCard.swift": {
+    "Sources/AppCore/CoachPreviewNeverSentCard.swift": {
       "imports": [],
       "importedBy": []
     },
-    "api/account/health.ts": {
-      "imports": [
-        "api/_lib/account.js",
-        "api/_lib/session.js"
-      ],
-      "importedBy": [
-        "test/api/account-handlers.test.ts"
-      ]
-    },
-    "Sources/AppCore/Coach/CoachProvider.swift": {
+    "Sources/AppCore/ContentView.swift": {
       "imports": [],
       "importedBy": []
     },
-    "Sources/AppCore/RaceGoals.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/ChatBubble.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/Preferences.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/Auth/AppleCredentialChecker.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/AskCoachLockedState.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/Coach/RemoteCoach.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/HeatmapEmptyState.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/SettingsView.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "api/_lib/apns.js": {
-      "imports": [],
-      "importedBy": [
-        "api/cron/movement-nudge.ts"
-      ]
-    },
-    "Sources/AppCore/ActivityHistoryHeader.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/Theming/ThemeMarks.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/WeeklyReviewHeader.swift": {
+    "Sources/AppCore/Journal/JournalSpoken.swift": {
       "imports": [],
       "importedBy": []
     },
@@ -489,29 +74,222 @@
         "api/account/sync.ts"
       ]
     },
+    "api/_lib/ratelimit.js": {
+      "imports": [],
+      "importedBy": [
+        "api/race-search.ts",
+        "api/race-import.ts",
+        "api/coach.ts"
+      ]
+    },
+    "test/api/race-search.test.ts": {
+      "imports": [
+        "api/race-search.ts"
+      ],
+      "importedBy": []
+    },
+    ".claude/skills/review-session/scripts/extract-session.mjs": {
+      "imports": [
+        ".claude/skills/review-session/scripts/extract-session-helpers.mjs"
+      ],
+      "importedBy": []
+    },
+    "Tests/AppCoreTests/AppleCredentialMappingTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CodeyamIsolated/CodeyamIsolationHost.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    ".claude/hooks/editor-pretool-hook.py": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Notifications/MovementReminders.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "api/_lib/strava.ts": {
+      "imports": [],
+      "importedBy": [
+        "test/api/strava.test.ts",
+        "test/api/strava-handlers.test.ts"
+      ]
+    },
+    "api/_lib/llm.ts": {
+      "imports": [],
+      "importedBy": [
+        "test/api/llm.test.ts"
+      ]
+    },
+    "Sources/AppCore/AskCoachView.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    ".claude/skills/review-session/scripts/find-last-session.mjs": {
+      "imports": [
+        ".claude/skills/review-session/scripts/find-last-session-helpers.mjs"
+      ],
+      "importedBy": []
+    },
+    "Tests/AppCoreTests/CoachProfileTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "test/api/session.test.ts": {
+      "imports": [
+        "api/account/session.ts"
+      ],
+      "importedBy": []
+    },
+    "test/api/coach.test.ts": {
+      "imports": [
+        "api/coach.ts"
+      ],
+      "importedBy": []
+    },
+    "Sources/AppCore/ActivityHistory.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Account/AccountSyncService.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CoachPreviewAboutYouCard.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/TodayView.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/AskCoachHeader.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CodeyamIsolated/RollingWindowNoteIsolated.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/ActivityHistoryHeader.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/HeatmapLegend.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CoachPreviewLoadCard.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/HeatmapNote.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Journal/JournalLogic.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "test/api/cron-handler.test.ts": {
+      "imports": [
+        "api/cron/movement-nudge.ts"
+      ],
+      "importedBy": []
+    },
+    "Tests/AppCoreTests/ThemeStoreTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Health/HealthKitDataSource.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/RollingWindowNote.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CoachConsoleLinkRow.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Onboarding/OnboardingState.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/HeatmapGrid.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/HeatmapMetricPicker.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/ConnectHero.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Theming/ThemeMarks.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/ActivityHistoryView.swift": {
+      "imports": [],
+      "importedBy": []
+    },
     "test/api/llm.test.ts": {
       "imports": [
         "api/_lib/llm.ts"
       ],
       "importedBy": []
     },
-    "Sources/AppCore/AppIconArtwork.swift": {
+    "Sources/AppCore/Theming/ThemeSwatch.swift": {
       "imports": [],
       "importedBy": []
     },
-    "Sources/AppCore/ActivityHeatmap.swift": {
+    "Sources/AppCore/WeeklyReviewView.swift": {
       "imports": [],
       "importedBy": []
     },
-    "Sources/AppCore/Model.swift": {
+    ".claude/skills/review-session/scripts/extract-session-helpers.mjs": {
+      "imports": [],
+      "importedBy": [
+        ".claude/skills/review-session/scripts/extract-session.mjs"
+      ]
+    },
+    "vitest.config.ts": {
       "imports": [],
       "importedBy": []
     },
-    "Scripts/asc-beta-probe.mjs": {
+    "Sources/AppCore/HeatmapRamp.swift": {
       "imports": [],
       "importedBy": []
     },
-    "Sources/AppCore/Theming/ThemeSystem.swift": {
+    "Tests/AppCoreTests/ActivityHeatmapTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    ".claude/skills/review-session/scripts/find-last-session-helpers.mjs": {
+      "imports": [],
+      "importedBy": [
+        ".claude/skills/review-session/scripts/find-last-session.mjs"
+      ]
+    },
+    "Tests/AppCoreTests/FormattersTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Tests/AppCoreTests/IntegrationModuleTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Journal/JournalStore.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/WeeklyReviewHero.swift": {
       "imports": [],
       "importedBy": []
     },
@@ -524,17 +302,206 @@
         "test/api/session.test.ts"
       ]
     },
-    ".claude/skills/review-session/scripts/find-last-session-helpers.mjs": {
+    "Scripts/asc-version-probe.mjs": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Journal/JournalEditorSheet.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CoachKeyField.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "api/_lib/nudge.js": {
       "imports": [],
       "importedBy": [
-        ".claude/skills/review-session/scripts/find-last-session.mjs"
+        "api/cron/movement-nudge.ts"
+      ]
+    },
+    "Sources/AppCore/SettingsActionRow.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CoachPreviewHeader.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Journal/JournalChipRow.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Scripts/asc-submit-appstore.mjs": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/RaceImportView.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Notifications/MovementActivityMonitor.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "test/api/strava-handlers.test.ts": {
+      "imports": [
+        "api/_lib/strava.ts",
+        "api/strava/activities.ts",
+        "api/strava/callback.ts",
+        "api/strava/disconnect.ts",
+        "api/strava/exchange.ts"
+      ],
+      "importedBy": []
+    },
+    "Sources/AppCore/CardSection.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Tests/AppCoreTests/OnboardingStateTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CoachPreviewDestinationCard.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/AskCoachLockedState.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Scripts/asc-withdraw-review.mjs": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Journal/JournalChipSummary.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/RaceEditorView.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Tests/AppCoreTests/CoachDataPreviewTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/BuddySummaryCard.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Coach/RemoteCoach.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "api/strava/callback.ts": {
+      "imports": [
+        "api/_lib/strava.js"
+      ],
+      "importedBy": [
+        "test/api/strava-handlers.test.ts"
+      ]
+    },
+    "Sources/AppCore/ActivityHeatmapSection.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "api/strava/activities.ts": {
+      "imports": [
+        "api/_lib/strava.js"
+      ],
+      "importedBy": [
+        "test/api/strava-handlers.test.ts"
+      ]
+    },
+    "Sources/AppCore/Preferences.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/HeatmapDayDetail.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/WeeklyReviewEngine.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Tests/AppCoreTests/RaceGoalsTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Scripts/asc-submit-external.mjs": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/RaceGoals.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "test/api/apns.test.ts": {
+      "imports": [
+        "api/_lib/apns.ts"
+      ],
+      "importedBy": []
+    },
+    "api/account/health.ts": {
+      "imports": [
+        "api/_lib/account.js",
+        "api/_lib/session.js"
+      ],
+      "importedBy": [
+        "test/api/account-handlers.test.ts"
+      ]
+    },
+    "api/strava/disconnect.ts": {
+      "imports": [
+        "api/_lib/strava.js"
+      ],
+      "importedBy": [
+        "test/api/strava-handlers.test.ts"
+      ]
+    },
+    "Sources/AppCore/Journal/JournalEntry.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "api/_lib/nudge.ts": {
+      "imports": [],
+      "importedBy": [
+        "test/api/nudge.test.ts"
       ]
     },
     ".claude/hooks/editor-step-hook.py": {
       "imports": [],
       "importedBy": []
     },
-    "Sources/AppCore/WeeklyReviewHero.swift": {
+    "api/_lib/apple.js": {
+      "imports": [],
+      "importedBy": [
+        "api/account/session.ts"
+      ]
+    },
+    "Sources/AppCore/StepRing.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/HealthDeniedView.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CodeyamIsolated/SettingsActionRowIsolated.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Scripts/asc-build-status.mjs": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/SettingsView.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Onboarding/CoachProfile.swift": {
       "imports": [],
       "importedBy": []
     },
@@ -544,11 +511,190 @@
       ],
       "importedBy": []
     },
+    "Tests/AppCoreTests/ModelTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "test/api/push-handlers.test.ts": {
+      "imports": [
+        "api/account/push.ts"
+      ],
+      "importedBy": []
+    },
+    "Sources/AppCore/ActivityHeatmap.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "api/_lib/account.js": {
+      "imports": [],
+      "importedBy": [
+        "api/account/push.ts",
+        "api/account/health.ts",
+        "api/account/sync.ts",
+        "api/cron/movement-nudge.ts"
+      ]
+    },
+    "Sources/AppCore/CoachEngine.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Tests/AppCoreTests/ActivityHistoryTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CodeyamIsolated/CoachKeyFieldIsolated.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Theming/ThemeSystem.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "test/api/account.test.ts": {
+      "imports": [
+        "api/_lib/account.ts"
+      ],
+      "importedBy": []
+    },
+    "api/_lib/apns.js": {
+      "imports": [],
+      "importedBy": [
+        "api/cron/movement-nudge.ts"
+      ]
+    },
+    "Tests/AppCoreTests/OnboardingScenarioIndexTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Tests/AppCoreTests/MovementRemindersTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Account/PushRegistrationService.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    ".claude/hooks/_step_metadata.py": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/AskCoachEmptyState.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CoachPreviewRacesCard.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "api/_lib/apple.ts": {
+      "imports": [],
+      "importedBy": []
+    },
+    "api/race-import.ts": {
+      "imports": [
+        "api/_lib/ratelimit.js",
+        "api/_lib/llm.js"
+      ],
+      "importedBy": [
+        "test/api/race-import.test.ts"
+      ]
+    },
+    "Sources/AppCore/TrendBadge.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Auth/SignInView.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Tests/AppCoreTests/PushRegistrationServiceTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Coach/CoachProvider.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/ActivityWeekSection.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Scripts/make-og-card.py": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/ChatBubble.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Health/HealthDataSource.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Scripts/asc-setup-version.mjs": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CodeyamIsolated/CoachConsoleLinkRowIsolated.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Journal/JournalNoteField.swift": {
+      "imports": [],
+      "importedBy": []
+    },
     "Sources/AppCore/HeatmapRangePicker.swift": {
       "imports": [],
       "importedBy": []
     },
-    "api/_lib/ratelimit.js": {
+    "Sources/AppCore/AppIconArtwork.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Journal/FeelSelector.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Coach/RaceImportClient.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "api/strava/exchange.ts": {
+      "imports": [
+        "api/_lib/strava.js"
+      ],
+      "importedBy": [
+        "test/api/strava-handlers.test.ts"
+      ]
+    },
+    "Scripts/asc-beta-probe.mjs": {
+      "imports": [],
+      "importedBy": []
+    },
+    "test/api/strava.test.ts": {
+      "imports": [
+        "api/_lib/strava.ts"
+      ],
+      "importedBy": []
+    },
+    "api/_lib/ratelimit.ts": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/WeeklyLoadCard.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "api/account/sync.ts": {
+      "imports": [
+        "api/_lib/account.js",
+        "api/_lib/session.js"
+      ],
+      "importedBy": [
+        "test/api/account-handlers.test.ts"
+      ]
+    },
+    "api/_lib/llm.js": {
       "imports": [],
       "importedBy": [
         "api/race-search.ts",
@@ -556,7 +702,34 @@
         "api/coach.ts"
       ]
     },
-    "Sources/AppCore/RollingWindowNote.swift": {
+    "api/race-search.ts": {
+      "imports": [
+        "api/_lib/ratelimit.js",
+        "api/_lib/llm.js"
+      ],
+      "importedBy": [
+        "test/api/race-search.test.ts"
+      ]
+    },
+    "Sources/AppCore/HeatmapEmptyState.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "test/api/race-import.test.ts": {
+      "imports": [
+        "api/race-import.ts"
+      ],
+      "importedBy": []
+    },
+    "Tests/AppCoreTests/CoachProviderConsoleTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CoachDataPreview.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CodeyamIsolated/SettingsActionRowLabelIsolated.swift": {
       "imports": [],
       "importedBy": []
     },
@@ -569,17 +742,82 @@
         "test/api/push-handlers.test.ts"
       ]
     },
-    "Tests/AppCoreTests/FormattersTests.swift": {
+    "Sources/AppCore/Auth/SessionStore.swift": {
       "imports": [],
       "importedBy": []
     },
-    "test/api/race-search.test.ts": {
+    "Sources/AppCore/PuffyBuddy.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CoachPreviewActivityCard.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "ui/src/helpers/stepLabels.generated.ts": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Journal/JournalEmptyState.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Tests/AppCoreTests/RaceImportPersistenceTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Journal/JournalEntryRow.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Tests/AppCoreTests/SessionStoreTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Model.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "api/_lib/session.ts": {
       "imports": [
-        "api/race-search.ts"
+        "api/_lib/strava.js"
+      ],
+      "importedBy": [
+        "test/api/session-lib.test.ts"
+      ]
+    },
+    "Sources/AppCore/WeeklyReviewHeader.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "test/api/nudge.test.ts": {
+      "imports": [
+        "api/_lib/nudge.ts"
       ],
       "importedBy": []
     },
-    "Sources/AppCore/Notifications/MovementReminders.swift": {
+    "App/App.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/CodeyamIsolated/CoachProviderRowIsolated.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/Theme.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "api/_lib/account.ts": {
+      "imports": [
+        "api/_lib/strava.js"
+      ],
+      "importedBy": [
+        "test/api/account.test.ts",
+        "test/api/account-push.test.ts"
+      ]
+    },
+    "Sources/AppCore/Journal/CheckInCard.swift": {
       "imports": [],
       "importedBy": []
     },
@@ -596,262 +834,53 @@
         "api/cron/movement-nudge.ts"
       ]
     },
-    "Tests/AppCoreTests/AppleCredentialMappingTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/WeeklyLoadCard.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "ui/src/helpers/stepLabels.generated.ts": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/HeatmapMetricPicker.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Tests/AppCoreTests/MovementRemindersTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    ".claude/skills/review-session/scripts/extract-session-helpers.mjs": {
-      "imports": [],
-      "importedBy": [
-        ".claude/skills/review-session/scripts/extract-session.mjs"
-      ]
-    },
-    "api/_lib/nudge.js": {
-      "imports": [],
-      "importedBy": [
-        "api/cron/movement-nudge.ts"
-      ]
-    },
-    "Sources/AppCore/WeeklyReviewView.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/Theme.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CodeyamIsolated/SettingsActionRowIsolated.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/ActivityHistoryView.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Tests/AppCoreTests/SessionStoreTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CoachPreviewNeverSentCard.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/ContentView.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/Auth/SignInView.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    ".claude/hooks/_step_metadata.py": {
-      "imports": [],
-      "importedBy": []
-    },
-    "api/_lib/strava.ts": {
-      "imports": [],
-      "importedBy": [
-        "test/api/strava.test.ts",
-        "test/api/strava-handlers.test.ts"
-      ]
-    },
-    "Sources/AppCore/AskCoachView.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Tests/AppCoreTests/WeeklyReviewEngineTests.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "test/api/race-import.test.ts": {
+    "test/api/account-handlers.test.ts": {
       "imports": [
-        "api/race-import.ts"
-      ],
-      "importedBy": []
-    },
-    "api/_lib/session.ts": {
-      "imports": [
-        "api/_lib/strava.js"
-      ],
-      "importedBy": [
-        "test/api/session-lib.test.ts"
-      ]
-    },
-    "Scripts/asc-withdraw-review.mjs": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Scripts/make-og-card.py": {
-      "imports": [],
-      "importedBy": []
-    },
-    "api/cron/movement-nudge.ts": {
-      "imports": [
-        "api/_lib/account.js",
-        "api/_lib/apns.js",
-        "api/_lib/nudge.js",
-        "api/_lib/strava.js"
-      ],
-      "importedBy": [
-        "test/api/cron-handler.test.ts"
-      ]
-    },
-    "test/api/cron-handler.test.ts": {
-      "imports": [
-        "api/cron/movement-nudge.ts"
-      ],
-      "importedBy": []
-    },
-    "Sources/AppCore/RaceEditorView.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/Theming/ThemeSwatch.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/PuffyBuddy.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CoachDataPreview.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "api/_lib/apple.js": {
-      "imports": [],
-      "importedBy": [
-        "api/account/session.ts"
-      ]
-    },
-    "api/_lib/account.js": {
-      "imports": [],
-      "importedBy": [
-        "api/account/push.ts",
-        "api/account/health.ts",
         "api/account/sync.ts",
-        "api/cron/movement-nudge.ts"
-      ]
-    },
-    "api/strava/activities.ts": {
-      "imports": [
-        "api/_lib/strava.js"
-      ],
-      "importedBy": [
-        "test/api/strava-handlers.test.ts"
-      ]
-    },
-    "Sources/AppCore/Health/HealthKitDataSource.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/Onboarding/CoachProfile.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    ".claude/skills/review-session/scripts/extract-session.mjs": {
-      "imports": [
-        ".claude/skills/review-session/scripts/extract-session-helpers.mjs"
+        "api/account/health.ts"
       ],
       "importedBy": []
     },
-    "Tests/AppCoreTests/CoachEngineTests.swift": {
+    "Sources/AppCore/Auth/AppleCredentialChecker.swift": {
       "imports": [],
       "importedBy": []
     },
-    "Sources/AppCore/ActivityWeekSection.swift": {
+    "Sources/AppCore/Journal/JournalEditorHeader.swift": {
       "imports": [],
       "importedBy": []
     },
-    "api/_lib/apns.ts": {
-      "imports": [
-        "api/_lib/strava.js"
-      ],
-      "importedBy": [
-        "test/api/apns.test.ts"
-      ]
+    "Sources/AppCore/CoachPreviewWorkoutsCard.swift": {
+      "imports": [],
+      "importedBy": []
     },
-    "api/race-import.ts": {
+    "api/coach.ts": {
       "imports": [
         "api/_lib/ratelimit.js",
         "api/_lib/llm.js"
       ],
       "importedBy": [
-        "test/api/race-import.test.ts"
+        "test/api/coach.test.ts"
       ]
     },
-    "Sources/AppCore/TodayView.swift": {
+    "Tests/AppCoreTests/MainTabTests.swift": {
       "imports": [],
       "importedBy": []
     },
-    "App/App.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "Sources/AppCore/CoachDataRow.swift": {
-      "imports": [],
-      "importedBy": []
-    },
-    "test/api/account.test.ts": {
-      "imports": [
-        "api/_lib/account.ts"
-      ],
-      "importedBy": []
-    },
-    "Sources/AppCore/CoachPreviewDestinationCard.swift": {
+    "Sources/AppCore/Formatters.swift": {
       "imports": [],
       "importedBy": []
     }
   },
   "entities": {
-    "test/api/cron-handler.test.ts::__file_root__": {
-      "filePath": "test/api/cron-handler.test.ts",
+    "api/_lib/ratelimit.js::__file_root__": {
+      "filePath": "api/_lib/ratelimit.js",
       "name": "__file_root__",
-      "imports": [
-        "api/cron/movement-nudge.ts::handler"
-      ],
-      "importedBy": []
-    },
-    "test/api/race-import.test.ts::__file_root__": {
-      "filePath": "test/api/race-import.test.ts",
-      "name": "__file_root__",
-      "imports": [
-        "api/race-import.ts::handler"
-      ],
-      "importedBy": []
-    },
-    "test/api/race-search.test.ts::__file_root__": {
-      "filePath": "test/api/race-search.test.ts",
-      "name": "__file_root__",
-      "imports": [
-        "api/race-search.ts::handler"
-      ],
-      "importedBy": []
-    },
-    "test/api/account-handlers.test.ts::__file_root__": {
-      "filePath": "test/api/account-handlers.test.ts",
-      "name": "__file_root__",
-      "imports": [
-        "api/account/sync.ts::__file_root__",
-        "api/account/health.ts::__file_root__"
-      ],
-      "importedBy": []
+      "imports": [],
+      "importedBy": [
+        "api/race-search.ts::__file_root__",
+        "api/race-import.ts::__file_root__",
+        "api/coach.ts::__file_root__"
+      ]
     },
     "api/strava/disconnect.ts::__file_root__": {
       "filePath": "api/strava/disconnect.ts",
@@ -861,22 +890,30 @@
       ],
       "importedBy": []
     },
-    "api/_lib/account.js::__file_root__": {
-      "filePath": "api/_lib/account.js",
+    "test/api/cron-handler.test.ts::__file_root__": {
+      "filePath": "test/api/cron-handler.test.ts",
       "name": "__file_root__",
-      "imports": [],
-      "importedBy": [
-        "api/account/push.ts::__file_root__",
-        "api/account/health.ts::__file_root__",
-        "api/account/sync.ts::__file_root__",
-        "api/cron/movement-nudge.ts::__file_root__"
-      ]
+      "imports": [
+        "api/cron/movement-nudge.ts::handler"
+      ],
+      "importedBy": []
     },
-    "api/_lib/apns.ts::__file_root__": {
-      "filePath": "api/_lib/apns.ts",
+    "api/strava/callback.ts::__file_root__": {
+      "filePath": "api/strava/callback.ts",
       "name": "__file_root__",
       "imports": [
         "api/_lib/strava.js::__file_root__"
+      ],
+      "importedBy": []
+    },
+    "test/api/nudge.test.ts::__file_root__": {
+      "filePath": "test/api/nudge.test.ts",
+      "name": "__file_root__",
+      "imports": [
+        "api/_lib/nudge.ts::NudgeState",
+        "api/_lib/nudge.ts::__file_root__",
+        "api/_lib/nudge.ts::isQuietHour",
+        "api/_lib/nudge.ts::shouldNudge"
       ],
       "importedBy": []
     },
@@ -894,20 +931,22 @@
       ],
       "importedBy": []
     },
-    "api/strava/exchange.ts::__file_root__": {
-      "filePath": "api/strava/exchange.ts",
+    "api/_lib/account.js::__file_root__": {
+      "filePath": "api/_lib/account.js",
       "name": "__file_root__",
-      "imports": [
-        "api/_lib/strava.js::__file_root__"
-      ],
-      "importedBy": []
+      "imports": [],
+      "importedBy": [
+        "api/account/push.ts::__file_root__",
+        "api/account/health.ts::__file_root__",
+        "api/account/sync.ts::__file_root__",
+        "api/cron/movement-nudge.ts::__file_root__"
+      ]
     },
-    ".claude/skills/review-session/scripts/extract-session.mjs::__file_root__": {
-      "filePath": ".claude/skills/review-session/scripts/extract-session.mjs",
+    "test/api/coach.test.ts::__file_root__": {
+      "filePath": "test/api/coach.test.ts",
       "name": "__file_root__",
       "imports": [
-        ".claude/skills/review-session/scripts/extract-session-helpers.mjs::detectFormat",
-        ".claude/skills/review-session/scripts/extract-session-helpers.mjs::detectFormatFromPath"
+        "api/coach.ts::handler"
       ],
       "importedBy": []
     },
@@ -926,22 +965,21 @@
         "api/cron/movement-nudge.ts::__file_root__"
       ]
     },
-    "api/_lib/account.ts::__file_root__": {
-      "filePath": "api/_lib/account.ts",
+    "api/account/push.ts::__file_root__": {
+      "filePath": "api/account/push.ts",
       "name": "__file_root__",
       "imports": [
-        "api/_lib/strava.js::__file_root__"
+        "api/_lib/account.js::__file_root__",
+        "api/_lib/session.js::__file_root__"
       ],
       "importedBy": []
     },
-    "test/api/nudge.test.ts::__file_root__": {
-      "filePath": "test/api/nudge.test.ts",
+    ".claude/skills/review-session/scripts/extract-session.mjs::__file_root__": {
+      "filePath": ".claude/skills/review-session/scripts/extract-session.mjs",
       "name": "__file_root__",
       "imports": [
-        "api/_lib/nudge.ts::NudgeState",
-        "api/_lib/nudge.ts::__file_root__",
-        "api/_lib/nudge.ts::isQuietHour",
-        "api/_lib/nudge.ts::shouldNudge"
+        ".claude/skills/review-session/scripts/extract-session-helpers.mjs::detectFormat",
+        ".claude/skills/review-session/scripts/extract-session-helpers.mjs::detectFormatFromPath"
       ],
       "importedBy": []
     },
@@ -953,12 +991,12 @@
       ],
       "importedBy": []
     },
-    "api/account/health.ts::__file_root__": {
-      "filePath": "api/account/health.ts",
+    "test/api/account-handlers.test.ts::__file_root__": {
+      "filePath": "test/api/account-handlers.test.ts",
       "name": "__file_root__",
       "imports": [
-        "api/_lib/account.js::__file_root__",
-        "api/_lib/session.js::__file_root__"
+        "api/account/sync.ts::__file_root__",
+        "api/account/health.ts::__file_root__"
       ],
       "importedBy": []
     },
@@ -970,6 +1008,14 @@
         "api/cron/movement-nudge.ts::__file_root__"
       ]
     },
+    ".claude/skills/review-session/scripts/find-last-session.mjs::__file_root__": {
+      "filePath": ".claude/skills/review-session/scripts/find-last-session.mjs",
+      "name": "__file_root__",
+      "imports": [
+        ".claude/skills/review-session/scripts/find-last-session-helpers.mjs::claudeProjectHashFromPath"
+      ],
+      "importedBy": []
+    },
     "api/_lib/llm.js::__file_root__": {
       "filePath": "api/_lib/llm.js",
       "name": "__file_root__",
@@ -980,6 +1026,78 @@
         "api/coach.ts::__file_root__"
       ]
     },
+    "api/coach.ts::__file_root__": {
+      "filePath": "api/coach.ts",
+      "name": "__file_root__",
+      "imports": [
+        "api/_lib/ratelimit.js::__file_root__",
+        "api/_lib/llm.js::__file_root__"
+      ],
+      "importedBy": []
+    },
+    "test/api/account.test.ts::__file_root__": {
+      "filePath": "test/api/account.test.ts",
+      "name": "__file_root__",
+      "imports": [
+        "api/_lib/account.ts::deleteHealth",
+        "api/_lib/account.ts::getHealth",
+        "api/_lib/account.ts::getPrefs",
+        "api/_lib/account.ts::healthEndpoint",
+        "api/_lib/account.ts::incomingWins",
+        "api/_lib/account.ts::prefsContainHealthFields",
+        "api/_lib/account.ts::prefsEndpoint",
+        "api/_lib/account.ts::upsertHealth",
+        "api/_lib/account.ts::upsertPrefs"
+      ],
+      "importedBy": []
+    },
+    "api/cron/movement-nudge.ts::__file_root__": {
+      "filePath": "api/cron/movement-nudge.ts",
+      "name": "__file_root__",
+      "imports": [
+        "api/_lib/account.js::__file_root__",
+        "api/_lib/apns.js::__file_root__",
+        "api/_lib/nudge.js::__file_root__",
+        "api/_lib/strava.js::__file_root__"
+      ],
+      "importedBy": []
+    },
+    "test/api/race-search.test.ts::__file_root__": {
+      "filePath": "test/api/race-search.test.ts",
+      "name": "__file_root__",
+      "imports": [
+        "api/race-search.ts::handler"
+      ],
+      "importedBy": []
+    },
+    "api/_lib/apns.js::__file_root__": {
+      "filePath": "api/_lib/apns.js",
+      "name": "__file_root__",
+      "imports": [],
+      "importedBy": [
+        "api/cron/movement-nudge.ts::__file_root__"
+      ]
+    },
+    "test/api/strava.test.ts::__file_root__": {
+      "filePath": "test/api/strava.test.ts",
+      "name": "__file_root__",
+      "imports": [
+        "api/_lib/strava.ts::TokenRow",
+        "api/_lib/strava.ts::deleteToken",
+        "api/_lib/strava.ts::env",
+        "api/_lib/strava.ts::exchangeCode",
+        "api/_lib/strava.ts::fetchMappedActivities",
+        "api/_lib/strava.ts::freshAccessToken",
+        "api/_lib/strava.ts::getToken",
+        "api/_lib/strava.ts::mapActivity",
+        "api/_lib/strava.ts::pacePerMile",
+        "api/_lib/strava.ts::round1",
+        "api/_lib/strava.ts::supabaseHeaders",
+        "api/_lib/strava.ts::tokensEndpoint",
+        "api/_lib/strava.ts::upsertToken"
+      ],
+      "importedBy": []
+    },
     "api/_lib/session.ts::__file_root__": {
       "filePath": "api/_lib/session.ts",
       "name": "__file_root__",
@@ -988,11 +1106,66 @@
       ],
       "importedBy": []
     },
-    "api/strava/callback.ts::__file_root__": {
-      "filePath": "api/strava/callback.ts",
+    "api/strava/exchange.ts::__file_root__": {
+      "filePath": "api/strava/exchange.ts",
       "name": "__file_root__",
       "imports": [
         "api/_lib/strava.js::__file_root__"
+      ],
+      "importedBy": []
+    },
+    "test/api/strava-handlers.test.ts::__file_root__": {
+      "filePath": "test/api/strava-handlers.test.ts",
+      "name": "__file_root__",
+      "imports": [
+        "api/_lib/strava.ts::__file_root__",
+        "api/strava/activities.ts::__file_root__",
+        "api/strava/callback.ts::__file_root__",
+        "api/strava/disconnect.ts::__file_root__",
+        "api/strava/exchange.ts::__file_root__"
+      ],
+      "importedBy": []
+    },
+    "api/account/session.ts::__file_root__": {
+      "filePath": "api/account/session.ts",
+      "name": "__file_root__",
+      "imports": [
+        "api/_lib/apple.js::__file_root__",
+        "api/_lib/session.js::__file_root__"
+      ],
+      "importedBy": []
+    },
+    "api/_lib/account.ts::__file_root__": {
+      "filePath": "api/_lib/account.ts",
+      "name": "__file_root__",
+      "imports": [
+        "api/_lib/strava.js::__file_root__"
+      ],
+      "importedBy": []
+    },
+    "api/account/sync.ts::__file_root__": {
+      "filePath": "api/account/sync.ts",
+      "name": "__file_root__",
+      "imports": [
+        "api/_lib/account.js::__file_root__",
+        "api/_lib/session.js::__file_root__"
+      ],
+      "importedBy": []
+    },
+    "api/race-import.ts::__file_root__": {
+      "filePath": "api/race-import.ts",
+      "name": "__file_root__",
+      "imports": [
+        "api/_lib/ratelimit.js::__file_root__",
+        "api/_lib/llm.js::__file_root__"
+      ],
+      "importedBy": []
+    },
+    "test/api/session.test.ts::__file_root__": {
+      "filePath": "test/api/session.test.ts",
+      "name": "__file_root__",
+      "imports": [
+        "api/account/session.ts::handler"
       ],
       "importedBy": []
     },
@@ -1015,44 +1188,16 @@
         "api/account/session.ts::__file_root__"
       ]
     },
-    "api/_lib/apns.js::__file_root__": {
-      "filePath": "api/_lib/apns.js",
-      "name": "__file_root__",
-      "imports": [],
-      "importedBy": [
-        "api/cron/movement-nudge.ts::__file_root__"
-      ]
-    },
-    "test/api/session.test.ts::__file_root__": {
-      "filePath": "test/api/session.test.ts",
+    "test/api/llm.test.ts::__file_root__": {
+      "filePath": "test/api/llm.test.ts",
       "name": "__file_root__",
       "imports": [
-        "api/account/session.ts::handler"
-      ],
-      "importedBy": []
-    },
-    "test/api/account.test.ts::__file_root__": {
-      "filePath": "test/api/account.test.ts",
-      "name": "__file_root__",
-      "imports": [
-        "api/_lib/account.ts::deleteHealth",
-        "api/_lib/account.ts::getHealth",
-        "api/_lib/account.ts::getPrefs",
-        "api/_lib/account.ts::healthEndpoint",
-        "api/_lib/account.ts::incomingWins",
-        "api/_lib/account.ts::prefsContainHealthFields",
-        "api/_lib/account.ts::prefsEndpoint",
-        "api/_lib/account.ts::upsertHealth",
-        "api/_lib/account.ts::upsertPrefs"
-      ],
-      "importedBy": []
-    },
-    "api/coach.ts::__file_root__": {
-      "filePath": "api/coach.ts",
-      "name": "__file_root__",
-      "imports": [
-        "api/_lib/ratelimit.js::__file_root__",
-        "api/_lib/llm.js::__file_root__"
+        "api/_lib/llm.ts::LlmError",
+        "api/_lib/llm.ts::LlmProvider",
+        "api/_lib/llm.ts::complete",
+        "api/_lib/llm.ts::credentialsFromHeaders",
+        "api/_lib/llm.ts::isLlmProvider",
+        "api/_lib/llm.ts::modelFor"
       ],
       "importedBy": []
     },
@@ -1064,58 +1209,11 @@
       ],
       "importedBy": []
     },
-    "api/_lib/ratelimit.js::__file_root__": {
-      "filePath": "api/_lib/ratelimit.js",
-      "name": "__file_root__",
-      "imports": [],
-      "importedBy": [
-        "api/race-search.ts::__file_root__",
-        "api/race-import.ts::__file_root__",
-        "api/coach.ts::__file_root__"
-      ]
-    },
-    ".claude/skills/review-session/scripts/find-last-session.mjs::__file_root__": {
-      "filePath": ".claude/skills/review-session/scripts/find-last-session.mjs",
+    "test/api/race-import.test.ts::__file_root__": {
+      "filePath": "test/api/race-import.test.ts",
       "name": "__file_root__",
       "imports": [
-        ".claude/skills/review-session/scripts/find-last-session-helpers.mjs::claudeProjectHashFromPath"
-      ],
-      "importedBy": []
-    },
-    "test/api/coach.test.ts::__file_root__": {
-      "filePath": "test/api/coach.test.ts",
-      "name": "__file_root__",
-      "imports": [
-        "api/coach.ts::handler"
-      ],
-      "importedBy": []
-    },
-    "test/api/strava.test.ts::__file_root__": {
-      "filePath": "test/api/strava.test.ts",
-      "name": "__file_root__",
-      "imports": [
-        "api/_lib/strava.ts::TokenRow",
-        "api/_lib/strava.ts::deleteToken",
-        "api/_lib/strava.ts::env",
-        "api/_lib/strava.ts::exchangeCode",
-        "api/_lib/strava.ts::fetchMappedActivities",
-        "api/_lib/strava.ts::freshAccessToken",
-        "api/_lib/strava.ts::getToken",
-        "api/_lib/strava.ts::mapActivity",
-        "api/_lib/strava.ts::pacePerMile",
-        "api/_lib/strava.ts::round1",
-        "api/_lib/strava.ts::supabaseHeaders",
-        "api/_lib/strava.ts::tokensEndpoint",
-        "api/_lib/strava.ts::upsertToken"
-      ],
-      "importedBy": []
-    },
-    "api/race-search.ts::__file_root__": {
-      "filePath": "api/race-search.ts",
-      "name": "__file_root__",
-      "imports": [
-        "api/_lib/ratelimit.js::__file_root__",
-        "api/_lib/llm.js::__file_root__"
+        "api/race-import.ts::handler"
       ],
       "importedBy": []
     },
@@ -1132,41 +1230,12 @@
       ],
       "importedBy": []
     },
-    "api/race-import.ts::__file_root__": {
-      "filePath": "api/race-import.ts",
-      "name": "__file_root__",
-      "imports": [
-        "api/_lib/ratelimit.js::__file_root__",
-        "api/_lib/llm.js::__file_root__"
-      ],
-      "importedBy": []
-    },
-    "api/account/session.ts::__file_root__": {
-      "filePath": "api/account/session.ts",
-      "name": "__file_root__",
-      "imports": [
-        "api/_lib/apple.js::__file_root__",
-        "api/_lib/session.js::__file_root__"
-      ],
-      "importedBy": []
-    },
-    "api/account/sync.ts::__file_root__": {
-      "filePath": "api/account/sync.ts",
+    "api/account/health.ts::__file_root__": {
+      "filePath": "api/account/health.ts",
       "name": "__file_root__",
       "imports": [
         "api/_lib/account.js::__file_root__",
         "api/_lib/session.js::__file_root__"
-      ],
-      "importedBy": []
-    },
-    "api/cron/movement-nudge.ts::__file_root__": {
-      "filePath": "api/cron/movement-nudge.ts",
-      "name": "__file_root__",
-      "imports": [
-        "api/_lib/account.js::__file_root__",
-        "api/_lib/apns.js::__file_root__",
-        "api/_lib/nudge.js::__file_root__",
-        "api/_lib/strava.js::__file_root__"
       ],
       "importedBy": []
     },
@@ -1179,40 +1248,23 @@
       ],
       "importedBy": []
     },
-    "test/api/llm.test.ts::__file_root__": {
-      "filePath": "test/api/llm.test.ts",
+    "api/race-search.ts::__file_root__": {
+      "filePath": "api/race-search.ts",
       "name": "__file_root__",
       "imports": [
-        "api/_lib/llm.ts::LlmError",
-        "api/_lib/llm.ts::LlmProvider",
-        "api/_lib/llm.ts::complete",
-        "api/_lib/llm.ts::credentialsFromHeaders",
-        "api/_lib/llm.ts::isLlmProvider",
-        "api/_lib/llm.ts::modelFor"
+        "api/_lib/ratelimit.js::__file_root__",
+        "api/_lib/llm.js::__file_root__"
       ],
       "importedBy": []
     },
-    "api/account/push.ts::__file_root__": {
-      "filePath": "api/account/push.ts",
+    "api/_lib/apns.ts::__file_root__": {
+      "filePath": "api/_lib/apns.ts",
       "name": "__file_root__",
       "imports": [
-        "api/_lib/account.js::__file_root__",
-        "api/_lib/session.js::__file_root__"
-      ],
-      "importedBy": []
-    },
-    "test/api/strava-handlers.test.ts::__file_root__": {
-      "filePath": "test/api/strava-handlers.test.ts",
-      "name": "__file_root__",
-      "imports": [
-        "api/_lib/strava.ts::__file_root__",
-        "api/strava/activities.ts::__file_root__",
-        "api/strava/callback.ts::__file_root__",
-        "api/strava/disconnect.ts::__file_root__",
-        "api/strava/exchange.ts::__file_root__"
+        "api/_lib/strava.js::__file_root__"
       ],
       "importedBy": []
     }
   },
-  "lastUpdated": "2026-07-31T16:37:16Z"
+  "lastUpdated": "2026-08-03T17:09:17Z"
 }

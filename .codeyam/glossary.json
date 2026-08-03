@@ -198,6 +198,16 @@
     }
   },
   {
+    "conformsToView": true,
+    "description": "The journal's home on the Today dashboard, with two states in one card: a prompt ('How'd today feel?' with the 1-5 row live on the card, so a check-in is one tap and never requires opening a sheet) or today's logged entry in a compact read state with an edit affordance. Deliberately never a streak and never a scold — no 'you haven't journaled in N days', no completion ring. The empty state invites; it does not guilt.",
+    "filePath": "Sources/AppCore/Journal/CheckInCard.swift",
+    "name": "CheckInCard",
+    "scenarios": [
+      "checkincard-prompt",
+      "checkincard-logged"
+    ]
+  },
+  {
     "description": "The AI coach recommendation card, with a calm brand treatment normally and an amber shield-marked treatment when the recommendation carries a safety flag.",
     "filePath": "Sources/AppCore/CoachCard.swift",
     "name": "CoachCard",
@@ -481,6 +491,17 @@
     }
   },
   {
+    "conformsToView": true,
+    "description": "The 1-5 'how did it feel' row — the journal's front door, since one tap here starts an entry and everything else is optional. Each option carries a word (Rough/Meh/Okay/Good/Great) so the scale means something, and a full spoken label ('3 out of 5, okay') rather than a bare number. Tints run warm-to-calm and never red, because a rough day is information rather than a failure. At accessibility text sizes the five options become a vertical list — they cannot share one row without clipping the fifth off-screen entirely.",
+    "filePath": "Sources/AppCore/Journal/FeelSelector.swift",
+    "name": "FeelSelector",
+    "scenarios": [
+      "feelselector-unselected",
+      "feelselector-rough-day-selected",
+      "feelselector-great-day-selected"
+    ]
+  },
+  {
     "description": "macOS-only dev tool (SwiftPM executable) that rasterizes AppIconArtwork via ImageRenderer and writes the opaque 1024x1024 AppIcon-1024.png, flattening onto the coral background so the output has no alpha channel. Regenerates the icon when the mascot art changes.",
     "filePath": "Scripts/GenerateAppIcon/main.swift",
     "name": "GenerateAppIcon",
@@ -592,6 +613,106 @@
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
       "kind": "no-isolation-harness"
     }
+  },
+  {
+    "conformsToView": false,
+    "description": "Pure logic over a [JournalEntry]: entry(forWorkoutOn:) and checkIn(on:) keep the workout card and the Today card from fighting over one entry; recent() windows by trailing days; byWeek() reuses ActivityHistory's Monday-start UTC convention so journal rows land in the weeks the history screen already renders; summary() rolls up counts, average feel, and roughDays (counted by distinct DATE, so one entry that is both low-feel and sore is still one hard day). coachSlice() is the bounded 14-day / 200-char-per-note projection that protects the backend's 16 KB MAX_CONTEXT_BYTES budget from an unbounded diary.",
+    "filePath": "Sources/AppCore/Journal/JournalLogic.swift",
+    "name": "Journal",
+    "testFile": "Tests/AppCoreTests/JournalTests.swift"
+  },
+  {
+    "conformsToView": true,
+    "description": "The shared labeled capsule row behind the editor's energy / soreness / sleep pickers, following the step-goal preset idiom from Settings so the journal reads as part of the app. Tapping the selected chip clears it, because every field is optional and a mis-tap must be recoverable without abandoning the entry. At accessibility sizes the capsules stack vertically and drop their one-line constraint — pinned to one line there, a long label like 'a little sore' takes an intrinsic width wider than the screen and drags the whole editor off the trailing edge.",
+    "filePath": "Sources/AppCore/Journal/JournalChipRow.swift",
+    "name": "JournalChipRow",
+    "scenarios": [
+      "journalchiprow-selected",
+      "journalchiprow-nothing-selected"
+    ]
+  },
+  {
+    "conformsToView": true,
+    "description": "The chips an entry recorded, rendered inline as a compact read-only strip, shared by the Today check-in card and the history row so a logged entry looks the same wherever it appears. Renders nothing at all when no chips were recorded, so an entry that is just a rating and a note leaves no blank band behind.",
+    "filePath": "Sources/AppCore/Journal/JournalChipSummary.swift",
+    "name": "JournalChipSummary",
+    "scenarios": [
+      "journalchipsummary-full",
+      "journalchipsummary-partial",
+      "journalchipsummary-nothing-recorded"
+    ]
+  },
+  {
+    "conformsToView": true,
+    "description": "The editor's top bar: Cancel, the entry's date, and Save. Owns two accessibility accommodations — at accessibility text sizes the date drops to its own line (three items cannot share the row), and the bar caps its own type growth because Cancel and Save are a fixed pair that must both stay on screen; uncapped, their intrinsic width exceeds the display and clips Save off the trailing edge. Save is disabled rather than hidden on a blank draft so the bar does not shift under the thumb.",
+    "filePath": "Sources/AppCore/Journal/JournalEditorHeader.swift",
+    "name": "JournalEditorHeader",
+    "scenarios": [
+      "journaleditorheader-save-disabled",
+      "journaleditorheader-save-enabled",
+      "journaleditorheader-both-states"
+    ]
+  },
+  {
+    "conformsToView": true,
+    "description": "The full journal editor, used for BOTH a daily check-in and a post-run note — the workout link is simply passed in and retitles it. Structured chips lead and free text follows, because chips are one tap on a phone and are what the coach can reason over reliably. Presented as a full-cover overlay rather than a sheet, matching Activity History and Weekly Review: fullScreenCover is unavailable on macOS, and a launch-seeded overlay must render complete on the first frame so a capture is never caught mid-transition.",
+    "filePath": "Sources/AppCore/Journal/JournalEditorSheet.swift",
+    "name": "JournalEditorSheet",
+    "scenarios": [
+      "journaleditorsheet-blank-check-in",
+      "journaleditorsheet-post-run-note"
+    ]
+  },
+  {
+    "conformsToView": true,
+    "description": "The invitation shown where a journal history would be but nothing has been written yet: Buddy plus 'A line about today is enough.' Deliberately carries no streak language, no missed-day count, and nothing that turns an empty journal into a failure — a journaling feature is exactly where a wellness app usually breaks the never-shame rule Buddy already follows.",
+    "filePath": "Sources/AppCore/Journal/JournalEmptyState.swift",
+    "name": "JournalEmptyState",
+    "scenarios": [
+      "journalemptystate-default"
+    ]
+  },
+  {
+    "conformsToView": false,
+    "description": "One dated entry in the runner's journal, covering both surfaces with a single type: a post-run note bound to a workout (workoutDate set) and a standalone daily check-in (workoutDate nil). Carries an optional 1-5 feel plus energy/soreness/sleep enums and optional free text — every field optional so a three-second entry is representable. Tolerant decode defaults every field (and clamps an out-of-range feel) so an entry persisted before a field existed still decodes rather than costing the user their journal. isEmpty keeps a blank editor save from becoming a hollow row; isPostRunNote is what splits the two surfaces.",
+    "filePath": "Sources/AppCore/Journal/JournalEntry.swift",
+    "name": "JournalEntry",
+    "testFile": "Tests/AppCoreTests/JournalTests.swift"
+  },
+  {
+    "conformsToView": true,
+    "description": "One journal entry rendered in Activity History: date, how it felt, the recorded chips, and the note. A post-run note carries its workout's icon so the timeline reads as 'this is about that run' at a glance; a standalone check-in gets a quieter pencil. Used for check-ins only — a post-run note renders inside its own workout's card instead, so the same words never appear twice in one week.",
+    "filePath": "Sources/AppCore/Journal/JournalEntryRow.swift",
+    "name": "JournalEntryRow",
+    "scenarios": [
+      "journalentryrow-post-run-note",
+      "journalentryrow-check-in",
+      "journalentryrow-both-kinds"
+    ]
+  },
+  {
+    "conformsToView": true,
+    "description": "The journal's free-text field: a labeled TextEditor in the app's card chrome, asking 'Anything else?' rather than instructing — the note is optional and always available but never required, because a journal that demands prose gets abandoned in a week. Takes a subject so the spoken label reads 'Note about this workout' rather than a bare 'Note'. Hides the TextEditor's own opaque background where the OS supports it so the themed card fill shows through.",
+    "filePath": "Sources/AppCore/Journal/JournalNoteField.swift",
+    "name": "JournalNoteField",
+    "scenarios": [
+      "journalnotefield-empty",
+      "journalnotefield-filled"
+    ]
+  },
+  {
+    "conformsToView": false,
+    "description": "Shared copy helpers so the check-in card, the history row, and every accessibility label describe an entry identically — one place to change how an entry reads aloud instead of three drifting variants. chips() returns only the chips actually recorded (with their tints); describe() builds a single VoiceOver sentence listing only what the runner recorded, so a withheld value is never implied.",
+    "filePath": "Sources/AppCore/Journal/JournalSpoken.swift",
+    "name": "JournalSpoken",
+    "testFile": "Tests/AppCoreTests/JournalTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "UserDefaults-backed store for the journal — one JSON array under otterpaceJournalEntries, the RaceStore shape, with an injectable defaults so tests use an isolated suite. load() returns [] on empty or corrupt data rather than throwing, because a decode failure must never cost the user the surrounding app. upsert() replaces by id so editing an entry cannot stack duplicates on the timeline; clear() backs the Settings delete-all, which exists because on-device-only data has no server-side delete to lean on.",
+    "filePath": "Sources/AppCore/Journal/JournalStore.swift",
+    "name": "JournalStore",
+    "testFile": "Tests/AppCoreTests/JournalStoreTests.swift"
   },
   {
     "description": "A provider-side failure already mapped to the status the iOS app handles: 401 invalid_key, 429 rate_limited, 502 upstream_error. The message names the actual provider, so a rejected OpenAI key does not tell the user Anthropic refused it.",

@@ -245,6 +245,18 @@ public struct RemoteCoach {
         let safetyFlag: Bool
     }
 
+    /// The context actually put on the wire. The journal is projected down to its
+    /// bounded recent slice here — at the single point where the payload leaves
+    /// the device — so an unbounded diary can never push `loadHistory` out of the
+    /// backend's 16 KB `MAX_CONTEXT_BYTES` cap and quietly degrade the coaching
+    /// this feature exists to improve. Every other field passes through untouched.
+    func bounded(_ context: TodayState) -> TodayState {
+        guard !context.journal.isEmpty else { return context }
+        var out = context
+        out.journal = Journal.coachSlice(context.journal, asOf: context.date)
+        return out
+    }
+
     /// Ask the real coach. Throws `CoachError` so the caller can decide whether to
     /// fall back to `CoachEngine` (network/server) or surface the problem (bad key).
     /// `history` is the recent conversation (oldest first); pass it so the model
@@ -260,7 +272,8 @@ public struct RemoteCoach {
         CoachRequestHeaders.apply(provider: provider, apiKey: apiKey, to: &request)
         do {
             let turns = history.map { Turn(role: $0.role.rawValue, text: $0.text) }
-            request.httpBody = try JSONEncoder().encode(RequestBody(question: question, context: context, history: turns))
+            request.httpBody = try JSONEncoder().encode(
+                RequestBody(question: question, context: bounded(context), history: turns))
         } catch {
             throw CoachError.server
         }

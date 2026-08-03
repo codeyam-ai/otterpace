@@ -122,6 +122,10 @@ public struct TodayState: Codable, Equatable {
     /// where a scenario seeds it. [:] => the steps metric shows "no step data yet"
     /// rather than a grid of misleading zeroes.
     public var dailySteps: [String: Int]
+    /// The runner's own account of how it went — post-run notes and daily
+    /// check-ins. On-device only; a bounded recent slice rides to the coach.
+    /// [] => none written, and every engine behaves exactly as it did before.
+    public var journal: [JournalEntry]
 
     public init(
         healthKitConnected: Bool,
@@ -139,7 +143,8 @@ public struct TodayState: Codable, Equatable {
         loadHistory: [WeeklyLoadPoint] = [],
         races: [RaceGoal] = [],
         profile: CoachProfile? = nil,
-        dailySteps: [String: Int] = [:]
+        dailySteps: [String: Int] = [:],
+        journal: [JournalEntry] = []
     ) {
         self.healthKitConnected = healthKitConnected
         self.date = date
@@ -157,6 +162,7 @@ public struct TodayState: Codable, Equatable {
         self.races = races
         self.profile = profile
         self.dailySteps = dailySteps
+        self.journal = journal
     }
 
     // Tolerant decode: TodayState is encode-only in production (assembled via the
@@ -182,6 +188,7 @@ public struct TodayState: Codable, Equatable {
         races = try c.decodeIfPresent([RaceGoal].self, forKey: .races) ?? []
         profile = try c.decodeIfPresent(CoachProfile.self, forKey: .profile)
         dailySteps = try c.decodeIfPresent([String: Int].self, forKey: .dailySteps) ?? [:]
+        journal = try c.decodeIfPresent([JournalEntry].self, forKey: .journal) ?? []
     }
 
     // Production default: nothing connected yet, blank day-one state.
@@ -234,6 +241,9 @@ public final class OtterpaceModel: ObservableObject {
             // (nil when empty) so it reaches coaching from launch too.
             let profile = CoachProfileStore.load(defaults)
             self.today.profile = profile.isEmpty ? nil : profile
+            // Journal entries are on-device too; load them so what the runner
+            // wrote reaches coaching from launch.
+            self.today.journal = JournalStore.load(defaults)
         }
     }
 
@@ -336,6 +346,17 @@ public final class OtterpaceModel: ObservableObject {
             dailySteps = decoded
         }
 
+        // Journal: a JSON-encoded array under one key (same shape as
+        // rbWorkoutsJSON), so a scenario can pin an exact timeline of post-run
+        // notes and check-ins for capture. [] => nothing written yet, and every
+        // journal-aware surface falls back to its invitation empty state.
+        var journal: [JournalEntry] = []
+        if let json = d.string(forKey: "rbJournalJSON"), !json.isEmpty,
+           let data = json.data(using: .utf8),
+           let decoded = try? JSONDecoder().decode([JournalEntry].self, from: data) {
+            journal = Journal.sorted(decoded)
+        }
+
         var coach: CoachRecommendation? = nil
         if let headline = d.string(forKey: "rbCoachHeadline"), !headline.isEmpty {
             coach = CoachRecommendation(
@@ -363,7 +384,8 @@ public final class OtterpaceModel: ObservableObject {
             loadHistory: loadHistory,
             races: races,
             profile: profile,
-            dailySteps: dailySteps
+            dailySteps: dailySteps,
+            journal: journal
         )
     }
 
@@ -434,6 +456,7 @@ public final class OtterpaceModel: ObservableObject {
         today.races = RaceStore.load(defaults)
         let profile = CoachProfileStore.load(defaults)
         today.profile = profile.isEmpty ? nil : profile
+        today.journal = JournalStore.load(defaults)
     }
 
     /// Set the daily step goal: persist it and apply immediately to the dashboard.
@@ -449,6 +472,43 @@ public final class OtterpaceModel: ObservableObject {
     @MainActor public func addRace(_ race: RaceGoal) { today.races = RaceStore.add(race, defaults) }
     @MainActor public func updateRace(_ race: RaceGoal) { today.races = RaceStore.update(race, defaults) }
     @MainActor public func removeRace(id: UUID) { today.races = RaceStore.remove(id: id, defaults) }
+
+    // MARK: Journal (persist through JournalStore + apply to the dashboard immediately)
+
+    /// Save (or update) an entry. An entry the runner left completely blank is
+    /// discarded rather than persisted as a hollow row on the timeline.
+    @MainActor public func saveJournalEntry(_ entry: JournalEntry) {
+        guard !entry.isEmpty else { return }
+        today.journal = JournalStore.upsert(entry, defaults)
+    }
+
+    @MainActor public func deleteJournalEntry(id: UUID) {
+        today.journal = JournalStore.delete(id: id, defaults)
+    }
+
+    /// One-tap check-in from the Today card: record `feel` for `date` while
+    /// PRESERVING whatever else the runner already logged that day. Lives here
+    /// rather than in the view because rebuilding the entry inline meant the
+    /// call site had to remember to carry every other field forward — miss one
+    /// and a stray tap silently erases the note they typed this morning.
+    @MainActor public func quickFeel(_ feel: Int, on date: String) {
+        let existing = Journal.checkIn(on: date, in: today.journal)
+        saveJournalEntry(JournalEntry(
+            id: existing?.id ?? UUID(),
+            date: date,
+            feel: feel,
+            energy: existing?.energy,
+            soreness: existing?.soreness,
+            sleep: existing?.sleep,
+            note: existing?.note
+        ))
+    }
+
+    /// Erase the whole journal — the Settings destructive action.
+    @MainActor public func deleteAllJournalEntries() {
+        JournalStore.clear(defaults)
+        today.journal = []
+    }
 
     /// Ingest activities imported from Strava (an optional data source alongside
     /// Apple Health). Populates the workout history + latest workout, and flips

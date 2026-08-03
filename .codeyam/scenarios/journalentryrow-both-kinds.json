@@ -1,0 +1,19 @@
+{
+  "name": "JournalEntryRow - Both Kinds",
+  "id": "c2bb3483-71a5-4de2-832d-5a782b569856",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Both Kinds",
+      "CODEYAM_ISOLATE_COMPONENT": "JournalEntryRow"
+    }
+  },
+  "componentName": "JournalEntryRow",
+  "scenarioType": "component"
+}

@@ -1,0 +1,19 @@
+{
+  "name": "JournalNoteField - Empty",
+  "id": "e4eaaf46-019e-447e-827d-4330572640d2",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "JournalNoteField",
+      "CODEYAM_ISOLATE_SCENARIO": "Empty"
+    }
+  },
+  "componentName": "JournalNoteField",
+  "scenarioType": "component"
+}

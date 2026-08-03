@@ -1,0 +1,19 @@
+{
+  "name": "JournalEditorHeader - Save Disabled",
+  "id": "0c3010ab-5d00-4ab0-9a23-5a8d5ba1e0b7",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Save Disabled",
+      "CODEYAM_ISOLATE_COMPONENT": "JournalEditorHeader"
+    }
+  },
+  "componentName": "JournalEditorHeader",
+  "scenarioType": "component"
+}

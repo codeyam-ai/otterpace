@@ -1,0 +1,19 @@
+{
+  "name": "JournalEntryRow - Post-Run Note",
+  "id": "b7c0c8ee-9efb-41a8-af9c-5f176c0aead1",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "JournalEntryRow",
+      "CODEYAM_ISOLATE_SCENARIO": "Post-Run Note"
+    }
+  },
+  "componentName": "JournalEntryRow",
+  "scenarioType": "component"
+}

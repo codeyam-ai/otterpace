@@ -17,6 +17,8 @@ public enum CodeyamIsolationHost {
         switch component {
         case "AskCoachHeader":
             return AnyView(AskCoachHeaderIsolated(scenario: scenario))
+        case "CheckInCard":
+            return AnyView(CheckInCardIsolated(scenario: scenario))
         case "CoachConsoleLinkRow":
             return AnyView(CoachConsoleLinkRowIsolated(scenario: scenario))
         case "CoachDataRow":
@@ -37,6 +39,22 @@ public enum CodeyamIsolationHost {
             return AnyView(CoachPreviewWorkoutsCardIsolated(scenario: scenario))
         case "CoachProviderRow":
             return AnyView(CoachProviderRowIsolated(scenario: scenario))
+        case "FeelSelector":
+            return AnyView(FeelSelectorIsolated(scenario: scenario))
+        case "JournalChipRow":
+            return AnyView(JournalChipRowIsolated(scenario: scenario))
+        case "JournalChipSummary":
+            return AnyView(JournalChipSummaryIsolated(scenario: scenario))
+        case "JournalEditorHeader":
+            return AnyView(JournalEditorHeaderIsolated(scenario: scenario))
+        case "JournalEditorSheet":
+            return AnyView(JournalEditorSheetIsolated(scenario: scenario))
+        case "JournalEmptyState":
+            return AnyView(JournalEmptyStateIsolated(scenario: scenario))
+        case "JournalEntryRow":
+            return AnyView(JournalEntryRowIsolated(scenario: scenario))
+        case "JournalNoteField":
+            return AnyView(JournalNoteFieldIsolated(scenario: scenario))
         case "RaceImportSheet":
             return AnyView(RaceImportSheetIsolated(scenario: scenario))
         case "RaceSearchSheet":

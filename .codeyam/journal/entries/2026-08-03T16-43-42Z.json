@@ -1,0 +1,963 @@
+{
+  "timestamp": "2026-08-03T16:43:42Z",
+  "title": "Journal — Post-Run Notes and Daily Check-Ins",
+  "type": "feature",
+  "userRequest": "## Summary\n\nLet a runner write down how it actually went. Two entry points, one store: a\n**post-run note** attached to a workout (\"legs heavy the first mile, then it\nclicked\") and a lightweight **daily check-in** — a feel rating, an energy /\nsoreness / sleep chip set, and an optional free-text line — reachable from\nToday. Entries are **on-device only**, stored as a JSON array in `UserDefaults`\nexactly like `RaceStore` and `CoachProfile`, and carried on `TodayState` so they\nflow with no new transport into the deterministic `CoachEngine`, the remote AI\ncoach (`api/coach.ts`), and the `WeeklyReviewEngine`. That last part is the\npoint: Buddy stops reasoning from mileage alone and starts saying \"you logged\nthree heavy-legs runs this week — take Thursday easy.\"\n\n## Key Decisions\n\n- **One `JournalEntry` type covering both surfaces, not two features.** A\n  post-run note and a daily check-in differ only in whether they're bound to a\n  workout. Modeling both as a single dated entry with an optional\n  `workoutDate` + `workoutType` link means one store, one persistence path, one\n  coach payload, and one set of tests — and it means \"how did that run feel\" and\n  \"how do I feel today\" appear on the same timeline instead of in two disjoint\n  histories.\n\n- **On-device only, following the `RaceStore` pattern.** Journal text is the most\n  personal data in the app. It goes in `UserDefaults` as a JSON array under\n  `otterpaceJournalEntries` — no new table, no sync stream, no consent sheet\n  needed, and it disappears with the app. It rides to the backend **only** on a\n  connected-coach request, inside the `TodayState` the app already ships — the\n  same posture, and the same privacy sentence, that `CoachProfile` already\n  established.\n\n- **Structured chips first, free text second.** The check-in leads with tappable\n  chips (feel 1–5, plus energy / soreness / sleep) because they're one-tap on a\n  phone, they're what the coach can reason over reliably, and they make an entry\n  possible in three seconds. Free text is optional and always available, but\n  never required — a journal that demands prose gets abandoned in a week.\n\n- **The coach gets a bounded, recent slice — not the whole diary.** Only the last\n  **14 days** of entries, each capped at ~200 characters of free text, ride in\n  the coach context. `TodayState` already flows through a 16 KB\n  `MAX_CONTEXT_BYTES` cap in `api/coach.ts`; an unbounded journal would silently\n  push out `loadHistory` and degrade the coaching quality this feature is meant\n  to improve. The bounding is a pure function, so the cap is testable rather than\n  hoped for.\n\n- **Deterministic coach first, model second.** `CoachEngine` gains journal-aware\n  rules (repeated low feel or high soreness → a gentler nudge and a `recovery`\n  Buddy mood; a run logged as great after a rest day → affirm it) so the feature\n  works with **no API key at all** and stays reproducible in captures. The\n  `api/coach.ts` system prompt then gets a short journal section for connected\n  users, written in the same hedged style as the existing `profile` /\n  `loadHistory` sections — \"the user's own words about how they felt; treat as\n  ground truth about subjective experience, never as a substitute for the safety\n  rules.\"\n\n- **The most personal data in the app gets a way out.** Because entries are\n  on-device with no sync, there is no server-side delete to lean on — which means\n  without an explicit affordance, the only way to clear your journal is to delete\n  the app. Settings gets a destructive **\"Delete all journal entries\"** action with\n  a confirm, matching the existing health-sync disable dialog's shape. A feature\n  that invites people to write down how they really felt owes them an eraser.\n\n- **Never a streak, never a scold.** No \"you haven't journaled in 4 days,\" no\n  completion ring, no unbroken-chain pressure. The empty state invites; it\n  doesn't guilt. This is the same never-shame-based rule Buddy already follows,\n  and a journaling feature is exactly where a wellness app usually breaks it.\n\n- **Journal history lives inside Activity History, not a new tab.** The Activity\n  History overlay already owns the dated workout timeline and the heatmap;\n  entries slot into the week sections they belong to. That reuses the existing\n  navigation and data instead of adding a fourth top-level destination for what\n  is fundamentally an annotation on activity.\n\n## Implementation\n\n### 1. Journal domain model + pure logic\n\n**New file**: `Sources/AppCore/Journal/JournalEntry.swift`\n\nModeled directly on `Sources/AppCore/RaceGoals.swift` — `Codable, Equatable,\nIdentifiable`, a tolerant `init(from:)` defaulting every field so older persisted\npayloads decode, and enum cases carrying short human `label`s the way\n`WalkVolume` / `TrainingKind` do in `CoachProfile.swift`.\n\n```\nJournalEntry\n  id: UUID\n  date: String            // ISO yyyy-MM-dd, matching LatestWorkout.date\n  feel: Int?              // 1...5, nil when not rated\n  energy: EnergyLevel?    // low | okay | good\n  soreness: SorenessLevel?// none | mild | sore | painful\n  sleep: SleepQuality?    // poor | okay | good\n  note: String?           // free text, optional\n  workoutDate: String?    // set => this is a post-run note\n  workoutType: String?    // run | walk | ride, for the row's icon\n```\n\nPure helpers, all XCTest-covered:\n\n- `Journal.entry(forWorkoutOn:in:)` — the note attached to a given workout day.\n- `Journal.checkIn(on:in:)` — today's non-workout check-in, if any.\n- `Journal.recent(_:asOf:days:)` — the trailing-N-day slice, newest-first.\n- `Journal.byWeek(_:asOf:)` — Monday-start grouping reusing the exact POSIX/UTC\n  convention (and unparseable-date dropping) from `ActivityHistory.groupByWeek`,\n  so journal rows land in the same weeks the history screen already renders.\n- `Journal.coachSlice(_:asOf:)` — the bounded 14-day / 200-char-per-note\n  projection that goes in the coach context.\n- `Journal.summary(_:asOf:)` — counts + average feel + a dominant-soreness read\n  over a window, consumed by both `CoachEngine` and `WeeklyReviewEngine`.\n\n**New test**: `Tests/AppCoreTests/JournalTests.swift` — grouping, lookups,\ntolerant decode of a payload missing the newer fields, and explicit assertions\nthat `coachSlice` truncates both the day window and the per-note length.\n\n### 2. Persistence\n\n**New file**: `Sources/AppCore/Journal/JournalStore.swift`\n\n`load(_:)` / `save(_:)` / `upsert(_:)` / `delete(id:)` against an injectable\n`UserDefaults` under `otterpaceJournalEntries`, the same shape as `RaceStore`.\nScenario seeding reads `rbJournalJSON` so a capture can pin an exact timeline;\n`OtterpaceModel` hydrates `today.journal` from the store at launch and after\nevery edit.\n\n**New test**: `Tests/AppCoreTests/JournalStoreTests.swift` — round-trip, upsert\nreplaces by id, delete, and an empty/corrupt default decoding to `[]` rather than\nthrowing (mirroring `RaceImportPersistenceTests`).\n\n### 3. Carry entries on `TodayState`\n\n**File**: `Sources/AppCore/Model.swift`\n\nAdd `public var journal: [JournalEntry]` — defaulted to `[]` in the memberwise\ninit and `decodeIfPresent(...) ?? []` in the tolerant decoder, exactly as\n`races` / `loadHistory` were added. `OtterpaceModel` loads it from `JournalStore`\nand exposes `saveJournalEntry(_:)` / `deleteJournalEntry(id:)` that write through\nand republish. Extend `Tests/AppCoreTests/ModelTests.swift` for the new field's\ndefault-and-decode behavior.\n\n### 4. Capture surfaces\n\n**New files** under `Sources/AppCore/Journal/`:\n\n- `CheckInCard.swift` — on Today, below `WorkoutCard`: either \"How'd today feel?\"\n  with the 1–5 feel row inline (one tap starts an entry), or today's logged\n  entry in a compact read state with an edit affordance.\n- `JournalEditorSheet.swift` — the full editor: feel selector, energy / soreness\n  / sleep chip rows, a free-text field, Save / Delete. Used for both a check-in\n  and a post-run note; the workout link is passed in.\n- `FeelSelector.swift` — the 1–5 row, using theme tokens and carrying a full\n  accessibility label per option (not just a number).\n- `JournalChipRow.swift` — the shared labeled chip row for the three enums,\n  following the capsule idiom already used by the step-goal presets in Settings.\n- `JournalEntryRow.swift` — one entry rendered in history: date, feel, chips, and\n  the note, with the workout icon when it's a post-run note.\n- `JournalEmptyState.swift` — Buddy plus \"A line about today is enough.\" Invites,\n  never scolds.\n\n**File**: `Sources/AppCore/TodayView.swift` — insert `CheckInCard` into the\n`VStack` after the `WorkoutCard` branch (line ~72), and add a \"How'd that run\nfeel?\" affordance on `WorkoutCard` itself when the latest workout has no note yet.\n\n**File**: `Sources/AppCore/WorkoutCard.swift` — optional `note`/`onAddNote`\nparameters, defaulted so every existing call site keeps compiling; renders a note\npreview line when present. Update the `accessibilityLabel` to include the note.\n\n**File**: `Sources/AppCore/ActivityHistoryView.swift` — pass entries into\n`ActivityWeekSection` so journal rows interleave with the week's workouts by date.\n\n**File**: `Sources/AppCore/ActivityWeekSection.swift` — render `JournalEntryRow`\nalongside the week's workouts.\n\n### 5. Coach integration\n\n**File**: `Sources/AppCore/CoachEngine.swift`\n\nJournal-aware rules in `dailyNudge(for:)`, layered **below** the existing safety\nrules so nothing about the pain/safety path changes:\n\n- Two or more entries in the last 5 days with `soreness == .sore/.painful` or\n  `feel <= 2` → soften the recommendation toward `rest`/`walk`, Buddy mood\n  `recovery`, and reference it in plain words.\n- A recent `feel >= 4` after a rest day → affirm, keep the plan.\n- No entries → behave exactly as today. **This is the regression guard**: every\n  existing `CoachEngineTests` case must pass unchanged with an empty journal.\n\n**File**: `Sources/AppCore/WeeklyReviewEngine.swift` — add a journal line to the\n\"what went well\" / \"what changed\" sections when the week has entries (e.g. \"you\nfelt strong on three of four runs\"), omitted entirely when it doesn't.\n\n**File**: `api/coach.ts` — a `journal` section in the system prompt (near the\nexisting `profile` section at lines ~46–60), same hedged register: entries are\nthe user's own subjective account, optional, never invented when absent, and\nnever overriding the safety rules or the ~10% guidance. No transport change —\n`journal` arrives inside the `TodayState` context that already ships.\n\n**Tests**: extend `Tests/AppCoreTests/CoachEngineTests.swift` and\n`WeeklyReviewEngineTests.swift`; extend `test/api/coach.test.ts` for the prompt\nsection.\n\n### 6. Settings — delete all entries\n\n**File**: `Sources/AppCore/SettingsView.swift`\n\nA destructive **\"Delete all journal entries\"** row in the same card as the other\ndata controls, built from the existing `actionRow(...)` helper and gated by a\nconfirmation dialog in the shape of the health-sync disable dialog. Clears\n`otterpaceJournalEntries` via `JournalStore` and republishes `today.journal` as\n`[]`. Also extend the account-deletion path so journal entries go with it.\n\n**Test**: extend `Tests/AppCoreTests/JournalStoreTests.swift` — delete-all empties\nthe store and a subsequent `load` returns `[]` rather than throwing.\n\n### 7. Privacy copy\n\n**File**: `site/privacy.html` — extend the \"AI coach (optional)\" paragraph, which\nalready enumerates what's sent, to name journal entries. They stay on-device and\nleave only on a connected-coach request — the same sentence structure the\npersonalization profile already uses there.\n\n> **Cross-plan note — journal must never reach a friend.** The `social-foundation`\n> plan adds `SocialShare.redact(_:)`, which projects `TodayState` down to the five\n> fields a friend may see, and a test asserting the excluded fields never appear.\n> That test's exclusion list was written before `journal` existed on `TodayState`.\n> **Whichever of these two plans lands second owns adding `journal` to that\n> assertion** — both the Swift `SocialModelsTests` list and the server-side\n> `sanitizeShare` allowlist test in `test/api/social.test.ts`. Journal text is the\n> most personal data in the app; it must never be shareable.\n\n## Reused existing code\n\n- `RaceGoal` / `RaceStore` from `Sources/AppCore/RaceGoals.swift` — the\n  UserDefaults-JSON persistence pattern, ISO-date convention, and tolerant-decode\n  style the journal copies wholesale.\n- `CoachProfile` from `Sources/AppCore/Onboarding/CoachProfile.swift` — the\n  precedent for an optional on-device blob carried on `TodayState` into both\n  coaches, including its privacy posture and enum-with-`label` idiom.\n- `ActivityHistory.groupByWeek` / `ActivityHistory.referenceDate`\n  (`Sources/AppCore/ActivityHistory.swift`) — Monday-start weeks and the UTC\n  date convention, reused rather than reimplemented.\n- `TodayState` optional-field pattern (`Sources/AppCore/Model.swift`) — `races`,\n  `loadHistory`, `dailySteps` are the exact template for adding `journal`.\n- `CoachEngine.dailyNudge` (`Sources/AppCore/CoachEngine.swift`) — extended, so\n  the feature works with no API key and stays deterministic in captures.\n- `WorkoutCard` (`Sources/AppCore/WorkoutCard.swift`) and `ActivityWeekSection` —\n  existing rows extended, not replaced.\n- `MoodChip` (`Sources/AppCore/MoodChip.swift`) and the Settings step-goal capsule\n  idiom — the visual language for the chip rows.\n- `HealthSource.isScenarioSeeded()` and the `rb*` seeding convention\n  (`Sources/AppCore/Health/HealthDataSource.swift`) — `rbJournalJSON` follows it.\n\n## Scenarios to Demonstrate\n\n- **Today — check-in prompt**: no entry yet, \"How'd today feel?\" with the feel row\n  live on the card.\n- **Today — checked in**: today's entry in its compact read state (feel 4, energy\n  good, a one-line note).\n- **Post-run note prompt**: a 5.2-mile run on the `WorkoutCard` with no note yet\n  and the \"How'd that run feel?\" affordance.\n- **Journal editor — empty**: the sheet opened fresh, nothing selected.\n- **Journal editor — rich**: feel 2, sore, poor sleep, and a real multi-line note\n  — the \"hard day\" state, and the layout stress case.\n- **Journal editor — long note + large text**: `rbContentSize=\"accessibility3\"`\n  over a note near the character cap.\n- **History with journal rows**: a rich multi-week history where entries\n  interleave with workouts, some post-run notes and some standalone check-ins.\n- **History — no entries yet**: the invitation empty state, no streak language\n  anywhere.\n- **Coach responds to a rough week**: three low-feel/sore entries in five days →\n  a gentler card, `recovery` Buddy mood, coach copy referencing how the runner\n  said they felt.\n- **Coach with an empty journal**: identical to today's behavior — the visible\n  proof of no regression.\n- **Weekly Review with journal context**: the recap including the \"how it felt\"\n  line.\n- **Settings — delete all entries confirm**: the destructive dialog, plain and\n  non-alarming.\n- **Check-in card — Fieldnote theme** (and one more, e.g. Orbit): the new cards\n  retinting across the five-theme system.",
+  "description": "Added an on-device running journal that captures both a post-run note bound to a workout and a standalone daily check-in, modeled as a single dated JournalEntry so the two land on one timeline behind one store and one coach payload. It surfaces as a one-tap feel scale on the Today dashboard (CheckInCard), interleaved entries in Activity History (JournalEntryRow), and a full optional editor with energy/soreness/sleep chips plus free text (JournalEditorSheet). Coaching reads it through a bounded 14-day slice with per-note truncation so a long-running journal can never crowd out loadHistory in the coach context, and the copy is guarded against streak or missed-day shaming.",
+  "modifiedFiles": [
+    {
+      "path": ".claude/skills/codeyam-audit/finalize-procedure.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/data-structure.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/post-run-journal-and-check-ins.md\t.codeyam/plans/completed/post-run-journal-and-check-ins.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/accessibility-large-text-today--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-empty--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-empty--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-long-values--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-long-values--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-partial-week-mid-week--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-partial-week-mid-week--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-rich-multi-week--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-rich-multi-week--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-sparse--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/activity-history-sparse--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-all-three-connected--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-all-three-connected--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-anthropic-migrated--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-no-key--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-appearance-picker-bolt--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-custom-goal--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-races-list--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-replay-tour-row--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-training-phase-building--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-training-phase-building--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-almost-there--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-computed-nudge--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-custom-goal--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-day-one-connect--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-fresh-start--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-bolt-theme--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-fieldnote-theme--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-garden-theme--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-orbit-theme--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-long-content--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-midday-nudge--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-past-race-banner-returns--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-past-race-banner-returns--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-race-prompt-banner--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-race-prompt-banner--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-recovery-caution--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-strong-weekend-fresh-week--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-walking-focused-nudge--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-zero-step-morning--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-solid-week--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/provider-auth-verdict.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/scenario-taxonomy.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ActivityHistoryView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ActivityWeekSection.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/BuddySummaryCard.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Coach/RemoteCoach.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CoachEngine.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CodeyamIsolationHost.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Model.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/SettingsView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/TodayView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/WeeklyReviewEngine.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/WorkoutCard.swift",
+      "status": "modified"
+    },
+    {
+      "path": "api/coach.ts",
+      "status": "modified"
+    },
+    {
+      "path": "site/privacy.html",
+      "status": "modified"
+    },
+    {
+      "path": "test/api/coach.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/provider-copy-says-all-three.md",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/checkincard-logged.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/checkincard-prompt.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/feelselector-great-day-selected.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/feelselector-rough-day-selected.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/feelselector-unselected.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journal-coach-responds-to-a-rough-week.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journal-editor-empty.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journal-editor-existing-check-in.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journal-editor-long-note-large-text.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journal-editor-rich.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journal-history-with-entries.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journal-today-checked-in.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journalchiprow-nothing-selected.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journalchiprow-selected.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journalchipsummary-full.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journalchipsummary-nothing-recorded.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journalchipsummary-partial.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journaleditorheader-both-states.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journaleditorheader-save-disabled.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journaleditorheader-save-enabled.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journaleditorsheet-blank-check-in.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journaleditorsheet-post-run-note.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journalemptystate-default.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journalentryrow-both-kinds.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journalentryrow-check-in.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journalentryrow-post-run-note.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journalnotefield-empty.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/journalnotefield-filled.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/checkincard-logged--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/checkincard-logged--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/checkincard-prompt--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/checkincard-prompt--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/feelselector-great-day-selected--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/feelselector-great-day-selected--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/feelselector-rough-day-selected--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/feelselector-rough-day-selected--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/feelselector-unselected--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/feelselector-unselected--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journal-coach-responds-to-a-rough-week--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journal-coach-responds-to-a-rough-week--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journal-editor-empty--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journal-editor-empty--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journal-editor-existing-check-in--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journal-editor-existing-check-in--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journal-editor-long-note-large-text--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journal-editor-long-note-large-text--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journal-editor-rich--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journal-editor-rich--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journal-history-with-entries--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journal-history-with-entries--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journal-today-checked-in--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journal-today-checked-in--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalchiprow-nothing-selected--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalchiprow-nothing-selected--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalchiprow-selected--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalchiprow-selected--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalchipsummary-full--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalchipsummary-full--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalchipsummary-nothing-recorded--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalchipsummary-nothing-recorded--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalchipsummary-partial--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalchipsummary-partial--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journaleditorheader-both-states--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journaleditorheader-both-states--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journaleditorheader-save-disabled--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journaleditorheader-save-disabled--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journaleditorheader-save-enabled--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journaleditorheader-save-enabled--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journaleditorsheet-blank-check-in--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journaleditorsheet-blank-check-in--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journaleditorsheet-post-run-note--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journaleditorsheet-post-run-note--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalemptystate-default--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalemptystate-default--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalentryrow-both-kinds--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalentryrow-both-kinds--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalentryrow-check-in--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalentryrow-check-in--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalentryrow-post-run-note--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalentryrow-post-run-note--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalnotefield-empty--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalnotefield-empty--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalnotefield-filled--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/journalnotefield-filled--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-delete-all-journal-entries--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-delete-all-journal-entries--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-how-the-week-felt--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/weekly-review-how-the-week-felt--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-delete-all-journal-entries.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/weekly-review-how-the-week-felt.json",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CheckInCardIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/FeelSelectorIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/JournalChipRowIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/JournalChipSummaryIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/JournalEditorHeaderIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/JournalEditorSheetIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/JournalEmptyStateIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/JournalEntryRowIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/JournalNoteFieldIsolated.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Journal/CheckInCard.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Journal/FeelSelector.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Journal/JournalChipRow.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Journal/JournalChipSummary.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Journal/JournalEditorHeader.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Journal/JournalEditorSheet.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Journal/JournalEmptyState.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Journal/JournalEntry.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Journal/JournalEntryRow.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Journal/JournalLogic.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Journal/JournalNoteField.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Journal/JournalSpoken.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Journal/JournalStore.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/JournalModelTests.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/JournalStoreTests.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/JournalTests.swift",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Activity History — Empty",
+      "screenshotPath": "activity-history-empty--iphone-16.png"
+    },
+    {
+      "name": "Activity History — Long Values",
+      "screenshotPath": "activity-history-long-values--iphone-16.png"
+    },
+    {
+      "name": "Activity History — Partial Week (Mid-Week)",
+      "screenshotPath": "activity-history-partial-week-mid-week--iphone-16.png"
+    },
+    {
+      "name": "Activity History — Rich Multi-Week",
+      "screenshotPath": "activity-history-rich-multi-week--iphone-16.png"
+    },
+    {
+      "name": "Activity History — Sparse",
+      "screenshotPath": "activity-history-sparse--iphone-16.png"
+    },
+    {
+      "name": "CheckInCard - Logged",
+      "screenshotPath": "checkincard-logged--iphone-16.png"
+    },
+    {
+      "name": "CheckInCard - Prompt",
+      "screenshotPath": "checkincard-prompt--iphone-16.png"
+    },
+    {
+      "name": "FeelSelector - Great Day Selected",
+      "screenshotPath": "feelselector-great-day-selected--iphone-16.png"
+    },
+    {
+      "name": "FeelSelector - Rough Day Selected",
+      "screenshotPath": "feelselector-rough-day-selected--iphone-16.png"
+    },
+    {
+      "name": "FeelSelector - Unselected",
+      "screenshotPath": "feelselector-unselected--iphone-16.png"
+    },
+    {
+      "name": "Journal — Editor Empty",
+      "screenshotPath": "journal-editor-empty--iphone-16.png"
+    },
+    {
+      "name": "Journal — Editor Existing Check-In",
+      "screenshotPath": "journal-editor-existing-check-in--iphone-16.png"
+    },
+    {
+      "name": "Journal — Editor Long Note, Large Text",
+      "screenshotPath": "journal-editor-long-note-large-text--iphone-16.png"
+    },
+    {
+      "name": "Journal — Editor Rich",
+      "screenshotPath": "journal-editor-rich--iphone-16.png"
+    },
+    {
+      "name": "Journal — History With Entries",
+      "screenshotPath": "journal-history-with-entries--iphone-16.png"
+    },
+    {
+      "name": "Journal — Today Checked In",
+      "screenshotPath": "journal-today-checked-in--iphone-16.png"
+    },
+    {
+      "name": "JournalChipRow - Nothing Selected",
+      "screenshotPath": "journalchiprow-nothing-selected--iphone-16.png"
+    },
+    {
+      "name": "JournalChipRow - Selected",
+      "screenshotPath": "journalchiprow-selected--iphone-16.png"
+    },
+    {
+      "name": "JournalChipSummary - Full",
+      "screenshotPath": "journalchipsummary-full--iphone-16.png"
+    },
+    {
+      "name": "JournalChipSummary - Nothing Recorded",
+      "screenshotPath": "journalchipsummary-nothing-recorded--iphone-16.png"
+    },
+    {
+      "name": "JournalChipSummary - Partial",
+      "screenshotPath": "journalchipsummary-partial--iphone-16.png"
+    },
+    {
+      "name": "JournalEditorHeader - Both States",
+      "screenshotPath": "journaleditorheader-both-states--iphone-16.png"
+    },
+    {
+      "name": "JournalEditorHeader - Save Disabled",
+      "screenshotPath": "journaleditorheader-save-disabled--iphone-16.png"
+    },
+    {
+      "name": "JournalEditorHeader - Save Enabled",
+      "screenshotPath": "journaleditorheader-save-enabled--iphone-16.png"
+    },
+    {
+      "name": "JournalEditorSheet - Blank Check-In",
+      "screenshotPath": "journaleditorsheet-blank-check-in--iphone-16.png"
+    },
+    {
+      "name": "JournalEditorSheet - Post-Run Note",
+      "screenshotPath": "journaleditorsheet-post-run-note--iphone-16.png"
+    },
+    {
+      "name": "JournalEmptyState - Default",
+      "screenshotPath": "journalemptystate-default--iphone-16.png"
+    },
+    {
+      "name": "JournalEntryRow - Both Kinds",
+      "screenshotPath": "journalentryrow-both-kinds--iphone-16.png"
+    },
+    {
+      "name": "JournalEntryRow - Check-In",
+      "screenshotPath": "journalentryrow-check-in--iphone-16.png"
+    },
+    {
+      "name": "JournalEntryRow - Post-Run Note",
+      "screenshotPath": "journalentryrow-post-run-note--iphone-16.png"
+    },
+    {
+      "name": "JournalNoteField - Empty",
+      "screenshotPath": "journalnotefield-empty--iphone-16.png"
+    },
+    {
+      "name": "JournalNoteField - Filled",
+      "screenshotPath": "journalnotefield-filled--iphone-16.png"
+    },
+    {
+      "name": "Settings",
+      "screenshotPath": "settings--iphone-16.png"
+    },
+    {
+      "name": "Settings - Appearance Picker - Bolt",
+      "screenshotPath": "settings-appearance-picker-bolt--iphone-16.png"
+    },
+    {
+      "name": "Settings — AI Coach All Three Connected",
+      "screenshotPath": "settings-ai-coach-all-three-connected--iphone-16.png"
+    },
+    {
+      "name": "Settings — AI Coach Anthropic Migrated",
+      "screenshotPath": "settings-ai-coach-anthropic-migrated--iphone-16.png"
+    },
+    {
+      "name": "Settings — AI Coach No Key",
+      "screenshotPath": "settings-ai-coach-no-key--iphone-16.png"
+    },
+    {
+      "name": "Settings — Account Sync",
+      "screenshotPath": "settings-account-sync--iphone-16.png"
+    },
+    {
+      "name": "Settings — Custom Goal",
+      "screenshotPath": "settings-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Settings — Delete All Journal Entries",
+      "screenshotPath": "settings-delete-all-journal-entries--iphone-16.png"
+    },
+    {
+      "name": "Settings — Health Sync On",
+      "screenshotPath": "settings-health-sync-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Races List",
+      "screenshotPath": "settings-races-list--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders On",
+      "screenshotPath": "settings-reminders-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Replay Tour Row",
+      "screenshotPath": "settings-replay-tour-row--iphone-16.png"
+    },
+    {
+      "name": "Settings — Training Phase (Building)",
+      "screenshotPath": "settings-training-phase-building--iphone-16.png"
+    },
+    {
+      "name": "Today — Past Race Banner Returns",
+      "screenshotPath": "today-past-race-banner-returns--iphone-16.png"
+    },
+    {
+      "name": "Today — Race Prompt Banner",
+      "screenshotPath": "today-race-prompt-banner--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 369,
+    "passed": 369,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 369,
+        "passed": 369
+      }
+    ]
+  }
+}

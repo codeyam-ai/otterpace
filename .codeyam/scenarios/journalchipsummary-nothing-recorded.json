@@ -1,0 +1,19 @@
+{
+  "name": "JournalChipSummary - Nothing Recorded",
+  "id": "f93d8c4f-c770-43f7-bbdc-b8ae54d0dcf2",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "JournalChipSummary",
+      "CODEYAM_ISOLATE_SCENARIO": "Nothing Recorded"
+    }
+  },
+  "componentName": "JournalChipSummary",
+  "scenarioType": "component"
+}

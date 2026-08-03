@@ -1604,6 +1604,546 @@
       "runner": "tests"
     },
     {
+      "description": "A recent 11-mile hard effort still yields a rest recommendation despite a happy journal.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testARecentHardEffortStillOutranksAGoodJournal",
+      "line": 101,
+      "registeredAt": "2026-08-03T16:20:16.598622+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "One rough day leaves the nudge unchanged - the rule requires a pattern before it fires, so the coach never nags off a single bad day.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testASingleRoughDayDoesNotChangeTheNudge",
+      "line": 44,
+      "registeredAt": "2026-08-03T16:20:30.013034+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Safety wins over mood: a spiking weekly load still raises the safety flag and a caution recommendation even when every entry says the runner feels great.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testASpikingLoadStillOutranksAGoodJournal",
+      "line": 91,
+      "registeredAt": "2026-08-03T16:20:38.922111+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A strong day following a rest day is affirmed: Buddy cheers and the recommendation is to run.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testAStrongDayAfterRestIsAffirmed",
+      "line": 112,
+      "registeredAt": "2026-08-03T16:20:48.792176+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The strong-day affirmation stays quiet when the week has no rest day, so it does not fire on every good run and become noise.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testAStrongDayWithNoRestDayDoesNotFire",
+      "line": 119,
+      "registeredAt": "2026-08-03T16:20:59.912231+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Bounding a context with an empty journal returns it unchanged.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testBoundingAnEmptyJournalIsAPassThrough",
+      "line": 187,
+      "registeredAt": "2026-08-03T16:21:16.057853+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Bounding the coach context for the journal leaves weeklyLoad, steps, and date untouched.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testBoundingLeavesEveryOtherFieldUntouched",
+      "line": 179,
+      "registeredAt": "2026-08-03T16:21:30.802394+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Regression guard: a user with an empty journal gets a byte-identical dailyNudge to the one produced before the feature shipped.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testEmptyJournalLeavesTheNudgeByteIdentical",
+      "line": 34,
+      "registeredAt": "2026-08-03T16:21:43.885559+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Rough days three weeks old fall outside the recency window and leave the nudge identical to the no-journal baseline.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testOldRoughDaysOutsideTheWindowDoNotFire",
+      "line": 82,
+      "registeredAt": "2026-08-03T16:21:52.406769+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Rough-patch advice is visibly grounded in what was logged: the body text mentions being sore or having a rough stretch.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testRoughPatchCopyReferencesWhatTheRunnerWrote",
+      "line": 63,
+      "registeredAt": "2026-08-03T16:22:01.002289+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A logged rough patch outranks the step-goal celebration - clearing 12k steps must not produce confetti over a sore week.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testRoughPatchOutranksTheGoalCrushedCelebration",
+      "line": 71,
+      "registeredAt": "2026-08-03T16:22:09.477839+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "RemoteCoach.bounded ships only the trailing 14-day slice and truncates each note to the coach character cap before it goes on the wire.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testTheContextPutOnTheWireCarriesOnlyTheBoundedSlice",
+      "line": 169,
+      "registeredAt": "2026-08-03T16:22:21.222062+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Two rough days inside the window flip the recommendation to rest and Buddy's mood to recovery.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testTwoRoughDaysSoftenTheRecommendation",
+      "line": 55,
+      "registeredAt": "2026-08-03T16:22:29.931216+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A week of strong entries is credited in the recap's wentWell section.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testWeeklyReviewCreditsAStrongWeek",
+      "line": 147,
+      "registeredAt": "2026-08-03T16:22:38.527204+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The weekly review is identical with an empty journal versus no journal at all.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testWeeklyReviewIsUnchangedWithoutJournalEntries",
+      "line": 131,
+      "registeredAt": "2026-08-03T16:22:47.280369+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The weekly recap names a hard stretch, mentioning soreness in whatChanged rather than glossing the week.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testWeeklyReviewNamesAHardStretch",
+      "line": 139,
+      "registeredAt": "2026-08-03T16:22:55.299045+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Never-shame guard on recap copy: no section may contain streak, missed, you havent, dont forget, or remember-to-log language.",
+      "file": "Tests/AppCoreTests/JournalCoachingTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalCoachingTests › testWeeklyReviewNeverMentionsStreaksOrMissedDays",
+      "line": 155,
+      "registeredAt": "2026-08-03T16:23:03.192452+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "deleteAllJournalEntries empties both the model's journal and the persisted store.",
+      "file": "Tests/AppCoreTests/JournalModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalModelTests › testDeleteAllClearsBothTheModelAndTheStore",
+      "line": 103,
+      "registeredAt": "2026-08-03T16:23:11.726965+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Tapping the feel row creates today's standalone check-in - one entry, correct date, not a post-run note.",
+      "file": "Tests/AppCoreTests/JournalModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalModelTests › testQuickFeelCreatesTodaysCheckIn",
+      "line": 33,
+      "registeredAt": "2026-08-03T16:23:22.737074+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A quick feel on a day that already has a post-run note starts a separate check-in instead of overwriting the run's note.",
+      "file": "Tests/AppCoreTests/JournalModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalModelTests › testQuickFeelIgnoresAPostRunNoteOnTheSameDay",
+      "line": 69,
+      "registeredAt": "2026-08-03T16:23:30.547004+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A quick feel tap persists through JournalStore, not just to the in-memory model.",
+      "file": "Tests/AppCoreTests/JournalModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalModelTests › testQuickFeelPersistsThroughTheStore",
+      "line": 43,
+      "registeredAt": "2026-08-03T16:23:38.583558+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Regression guard: re-tapping the feel row updates the rating in place and preserves the chips and note already recorded, rather than adding a second entry.",
+      "file": "Tests/AppCoreTests/JournalModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalModelTests › testQuickFeelPreservesEverythingElseAlreadyLogged",
+      "line": 49,
+      "registeredAt": "2026-08-03T16:23:48.006516+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "readState decodes a scenario-seeded rbJournalJSON payload into journal entries.",
+      "file": "Tests/AppCoreTests/JournalModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalModelTests › testReadStateDecodesTheSeededJournal",
+      "line": 116,
+      "registeredAt": "2026-08-03T16:23:58.357472+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A malformed rbJournalJSON seed yields an empty journal rather than crashing the scenario capture.",
+      "file": "Tests/AppCoreTests/JournalModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalModelTests › testReadStateSurvivesACorruptSeededJournal",
+      "line": 130,
+      "registeredAt": "2026-08-03T16:24:08.482109+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "readState yields an empty journal when no rbJournalJSON seed is present.",
+      "file": "Tests/AppCoreTests/JournalModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalModelTests › testReadStateWithNoSeededJournalIsEmpty",
+      "line": 125,
+      "registeredAt": "2026-08-03T16:24:16.458903+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Saving then deleting an entry round-trips, clearing both the model and the store.",
+      "file": "Tests/AppCoreTests/JournalModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalModelTests › testSaveThenDeleteRoundTrips",
+      "line": 92,
+      "registeredAt": "2026-08-03T16:24:24.502154+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Saving an entry with nothing recorded is discarded, so a blank draft never becomes a hollow row.",
+      "file": "Tests/AppCoreTests/JournalModelTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalModelTests › testSavingABlankEntryIsDiscarded",
+      "line": 86,
+      "registeredAt": "2026-08-03T16:24:33.071908+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Clearing the store empties it and a subsequent load returns empty rather than throwing.",
+      "file": "Tests/AppCoreTests/JournalStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalStoreTests › testClearEmptiesTheStoreAndLoadStillReturnsEmpty",
+      "line": 79,
+      "registeredAt": "2026-08-03T16:24:41.075393+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A corrupt stored value decodes to an empty journal rather than throwing, so a bad value never costs the user the rest of the app.",
+      "file": "Tests/AppCoreTests/JournalStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalStoreTests › testCorruptValueDecodesToEmptyRatherThanThrowing",
+      "line": 92,
+      "registeredAt": "2026-08-03T16:24:49.608064+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Deleting an id that isn't stored is a no-op that returns the store unchanged.",
+      "file": "Tests/AppCoreTests/JournalStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalStoreTests › testDeleteOfAnUnknownIdIsANoOp",
+      "line": 73,
+      "registeredAt": "2026-08-03T16:24:57.424199+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Deleting by id removes only that entry and leaves the others intact in both the return value and the store.",
+      "file": "Tests/AppCoreTests/JournalStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalStoreTests › testDeleteRemovesOnlyTheNamedEntry",
+      "line": 63,
+      "registeredAt": "2026-08-03T16:25:05.669581+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An empty stored string decodes to an empty journal rather than throwing.",
+      "file": "Tests/AppCoreTests/JournalStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalStoreTests › testEmptyStringDecodesToEmptyRatherThanThrowing",
+      "line": 87,
+      "registeredAt": "2026-08-03T16:25:13.592851+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Loading from a store that was never written returns an empty array.",
+      "file": "Tests/AppCoreTests/JournalStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalStoreTests › testLoadOnAnUntouchedStoreIsEmpty",
+      "line": 24,
+      "registeredAt": "2026-08-03T16:25:21.442122+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Loaded entries come back sorted newest-date-first regardless of the order they were saved in.",
+      "file": "Tests/AppCoreTests/JournalStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalStoreTests › testLoadReturnsNewestFirst",
+      "line": 37,
+      "registeredAt": "2026-08-03T16:25:29.443137+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A fully populated entry round-trips through save and load with every field intact.",
+      "file": "Tests/AppCoreTests/JournalStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalStoreTests › testSaveThenLoadRoundTrips",
+      "line": 28,
+      "registeredAt": "2026-08-03T16:25:37.559472+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Upserting an entry with a new id appends it, leaving the existing row in place.",
+      "file": "Tests/AppCoreTests/JournalStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalStoreTests › testUpsertAppendsADistinctEntry",
+      "line": 57,
+      "registeredAt": "2026-08-03T16:25:45.396527+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Upserting an edited entry replaces the existing row by id rather than stacking a duplicate.",
+      "file": "Tests/AppCoreTests/JournalStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalStoreTests › testUpsertReplacesById",
+      "line": 45,
+      "registeredAt": "2026-08-03T16:25:53.549833+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A JSON object stored where an array is expected decodes to empty rather than throwing.",
+      "file": "Tests/AppCoreTests/JournalStoreTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalStoreTests › testWrongShapeDecodesToEmptyRatherThanThrowing",
+      "line": 97,
+      "registeredAt": "2026-08-03T16:26:01.330659+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Week grouping drops entries with unparseable dates, yielding an empty grouping rather than throwing.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testByWeekDropsUnparseableDates",
+      "line": 76,
+      "registeredAt": "2026-08-03T16:26:09.459593+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Week grouping uses the same Monday-start weeks as Activity History, so a Sunday entry lands in the prior week.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testByWeekUsesTheSameMondayStartWeeksAsActivityHistory",
+      "line": 68,
+      "registeredAt": "2026-08-03T16:26:17.510344+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "checkIn(on:) ignores post-run notes, so a day with only a run note still shows the Today card's prompt.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testCheckInExcludesPostRunNotes",
+      "line": 30,
+      "registeredAt": "2026-08-03T16:26:25.647909+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "coachSlice drops a whitespace-only note to nil rather than shipping blank text to the coach.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testCoachSliceDropsWhitespaceOnlyNotes",
+      "line": 103,
+      "registeredAt": "2026-08-03T16:26:33.515568+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "coachSlice leaves a note under the character cap byte-for-byte intact.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testCoachSliceLeavesShortNotesIntact",
+      "line": 98,
+      "registeredAt": "2026-08-03T16:26:41.594578+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "coachSlice caps each note at the coach character limit and appends an ellipsis so truncation is visible, not silent.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testCoachSliceTruncatesEachNoteToTheCharacterCap",
+      "line": 90,
+      "registeredAt": "2026-08-03T16:26:49.439886+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "coachSlice bounds the day window to the trailing 14 days inclusive, dropping anything older.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testCoachSliceTruncatesTheDayWindow",
+      "line": 83,
+      "registeredAt": "2026-08-03T16:26:57.441440+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Decoding clamps an out-of-range feel value to the 1-5 scale.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testDecodeClampsAnOutOfRangeFeel",
+      "line": 170,
+      "registeredAt": "2026-08-03T16:27:05.490983+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Tolerant decode: a payload persisted before the chip fields existed decodes with those fields nil instead of throwing.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testDecodesPayloadMissingTheNewerFields",
+      "line": 156,
+      "registeredAt": "2026-08-03T16:27:13.345160+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "entry(forWorkoutOn:) returns the post-run note for that date, not a standalone check-in sharing the day.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testEntryForWorkoutFindsOnlyThePostRunNote",
+      "line": 22,
+      "registeredAt": "2026-08-03T16:27:21.360597+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "isEmpty is true only when nothing was recorded; whitespace-only text is not content, and any rating or note makes it non-empty.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testIsEmptyOnlyWhenNothingWasRecorded",
+      "line": 187,
+      "registeredAt": "2026-08-03T16:27:29.586+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "isPostRunNote requires a non-empty workoutDate - an empty string does not make an entry a post-run note.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testIsPostRunNoteRequiresANonEmptyWorkoutDate",
+      "line": 194,
+      "registeredAt": "2026-08-03T16:27:37.874873+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Both journal lookups return nil for an empty date string rather than matching arbitrarily.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testLookupsOnEmptyDateReturnNothing",
+      "line": 40,
+      "registeredAt": "2026-08-03T16:27:45.674518+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Entries with unparseable dates are dropped from the recency window rather than throwing.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testRecentDropsUnparseableDates",
+      "line": 55,
+      "registeredAt": "2026-08-03T16:27:53.650185+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The recency window is inclusive of both ends - a 7-day window ending 06-22 covers 06-16 through 06-22.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testRecentIsInclusiveOfBothEnds",
+      "line": 48,
+      "registeredAt": "2026-08-03T16:28:01.563718+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The recency window returns entries newest-first.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testRecentReturnsNewestFirst",
+      "line": 60,
+      "registeredAt": "2026-08-03T16:28:09.659229+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "One entry that is both low-feel and sore counts as a single rough day, so one bad afternoon cannot double-soften coaching.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testRoughDaysCountsDaysNotSignals",
+      "line": 126,
+      "registeredAt": "2026-08-03T16:28:17.593604+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A check-in and a post-run note on the same rough date collapse to one rough day.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testRoughDaysDeduplicatesTwoEntriesOnTheSameDate",
+      "line": 135,
+      "registeredAt": "2026-08-03T16:28:25.564316+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A fully populated entry round-trips through Codable unchanged.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testRoundTripsThroughCodable",
+      "line": 176,
+      "registeredAt": "2026-08-03T16:28:33.720919+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Average feel is nil when no entry carried a rating - no rating is not a zero rating.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testSummaryAverageIsNilWhenNothingWasRated",
+      "line": 148,
+      "registeredAt": "2026-08-03T16:28:41.531366+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The summary computes count, average feel, low/strong feel days, sore days, poor sleep days, and rough days across the window.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testSummaryCountsFeelSorenessAndSleep",
+      "line": 110,
+      "registeredAt": "2026-08-03T16:28:49.238784+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The summary of an empty journal equals the all-zero default Summary.",
+      "file": "Tests/AppCoreTests/JournalTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.JournalTests › testSummaryOfAnEmptyJournalIsAllZero",
+      "line": 144,
+      "registeredAt": "2026-08-03T16:19:47.422647+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "A known raw string maps to the matching tab, case-insensitively",
       "file": "Tests/AppCoreTests/MainTabTests.swift",
       "format": "junit-xml",

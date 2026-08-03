@@ -172,6 +172,17 @@ public enum CoachEngine {
                 body: "After that recent effort, an easy 20 to 40 minute walk or some light mobility is the move. That's how hard work turns into fitness.",
                 recommendationType: "rest")
         }
+        // What the runner actually SAID about how they felt, layered BELOW the
+        // hard safety rules above so nothing about the pain/safety path changes.
+        // A rough patch in their own words is a signal mileage alone can't give
+        // us: a week can look fine on paper and feel terrible.
+        if roughPatch(c, asOf: day) {
+            return CoachRecommendation(
+                buddyMood: "recovery",
+                headline: "Sounds like a rough stretch",
+                body: "\(roughPatchClause(c, asOf: day)) Let's take the pressure off: an easy walk or some light mobility today, and keep any running relaxed. Backing off now is what lets the good days come back.",
+                recommendationType: "rest")
+        }
         // Goal met for the day.
         let remaining = max(0, c.goalSteps - c.steps)
         if remaining == 0 {
@@ -195,6 +206,15 @@ public enum CoachEngine {
             return CoachRecommendation(
                 buddyMood: "ready",
                 headline: "Eyes on race day",
+                body: clause,
+                recommendationType: "run")
+        }
+        // They told us it went well. Say so — an affirmation the runner's own
+        // words earned, not one invented from step counts.
+        if let clause = strongFeelClause(c, asOf: day) {
+            return CoachRecommendation(
+                buddyMood: "cheering",
+                headline: "That's the good stuff",
                 body: clause,
                 recommendationType: "run")
         }
@@ -311,6 +331,48 @@ public enum CoachEngine {
 
     /// True when there isn't enough history to judge the load trend honestly.
     private static func historyThin(_ c: TodayState) -> Bool { trend(c) == "insufficient" }
+
+    // MARK: Journal awareness
+    //
+    // The runner's own account of how it went. Every helper here returns
+    // false/nil on an EMPTY journal, so a user who has written nothing gets
+    // byte-identical coaching to before this feature existed — that's the
+    // regression guard, and the existing CoachEngineTests prove it.
+
+    /// How many recent days the daily nudge reads back over. Short on purpose:
+    /// a rough patch is about the last few days, not a fortnight ago.
+    private static let journalWindowDays = 5
+
+    /// Two or more recent DAYS where the runner said they felt rough (2 or
+    /// below) or were genuinely sore. One bad day is just a day; two is a
+    /// pattern worth softening for. Counted by distinct date, so a single entry
+    /// that is both low-feel and sore does not masquerade as a pattern.
+    private static func roughPatch(_ c: TodayState, asOf today: String) -> Bool {
+        Journal.summary(c.journal, asOf: today, days: journalWindowDays).roughDays >= 2
+    }
+
+    /// Name what they told us, in their terms, so the advice is visibly grounded
+    /// in what they wrote rather than appearing out of nowhere.
+    private static func roughPatchClause(_ c: TodayState, asOf today: String) -> String {
+        let s = Journal.summary(c.journal, asOf: today, days: journalWindowDays)
+        if s.soreDays >= 2 && s.lowFeelDays >= 2 {
+            return "You've logged a few sore, low-energy days this week."
+        }
+        if s.soreDays >= 2 {
+            return "You've logged \(s.soreDays) sore days in the last few."
+        }
+        return "You've rated the last few days on the rough side."
+    }
+
+    /// A recent strong day (4 or 5) following a rest day — the moment worth
+    /// affirming. Requires a rest day so this doesn't fire on every good run and
+    /// become noise. nil when there's nothing to say.
+    private static func strongFeelClause(_ c: TodayState, asOf today: String) -> String? {
+        let s = Journal.summary(c.journal, asOf: today, days: journalWindowDays)
+        guard s.strongFeelDays >= 1, s.lowFeelDays == 0, s.soreDays == 0 else { return nil }
+        guard let rest = c.weeklyLoad?.restDaysThisWeek, rest >= 1 else { return nil }
+        return "You rated a recent day a \(Int(s.averageFeel?.rounded() ?? 4)) out of 5 after taking a rest day — that's the rest doing its job. Keep today easy and consistent and let that feeling stick around."
+    }
 
     // MARK: Intent replies
 

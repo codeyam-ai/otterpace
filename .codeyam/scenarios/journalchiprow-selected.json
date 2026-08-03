@@ -1,0 +1,19 @@
+{
+  "name": "JournalChipRow - Selected",
+  "id": "0df01883-d481-4444-8d76-39109b97f996",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Selected",
+      "CODEYAM_ISOLATE_COMPONENT": "JournalChipRow"
+    }
+  },
+  "componentName": "JournalChipRow",
+  "scenarioType": "component"
+}

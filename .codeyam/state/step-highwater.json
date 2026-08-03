@@ -1,6 +1,6 @@
 {
-  "feature": "coach-key-links-provider-picker",
-  "maxStep": 26,
-  "version": 84,
-  "updatedAt": "2026-07-31T16:49:12.254915+00:00"
+  "feature": "post-run-journal-and-check-ins",
+  "maxStep": 24,
+  "version": 1015,
+  "updatedAt": "2026-08-03T17:18:45.267093+00:00"
 }

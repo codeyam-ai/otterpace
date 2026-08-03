@@ -1,0 +1,44 @@
+{
+  "name": "Settings — Delete All Journal Entries",
+  "id": "12a84cb4-80c0-4197-825e-72f73b747d52",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbGoalSteps": 10000,
+      "rbShowCoachDataPreview": false,
+      "otterpaceRemindGoal": false,
+      "rbCoachPreviewScroll": "",
+      "rbShowRaceEditor": false,
+      "rbJournalEditorPostRun": false,
+      "rbSyncSettings": false,
+      "rbConnected": true,
+      "rbShowJournalEditor": false,
+      "rbSignedInUserID": "",
+      "rbSyncHealth": false,
+      "otterpaceRemindDaily": false,
+      "rbDate": "2026-06-22",
+      "rbShowWeeklyReview": false,
+      "rbStartTab": "today",
+      "rbJournalJSON": "[{\"id\":\"3F2A1C40-6666-4A01-9F01-000000000101\",\"date\":\"2026-06-22\",\"feel\":3,\"energy\":\"okay\",\"soreness\":\"mild\",\"sleep\":\"okay\",\"note\":\"Steady one.\"},{\"id\":\"3F2A1C40-6666-4A01-9F01-000000000102\",\"date\":\"2026-06-20\",\"feel\":2,\"energy\":\"low\",\"soreness\":\"sore\",\"sleep\":\"poor\",\"note\":\"Rough day, wrote it down anyway.\"}]",
+      "rbPreviewMode": "",
+      "rbRaceEditorCustomUnit": "",
+      "rbRacesJSON": "",
+      "rbShowKeyProviderPicker": false,
+      "rbShowSettings": true,
+      "rbTheme": "default",
+      "rbRaceEditorCustomValue": "",
+      "rbShowHistory": false,
+      "rbStartScreen": "",
+      "rbSteps": 8000,
+      "rbContentSize": "",
+      "otterpaceRemindInactivity": false,
+      "rbSettingsScroll": "privacy"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/SettingsView.swift"
+}

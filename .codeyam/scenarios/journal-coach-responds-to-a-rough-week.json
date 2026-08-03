@@ -1,0 +1,50 @@
+{
+  "name": "Journal — Coach Responds To A Rough Week",
+  "id": "d4d70387-611a-47ff-ae8c-7746f93a6498",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbLongestRunMiles": 6.1,
+      "rbShowKeyProviderPicker": false,
+      "rbGoalSteps": 10000,
+      "rbShowCoachDataPreview": false,
+      "rbPreviewMode": "",
+      "rbStartTab": "today",
+      "rbShowHistory": false,
+      "rbActiveEnergyKcal": 612,
+      "rbDate": "2026-06-22",
+      "rbAskSeedQuestion": "",
+      "rbActiveMinutes": 68,
+      "rbLoadTrend": "building",
+      "rbWorkoutDurationMinutes": 43,
+      "rbWorkoutType": "run",
+      "rbBuddyMood": "celebrating",
+      "rbSteps": 11240,
+      "rbWorkoutSource": "strava",
+      "otterpaceRacePromptDismissed": true,
+      "rbJournalEditorPostRun": false,
+      "rbJournalJSON": "[{\"id\":\"3f2a1c40-2222-4a01-9f01-0000000000c1\",\"date\":\"2026-06-22\",\"feel\":2,\"energy\":\"low\",\"soreness\":\"sore\",\"sleep\":\"poor\",\"note\":\"Shins are barking again. Cut it to two miles and walked the rest home.\",\"workoutDate\":\"2026-06-22\",\"workoutType\":\"run\"},{\"id\":\"3f2a1c40-2222-4a01-9f01-0000000000c2\",\"date\":\"2026-06-20\",\"feel\":2,\"energy\":\"low\",\"soreness\":\"sore\",\"sleep\":\"poor\",\"note\":\"Third bad night in a row. Everything is heavy.\",\"workoutDate\":null,\"workoutType\":null},{\"id\":\"3f2a1c40-2222-4a01-9f01-0000000000c3\",\"date\":\"2026-06-19\",\"feel\":1,\"energy\":\"low\",\"soreness\":\"painful\",\"sleep\":\"okay\",\"note\":\"Calf grabbed on the hill. Stopped early \\u2014 didn't want to push it.\",\"workoutDate\":\"2026-06-19\",\"workoutType\":\"run\"}]",
+      "rbMinutesSinceMovement": 14,
+      "rbShowSettings": false,
+      "rbConnected": true,
+      "rbTheme": "default",
+      "rbWorkoutPace": "10:15/mi",
+      "rbContentSize": "",
+      "rbShowWeeklyReview": false,
+      "rbDistanceMiles": 5.1,
+      "rbWorkoutDate": "2026-06-22",
+      "rbWorkoutDistanceMiles": 4.2,
+      "rbRestDaysThisWeek": 2,
+      "rbShowJournalEditor": false,
+      "rbCoachSafety": false,
+      "rbDaysRunThisWeek": 3,
+      "rbWeeklyMileage": 14.6
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/CoachCard.swift"
+}

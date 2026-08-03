@@ -1,0 +1,19 @@
+{
+  "name": "JournalChipSummary - Partial",
+  "id": "fa821021-48d5-4b50-b26a-6ab22f49f204",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "JournalChipSummary",
+      "CODEYAM_ISOLATE_SCENARIO": "Partial"
+    }
+  },
+  "componentName": "JournalChipSummary",
+  "scenarioType": "component"
+}

@@ -1,0 +1,53 @@
+{
+  "name": "Journal — Editor Empty",
+  "id": "aa2fab4f-0240-480c-8542-2f6103de2e28",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbLoadTrend": "building",
+      "rbBuddyMood": "celebrating",
+      "rbCoachHeadline": "10K crushed, nice work!",
+      "rbShowSettings": false,
+      "rbActiveEnergyKcal": 612,
+      "rbShowHistory": false,
+      "rbAskSeedQuestion": "",
+      "rbJournalEditorPostRun": false,
+      "rbWorkoutDistanceMiles": 4.2,
+      "rbWorkoutDurationMinutes": 43,
+      "otterpaceRacePromptDismissed": true,
+      "rbCoachSafety": false,
+      "rbShowKeyProviderPicker": false,
+      "rbWeeklyMileage": 14.6,
+      "rbMinutesSinceMovement": 14,
+      "rbPreviewMode": "",
+      "rbConnected": true,
+      "rbCoachPreviewScroll": "",
+      "rbShowWeeklyReview": false,
+      "rbWorkoutType": "run",
+      "rbSteps": 11240,
+      "rbShowJournalEditor": true,
+      "rbActiveMinutes": 68,
+      "rbStartTab": "today",
+      "rbTheme": "default",
+      "rbWorkoutSource": "strava",
+      "rbDistanceMiles": 5.1,
+      "rbDaysRunThisWeek": 3,
+      "rbWorkoutDate": "2026-06-22",
+      "rbGoalSteps": 10000,
+      "rbCoachBody": "You blew past your step goal and logged a solid 4.2-mile run. Tomorrow, keep it easy: a relaxed walk or mobility work lets today settle in.",
+      "rbRestDaysThisWeek": 2,
+      "rbLongestRunMiles": 6.1,
+      "rbContentSize": "",
+      "rbShowCoachDataPreview": false,
+      "rbCoachType": "celebrate",
+      "rbDate": "2026-06-22",
+      "rbWorkoutPace": "10:15/mi"
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/Journal/JournalEditorSheet.swift"
+}

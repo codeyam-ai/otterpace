@@ -1,0 +1,19 @@
+{
+  "name": "FeelSelector - Unselected",
+  "id": "5d804515-5078-484c-88dc-61b854c53def",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "FeelSelector",
+      "CODEYAM_ISOLATE_SCENARIO": "Unselected"
+    }
+  },
+  "componentName": "FeelSelector",
+  "scenarioType": "component"
+}

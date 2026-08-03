@@ -25,6 +25,9 @@ public struct SettingsView: View {
     @State private var healthSyncOn = false
     @State private var showHealthConsent = false
     @State private var confirmHealthOff = false
+    /// Gates the destructive journal erase behind the same confirm shape the
+    /// health-sync disable dialog uses.
+    @State private var confirmJournalDelete = false
 
     // BYO provider keys for the real AI coach (stored on-device via the Keychain).
     // `coachConnected` mirrors the store's connected set so the card re-renders on
@@ -120,7 +123,7 @@ public struct SettingsView: View {
                             racesCard.id("races")
                             remindersCard.id("reminders")
                             goalCard.id("goal")
-                            privacyCard
+                            privacyCard.id("privacy")
                             aboutCard.id("about")
                         }
                         .padding(.horizontal, 18)
@@ -160,10 +163,15 @@ public struct SettingsView: View {
                     await accountSession.revoke()
                 }
                 session.deleteAccount()
+                // Journal entries never sync, so `purgeOnAccountDeletion` above
+                // cannot reach them — but they are the most personal thing the
+                // app holds, and "delete my account" has to mean it. Erase them
+                // here or they would outlive the account on this device.
+                model.deleteAllJournalEntries()
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This removes your sign-in from this device and deletes any data synced to your account. Health data is only ever synced if you turned it on.")
+            Text("This removes your sign-in from this device and deletes any data synced to your account, along with your journal entries. Health data is only ever synced if you turned it on.")
         }
         .sheet(isPresented: $showHealthConsent) { healthConsentSheet }
         // Reads `model.today` — the same value AskCoachView hands to RemoteCoach —
@@ -225,6 +233,17 @@ public struct SettingsView: View {
             Button("Cancel", role: .cancel) { healthSyncOn = true }
         } message: {
             Text("Stop syncing your health & activity data to your account. You can also delete what's already been uploaded.")
+        }
+        // Plain and non-alarming: state what goes and that it can't come back,
+        // then get out of the way. No scare copy about a lost streak.
+        .confirmationDialog("Delete all journal entries?", isPresented: $confirmJournalDelete, titleVisibility: .visible) {
+            Button("Delete all entries", role: .destructive) {
+                model.deleteAllJournalEntries()
+                Analytics.shared.capture("journal_deleted_all")
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Your notes and check-ins are stored only on this device, so this can't be undone.")
         }
     }
 
@@ -854,6 +873,18 @@ public struct SettingsView: View {
                 Text("Otterpace reads your steps, distance, and active energy from Apple Health, and uses them on your device to coach you. Your health data stays on your device by default. It's only synced to your account if you turn on health sync, and it's never sent to analytics.")
                     .font(Typography.callout).foregroundColor(Palette.ink)
                     .fixedSize(horizontal: false, vertical: true)
+            }
+            // Journal entries are on-device with no sync, so there is no
+            // server-side delete to lean on — without this row, the only way to
+            // clear your journal would be to delete the app. A feature that
+            // invites people to write down how they really felt owes them an
+            // eraser. Shown only once there's something to erase.
+            if !model.today.journal.isEmpty {
+                Divider().opacity(0.25)
+                actionRow("Delete all journal entries", icon: "trash",
+                          tint: Palette.brandDeep, destructive: true) {
+                    confirmJournalDelete = true
+                }
             }
             if let url = URL(string: "https://otterpace.com/privacy") {
                 Link(destination: url) {

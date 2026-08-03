@@ -1,0 +1,19 @@
+{
+  "name": "CheckInCard - Prompt",
+  "id": "d4c6f506-384c-4994-9c5e-a2f545c6ef3d",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "CheckInCard",
+      "CODEYAM_ISOLATE_SCENARIO": "Prompt"
+    }
+  },
+  "componentName": "CheckInCard",
+  "scenarioType": "component"
+}

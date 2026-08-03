@@ -1,0 +1,19 @@
+{
+  "name": "FeelSelector - Rough Day Selected",
+  "id": "7dda3187-8d42-433c-92a8-603083f73fd3",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "FeelSelector",
+      "CODEYAM_ISOLATE_SCENARIO": "Rough Day Selected"
+    }
+  },
+  "componentName": "FeelSelector",
+  "scenarioType": "component"
+}

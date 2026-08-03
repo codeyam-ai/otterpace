@@ -242,6 +242,65 @@ describe("coach handler", () => {
     expect(system).toMatch(/no coaching over bad coaching/i);
   });
 
+  // Journal entries ride inside `context` (TodayState) the same way the profile
+  // does — no new transport — and the system prompt teaches the model to treat
+  // them as ground truth about subjective experience without letting them
+  // override the safety rules.
+  it("includes journal entries in the prompt and teaches how to use them", async () => {
+    createMock.mockResolvedValue(textReply(JSON.stringify({ text: "ok", mood: "recovery", safetyFlag: false })));
+    const context = {
+      steps: 6400,
+      goalSteps: 10000,
+      journal: [
+        {
+          date: "2026-06-22",
+          feel: 2,
+          energy: "low",
+          soreness: "sore",
+          sleep: "poor",
+          note: "Shins are barking again. Cut it to two miles.",
+          workoutDate: "2026-06-22",
+          workoutType: "run",
+        },
+      ],
+    };
+    const { res, done } = call({
+      method: "POST",
+      headers: { "x-anthropic-key": "sk-ant-xyz" },
+      body: { question: "should I run today?", context },
+    });
+    await done;
+    expect(res.statusCode).toBe(200);
+    const sentContent = createMock.mock.calls[0][0].messages[0].content as string;
+    // The runner's own words reach the model.
+    expect(sentContent).toContain("Shins are barking again");
+    expect(sentContent).toContain("soreness");
+
+    const system = createMock.mock.calls[0][0].system as string;
+    expect(system).toContain("Journal");
+    // Subjective experience is ground truth...
+    expect(system).toMatch(/subjective experience/i);
+    // ...but never a way around the safety rules.
+    expect(system).toMatch(/never substitutes for the hard safety rules/i);
+    // And the model must never turn journaling into a streak or a nag.
+    expect(system).toMatch(/no streaks/i);
+  });
+
+  // Behavior is unchanged when no journal is present — the call still succeeds
+  // and the prompt carries no journal fields.
+  it("works unchanged when the context has no journal", async () => {
+    createMock.mockResolvedValue(textReply(JSON.stringify({ text: "ok", mood: "ready", safetyFlag: false })));
+    const { res, done } = call({
+      method: "POST",
+      headers: { "x-anthropic-key": "sk-ant-xyz" },
+      body: { question: "hi", context: { steps: 6400, goalSteps: 10000 } },
+    });
+    await done;
+    expect(res.statusCode).toBe(200);
+    const sentContent = createMock.mock.calls[0][0].messages[0].content as string;
+    expect(sentContent).not.toContain("journal");
+  });
+
   // Behavior is unchanged when no profile is present — the call still succeeds and
   // the prompt simply carries no profile fields.
   it("works unchanged when the context has no profile", async () => {

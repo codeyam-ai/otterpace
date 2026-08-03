@@ -1,0 +1,19 @@
+{
+  "name": "JournalEntryRow - Check-In",
+  "id": "6f4e70f5-9be2-4e88-a5dd-8111672f9e1a",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Check-In",
+      "CODEYAM_ISOLATE_COMPONENT": "JournalEntryRow"
+    }
+  },
+  "componentName": "JournalEntryRow",
+  "scenarioType": "component"
+}

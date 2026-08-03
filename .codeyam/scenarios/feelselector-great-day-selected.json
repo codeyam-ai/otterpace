@@ -1,0 +1,19 @@
+{
+  "name": "FeelSelector - Great Day Selected",
+  "id": "e5c9032d-95ab-4124-98ff-e607c52c43cc",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "FeelSelector",
+      "CODEYAM_ISOLATE_SCENARIO": "Great Day Selected"
+    }
+  },
+  "componentName": "FeelSelector",
+  "scenarioType": "component"
+}
