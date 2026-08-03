@@ -31,6 +31,12 @@ public struct ContentView: View {
     @State private var showOnboarding: Bool
     private let startOnboardingPage = OnboardingState.startPage()
 
+    // Replaying the Today spotlight tour. `TodayDashboard` seeds its tour state in
+    // `init` (so a launch-seeded capture renders on the first frame), which means
+    // clearing the flag alone would not restart a dashboard that already exists.
+    // Bumping this token re-keys the dashboard so it re-inits and picks the tour up.
+    @State private var todayTourReplay = 0
+
     // Scenario-only override: a scenario can seed `rbContentSize` (e.g. "xxxl",
     // "accessibility3") to force a Dynamic Type size for the whole app, so the
     // large-text accessibility states render in a capture. Empty (production) =>
@@ -110,7 +116,13 @@ public struct ContentView: View {
             if showSettings && previewMode.isEmpty && session.state != .undecided {
                 SettingsView(model: model, session: session,
                              onClose: { withAnimation(Motion.overlay) { showSettings = false } },
-                             onReplayTour: { withAnimation(Motion.overlay) { showSettings = false; showOnboarding = true } })
+                             onReplayTour: { withAnimation(Motion.overlay) { showSettings = false; showOnboarding = true } },
+                             onReplayTodayTour: {
+                                 TourState.clearSeen()
+                                 tab = .today
+                                 todayTourReplay += 1
+                                 withAnimation(Motion.overlay) { showSettings = false }
+                             })
                     .overlayTransition()
                     .zIndex(2)
             }
@@ -169,6 +181,7 @@ public struct ContentView: View {
         TabView(selection: $tab) {
             TodayDashboard(model: model, onAskCoach: { tab = .coach },
                            onSettings: { withAnimation(Motion.overlay) { showSettings = true } })
+                .id(todayTourReplay)
                 .tag(MainTab.today)
                 .tabItem { Label("Today", systemImage: "sun.max.fill") }
 

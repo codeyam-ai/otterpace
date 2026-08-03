@@ -62,4 +62,16 @@ final class OnboardingStateTests: XCTestCase {
         XCTAssertEqual(OnboardingState.stepCount, 9)
         XCTAssertEqual(OnboardingState.pageCount, OnboardingState.introPageCount) // back-compat alias
     }
+
+    // The Today spotlight tour ships as its own overlay with its own gate,
+    // deliberately NOT as an onboarding step. If it ever gets folded in here, every
+    // `rbOnboardingPage` seed at or after the insertion point shifts and those
+    // scenarios silently start capturing the wrong screen. This asserts the two
+    // flows stay independent.
+    func testTodayTourDidNotBecomeAnOnboardingStep() {
+        XCTAssertEqual(OnboardingState.stepCount, 9,
+                       "The Today tour must not add an onboarding step — it has its own TourState gate.")
+        XCTAssertNotEqual(OnboardingState.seenKey, TourState.seenKey,
+                          "The two flows must persist independently, so replaying one does not replay the other.")
+    }
 }

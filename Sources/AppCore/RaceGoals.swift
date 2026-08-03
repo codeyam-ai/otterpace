@@ -195,15 +195,103 @@ public enum RaceStore {
 
 // MARK: - "Add a race" Today banner dismissal
 
-/// Whether the user has dismissed the Today "add a race" prompt. Modeled on
-/// `OnboardingState`: a single UserDefaults flag with injectable defaults.
+/// Whether to show the Today "add a race" prompt, and what dismissing it means.
+///
+/// This used to be a single forever-flag: the first ✕ killed the banner for good.
+/// That is exactly what a confused first-run user does by reflex, so the offer was
+/// being destroyed by the very confusion it caused. Now dismissal is a snooze:
+/// two 14-day snoozes, then permanent, and the banner does not appear on day one
+/// at all. Pure + injectable defaults, like `OnboardingState`.
 public enum RacePromptState {
     static let dismissedKey = "otterpaceRacePromptDismissed"
+    static let snoozedUntilKey = "otterpaceRacePromptSnoozedUntil"
+    static let dismissCountKey = "otterpaceRacePromptDismissCount"
+    static let firstEligibleKey = "otterpaceRacePromptFirstEligible"
 
+    /// Dismissals after which the banner stops coming back.
+    public static let maxDismissals = 2
+
+    /// Days a single dismissal buys.
+    public static let snoozeDays = 14
+
+    /// Back-compat: the pre-snooze forever-flag. Still honored so an existing
+    /// install that already dismissed the banner does not see it return.
     public static func isDismissed(_ d: UserDefaults = .standard) -> Bool {
         d.bool(forKey: dismissedKey)
     }
+
     public static func markDismissed(_ d: UserDefaults = .standard) {
         d.set(true, forKey: dismissedKey)
     }
+
+    public static func dismissCount(_ d: UserDefaults = .standard) -> Int {
+        d.integer(forKey: dismissCountKey)
+    }
+
+    /// Whether the banner should be visible. False when:
+    ///   • an upcoming race already exists (nothing to ask for),
+    ///   • the legacy forever-flag was set by an older build,
+    ///   • it has been dismissed `maxDismissals` times,
+    ///   • a snooze is still running,
+    ///   • or the user became eligible less than a day ago (so it never lands in
+    ///     the confusing first session).
+    ///
+    /// Stamps the first-eligible date on the first call that qualifies, which is
+    /// what makes the day-one suppression work without a separate install date.
+    public static func shouldShow(asOf today: String,
+                                  races: [RaceGoal],
+                                  defaults d: UserDefaults = .standard) -> Bool {
+        if RaceGoal.hasUpcoming(in: races, asOf: today) { return false }
+        if isDismissed(d) { return false }
+        if dismissCount(d) >= maxDismissals { return false }
+
+        if let snoozedUntil = d.string(forKey: snoozedUntilKey), !snoozedUntil.isEmpty {
+            // ISO yyyy-MM-dd strings sort lexicographically, so a plain compare is
+            // correct here (same trick `RaceGoal.upcoming` relies on).
+            if today < snoozedUntil { return false }
+        }
+
+        guard let firstEligible = d.string(forKey: firstEligibleKey), !firstEligible.isEmpty else {
+            d.set(today, forKey: firstEligibleKey)
+            return false   // day one: record eligibility, stay quiet
+        }
+        return today > firstEligible
+    }
+
+    /// Dismiss for now: bump the count and snooze for `snoozeDays`. On the final
+    /// allowed dismissal it becomes permanent.
+    public static func snooze(asOf today: String, defaults d: UserDefaults = .standard) {
+        let count = dismissCount(d) + 1
+        d.set(count, forKey: dismissCountKey)
+
+        if count >= maxDismissals {
+            markDismissed(d)
+            return
+        }
+        if let until = addDays(snoozeDays, to: today) {
+            d.set(until, forKey: snoozedUntilKey)
+        }
+    }
+
+    /// ISO date `days` after `iso`, or nil on unparseable input.
+    static func addDays(_ days: Int, to iso: String) -> String? {
+        guard let date = isoParser.date(from: iso),
+              let moved = utcCalendar.date(byAdding: .day, value: days, to: date)
+        else { return nil }
+        return isoParser.string(from: moved)
+    }
+
+    private static let isoParser: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "UTC")
+        return f
+    }()
+
+    private static let utcCalendar: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "UTC") ?? .current
+        return c
+    }()
 }

@@ -152,4 +152,87 @@ final class RaceGoalsTests: XCTestCase {
         XCTAssertTrue(review.safetyFlag)                              // spiking still wins
         XCTAssertTrue(review.nextWeek.lowercased().contains("ease off"))
     }
+
+    // MARK: - Race prompt: snooze instead of self-destruct
+    //
+    // The old banner set one forever-flag on the first ✕, which is exactly what a
+    // confused first-run user taps by reflex — the offer was being destroyed by
+    // the very confusion it caused. It now stays quiet on day one, snoozes twice,
+    // and only then goes away for good.
+
+    private func promptDefaults(_ name: String = #function) -> UserDefaults {
+        let suite = "RacePromptStateTests.\(name)"
+        UserDefaults().removePersistentDomain(forName: suite)
+        return UserDefaults(suiteName: suite)!
+    }
+
+    /// Day one records eligibility and stays quiet, so the banner never lands in
+    /// the confusing first session.
+    func testBannerIsSilentOnTheFirstDay() {
+        let d = promptDefaults()
+        XCTAssertFalse(RacePromptState.shouldShow(asOf: today, races: [], defaults: d))
+    }
+
+    func testBannerAppearsTheNextDay() {
+        let d = promptDefaults()
+        _ = RacePromptState.shouldShow(asOf: today, races: [], defaults: d)   // stamps eligibility
+        XCTAssertTrue(RacePromptState.shouldShow(asOf: "2026-06-25", races: [], defaults: d))
+    }
+
+    /// Nothing to ask for while a race is already on the calendar.
+    func testBannerSuppressedWhileAnUpcomingRaceExists() {
+        let d = promptDefaults()
+        _ = RacePromptState.shouldShow(asOf: today, races: [], defaults: d)
+        XCTAssertFalse(RacePromptState.shouldShow(asOf: "2026-06-25",
+                                                  races: [race("October Half", "2026-10-10")],
+                                                  defaults: d))
+    }
+
+    /// A finished race does not suppress it — there is a next goal to set.
+    func testPastRaceDoesNotSuppressTheBanner() {
+        let d = promptDefaults()
+        _ = RacePromptState.shouldShow(asOf: today, races: [], defaults: d)
+        XCTAssertTrue(RacePromptState.shouldShow(asOf: "2026-06-25",
+                                                 races: [race("Spring 10K", "2026-04-01", miles: 6.2)],
+                                                 defaults: d))
+    }
+
+    func testFirstDismissSnoozesRatherThanKilling() {
+        let d = promptDefaults()
+        _ = RacePromptState.shouldShow(asOf: today, races: [], defaults: d)
+        XCTAssertTrue(RacePromptState.shouldShow(asOf: "2026-06-25", races: [], defaults: d))
+
+        RacePromptState.snooze(asOf: "2026-06-25", defaults: d)
+        XCTAssertEqual(RacePromptState.dismissCount(d), 1)
+        XCTAssertFalse(RacePromptState.isDismissed(d), "one tap must not be permanent")
+
+        // Still snoozed a week later...
+        XCTAssertFalse(RacePromptState.shouldShow(asOf: "2026-07-02", races: [], defaults: d))
+        // ...and back after the window.
+        XCTAssertTrue(RacePromptState.shouldShow(asOf: "2026-07-10", races: [], defaults: d))
+    }
+
+    func testSecondDismissIsPermanent() {
+        let d = promptDefaults()
+        _ = RacePromptState.shouldShow(asOf: today, races: [], defaults: d)
+        RacePromptState.snooze(asOf: "2026-06-25", defaults: d)
+        RacePromptState.snooze(asOf: "2026-07-10", defaults: d)
+
+        XCTAssertEqual(RacePromptState.dismissCount(d), RacePromptState.maxDismissals)
+        XCTAssertTrue(RacePromptState.isDismissed(d))
+        XCTAssertFalse(RacePromptState.shouldShow(asOf: "2026-12-01", races: [], defaults: d))
+    }
+
+    /// An install that already dismissed the banner under the old forever-flag
+    /// must not see it come back.
+    func testLegacyDismissalIsStillHonored() {
+        let d = promptDefaults()
+        RacePromptState.markDismissed(d)
+        XCTAssertFalse(RacePromptState.shouldShow(asOf: "2026-06-25", races: [], defaults: d))
+    }
+
+    func testSnoozeWindowIsFourteenDays() {
+        XCTAssertEqual(RacePromptState.addDays(RacePromptState.snoozeDays, to: "2026-06-25"),
+                       "2026-07-09")
+    }
 }

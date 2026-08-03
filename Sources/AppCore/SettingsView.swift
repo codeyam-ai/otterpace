@@ -13,6 +13,7 @@ public struct SettingsView: View {
     @ObservedObject var session: SessionStore
     var onClose: () -> Void
     var onReplayTour: () -> Void = {}
+    var onReplayTodayTour: () -> Void = {}
 
     @State private var confirmDelete = false
 
@@ -95,11 +96,13 @@ public struct SettingsView: View {
     }
 
     public init(model: OtterpaceModel, session: SessionStore, onClose: @escaping () -> Void = {},
-                onReplayTour: @escaping () -> Void = {}) {
+                onReplayTour: @escaping () -> Void = {},
+                onReplayTodayTour: @escaping () -> Void = {}) {
         self.model = model
         self.session = session
         self.onClose = onClose
         self.onReplayTour = onReplayTour
+        self.onReplayTodayTour = onReplayTodayTour
     }
 
     public var body: some View {
@@ -901,6 +904,7 @@ public struct SettingsView: View {
         card("About") {
             row(icon: "pawprint.fill", tint: Palette.brand, title: "Otterpace", detail: "Version \(appVersion)")
             actionRow("Show welcome tour again", icon: "sparkles", tint: Palette.sky) { onReplayTour() }
+            actionRow("Show the Today tour again", icon: "hand.point.up.left.fill", tint: Palette.go) { onReplayTodayTour() }
         }
     }
 
