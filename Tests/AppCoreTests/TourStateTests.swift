@@ -115,9 +115,9 @@ final class TourStateTests: XCTestCase {
     // seed asked for, so nothing else catches it.
 
     private static let expectedStep: [String: Int] = [
-        "tour-step-buddy": 0,
-        "tour-step-stats": 1,
-        "tour-step-coach-card": 2,
+        "tour-step-1-buddy": 0,
+        "tour-step-2-stats": 1,
+        "tour-step-3-coach-card": 2,
     ]
 
     private var scenariosDir: URL {
