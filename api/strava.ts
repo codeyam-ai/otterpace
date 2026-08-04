@@ -8,7 +8,7 @@ import {
   getToken,
   isValidDeviceKey,
   upsertToken,
-} from "../_lib/strava.js";
+} from "./_lib/strava.js";
 
 // Every Strava route behind ONE serverless function.
 //
@@ -17,17 +17,26 @@ import {
 // all. Strava is the natural place to reclaim slots: four small handlers that
 // share one `_lib/strava.ts` and one client. Collapsing them frees three.
 //
-// The public paths are UNCHANGED. A catch-all at `api/strava/[...route].ts`
-// serves `/api/strava/activities`, `/callback`, `/disconnect` and `/exchange`
-// exactly as the four files did — the iOS client and the Strava app's registered
-// Authorization Callback Domain both keep working untouched. Each handler body
-// moved across verbatim: same status codes, same JSON error keys (the client
-// branches on them), same `console.error` tags (so log greps keep working), and
-// the same header comments, which document real constraints.
+// ROUTING IS LOAD-BEARING AND LIVES IN `vercel.json`.
+// The four public paths are served by the rewrite
+//   /api/strava/:route  ->  /api/strava?route=:route
+// so `/api/strava/activities`, `/callback`, `/disconnect` and `/exchange` keep
+// working exactly as the four files did. Do NOT replace that rewrite with a
+// `api/strava/[...route].ts` catch-all: bracket catch-alls are Next.js routing,
+// NOT supported by Vercel's zero-config `api/` directory, and the result is a
+// silent 404 on every path. That was tried, deployed, and reverted — unit tests
+// cannot catch it because they invoke this handler directly and never exercise
+// the platform's path resolution. Verify against a real deployment after any
+// change here; `/api/strava/callback` is the Authorization Callback Domain
+// registered with Strava, so a 404 breaks OAuth for every new connection.
+//
+// Each handler body moved across verbatim: same status codes, same JSON error
+// keys (the client branches on them), same `console.error` tags (so log greps
+// keep working), and the same header comments, which document real constraints.
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // A catch-all delivers `route` as string[]; take the first segment so a
-  // nested or trailing-slash path can't slip past the switch into the default.
+  // The rewrite supplies `route` as a string; tolerate string[] too so a future
+  // routing change (or a direct call) can't silently fall through to the 404.
   const segments = req.query.route;
   const route = Array.isArray(segments) ? segments[0] : segments;
 

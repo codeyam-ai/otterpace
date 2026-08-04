@@ -25,7 +25,7 @@ const KEY = "dev_key_abcdef1234567890";
 // "its" handler, but every call is dispatched through the real catch-all with
 // the path segment set — so these tests exercise the routing too, not just the
 // bodies. If a segment ever stops dispatching, every suite for it fails.
-import stravaRoute from "../../api/strava/[...route].ts";
+import stravaRoute from "../../api/strava.ts";
 
 /** Invoke the catch-all as if the request arrived at /api/strava/<segment>. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
