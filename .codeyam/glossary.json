@@ -1276,6 +1276,13 @@
     "testFile": "test/api/account-push.test.ts"
   },
   {
+    "conformsToView": false,
+    "description": "Every supported provider named in prose ('Anthropic, OpenAI, or Gemini'), built from displayOrder rather than written out, so a fourth provider appears in user-facing copy the moment it is added to the enum. Hardcoded lists are precisely how the app came to tell users an OpenAI key would not work.",
+    "filePath": "Sources/AppCore/Coach/CoachProvider.swift",
+    "name": "allNamesSentence",
+    "testFile": "Tests/AppCoreTests/CoachProviderCopyTests.swift"
+  },
+  {
     "description": "Fixed-window in-memory rate-limit check: true when the key is under its limit for the current window. Best-effort, per-instance.",
     "filePath": "api/_lib/ratelimit.ts",
     "name": "allow",
@@ -1940,6 +1947,13 @@
       "justification": "Standalone App Store Connect release/ops script (Scripts/asc-*.mjs), run manually during release; not part of the app build or unit-test surface.",
       "kind": "platform-glue"
     }
+  },
+  {
+    "conformsToView": false,
+    "description": "The sentence explaining which key a coach-backed feature needs, derived from the connected provider rather than restated per call site. With a provider it names that provider and no other, so the copy can never contradict the request the sheet is about to make; with none it offers every supported provider. A hardcoded vendor name here is what left the race sheets claiming they needed an Anthropic key long after OpenAI and Gemini worked. Pure and SwiftUI-free, so it is unit-testable exactly like detect(fromKey:).",
+    "filePath": "Sources/AppCore/Coach/CoachProvider.swift",
+    "name": "keyRequirementCopy",
+    "testFile": "Tests/AppCoreTests/CoachProviderCopyTests.swift"
   },
   {
     "conformsToView": false,

@@ -21,20 +21,31 @@ the chat fails.
 ## How it connects (BYO key, proxied through a backend)
 
 ```
-iOS app ──{question, TodayState}──▶  otterpace.com/api/coach   ──▶  Anthropic
-          x-anthropic-key: <user key>     (Vercel function:            (user's key)
-                                            curated coach prompt
-                                            + safety rules +
-                                            structured output)
+iOS app ──{question, TodayState}──▶  otterpace.com/api/coach ──▶ api/_lib/llm.ts ──▶ Anthropic
+          x-ai-provider: <provider>      (Vercel function:        (provider router)     OpenAI
+          x-ai-key:      <user key>       curated coach prompt                          Gemini
+                                          + safety rules +                          (user's key)
+                                          structured output)
 ```
 
-- The user's key is sent **per request** in the `x-anthropic-key` header and is
-  **never stored, logged, or persisted** by the function (`api/coach.ts` holds no
-  state). On-device it lives only in the Keychain (`CoachConfig.keyAccount`).
+- **The prompt does not vary by provider.** Otterpace's coaching quality and
+  safety rules are the product; the provider only changes which model generates
+  the words. That invariant is why the router exists, and a provider that cannot
+  honor the schema is a bug to fix in `llm.ts`, not a reason to soften the prompt.
+- The user's key is sent **per request** in the `x-ai-key` header, alongside
+  `x-ai-provider` naming which service to call, and is **never stored, logged, or
+  persisted** by the function. On-device it lives only in the Keychain, one
+  account per provider.
+- `x-anthropic-key` is retained **only** as a legacy fallback for already-installed
+  clients, and a request with no `x-ai-provider` is inferred as Anthropic
+  (`api/_lib/llm.ts`). App and backend cannot deploy atomically, so compatibility
+  runs both ways.
+- **Models are env-overridable** without an app release: `COACH_MODEL`,
+  `COACH_MODEL_OPENAI`, `COACH_MODEL_GEMINI`.
 - The **coaching prompt, safety rules, and model choice live server-side**, so
   they can be tuned without an App Store release, and the client can't see or
   tamper with them.
-- The backend constrains Claude to a structured `{ text, mood, safetyFlag }`
+- The backend constrains the model to a structured `{ text, mood, safetyFlag }`
   reply (mood ∈ the app's `BuddyMood` raw values) so the app decodes it directly.
 - **You pay nothing for coach usage** — each user's calls run on their own key.
 - The `TodayState` context now also carries an **optional onboarding
@@ -46,8 +57,15 @@ iOS app ──{question, TodayState}──▶  otterpace.com/api/coach   ──�
 
 ## Files
 
-- `api/coach.ts` — the Vercel serverless function (Anthropic SDK).
-- `vercel.json` / `package.json` — Vercel config + deps (`@anthropic-ai/sdk`).
+- `api/coach.ts` — the Vercel serverless function: validates, builds the prompt.
+- `api/_lib/llm.ts` — the **provider layer**: reads the key + provider off the
+  headers and routes to Anthropic (SDK), OpenAI or Gemini (plain `fetch`).
+  `api/race-import.ts` and `api/race-search.ts` share it, so all three
+  coach-backed endpoints support all three providers identically.
+- `vercel.json` / `package.json` — Vercel config + deps. `@anthropic-ai/sdk` is the
+  only vendor SDK shipped; the other two providers are reached over `fetch`.
+- `Sources/AppCore/Coach/CoachProvider.swift` — the provider enum: key-shape
+  detection, display names, console URLs, and user-facing copy.
 - `Sources/AppCore/Coach/RemoteCoach.swift` — iOS client + `CoachKeyStore`.
 - `Sources/AppCore/AskCoachView.swift` — routes interactive sends to the coach,
   falls back to the mock; seeding stays on the mock.
@@ -65,7 +83,8 @@ iOS app ──{question, TodayState}──▶  otterpace.com/api/coach   ──�
    Pages workflow can stay as a fallback for the static site only.
 3. *(optional)* Set env var **`COACH_MODEL`** in Vercel to override the model
    (default `claude-opus-4-8`). No server-side API key is needed — keys are BYO.
-4. In the app: **Settings → AI Coach → paste an Anthropic key → Connect**, then
+4. In the app: **Settings → AI Coach → paste a key from Anthropic, OpenAI or
+   Gemini → Connect**, then
    ask the coach a question. Without a key, the built-in coach answers.
 
 ## Verify
@@ -83,3 +102,20 @@ iOS app ──{question, TodayState}──▶  otterpace.com/api/coach   ──�
 - `@anthropic-ai/sdk` / `@vercel/node` are pinned to `latest` in `package.json`
   so the first Vercel install resolves a version with the `output_config`
   structured-output API; pin to exact versions after the first successful deploy.
+
+## Adding a fourth provider
+
+Two places enumerate providers, and `CoachProvider.swift` promises that is the
+whole list:
+
+1. **`Sources/AppCore/Coach/CoachProvider.swift`** — add the case. Key-shape
+   detection, display name, console URL and the user-facing copy all hang off the
+   enum, and `allNamesSentence` derives prose from `displayOrder`, so the app's
+   copy updates itself.
+2. **`api/_lib/llm.ts`** — add the case to `LlmProvider`, `MODELS`, and the
+   `complete` switch, with a `complete<Provider>` function that returns the shared
+   `LlmResult` shape.
+
+Nothing else should need touching: the prompt, safety rules and structured-output
+contract are provider-independent by design. If a change is needed anywhere else,
+that is a sign the abstraction leaked.

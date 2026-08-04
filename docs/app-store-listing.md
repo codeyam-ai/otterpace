@@ -51,7 +51,8 @@ docs agree on **Data Not Collected** for this release.
 > on-device UserDefaults only, and its analytics events (`theme_changed`,
 > `onboarding_theme_selected`) are no-ops while `PostHogProjectKey` is empty —
 > nothing leaves the device. The conversational-coaching change also collects
-> nothing new (BYO-key requests still go straight to Anthropic, never stored).
+> nothing new (BYO-key requests still go straight to the user's chosen AI
+> provider, never stored).
 
 > If analytics is enabled in a later release, the mapping becomes (kept here so
 > nothing is lost — see `docs/strava-and-analytics.md` for the full version):

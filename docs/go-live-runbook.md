@@ -21,7 +21,8 @@ Legend: ☐ = you do it. Each phase ends with a **Verify** you can actually chec
 - ☐ **Supabase** project (Phase 3) — stores Strava tokens.
 - ☐ **PostHog** project (Phase 3) — analytics.
 - Note: the **AI coach is bring-your-own-key** — *end users* paste their own
-  Anthropic key in the app. You don't need an Anthropic key to ship.
+  own key from Anthropic, OpenAI, or Gemini in the app. You don't need a key of
+  your own to ship.
 
 ---
 
@@ -102,7 +103,9 @@ Apple don't fully work in the simulator).
 On a real device, confirm each integration end-to-end:
 - ☐ **HealthKit** — permission sheet appears; steps/distance populate the dashboard.
 - ☐ **Sign in with Apple** — sign in, sign out, delete account all work.
-- ☐ **AI coach** — Settings → AI Coach → paste your Anthropic key → ask a question
+- ☐ **AI coach** — Settings → AI Coach → paste a key from any supported provider
+  → ask a question. Worth testing more than one provider: Anthropic, OpenAI and
+  Gemini are separate code paths in `api/_lib/llm.ts`.
   → real reply (a bad key falls back to the built-in coach).
 - ☐ **Strava** — Settings → Strava → Connect → approve → recent runs import.
 - ☐ **Reminders** — toggle a reminder on → permission prompt → it schedules.
@@ -157,8 +160,10 @@ Information notes (no-key coach, optional sign-in, sparse HealthKit) → attach 
 - Backend deps are pinned (`@anthropic-ai/sdk ^0.106`, `@vercel/node ^5.8`) and
   type-check clean (`npm install && npm run typecheck`); re-check after any bump.
 - **`npm audit` noise is expected and safe to ignore.** `npm audit --omit=dev`
-  reports **0 vulnerabilities** — the only runtime dependency (`@anthropic-ai/sdk`)
-  is clean. All flagged advisories (`undici`, `path-to-regexp`, `minimatch`, `ajv`,
+  reports **0 vulnerabilities** — the runtime dependencies (`@anthropic-ai/sdk`
+  and `jose`) are clean. Note that `@anthropic-ai/sdk` is the only *vendor* SDK we
+  ship: the OpenAI and Gemini branches of `api/_lib/llm.ts` call their HTTP APIs
+  with `fetch`, so adding those providers added no dependencies. All flagged advisories (`undici`, `path-to-regexp`, `minimatch`, `ajv`,
   `js-yaml`, `smol-toml`, `@vercel/*`) are in the `@vercel/node` tree, which is a
   **devDependency** imported `import type` only — erased at compile time, never in
   the deployed bundle (Vercel supplies the function runtime). **Do not run

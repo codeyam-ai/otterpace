@@ -1360,6 +1360,78 @@
       "runner": "tests"
     },
     {
+      "description": "Derived from `displayOrder`, so a fourth provider appears in the prose the moment it is added to the enum rather than the next time someone remembers to edit a sentence.",
+      "file": "Tests/AppCoreTests/CoachProviderCopyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProviderCopyTests › testAllNamesSentenceNamesEveryProvider",
+      "line": 17,
+      "registeredAt": "2026-08-04T15:43:48.554818+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The provider list reads as an Oxford-comma sentence rather than a raw join: no trailing comma, no doubled separator.",
+      "file": "Tests/AppCoreTests/CoachProviderCopyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProviderCopyTests › testAllNamesSentenceReadsAsProse",
+      "line": 25,
+      "registeredAt": "2026-08-04T15:43:57.989285+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "`article` exists so prose reads correctly before a provider name; the rule is about sound, not spelling, so it is asserted rather than derived.",
+      "file": "Tests/AppCoreTests/CoachProviderCopyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProviderCopyTests › testArticleReadsCorrectlyForEveryProvider",
+      "line": 88,
+      "registeredAt": "2026-08-04T15:44:07.903078+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "With nothing connected there is no provider to name, so the copy must offer all of them rather than picking one.",
+      "file": "Tests/AppCoreTests/CoachProviderCopyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProviderCopyTests › testNamesEveryProviderWhenNoneIsConnected",
+      "line": 51,
+      "registeredAt": "2026-08-04T15:44:17.117262+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "With a key connected the sentence names THAT provider and no other, so it can never contradict the request the sheet is about to make.",
+      "file": "Tests/AppCoreTests/CoachProviderCopyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProviderCopyTests › testNamesTheConnectedProviderAndNoOther",
+      "line": 36,
+      "registeredAt": "2026-08-04T15:44:26.310370+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "No variant of the provider copy contains an em dash, matching the app-wide copy convention.",
+      "file": "Tests/AppCoreTests/CoachProviderCopyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProviderCopyTests › testNoEmDashesInAnyVariant",
+      "line": 75,
+      "registeredAt": "2026-08-04T15:44:36.002500+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The no-key copy tells the user where to connect a key and keeps the manual-entry path offered, so they are never blocked.",
+      "file": "Tests/AppCoreTests/CoachProviderCopyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProviderCopyTests › testNoKeyCopyPointsAtSettingsAndTheManualPath",
+      "line": 67,
+      "registeredAt": "2026-08-04T15:44:45.148320+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The two sheets must read distinctly instead of sharing one sentence.",
+      "file": "Tests/AppCoreTests/CoachProviderCopyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.CoachProviderCopyTests › testUsesTheCallersVerb",
+      "line": 60,
+      "registeredAt": "2026-08-04T15:44:53.431264+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "An Anthropic key also rides the legacy x-anthropic-key header, so an app build shipping ahead of the backend keeps working.",
       "file": "Tests/AppCoreTests/IntegrationModuleTests.swift",
       "format": "junit-xml",

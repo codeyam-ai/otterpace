@@ -4,7 +4,7 @@ import { complete, credentialsFromHeaders, LlmError } from "./_lib/llm.js";
 
 // Otterpace race import — stateless BYO-key proxy (URL -> structured race).
 //
-// The iOS app POSTs { url } here with the user's own Anthropic key in the
+// The iOS app POSTs { url } here with the user's own provider key in the
 // `x-anthropic-key` header. We fetch the race's web page server-side, strip it to
 // bounded text, and ask Claude to extract a structured race (name, date, distance,
 // location) constrained to a strict JSON schema. The app opens its normal race

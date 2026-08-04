@@ -53,7 +53,9 @@ The **Ask Coach** chat, reached from a Today/Coach tab bar or the
   so they feel personal — a recent hard run or spiking load steers Buddy toward
   recovery, and pain questions return a non-diagnostic, see-a-clinician answer
   behind an amber **"safety first"** shield
-- A **real AI coach** is available when you connect your own Anthropic key
+- A **real AI coach** is available when you connect your own API key from
+  Anthropic, OpenAI, or Gemini (the provider is recognized from the key's shape,
+  so there is nothing to pick)
   (Settings → AI Coach): questions go to a Vercel backend that calls Claude with
   the load-aware coach prompt. Without a key — and offline, or in scenario
   previews — the deterministic `CoachEngine`
@@ -80,7 +82,7 @@ integration controls:
 - **Strava** (optional) — connect to import your runs and rides as an alternative
   to Apple Health. OAuth runs through a small backend so the client secret stays
   server-side; the Strava tokens never touch the device.
-- **AI Coach** — paste your own Anthropic key to upgrade Buddy from the built-in
+- **AI Coach** — paste your own key from Anthropic, OpenAI, or Gemini to upgrade Buddy from the built-in
   coach to a real model (see Ask Coach above).
 - **Movement reminders** — optional on-device notifications: a daily nudge at a
   time you choose, an evening goal nudge, and an inactivity nudge.

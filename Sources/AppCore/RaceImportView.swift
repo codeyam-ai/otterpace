@@ -42,7 +42,7 @@ struct RaceImportSheet: View {
     var body: some View {
         RaceImportScaffold(title: "Import from URL", onCancel: onCancel) {
             if !unlocked {
-                RaceImportNoKey(action: "Importing", onManual: onManual)
+                RaceImportNoKey(action: "Importing", provider: keyStore.activeProvider, onManual: onManual)
             } else {
                 VStack(alignment: .leading, spacing: 14) {
                     Text("Paste a race's web page and Buddy will pull in the name, date, distance and location for you to confirm.")
@@ -136,7 +136,7 @@ struct RaceSearchSheet: View {
     var body: some View {
         RaceImportScaffold(title: "Search online", onCancel: onCancel) {
             if !unlocked {
-                RaceImportNoKey(action: "Searching", onManual: onManual)
+                RaceImportNoKey(action: "Searching", provider: keyStore.activeProvider, onManual: onManual)
             } else {
                 VStack(alignment: .leading, spacing: 14) {
                     Text("Type a race name and pick from the matches. You can confirm and edit the details before saving.")
@@ -279,6 +279,10 @@ private struct RaceImportNoKey: View {
     /// The sheet-specific verb ("Importing" / "Searching") so the two sheets'
     /// no-key states read distinctly instead of sharing identical copy.
     let action: String
+    /// The active provider, or nil when nothing is connected. Read from the same
+    /// `keyStore.activeProvider` the request path uses, so the sentence and the
+    /// request can never name different providers.
+    var provider: CoachProvider? = nil
     var onManual: () -> Void
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -286,11 +290,11 @@ private struct RaceImportNoKey: View {
                 Image(systemName: "sparkles").foregroundColor(Palette.brand)
                 Text("Connect an AI coach key first").font(Typography.headline).foregroundColor(Palette.ink)
             }
-            // Names every supported provider, not just Anthropic: import and
-            // search go through the same BYO-key router the coach uses, so any
-            // connected provider works. The old copy named Anthropic alone and
-            // read as "your OpenAI key won't work here", which was never true.
-            Text("\(action) races from the web uses your own AI key, from Anthropic, OpenAI, or Gemini. Connect one in the AI Coach section of Settings, or add a race manually.")
+            // Derived, never restated: import and search ride the same BYO-key
+            // router the coach uses, so any connected provider works. Hardcoding
+            // "Anthropic" here is what made this read as "your OpenAI key won't
+            // work", which was never true.
+            Text(CoachProvider.keyRequirementCopy(action: action, provider: provider))
                 .font(Typography.callout).foregroundColor(Palette.ink)
                 .fixedSize(horizontal: false, vertical: true)
             Button("Add a race manually", action: onManual)

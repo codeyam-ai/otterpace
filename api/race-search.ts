@@ -4,7 +4,8 @@ import { complete, credentialsFromHeaders, LlmError } from "./_lib/llm.js";
 
 // Otterpace race search — stateless BYO-key proxy (name -> candidate races).
 //
-// The iOS app POSTs { query } here with the user's own Anthropic key. We ask
+// The iOS app POSTs { query } here with the user's own provider key (any of the
+// three the shared router supports). We ask
 // Claude to propose a short list of real races matching the name, each with a
 // best-effort source URL, and return them for the user to pick from. Picking a
 // candidate opens the app's race editor pre-filled (optionally re-importing full

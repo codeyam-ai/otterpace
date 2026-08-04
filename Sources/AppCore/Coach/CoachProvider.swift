@@ -83,6 +83,35 @@ public enum CoachProvider: String, CaseIterable, Codable, Sendable {
     /// keeps the UI from depending on declaration order by accident.
     public static var displayOrder: [CoachProvider] { allCases }
 
+    /// Every provider named in prose: "Anthropic, OpenAI, or Gemini".
+    ///
+    /// Derived from `displayOrder` rather than written out, so a fourth provider
+    /// appears in the copy the moment it is added to the enum. Hardcoded lists are
+    /// exactly how the app came to tell users an OpenAI key would not work.
+    public static var allNamesSentence: String {
+        let names = displayOrder.map(\.displayName)
+        guard names.count > 1 else { return names.first ?? "" }
+        return names.dropLast().joined(separator: ", ") + ", or " + names[names.count - 1]
+    }
+
+    /// The sentence explaining which key a coach-backed feature needs.
+    ///
+    /// Derived from the connected provider rather than restated per call site: a
+    /// hardcoded vendor name is what left the race sheets claiming they needed an
+    /// Anthropic key long after OpenAI and Gemini worked there. Pure and
+    /// SwiftUI-free, so it is unit-testable exactly like `detect(fromKey:)`.
+    ///
+    /// - Parameters:
+    ///   - action: the calling sheet's verb ("Importing" / "Searching"), so the
+    ///     two read distinctly instead of sharing one sentence.
+    ///   - provider: the active provider, or nil when no key is connected.
+    public static func keyRequirementCopy(action: String, provider: CoachProvider?) -> String {
+        if let provider {
+            return "\(action) races from the web uses your \(provider.displayName) API key, the one you connected for AI coaching."
+        }
+        return "\(action) races from the web uses your own AI key, from \(allNamesSentence). Connect one in the AI Coach section of Settings, or add a race manually."
+    }
+
     // MARK: Recognizing a pasted key
 
     /// Best guess at which provider a pasted key belongs to, or nil when the shape
