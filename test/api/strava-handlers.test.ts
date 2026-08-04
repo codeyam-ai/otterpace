@@ -21,10 +21,24 @@ vi.mock("../../api/_lib/strava.ts", async (importActual) => ({
 // A well-formed device key: high-entropy, base64url, ≥16 chars.
 const KEY = "dev_key_abcdef1234567890";
 
-import activities from "../../api/strava/activities.ts";
-import callback from "../../api/strava/callback.ts";
-import disconnect from "../../api/strava/disconnect.ts";
-import exchange from "../../api/strava/exchange.ts";
+// The four routes now live behind one catch-all. Each suite below still calls
+// "its" handler, but every call is dispatched through the real catch-all with
+// the path segment set — so these tests exercise the routing too, not just the
+// bodies. If a segment ever stops dispatching, every suite for it fails.
+import stravaRoute from "../../api/strava/[...route].ts";
+
+/** Invoke the catch-all as if the request arrived at /api/strava/<segment>. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function via(segment: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (req: any, res: any) =>
+    stravaRoute({ ...req, query: { ...(req?.query ?? {}), route: [segment] } }, res);
+}
+
+const activities = via("activities");
+const callback = via("callback");
+const disconnect = via("disconnect");
+const exchange = via("exchange");
 
 function makeRes() {
   return {
@@ -203,5 +217,57 @@ describe("strava/exchange", () => {
     lib.exchangeCode.mockRejectedValue(new Error("bad code"));
     const res = await run(exchange, { method: "POST", body: { code: "c", deviceKey: KEY } });
     expect(res.statusCode).toBe(502);
+  });
+});
+
+// Regression guard for the consolidation itself.
+//
+// Collapsing four handler files into one catch-all freed three Vercel function
+// slots, but it also moved routing from the filesystem (where it could not be
+// wrong) into a switch (where it can). The paths are public contracts: the iOS
+// client calls them, and /api/strava/callback is registered with Strava as the
+// Authorization Callback Domain. If the catch-all ever stops serving a segment,
+// OAuth breaks for every new connection — so every path is asserted to dispatch.
+describe("strava catch-all routing", () => {
+  const PUBLIC_ROUTES = ["activities", "callback", "disconnect", "exchange"];
+
+  it("dispatches every previously-public path", async () => {
+    for (const route of PUBLIC_ROUTES) {
+      // A bare request: each route rejects it in its own way (400/405/302), but
+      // NONE may fall through to the catch-all's 404 — that would mean the path
+      // is no longer served at all.
+      const res = await run(stravaRoute, { method: "GET", query: { route: [route] }, headers: {} });
+      expect(res.statusCode, `/api/strava/${route} did not dispatch`).not.toBe(404);
+    }
+  });
+
+  it("404s an unknown segment instead of falling into a real route", async () => {
+    const res = await run(stravaRoute, { method: "GET", query: { route: ["nope"] }, headers: {} });
+    expect(res.statusCode).toBe(404);
+    expect(res.body).toEqual({ error: "not_found" });
+  });
+
+  it("takes the first segment, so a nested path cannot bypass the switch", async () => {
+    // Vercel hands a catch-all its segments as an array; a deeper path must
+    // still resolve to its route rather than silently 404.
+    const res = await run(stravaRoute, {
+      method: "POST",
+      query: { route: ["disconnect", "extra"] },
+      headers: {},
+      body: { deviceKey: KEY },
+    });
+    expect(res.statusCode).not.toBe(404);
+  });
+
+  it("serves the OAuth callback as a redirect into the app scheme", async () => {
+    // The single most breakage-sensitive path: Strava redirects a real browser
+    // here, and the only correct outcome is a 302 into otterpace://.
+    const res = await run(stravaRoute, {
+      method: "GET",
+      query: { route: ["callback"], code: "abc123", state: KEY },
+      headers: {},
+    });
+    expect(res.statusCode).toBe(302);
+    expect(res.headers.Location).toMatch(/^otterpace:\/\/strava-callback\?/);
   });
 });

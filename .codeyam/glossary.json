@@ -1270,6 +1270,13 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "GET /api/strava/activities. Reads the device's Strava token from Supabase (refreshing server-side if expired), fetches recent activities and returns them mapped to the app's workout shape. The access token never reaches the app, and the device key rides in a header rather than the query string so it stays out of access logs. No stored token returns 200 with connected:false and an empty list, which is a deliberate non-error path: not connected is a normal state, not a fault.",
+    "filePath": "api/strava/[...route].ts",
+    "name": "activities",
+    "testFile": "test/api/strava-handlers.test.ts"
+  },
+  {
     "description": "Register an APNs device token for a user, idempotent and preserving any existing movement/nudge state on the row.",
     "filePath": "api/_lib/account.ts",
     "name": "addPushToken",
@@ -1513,6 +1520,13 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "GET /api/strava/callback. The path Strava redirects a real browser to after the user approves, registered as the Authorization Callback Domain, so it is the single most breakage-sensitive route here. Bounces into the app's custom scheme so ASWebAuthenticationSession can capture the code, carrying the device key through in state. Every reflected value is validated against its expected shape (CODE_RE, ERROR_RE, isValidDeviceKey) before entering the redirect URL, and the redirect host is a fixed app scheme never derived from input, so a crafted callback cannot inject query params into otterpace://strava-callback.",
+    "filePath": "api/strava/[...route].ts",
+    "name": "callback",
+    "testFile": "test/api/strava-handlers.test.ts"
+  },
+  {
     "description": "Clamps a custom daily step goal into the minGoal...maxGoal range and rounds it to the nearest goalIncrement, so any user-dialed value is always in-bounds and on a clean 500-step rail.",
     "filePath": "Sources/AppCore/Preferences.swift",
     "name": "clampGoal",
@@ -1652,6 +1666,13 @@
     "testFile": "test/api/strava-handlers.test.ts"
   },
   {
+    "conformsToView": false,
+    "description": "POST /api/strava/disconnect. Forgets this device's Strava tokens with a server-side delete. POST-only, and the device key is shape-validated before any delete runs. Failures return a generic 502 with details logged server-side only.",
+    "filePath": "api/strava/[...route].ts",
+    "name": "disconnect",
+    "testFile": "test/api/strava-handlers.test.ts"
+  },
+  {
     "description": "Pure, case-insensitive mapping from a scenario-seeded rbContentSize string (e.g. xxxl, accessibility3) to a SwiftUI DynamicTypeSize; empty/unrecognized returns nil to honor the system size. Drives the app-wide Dynamic Type override for accessibility text-size scenarios.",
     "filePath": "Sources/AppCore/ContentView.swift",
     "name": "dynamicTypeSize",
@@ -1669,6 +1690,13 @@
     "filePath": "api/_lib/llm.ts",
     "name": "errorDetail",
     "testFile": "test/api/llm.test.ts"
+  },
+  {
+    "conformsToView": false,
+    "description": "POST /api/strava/exchange. Trades the OAuth code for tokens server-side using the client secret and stores them in Supabase keyed by device key. Returns only a success flag and the athlete's first name; the tokens themselves never go to the app. POST-only, with both code and a shape-valid device key required before any exchange.",
+    "filePath": "api/strava/[...route].ts",
+    "name": "exchange",
+    "testFile": "test/api/strava-handlers.test.ts"
   },
   {
     "description": "Exchanges a Strava OAuth authorization code for tokens using the client secret, throwing on failure.",
@@ -1772,26 +1800,9 @@
     "testFile": "test/api/race-search.test.ts"
   },
   {
-    "description": "GET endpoint that reads a device's Strava token, refreshes it when expired, and returns recent activities mapped to the app's workout shape (not-connected with an empty list when no token).",
-    "filePath": "api/strava/activities.ts",
-    "name": "handler",
-    "testFile": "test/api/strava-handlers.test.ts"
-  },
-  {
-    "description": "OAuth redirect endpoint that bounces the browser back into the otterpace:// app scheme with the code (or error) plus state so ASWebAuthenticationSession can capture it.",
-    "filePath": "api/strava/callback.ts",
-    "name": "handler",
-    "testFile": "test/api/strava-handlers.test.ts"
-  },
-  {
-    "description": "POST endpoint that forgets a device's Strava tokens via a server-side Supabase delete.",
-    "filePath": "api/strava/disconnect.ts",
-    "name": "handler",
-    "testFile": "test/api/strava-handlers.test.ts"
-  },
-  {
-    "description": "POST endpoint that exchanges a Strava OAuth code for tokens and stores them in Supabase, returning only a success flag and the athlete first name.",
-    "filePath": "api/strava/exchange.ts",
+    "conformsToView": false,
+    "description": "Every Strava route behind one Vercel serverless function. Resolves the catch-all's first path segment and dispatches to activities, callback, disconnect or exchange, 404-ing an unknown segment. Collapsing the four handler files into one freed three function slots against Vercel's 12-function Hobby ceiling, which api/ had reached, while preserving every public path exactly: the iOS client calls these URLs and /api/strava/callback is registered with Strava as the Authorization Callback Domain, so a dropped route breaks OAuth for every new connection.",
+    "filePath": "api/strava/[...route].ts",
     "name": "handler",
     "testFile": "test/api/strava-handlers.test.ts"
   },
