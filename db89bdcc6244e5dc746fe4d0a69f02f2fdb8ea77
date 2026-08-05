@@ -1,0 +1,1 @@
+{"pushedRef":"refs/heads/main","reason":"Quiet-hours timezone fix + strava rewrite hotfix; finalize deferred via session-checkpoint after repeated session-finalize kills. Suites verified green: 212 backend, 445 swift. Finalize owed.","timestamp":"2026-08-05T16:09:48Z","user":"30483582+nseldeib@users.noreply.github.com"}
