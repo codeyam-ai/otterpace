@@ -83,3 +83,22 @@ footer a { color: var(--brand-deep); }
   .doc h1 { font-size: 1.7rem; }
   .doc h2 { font-size: 1.1rem; }
 }
+
+/* Tap targets + focus rings for the standalone doc pages (privacy, etc.).
+   Inline prose links stay inline — enlarging those would break the paragraph —
+   but standalone navigation links (the back link, the footer row) get the 44px
+   minimum, and every link gets a visible focus ring, which the page had none of. */
+.doc a:focus-visible, .back:focus-visible, footer a:focus-visible {
+  outline: 3px solid var(--coral, #ED4C36);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.back, footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

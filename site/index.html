@@ -22,18 +22,32 @@
   :root{--paper:#FBF6EF;--ink:#20202a;--coral:#FF5A3C;--coral2:#ED4C36;--go:#2FA968;--gold:#F3B430;--sky:#5B9EED;--muted:#7a7480;--line:#EADFCF;--card:#fff}
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
-  body{background:var(--paper);color:var(--ink);font-family:-apple-system,"SF Pro Display",system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  body{background:var(--paper);color:var(--ink);font-family:-apple-system,"SF Pro Display",system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
   .mono{font-family:"SF Mono",ui-monospace,monospace}
   .wrap{max-width:1140px;margin:0 auto;padding:0 28px}
   a{color:inherit;text-decoration:none}
 
   nav{position:sticky;top:0;z-index:40;background:rgba(251,246,239,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
   nav .wrap{display:flex;align-items:center;gap:16px;height:66px}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.02em}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.02em;min-height:44px;min-width:0}
   .brand img{width:32px;height:32px;border-radius:9px}
   nav .sp{flex:1}
-  .nl{font-family:"SF Mono",monospace;color:var(--muted);font-size:13px}.nl:hover{color:var(--coral)}
-  .btn{background:var(--ink);color:var(--paper);font-weight:800;font-size:14px;padding:10px 18px;border-radius:100px}
+  .nl{font-family:"SF Mono",monospace;color:var(--muted);font-size:13px;display:inline-flex;align-items:center;min-height:44px}
+  .nl:hover{color:var(--coral)}
+  .btn{background:var(--ink);color:var(--paper);font-weight:800;font-size:14px;padding:10px 18px;border-radius:100px;
+    display:inline-flex;align-items:center;min-height:44px;white-space:nowrap;flex:none}
+
+  /* Phone nav row. Hidden on desktop, where .nl sits inline in the bar. */
+  .navlinks{display:none;border-top:1px solid var(--line);background:rgba(251,246,239,.92)}
+  .navlinks .wrap{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;padding-top:6px;padding-bottom:6px}
+  .navlinks .wrap::-webkit-scrollbar{display:none}
+  .navlinks a{scroll-snap-align:start;flex:none;font-family:"SF Mono",monospace;font-size:13px;color:var(--muted);
+    border:1px solid var(--line);border-radius:100px;padding:0 14px;min-height:44px;display:inline-flex;align-items:center}
+  .navlinks a:hover{color:var(--coral)}
+  /* The sticky header is taller once the chip row shows; keep anchor targets
+     from landing underneath it. */
+  #themes,#recap,#made{scroll-margin-top:124px}
 
   .mq{background:var(--ink);color:var(--paper);overflow:hidden;padding:11px 0;white-space:nowrap}
   .mq .track{display:inline-block;animation:scroll 34s linear infinite;font-weight:800;font-size:14px;letter-spacing:.02em;text-transform:uppercase}
@@ -48,8 +62,9 @@
   h1{font-size:clamp(52px,8.5vw,104px);line-height:.9;letter-spacing:-.045em;font-weight:900;margin:20px 0 0;text-transform:uppercase}
   h1 .o{color:var(--coral)}
   .lead{font-size:20px;color:#4a4653;max-width:36ch;margin-top:20px;font-weight:500}
-  .cta-row{display:flex;gap:14px;margin-top:26px;flex-wrap:wrap;align-items:center}
+  .cta-row{display:flex;gap:14px;margin-top:26px;flex-wrap:wrap;align-items:center;padding-top:12px;padding-right:12px}
   .cta-row img{height:50px;width:auto;display:block}
+  .cta-row a{display:inline-flex;align-items:center;min-height:44px}
   .fine{margin-top:14px;font-family:"SF Mono",monospace;font-size:12px;color:var(--muted);letter-spacing:.02em}
   /* Android "coming soon" — deliberately non-interactive: ghosted badge + tag. */
   .soon{position:relative;display:inline-block;vertical-align:bottom;cursor:default}
@@ -83,6 +98,8 @@
   .devs .nm .sw{width:11px;height:11px;border-radius:50%;background:var(--ac);box-shadow:0 0 9px var(--ac)}
   .devs .h{color:#8f897f;font-size:11px;margin-top:3px}
   .devs figure.mid img{width:172px}
+  /* Rail affordance: only meaningful on the phone tier, shown there. */
+  .swipe{display:none;font-family:"SF Mono",monospace;font-size:11px;color:#7d786f;letter-spacing:.08em;margin-top:10px}
 
   /* weekly recap */
   .week{background:var(--ink);color:var(--paper);border-radius:20px;padding:24px 26px;margin-top:26px;display:grid;grid-template-columns:auto repeat(4,1fr);gap:20px;align-items:center}
@@ -120,7 +137,7 @@
   .step h4{font-size:16px;margin:8px 0 5px}
   .step p{color:#9a9caa;font-size:14px}
   .made .cta-row{margin-top:24px}
-  .lnk{display:inline-flex;align-items:center;gap:9px;font-weight:800;font-size:15px;padding:12px 20px;border-radius:100px;transition:.15s}
+  .lnk{display:inline-flex;align-items:center;gap:9px;font-weight:800;font-size:15px;padding:12px 20px;border-radius:100px;transition:.15s;min-height:44px}
   .lnk.primary{background:#ff6a4d;color:#1b1b23}
   .lnk.ghost{border:1.5px solid #40404c;color:#eceef2}
   .lnk:hover{transform:translateY(-2px)}
@@ -133,9 +150,89 @@
   footer{border-top:1px solid var(--line);padding:32px 0 60px}
   footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-family:"SF Mono",monospace;font-size:13px;color:var(--muted);align-items:center}
   footer b{color:#4a4653}
+  footer a{display:inline-flex;align-items:center;min-height:44px}
   footer a:hover{color:var(--coral)}
   footer .disc{width:100%;text-align:center;color:#a49e93;font-size:12px;margin-top:6px}
-  @media(max-width:880px){.hero-grid,.feat,.review,.steps{grid-template-columns:1fr}.week{grid-template-columns:1fr 1fr}.feat{grid-template-columns:1fr}.nl{display:none}}
+  /* ── Responsive tiers ───────────────────────────────────────────────────
+     The page had ONE breakpoint at 880px and nothing below it, so every iPhone
+     width (375/390/393/430) got the desktop layout merely squeezed. Each tier
+     below is a real layout, not a scale-down. */
+
+  /* Tablet / narrow desktop: collapse the multi-column grids. */
+  @media(max-width:880px){
+    .hero-grid,.feat,.review,.steps{grid-template-columns:1fr}
+    .week{grid-template-columns:1fr 1fr}
+    .feat{grid-template-columns:1fr}
+    /* The inline nav links move OUT of the bar and become the chip row below
+       it. Both halves matter: without hiding .nl they overlap the brand. */
+    .nl{display:none}
+    nav .wrap{gap:10px}
+    .brand{font-size:18px;min-width:0}
+    .navlinks{display:block}
+  }
+
+  /* Phone. */
+  @media(max-width:560px){
+    .wrap{padding:0 20px}
+    section{padding:40px 0}
+    header{padding:36px 0 12px}
+    h1{font-size:clamp(38px,11vw,52px)}
+    .h2{font-size:clamp(26px,7.5vw,34px)}
+    .lead{font-size:17px}
+    .sub{font-size:16px}
+    .made{padding:28px 20px;border-radius:22px}
+    .made p{font-size:16px}
+    .gallery{padding:24px 16px 12px;border-radius:20px}
+    .gallery .cap{position:static;display:block;text-align:right;margin-bottom:10px}
+    /* Five phones wrapped into ragged rows below 880px. A snap rail reads as a
+       deliberate gallery instead. */
+    .devs{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;scroll-snap-type:x mandatory;
+      -webkit-overflow-scrolling:touch;scrollbar-width:none;gap:14px;padding-bottom:4px}
+    .devs::-webkit-scrollbar{display:none}
+    .devs figure{scroll-snap-align:center;flex:0 0 auto;width:132px}
+    .devs img,.devs figure.mid img{width:132px}
+    /* The halo tracked a fixed 132px width; tie it to the figure so it stays
+       centred on the smaller rail image. */
+    .devs .halo{width:100%;height:170px}
+    .swipe{display:block}
+    /* Title full width, the four stats as a 2x2 beneath it. */
+    .week{grid-template-columns:1fr 1fr;padding:20px}
+    .week .title{grid-column:1/-1;max-width:none}
+    .rc,.fc,.step{padding:17px}
+    .final{padding:40px 20px}
+    footer .wrap{flex-direction:column;align-items:flex-start;text-align:left}
+    footer .disc{width:100%;text-align:left;margin-top:4px}
+  }
+
+  /* Small phone (iPhone SE / mini). */
+  @media(max-width:380px){
+    h1{font-size:clamp(32px,10vw,40px)}
+    .cta-row img,.soon img{height:44px}
+    .hero-device img{width:min(240px,78vw)}
+    /* At 320px the brand plus a non-shrinking "Get the app" overflowed the bar.
+       Both tighten rather than letting either wrap or clip. */
+    .brand{font-size:16px}
+    .brand img{width:28px;height:28px}
+    nav .wrap{gap:8px;padding:0 14px}
+    /* Shorter label at the narrowest width; the full wording returns above 380. */
+    .btn{font-size:13px;padding:10px 12px}
+    .btn .full{display:none}
+    .btn::after{content:"Get app"}
+  }
+
+  /* ── Accessibility ──────────────────────────────────────────────────────
+     The marquee animated regardless of the user's motion preference, and no
+     interactive element had a focus ring. */
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    .mq .track{animation:none;display:block;text-align:center}
+    /* The strip is duplicated for a seamless loop; with the animation off the
+       second copy is redundant noise, so hide it rather than show a half-scroll. */
+    .mq .track .dup{display:none}
+    .lnk{transition:none}
+    .lnk:hover{transform:none}
+  }
+  a:focus-visible,button:focus-visible{outline:3px solid var(--coral2);outline-offset:3px;border-radius:6px}
 </style>
 </head>
 <body>
@@ -143,12 +240,19 @@
   <a class="brand"><img src="app-shots/icon.png" alt="">Otterpace</a>
   <span class="sp"></span>
   <a class="nl" href="#themes">/themes</a><a class="nl" href="#recap">/weekly-recap</a><a class="nl" href="#made">/open-source</a>
-  <a class="btn" href="https://apps.apple.com/us/app/otterpace/id6784287408">Get the app</a>
-</div></nav>
+  <a class="btn" href="https://apps.apple.com/us/app/otterpace/id6784287408"><span class="full">Get the app</span></a>
+</div>
+<!-- Phone-tier nav. The links used to `display:none` below 880px with no
+     replacement, so the whole site was unnavigable on a phone. A scrollable
+     chip row keeps them reachable without crowding the bar. -->
+<div class="navlinks"><div class="wrap">
+  <a href="#themes">/themes</a><a href="#recap">/weekly-recap</a><a href="#made">/open-source</a>
+</div></div>
+</nav>
 
 <div class="mq"><div class="track">
   <span>Available on the App Store</span><span class="d">🐾</span><span>Android coming soon</span><span class="d">🐾</span><span>Five whole-app themes</span><span class="d">🐾</span><span>No ads, no data sold</span><span class="d">🐾</span><span>Open source</span><span class="d">🐾</span>
-  <span>Available on the App Store</span><span class="d">🐾</span><span>Android coming soon</span><span class="d">🐾</span><span>Five whole-app themes</span><span class="d">🐾</span><span>No ads, no data sold</span><span class="d">🐾</span><span>Open source</span><span class="d">🐾</span>
+  <span class="dup" aria-hidden="true">Available on the App Store</span><span class="d dup" aria-hidden="true">🐾</span><span class="dup" aria-hidden="true">Android coming soon</span><span class="d dup" aria-hidden="true">🐾</span><span class="dup" aria-hidden="true">Five whole-app themes</span><span class="d dup" aria-hidden="true">🐾</span><span class="dup" aria-hidden="true">No ads, no data sold</span><span class="d dup" aria-hidden="true">🐾</span><span class="dup" aria-hidden="true">Open source</span><span class="d dup" aria-hidden="true">🐾</span>
 </div></div>
 
 <header><div class="wrap"><div class="hero-grid">
@@ -183,6 +287,7 @@
       <figure style="--ac:#74D6FF"><div class="halo"></div><img src="app-shots/shot-orbit.png" alt="Orbit theme"><figcaption><span class="nm"><span class="sw"></span>Orbit</span><div class="h">cosmic navy · ice blue</div></figcaption></figure>
       <figure style="--ac:#7FA37A"><div class="halo"></div><img src="app-shots/shot-garden.png" alt="Garden theme"><figcaption><span class="nm"><span class="sw"></span>Garden</span><div class="h">sage · water-lily</div></figcaption></figure>
     </div>
+    <div class="swipe" aria-hidden="true">swipe for all five →</div>
   </div>
 </div></section>
 
