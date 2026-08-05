@@ -26,6 +26,40 @@ export interface QuietHours {
 export const DEFAULT_QUIET_HOURS: QuietHours = { startHour: 21, endHour: 8 };
 
 /**
+ * The wall-clock hour [0-23] in `timeZone` at instant `now`.
+ *
+ * DEFAULT_QUIET_HOURS is 9pm-8am *local*, but the cron scan used to compute one
+ * UTC hour for every user at once. For America/New_York that turned the guard
+ * into 5pm-4am local: it silenced the evening nudge that should fire and opened
+ * a 4am-8am window where a push could wake someone up. Resolving per user is the
+ * whole fix.
+ *
+ * Uses Intl rather than a fixed offset on purpose — a stored offset is wrong
+ * twice a year, and the DST-boundary tests are what keep that decision honest.
+ *
+ * Degrades to the UTC hour when the zone is absent (an older client that never
+ * sent one) or unrecognized. A garbage identifier from one client must never
+ * throw and abort the scan for every other user.
+ */
+export function localHourIn(timeZone: string | null | undefined, now: Date): number {
+  if (!timeZone) return now.getUTCHours();
+  try {
+    const hour = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      hour: "numeric",
+      hour12: false,
+    }).format(now);
+    const parsed = Number.parseInt(hour, 10);
+    if (Number.isNaN(parsed)) return now.getUTCHours();
+    // `hour12: false` renders midnight as 24 in some environments; normalize so
+    // the value is always a real [0-23] hour the quiet-window math can compare.
+    return parsed % 24;
+  } catch {
+    return now.getUTCHours();
+  }
+}
+
+/**
  * True when `hour` falls inside the quiet window, handling a window that wraps
  * past midnight (e.g. 21→8). A window where start == end is treated as "never
  * quiet" so a misconfiguration can't silence every nudge.

@@ -10,6 +10,7 @@ const lib = vi.hoisted(() => ({
   getHealth: vi.fn(),
   upsertHealth: vi.fn(),
   deleteHealth: vi.fn(),
+  mirrorMovement: vi.fn(),
   prefsContainHealthFields: vi.fn((p: Record<string, unknown>) =>
     Object.keys(p).some((k) => ["health", "steps"].includes(k.toLowerCase())),
   ),
@@ -222,5 +223,73 @@ describe("account/health", () => {
     lib.getHealth.mockRejectedValue(new Error("boom"));
     const res = await run(health, { method: "GET", ...AUTH });
     expect(res.statusCode).toBe(502);
+  });
+});
+
+// The movement-heartbeat branch, and the timezone it now carries. `mirrorMovement`
+// was missing from the mock above until this block existed, which is the tell: no
+// test had ever driven the handler down this path, so timeZoneFrom — the shape
+// guard standing between a client string and both the database and Intl — shipped
+// with no coverage at all.
+describe("account/health movement mirror (timezone)", () => {
+  const LAST_MOVEMENT = "2026-07-15T10:00:00Z";
+  const UPDATED_AT = "2026-06-25T00:00:00Z";
+  const BASE = { lastMovementAt: LAST_MOVEMENT, inactivityHours: 2 };
+
+  const putHealth = (health_: Record<string, unknown>) =>
+    run(health, { method: "PUT", ...AUTH, body: { health: health_, updatedAt: UPDATED_AT } });
+
+  beforeEach(() => {
+    lib.getHealth.mockResolvedValue(null);
+    lib.upsertHealth.mockResolvedValue(undefined);
+    lib.mirrorMovement.mockResolvedValue(undefined);
+  });
+
+  it("forwards a valid IANA zone to the push row", async () => {
+    await putHealth({ ...BASE, timeZone: "America/New_York" });
+    expect(lib.mirrorMovement).toHaveBeenCalledWith("u1", LAST_MOVEMENT, 2, UPDATED_AT, "America/New_York");
+  });
+
+  // Underscores and a `+` are both legal in IANA identifiers; rejecting them
+  // would silently push those users back onto the UTC fallback this fix removes.
+  it("accepts the full legal identifier shape", async () => {
+    for (const zone of ["Europe/Isle_of_Man", "Etc/GMT+5", "UTC"]) {
+      lib.mirrorMovement.mockClear();
+      await putHealth({ ...BASE, timeZone: zone });
+      expect(lib.mirrorMovement).toHaveBeenCalledWith("u1", LAST_MOVEMENT, 2, UPDATED_AT, zone);
+    }
+  });
+
+  // An older client that never learned to send one. Explicitly null, so the
+  // helper preserves the stored zone rather than treating it as "clear it".
+  it("passes null when the snapshot carries no zone", async () => {
+    await putHealth(BASE);
+    expect(lib.mirrorMovement).toHaveBeenCalledWith("u1", LAST_MOVEMENT, 2, UPDATED_AT, null);
+  });
+
+  // Every one of these must degrade to null (→ UTC fallback), never reach Intl
+  // or the row: a traversal-shaped string, an unbounded blob, a non-string, and
+  // an identifier with a character no real zone contains.
+  it("rejects hostile or malformed zone values", async () => {
+    for (const bad of ["../../etc/passwd", "x".repeat(65), "", "America/New York", "<script>", 42, null]) {
+      lib.mirrorMovement.mockClear();
+      await putHealth({ ...BASE, timeZone: bad });
+      expect(lib.mirrorMovement).toHaveBeenCalledWith("u1", LAST_MOVEMENT, 2, UPDATED_AT, null);
+    }
+  });
+
+  // The mirror is best-effort: it must never fail the sync the user asked for.
+  it("still returns 200 when the mirror rejects", async () => {
+    lib.mirrorMovement.mockRejectedValue(new Error("push row gone"));
+    const res = await putHealth({ ...BASE, timeZone: "America/New_York" });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({ applied: true });
+  });
+
+  // No heartbeat fields → no mirror call at all, so a health-only sync from a
+  // user who never granted push stays untouched.
+  it("does not mirror a snapshot without movement fields", async () => {
+    await putHealth({ steps: 6420, timeZone: "America/New_York" });
+    expect(lib.mirrorMovement).not.toHaveBeenCalled();
   });
 });

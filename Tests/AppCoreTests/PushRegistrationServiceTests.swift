@@ -79,16 +79,26 @@ final class PushRegistrationServiceTests: XCTestCase {
     func testHealthSnapshotHeartbeatRoundTrips() throws {
         let snap = SyncableHealthSnapshot(steps: 6000, distanceMiles: 2.0, activeMinutes: 20,
                                           activeEnergyKcal: 150, lastMovementAt: "2026-07-08T14:00:00Z",
-                                          inactivityHours: 3)
-        let decoded = try JSONDecoder().decode(SyncableHealthSnapshot.self,
-                                               from: JSONEncoder().encode(snap))
+                                          inactivityHours: 3, timeZone: "America/New_York")
+        let encoded = try JSONEncoder().encode(snap)
+        let decoded = try JSONDecoder().decode(SyncableHealthSnapshot.self, from: encoded)
         XCTAssertEqual(decoded, snap)
         XCTAssertEqual(decoded.lastMovementAt, "2026-07-08T14:00:00Z")
         XCTAssertEqual(decoded.inactivityHours, 3)
+        XCTAssertEqual(decoded.timeZone, "America/New_York")
+
+        // The wire key is the contract: the server reads health["timeZone"] and
+        // falls back to the UTC hour on anything else, so a renamed CodingKey
+        // would silently restore the very bug this feature fixes — quietly, with
+        // every round-trip assertion above still passing.
+        let json = try XCTUnwrap(String(data: encoded, encoding: .utf8))
+        XCTAssertTrue(json.contains("\"timeZone\""), "timeZone must encode under that exact key: \(json)")
 
         let plain = SyncableHealthSnapshot(steps: 100, distanceMiles: 0, activeMinutes: 0, activeEnergyKcal: 0)
         XCTAssertNil(plain.lastMovementAt)
         XCTAssertNil(plain.inactivityHours)
+        // Omitted, not empty-string: an older snapshot must stay byte-identical.
+        XCTAssertNil(plain.timeZone)
     }
 }
 

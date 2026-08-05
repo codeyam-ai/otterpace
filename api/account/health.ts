@@ -30,6 +30,20 @@ import { requireUser } from "../_lib/session.js";
 // or buggy client can't push an unbounded blob into the row.
 const MAX_HEALTH_BYTES = 64 * 1024;
 
+/**
+ * The client's IANA timezone from a health snapshot, or null.
+ *
+ * Shape-validated here rather than trusted: this string is written to the
+ * database and later handed to Intl, so an unbounded or hostile client value
+ * has no business reaching either. Anything unrecognized simply becomes null,
+ * and the nudge scan falls back to the UTC hour.
+ */
+function timeZoneFrom(health: Record<string, unknown>): string | null {
+  const tz = health["timeZone"];
+  if (typeof tz !== "string") return null;
+  return /^[A-Za-z0-9+_\-\/]{1,64}$/.test(tz) ? tz : null;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const userId = await requireUser(req);
@@ -75,7 +89,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const lastMovementAt = health["lastMovementAt"];
       const inactivityHours = health["inactivityHours"];
       if (typeof lastMovementAt === "string" && typeof inactivityHours === "number") {
-        await mirrorMovement(userId, lastMovementAt, inactivityHours, updatedAt).catch(() => {});
+        await mirrorMovement(userId, lastMovementAt, inactivityHours, updatedAt, timeZoneFrom(health)).catch(() => {});
       }
 
       res.status(200).json({ applied: true, ...row });

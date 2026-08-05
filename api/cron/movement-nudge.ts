@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { listNudgeCandidates, stampNudgeSent, removePushToken } from "../_lib/account.js";
 import { buildAps, providerToken, sendPush } from "../_lib/apns.js";
-import { shouldNudge, DEFAULT_QUIET_HOURS } from "../_lib/nudge.js";
+import { shouldNudge, DEFAULT_QUIET_HOURS, localHourIn } from "../_lib/nudge.js";
 import { env } from "../_lib/strava.js";
 
 // Scheduled scan for the server-driven movement nudge (Vercel cron, see
@@ -33,13 +33,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   try {
     const now = new Date();
-    const localHour = now.getUTCHours(); // per-user timezone is a future refinement; UTC baseline
     const jwt = providerToken(env("APNS_KEY_ID"), env("APNS_TEAM_ID"), env("APNS_AUTH_KEY"), now);
     const payload = buildAps(NUDGE_TITLE, NUDGE_BODY);
 
     const candidates = await listNudgeCandidates();
     let sent = 0;
     for (const user of candidates) {
+      // Resolved PER USER, not once for the scan: DEFAULT_QUIET_HOURS is a
+      // local window, so a single UTC hour silenced evening nudges and allowed
+      // 4am pushes for anyone west of UTC.
+      const localHour = localHourIn(user.time_zone, now);
       const due = shouldNudge(
         {
           lastMovementAt: user.last_movement_at,

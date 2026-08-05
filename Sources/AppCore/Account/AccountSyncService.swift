@@ -32,15 +32,25 @@ public struct SyncableHealthSnapshot: Codable, Equatable {
     /// unaffected); the backend mirrors them onto the push row when present.
     public var lastMovementAt: String?
     public var inactivityHours: Int?
+    /// The device's IANA timezone, e.g. "America/New_York".
+    ///
+    /// The quiet-hours window (9pm-8am) is *local*, but the nudge cron used to
+    /// compute one UTC hour for the whole scan — which silenced the evening
+    /// nudge and allowed a 4am push for anyone west of UTC. Sending the zone is
+    /// what lets the server resolve each user's own hour. Optional so an older
+    /// snapshot still round-trips; the server falls back to UTC without it.
+    public var timeZone: String?
 
     public init(steps: Int, distanceMiles: Double, activeMinutes: Int, activeEnergyKcal: Int,
-                lastMovementAt: String? = nil, inactivityHours: Int? = nil) {
+                lastMovementAt: String? = nil, inactivityHours: Int? = nil,
+                timeZone: String? = nil) {
         self.steps = steps
         self.distanceMiles = distanceMiles
         self.activeMinutes = activeMinutes
         self.activeEnergyKcal = activeEnergyKcal
         self.lastMovementAt = lastMovementAt
         self.inactivityHours = inactivityHours
+        self.timeZone = timeZone
     }
 }
 

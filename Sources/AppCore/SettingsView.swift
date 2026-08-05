@@ -363,7 +363,10 @@ public struct SettingsView: View {
                 activeMinutes: model.today.activeMinutes,
                 activeEnergyKcal: model.today.activeEnergyKcal,
                 lastMovementAt: lastMovement,
-                inactivityHours: ReminderSettings.load().inactivityHours
+                inactivityHours: ReminderSettings.load().inactivityHours,
+                // The server resolves quiet hours in THIS zone. Without it the
+                // scan falls back to UTC, which is the bug this fixes.
+                timeZone: TimeZone.current.identifier
             )
             await accountSync.pushHealth(snapshot, session: session.state)
         }

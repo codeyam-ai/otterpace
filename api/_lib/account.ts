@@ -172,6 +172,10 @@ export interface PushRow {
   last_movement_at: string | null;
   inactivity_hours: number | null;
   last_nudge_sent_at: string | null;
+  /** IANA identifier from the client's heartbeat, e.g. "America/New_York".
+   *  Null for an older client that never sent one; the nudge scan falls back to
+   *  the UTC hour in that case. `alter table account_push add column time_zone text;` */
+  time_zone: string | null;
   updated_at: string;
 }
 
@@ -210,6 +214,9 @@ export async function addPushToken(userId: string, token: string, platform: stri
     tokens: [...tokens],
     platform,
     last_movement_at: existing?.last_movement_at ?? null,
+    // Preserved across re-registration: a new device token must not wipe the
+    // zone the nudge scan relies on.
+    time_zone: existing?.time_zone ?? null,
     inactivity_hours: existing?.inactivity_hours ?? null,
     last_nudge_sent_at: existing?.last_nudge_sent_at ?? null,
     updated_at: now,
@@ -243,10 +250,24 @@ export async function deletePush(userId: string): Promise<void> {
  * single table. Only touches an EXISTING row (a user without push registration
  * gets no row created), and never clobbers the token list.
  */
-export async function mirrorMovement(userId: string, lastMovementAt: string, inactivityHours: number, now: string): Promise<void> {
+export async function mirrorMovement(
+  userId: string,
+  lastMovementAt: string,
+  inactivityHours: number,
+  now: string,
+  timeZone?: string | null,
+): Promise<void> {
   const existing = await getPush(userId);
   if (!existing) return; // no push registration → nothing to mirror
-  await upsertPush({ ...existing, last_movement_at: lastMovementAt, inactivity_hours: inactivityHours, updated_at: now });
+  await upsertPush({
+    ...existing,
+    last_movement_at: lastMovementAt,
+    inactivity_hours: inactivityHours,
+    // Only overwrite when this heartbeat actually carried a zone: an older
+    // client omits it, and a null must not clobber a good stored value.
+    time_zone: timeZone ?? existing.time_zone ?? null,
+    updated_at: now,
+  });
 }
 
 /** Every push row with at least one token and a known last-movement time — the cron's scan set. */

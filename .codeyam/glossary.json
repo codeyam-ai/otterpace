@@ -1271,13 +1271,13 @@
   },
   {
     "conformsToView": false,
-    "description": "GET /api/strava/activities. Reads the device's Strava token from Supabase (refreshing server-side if expired), fetches recent activities and returns them mapped to the app's workout shape. The access token never reaches the app, and the device key rides in a header rather than the query string so it stays out of access logs. No stored token returns 200 with connected:false and an empty list, which is a deliberate non-error path: not connected is a normal state, not a fault.",
-    "filePath": "api/strava/[...route].ts",
+    "description": "GET /api/strava/activities. Reads the device's Strava token from Supabase (refreshing server-side if expired), fetches recent activities and returns them mapped to the app's workout shape. The access token never reaches the app, and the device key rides in a header rather than the query string so it stays out of access logs. No stored token returns 200 with connected:false and an empty list, a deliberate non-error path: not connected is a normal state, not a fault.",
+    "filePath": "api/strava.ts",
     "name": "activities",
     "testFile": "test/api/strava-handlers.test.ts"
   },
   {
-    "description": "Register an APNs device token for a user, idempotent and preserving any existing movement/nudge state on the row.",
+    "description": "Register an APNs device token for a user, idempotent and preserving any existing movement/nudge state on the row — including the stored IANA timezone, so re-registering a device (or adding a second one) never wipes the zone the nudge scan resolves quiet hours against.",
     "filePath": "api/_lib/account.ts",
     "name": "addPushToken",
     "testFile": "test/api/account-push.test.ts"
@@ -1521,8 +1521,8 @@
   },
   {
     "conformsToView": false,
-    "description": "GET /api/strava/callback. The path Strava redirects a real browser to after the user approves, registered as the Authorization Callback Domain, so it is the single most breakage-sensitive route here. Bounces into the app's custom scheme so ASWebAuthenticationSession can capture the code, carrying the device key through in state. Every reflected value is validated against its expected shape (CODE_RE, ERROR_RE, isValidDeviceKey) before entering the redirect URL, and the redirect host is a fixed app scheme never derived from input, so a crafted callback cannot inject query params into otterpace://strava-callback.",
-    "filePath": "api/strava/[...route].ts",
+    "description": "GET /api/strava/callback. The path Strava redirects a real browser to after the user approves, registered as the Authorization Callback Domain, so it is the most breakage-sensitive route here. Bounces into the app's custom scheme so ASWebAuthenticationSession can capture the code, carrying the device key through in state. Every reflected value is shape-validated (CODE_RE, ERROR_RE, isValidDeviceKey) before entering the redirect URL, and the redirect host is a fixed app scheme never derived from input, so a crafted callback cannot inject query params into otterpace://strava-callback.",
+    "filePath": "api/strava.ts",
     "name": "callback",
     "testFile": "test/api/strava-handlers.test.ts"
   },
@@ -1668,7 +1668,7 @@
   {
     "conformsToView": false,
     "description": "POST /api/strava/disconnect. Forgets this device's Strava tokens with a server-side delete. POST-only, and the device key is shape-validated before any delete runs. Failures return a generic 502 with details logged server-side only.",
-    "filePath": "api/strava/[...route].ts",
+    "filePath": "api/strava.ts",
     "name": "disconnect",
     "testFile": "test/api/strava-handlers.test.ts"
   },
@@ -1694,7 +1694,7 @@
   {
     "conformsToView": false,
     "description": "POST /api/strava/exchange. Trades the OAuth code for tokens server-side using the client secret and stores them in Supabase keyed by device key. Returns only a success flag and the athlete's first name; the tokens themselves never go to the app. POST-only, with both code and a shape-valid device key required before any exchange.",
-    "filePath": "api/strava/[...route].ts",
+    "filePath": "api/strava.ts",
     "name": "exchange",
     "testFile": "test/api/strava-handlers.test.ts"
   },
@@ -1782,10 +1782,10 @@
     "testFile": "test/api/account-handlers.test.ts"
   },
   {
-    "description": "Scheduled scan applying the tested shouldNudge policy to each opted-in user and delivering the APNs nudge, stamping de-dup and pruning dead tokens.",
+    "description": "Scheduled scan applying the tested shouldNudge policy to each opted-in user and delivering the APNs nudge, stamping de-dup and pruning dead tokens. The quiet-hours local hour is resolved PER USER inside the loop from that row's stored IANA zone, not once for the whole scan: a single UTC hour made the 9pm-8am local window mean 5pm-4am in New York, which silenced the evening nudge and allowed a 4am push for anyone west of UTC. An unresolvable zone degrades to the UTC hour rather than throwing, so one bad row cannot abort delivery for everyone scanned after it.",
     "filePath": "api/cron/movement-nudge.ts",
     "name": "handler",
-    "testFile": "test/api/cron-handler.test.ts"
+    "testFile": "test/api/account-handlers.test.ts"
   },
   {
     "description": "POST endpoint that imports a race from a URL. Validates the URL and blocks private/loopback/metadata hosts to prevent SSRF, fetches the page server-side with size and timeout caps and no redirect-following, then calls Claude with the caller's BYO Anthropic key to extract a structured race plus confidence and missingFields hints. Maps upstream 401/429 to invalid_key/rate_limited and degrades to an empty race on unparseable model output.",
@@ -1801,8 +1801,8 @@
   },
   {
     "conformsToView": false,
-    "description": "Every Strava route behind one Vercel serverless function. Resolves the catch-all's first path segment and dispatches to activities, callback, disconnect or exchange, 404-ing an unknown segment. Collapsing the four handler files into one freed three function slots against Vercel's 12-function Hobby ceiling, which api/ had reached, while preserving every public path exactly: the iOS client calls these URLs and /api/strava/callback is registered with Strava as the Authorization Callback Domain, so a dropped route breaks OAuth for every new connection.",
-    "filePath": "api/strava/[...route].ts",
+    "description": "Every Strava route behind one Vercel serverless function. Resolves the route from the query supplied by the vercel.json rewrite (/api/strava/:route -> /api/strava?route=:route) and dispatches to activities, callback, disconnect or exchange, 404-ing an unknown segment. Collapsing four handler files into one freed three slots against Vercel's 12-function Hobby ceiling. The rewrite is load-bearing: a [...route].ts catch-all is Next.js-only routing that the zero-config api/ directory silently 404s, which shipped once and broke every Strava path in production.",
+    "filePath": "api/strava.ts",
     "name": "handler",
     "testFile": "test/api/strava-handlers.test.ts"
   },
@@ -1980,13 +1980,20 @@
     "testFile": "test/api/account-push.test.ts"
   },
   {
+    "conformsToView": false,
+    "description": "The wall-clock hour [0-23] in a given IANA timezone at an instant. DEFAULT_QUIET_HOURS is a 9pm-8am LOCAL window, but the nudge cron used to compute one UTC hour for the entire scan, which turned the guard into 5pm-4am local for America/New_York: it silenced the evening nudge that should fire and opened a 4am-8am window where a push could wake someone. Resolved via Intl rather than a stored offset, because an offset is wrong twice a year; DST-boundary tests in both directions keep that decision honest. Normalizes the hour12:false midnight-as-24 case, and degrades to the UTC hour when the zone is absent or unrecognized so one bad row cannot abort the scan for every other user.",
+    "filePath": "api/_lib/nudge.ts",
+    "name": "localHourIn",
+    "testFile": "test/api/nudge.test.ts"
+  },
+  {
     "description": "Maps a single Strava activity to a MappedWorkout, returning null when the date is missing or malformed; computes miles and pace.",
     "filePath": "api/_lib/strava.ts",
     "name": "mapActivity",
     "testFile": "test/api/strava.test.ts"
   },
   {
-    "description": "Mirror the latest movement heartbeat (last-movement time + inactivity setting) onto an existing push row so the cron scans one table; no-ops when the user has no push registration.",
+    "description": "Mirror the latest movement heartbeat (last-movement time, inactivity setting, and the client's IANA timezone) onto an existing push row so the cron scans one table; no-ops when the user has no push registration. The timezone is written only when the heartbeat actually carried one — an older client omits it, and letting that null overwrite a good stored value would silently drop the user back to the UTC quiet-hours fallback this feature exists to remove.",
     "filePath": "api/_lib/account.ts",
     "name": "mirrorMovement",
     "testFile": "test/api/account-push.test.ts"
@@ -2191,6 +2198,13 @@
       "errors"
     ],
     "testFile": "test/api/llm.test.ts"
+  },
+  {
+    "conformsToView": false,
+    "description": "Extracts the client's IANA timezone from a health snapshot, or null. Shape-validated at the boundary rather than trusted: the value is written to the database and later handed to Intl, so an unbounded or hostile client string has no business reaching either. Anything unrecognized becomes null and the nudge scan falls back to the UTC hour.",
+    "filePath": "api/account/health.ts",
+    "name": "timeZoneFrom",
+    "testFile": "test/api/account-handlers.test.ts"
   },
   {
     "description": "Adapt a JSON Schema for Gemini's responseSchema dialect by recursively stripping additionalProperties, which Gemini rejects. Recursion matters because nested object schemas (for example the race-import race object) carry it at every depth, and a single surviving keyword 400s the whole structured call.",
