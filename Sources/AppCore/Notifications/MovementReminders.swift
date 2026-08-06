@@ -104,13 +104,72 @@ public enum InactivitySchedule {
     }
 }
 
+/// Pure scheduling math for the evening goal nudge — the counterpart to
+/// `InactivitySchedule`, and the fix for this app's oldest false positive.
+///
+/// The goal nudge used to be a fixed 7pm `UNCalendarNotificationTrigger`. iOS
+/// won't let a pre-scheduled trigger read HealthKit when it fires, so it went out
+/// whether you were at 3,000 steps or 14,000 — and the copy had to hedge around
+/// not knowing ("Already done? Nice, consider this a wave from Buddy"). The hedge
+/// was the tell.
+///
+/// The durable fix is not a smarter 7pm; it's not being a fixed calendar trigger
+/// at all. This decides — from a step count just read off HealthKit — whether the
+/// nudge is still TRUE, and returns a one-shot fire date only when it is. The
+/// movement observer re-runs it on every new sample, so the answer stays current
+/// right up to the hour.
+public enum GoalNudgeSchedule {
+
+    /// The fire date for tonight's goal nudge, or nil when it must NOT be armed.
+    ///
+    /// Returns nil when:
+    ///   • the goal is already met — there is nothing to nudge about, and this is
+    ///     precisely the case the old fixed trigger got wrong;
+    ///   • no goal is set (a zero/negative goal can't be "short of");
+    ///   • the fire time is further out than `ActivityFreshness.goalMaxAge` — a
+    ///     step count read now says nothing about your steps this evening, so we
+    ///     decline to arm on it and let the observer arm nearer the hour;
+    ///   • tonight's hour has already passed (tomorrow's nudge is tomorrow's
+    ///     decision, made against tomorrow's data — never armed a day ahead).
+    public static func fireDate(steps: Int,
+                                goalSteps: Int,
+                                now: Date = Date(),
+                                hour: Int = ReminderSettings.goalHour,
+                                calendar: Calendar = .current) -> Date? {
+        guard goalSteps > 0 else { return nil }
+        guard steps < goalSteps else { return nil }   // already there — say nothing
+        guard let fire = todayAt(hour: hour, now: now, calendar: calendar) else { return nil }
+
+        let lead = fire.timeIntervalSince(now)
+        guard lead > 0 else { return nil }                              // hour already passed
+        guard lead <= ActivityFreshness.goalMaxAge else { return nil }  // too far out to trust
+        return fire
+    }
+
+    /// `hour:00` on the same calendar day as `now`. Separated out so the
+    /// day-boundary math is testable on its own.
+    static func todayAt(hour: Int, now: Date, calendar: Calendar = .current) -> Date? {
+        var parts = calendar.dateComponents([.year, .month, .day], from: now)
+        parts.hour = hour
+        parts.minute = 0
+        parts.second = 0
+        return calendar.date(from: parts)
+    }
+}
+
 /// Copy for each reminder, kept here so it's testable and consistent in Buddy's
 /// never-shame voice.
 public enum ReminderCopy {
     public static let dailyTitle = "Time to move 🐾"
     public static let dailyBody = "A short walk keeps things ticking over. Buddy's ready whenever you are, no rush."
     public static let goalTitle = "Evening check-in"
-    public static let goalBody = "If you haven't reached your step goal yet, a relaxed walk gets you there. Already done? Nice, consider this a wave from Buddy."
+    /// No longer hedges. The old wording ("If you haven't reached your step goal
+    /// yet… Already done? Nice, consider this a wave from Buddy") existed only
+    /// because a fixed calendar trigger couldn't tell. `GoalNudgeSchedule` now
+    /// declines to arm at all once the goal is met, so this only ever reaches
+    /// someone who is genuinely short — and it can say so plainly. Still never a
+    /// scold: short is stated as a fact, with an easy way to close it.
+    public static let goalBody = "You're a little short of your step goal — a relaxed walk gets you there. No rush."
     public static let inactivityTitle = "Stretch your legs?"
     public static let inactivityBody = "It's been a little while since you moved. A couple of easy minutes is plenty."
 }
@@ -123,10 +182,21 @@ public protocol MovementReminderScheduling {
     func requestAuthorization() async -> Bool
     /// Current permission state, without prompting.
     func isAuthorized() async -> Bool
-    /// App became active: (re)schedule the daily + goal reminders. It deliberately
-    /// does NOT touch the inactivity reminder — opening the app is not movement, so
-    /// the "have you moved" clock must not reset here (see `armInactivity`).
+    /// App became active: (re)schedule the DAILY reminder — the only one that is
+    /// still a pure clock alarm, because "remind me at 6pm" makes no claim about
+    /// your data and so can't be wrong.
+    ///
+    /// It deliberately does NOT touch the inactivity reminder — opening the app is
+    /// not movement, so the "have you moved" clock must not reset here (see
+    /// `armInactivity`). It no longer touches the GOAL reminder either: that one
+    /// now has to be verified against real step data before it may be armed (see
+    /// `armGoal`).
     func applyForeground(_ settings: ReminderSettings)
+    /// Arm (or clear) the evening goal nudge at an absolute fire date. `fireAt`
+    /// comes from `GoalNudgeSchedule.fireDate`, which returns nil once the goal is
+    /// met or when the step count is too old to act on — so a `nil` here means
+    /// "the nudge is no longer true, take it down", not merely "not scheduled".
+    func armGoal(fireAt: Date?, settings: ReminderSettings)
     /// Arm (or clear) the inactivity reminder at an absolute fire date. `fireAt`
     /// comes from `InactivitySchedule.fireDate` off the user's real last movement;
     /// a `nil` `fireAt` (or the reminder disabled) removes any pending request.
@@ -177,15 +247,26 @@ public struct MovementReminderScheduler: MovementReminderScheduling {
             center.removePendingNotificationRequests(withIdentifiers: [ReminderID.daily])
         }
 
-        if settings.goalEnabled {
-            var when = DateComponents()
-            when.hour = ReminderSettings.goalHour
-            when.minute = 0
-            schedule(id: ReminderID.goal, title: ReminderCopy.goalTitle, body: ReminderCopy.goalBody,
-                     trigger: UNCalendarNotificationTrigger(dateMatching: when, repeats: true))
-        } else {
+        // The goal nudge is deliberately NOT scheduled here any more. It can only
+        // be armed once something has actually read the step count — see
+        // `armGoal`, driven by `OtterpaceModel.rearmGoal` and the movement
+        // observer. Turning it off still takes any pending request down.
+        if !settings.goalEnabled {
             center.removePendingNotificationRequests(withIdentifiers: [ReminderID.goal])
         }
+    }
+
+    public func armGoal(fireAt: Date?, settings: ReminderSettings) {
+        guard settings.goalEnabled, let fireAt = fireAt else {
+            center.removePendingNotificationRequests(withIdentifiers: [ReminderID.goal])
+            return
+        }
+        // One-shot, like the inactivity nudge: a repeating trigger is exactly the
+        // thing that couldn't re-check itself. Tomorrow's nudge gets armed
+        // tomorrow, against tomorrow's data.
+        let interval = max(1, fireAt.timeIntervalSinceNow)
+        schedule(id: ReminderID.goal, title: ReminderCopy.goalTitle, body: ReminderCopy.goalBody,
+                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false))
     }
 
     public func armInactivity(fireAt: Date?, settings: ReminderSettings) {
@@ -221,6 +302,7 @@ public struct MovementReminderScheduler: MovementReminderScheduling {
     public func requestAuthorization() async -> Bool { false }
     public func isAuthorized() async -> Bool { false }
     public func applyForeground(_ settings: ReminderSettings) {}
+    public func armGoal(fireAt: Date?, settings: ReminderSettings) {}
     public func armInactivity(fireAt: Date?, settings: ReminderSettings) {}
     public func cancelAll() {}
 }

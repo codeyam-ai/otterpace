@@ -1,0 +1,339 @@
+{
+  "timestamp": "2026-08-05T22:18:27Z",
+  "title": "Nudges — Correctness First (Phase 1)",
+  "type": "feature",
+  "userRequest": "## Summary\n\n**Draft — needs a fleshing-out pass before running.** This merges two earlier\ndrafts, `activity-freshness-and-smarter-nudge-suppression` and\n`custom-movement-and-pacing-nudges`, which were separate plans that touched\n**five of the same files** — `MovementReminders.swift`,\n`MovementActivityMonitor.swift`, `api/_lib/nudge.ts`,\n`api/cron/movement-nudge.ts`, and the Settings reminders card — and both extended\n`MovementRemindersTests.swift`. Run separately, the second would have rewritten\nthe first's work on the same structs.\n\nThey are merged rather than resequenced because they are two phases of one\nproblem, and the ordering between them is not optional:\n\n- **Phase 1 — correctness.** Stop sending nudges that are wrong. The app's\n  picture of your activity must refresh without you opening it, and every nudge\n  must re-verify against fresh data at fire time instead of trusting a decision\n  made hours earlier.\n- **Phase 2 — customization.** Let people choose their times, schedules, quiet\n  hours, tone, and how many nudges a day is too many, and add pacing nudges that\n  speak to training rather than step count.\n\nPhase 2 makes Otterpace send *more* notifications. Landing more nudges on top of a\nfalse-positive problem multiplies the annoyance and is how an app gets its\nnotifications turned off permanently. Phase 1 is a hard precondition for Phase 2,\nnot a preference.\n\nThe timezone bug that used to head the correctness list has been **extracted into\nits own build-ready plan** (`quiet-hours-timezone-fix`, declared in `dependsOn`)\nbecause it was small, self-contained, and did not need any of the open questions\nbelow resolved. Do not re-implement it here.\n\n## Phase 1 — Correctness\n\nTwo false-positive paths remain in the code, and the file comments in each admit\nthe limitation:\n\n1. **The goal nudge can't see your steps.** It's a pre-scheduled 7pm calendar\n   notification — `UNCalendarNotificationTrigger` can't read live HealthKit data\n   at fire time, so it fires whether you're at 3,000 steps or 14,000. The copy\n   hedges around it (\"Already done? Nice, consider this a wave from Buddy\"),\n   which is the tell.\n2. **The server nudge runs on a possibly-stale heartbeat.**\n   `api/cron/movement-nudge.ts` decides from `lastMovementAt` in the account\n   health row. That row only updates when health sync is on *and* the app pushes\n   it — so for a user who moved all afternoon without opening the app, the server\n   still believes they've been still since morning, and sends \"Stretch your legs?\"\n   to someone mid-walk.\n\nThe local inactivity nudge is already the good pattern — `MovementActivityMonitor`\nobserves real HealthKit step/distance data via background delivery and re-arms\n`InactivitySchedule` from actual last-movement time. Phase 1 generalizes it.\n\n### Key decisions (provisional)\n\n- **Verify at fire time, don't just schedule better.** The durable fix for the\n  goal nudge is not a smarter 7pm; it's not being a fixed 7pm calendar trigger at\n  all. Options to evaluate: a `BGAppRefreshTask` that checks progress and either\n  cancels or re-arms the pending request; or converting it to the\n  `MovementActivityMonitor` pattern (observer wakes the app, app decides, app\n  schedules a near-term trigger only if the nudge is still true).\n- **One freshness contract, used everywhere.** A single pure `ActivityFreshness`\n  type answering \"how old is this data, and is it fresh enough to act on?\" —\n  consumed by the local scheduler, the health-sync push, and (as a\n  `lastMovementAt` age check) the server policy. Every nudge asks it first. Stale\n  data should mean **suppress**, never guess.\n- **Suppression is the safer default in both directions.** A nudge that doesn't\n  fire is a missed encouragement; a nudge that fires wrongly teaches the user the\n  app is dumb. When freshness is unknown, stay quiet. (Note the deliberate\n  contrast with the timezone plan's UTC fallback: an unknown *timezone* is a\n  rollout gap where suppressing would silently disable the feature; unknown\n  *freshness* is a real signal that we don't know enough to speak.)\n- **Keep the pure-policy split.** `api/_lib/nudge.ts` deliberately holds the\n  decision logic free of Supabase/APNs so it unit-tests directly. Every new rule\n  goes there, not in the cron handler.\n- **Don't ask for more permissions than needed.** HealthKit background delivery\n  is already enabled for step/distance when the inactivity reminder is on.\n  Whether to widen that (and to broaden `BGTaskSchedulerPermittedIdentifiers`) is\n  a real cost/benefit call, not automatic.\n\n### Open questions\n\n- **`BGAppRefreshTask` vs. widening HealthKit background delivery vs. both.** iOS\n  gives no guaranteed cadence for either; the design has to be correct when\n  neither fires for hours. What does the app do on a 6-hour gap?\n- **How fresh is \"fresh enough\"?** Probably different per nudge — a goal nudge\n  needs today's steps within ~30 minutes; an inactivity nudge tolerates more.\n- **Should the health heartbeat push on background wake?** That would fix the\n  server's stale-`lastMovementAt` problem directly — but it means uploading a\n  health snapshot without the user in the app, which needs a careful look at the\n  existing health-sync consent copy (`Sources/AppCore/Account/SyncConsent.swift`)\n  before it's acceptable.\n- **Should local and server nudges de-duplicate against each other?** A user with\n  both paths active can currently receive two \"stretch your legs\" nudges.\n- **Widget or Live Activity?** A widget would let people see progress without\n  opening the app at all — arguably the truest read of \"a better way to update vs.\n  manually checking.\" Probably its own plan rather than part of this one.\n\n### Implementation sketch\n\n1. **New** `Sources/AppCore/Notifications/ActivityFreshness.swift` — the pure\n   freshness contract (age of last known movement, per-nudge thresholds,\n   `shouldSuppress`), XCTest-covered in the `InactivitySchedule` style.\n2. **`MovementActivityMonitor.swift`** — extend the observer to re-evaluate *all*\n   pending reminders on new data, not just the inactivity one; cancel any request\n   whose premise no longer holds.\n3. **`MovementReminders.swift`** — convert the goal nudge off a fixed calendar\n   trigger to a verified-then-armed request; add the cancel path.\n4. **New** background refresh registration (`App/App.swift` +\n   `MovementActivityMonitor`) if `BGAppRefreshTask` is chosen — with the no-op\n   stub for non-iOS that `AppCore` already uses for platform glue.\n5. **`api/_lib/nudge.ts`** — a max-age guard on `lastMovementAt`. (The timezone\n   parameter already exists by this point, from the prerequisite plan.)\n6. **`api/cron/movement-nudge.ts`** — skip candidates whose heartbeat is too old\n   rather than nudging on stale state.\n7. **Tests** — `MovementRemindersTests.swift`, a new `ActivityFreshnessTests.swift`,\n   and `test/api/nudge.test.ts` for the staleness rules.\n\n## Phase 2 — Customization and pacing\n\nToday Otterpace ships three fixed reminders (`daily` at a time you pick, `goal`\nhard-coded to `ReminderSettings.goalHour = 19`, `inactivity` after 2/3/4 hours)\nwith fixed copy, one schedule, and no awareness of *how* you run. Phase 2 opens\nthat up in two directions: **customization** — user-chosen times, per-day-of-week\nschedules, quiet hours, tone, and a daily cap — and **pacing** — nudges that speak\nto your training (\"that was a hard one, tomorrow's an easy day\", \"you're 2k from\nyour goal with an hour of daylight left\", \"third day on — how about a rest day\").\n\n### Key decisions (provisional)\n\n- **Extend `ReminderSettings`, don't replace it.** The existing struct already has\n  the UserDefaults-backed, injectable, unit-tested shape. New fields default to\n  today's behavior so an existing user's reminders don't change under them on\n  update — the same additive-with-defaults discipline `TodayState` uses.\n- **Keep every scheduling *decision* pure.** `InactivitySchedule.fireDate` is the\n  model: platform glue stays thin, the decision is an XCTest-covered pure\n  function. Every new nudge type gets the same treatment.\n- **A hard daily cap, set by the user.** More nudge types must not mean more\n  nudges by default. A per-day ceiling (default low, e.g. 2) with a priority order\n  deciding which nudge wins is a first-class part of the design, not a follow-up.\n- **Every new nudge passes the freshness check from Phase 1.** This is the\n  structural reason the phases are ordered — a pacing nudge fired on stale data is\n  a worse false positive than the ones Phase 1 just fixed, because it makes a\n  specific claim about your training.\n- **Copy stays in `ReminderCopy`, in Buddy's voice.** Never-shame, never a streak\n  threat. Tone variants (quieter / warmer / more direct) are a user setting, not a\n  reason to loosen the voice rules.\n- **Local-first.** Prefer `UNUserNotificationCenter` scheduling on-device; reach\n  for the server/APNs path only for nudges that genuinely can't be decided\n  locally.\n\n### Open questions\n\n- **Which pacing nudges earn a notification?** Candidates: post-run recovery\n  (\"yesterday was hard — easy today\"), goal-proximity (\"2,100 steps to go\"),\n  streak-adjacent-but-not-shaming (\"day three — a rest day is training too\"), race\n  taper (`RaceGoal` data is already on `TodayState`), and weekly-review ready.\n  Each needs a \"would a real user thank us for this at 6pm?\" test.\n- **Per-day-of-week schedules** — genuinely useful (weekends differ) but it\n  multiplies the settings UI. Worth it, or is one schedule + quiet hours enough?\n- **User-editable quiet hours.** The window is now correct per-timezone, but still\n  fixed at 21→8 and server-side only. Should the local scheduler honor it too, and\n  should the user be able to move it?\n- **Goal nudge timing.** Make it user-set, or adaptive to when the user typically\n  closes their goal (which needs `dailySteps` on `TodayState`)? Note Phase 1 may\n  already have converted this nudge off a fixed trigger entirely, which changes\n  the answer.\n- **Does `CoachProfile.trainingPhase` steer nudges?** It already steers the coach;\n  reusing it would keep a \"recovering\" user from being nudged to move more, at no\n  new data cost.\n- **How much is capturable?** Notification delivery isn't scenario-capturable; the\n  Settings UI and any in-app nudge surfaces are.\n\n### Implementation sketch\n\n1. **`MovementReminders.swift`** — extend `ReminderSettings` (per-nudge times, day\n   mask, quiet-hours window, daily cap, tone); extend `ReminderCopy` with the new\n   nudge families; add pure `PacingSchedule` decision functions alongside\n   `InactivitySchedule`.\n2. **New** `Sources/AppCore/Notifications/NudgeBudget.swift` — the pure priority +\n   daily-cap arbiter every nudge passes through before scheduling.\n3. **`Sources/AppCore/SettingsView.swift`** — rework the reminders card into a\n   fuller schedule editor (likely its own sub-screen once per-day schedules land).\n4. **`MovementActivityMonitor.swift`** — re-arm the new pacing nudges on the same\n   HealthKit background-delivery signal it already observes.\n5. **`api/_lib/nudge.ts` / `api/cron/movement-nudge.ts`** — mirror any new\n   server-decided nudge and its cap policy, keeping the pure-policy split.\n6. **Tests** — extend `MovementRemindersTests.swift` and `test/api/nudge.test.ts`;\n   new tests for `NudgeBudget` and each pacing rule.\n\n## Reused existing code\n\n- `ReminderSettings`, `ReminderCopy`, `ReminderID`, `InactivitySchedule`,\n  `MovementReminderScheduling` —\n  `Sources/AppCore/Notifications/MovementReminders.swift`.\n- `MovementActivityMonitor` —\n  `Sources/AppCore/Notifications/MovementActivityMonitor.swift` — the existing\n  HealthKit observer + background-delivery pattern Phase 1 generalizes.\n- `shouldNudge`, `isQuietHour`, `DEFAULT_QUIET_HOURS`, `NudgeState`, and\n  `localHourIn` (added by the prerequisite plan) — `api/_lib/nudge.ts`, extended\n  in place, kept pure.\n- `listNudgeCandidates` / `stampNudgeSent` / `mirrorMovement` — `api/_lib/account.ts`.\n- `buildAps` / `sendPush` / `providerToken` — `api/_lib/apns.ts`;\n  `PushRegistrationService` — `Sources/AppCore/Account/PushRegistrationService.swift`.\n- `HealthDataSource` / `HealthKitDataSource` —\n  `Sources/AppCore/Health/HealthDataSource.swift` — the read seam, with its seeded\n  mock keeping any new logic testable offline.\n- `AccountSyncService` health heartbeat —\n  `Sources/AppCore/Account/AccountSyncService.swift`.\n- `CoachProfile.trainingPhase` and `RaceGoal` on `TodayState` — existing signals a\n  pacing nudge can read with no new plumbing.\n\n## Scenarios to Demonstrate\n\n*(Provisional — pure logic and Settings surfaces are capturable; delivery is not.)*\n\n**Phase 1**\n- Settings — reminders with a data-freshness indicator showing fresh data.\n- Settings — the same row showing stale data and what the app does about it.\n- Suppression explainer copy (\"we won't nudge you when we can't tell\").\n- Unit: goal nudge suppressed at 11,240 steps; goal nudge sent at 3,100.\n- Unit: server nudge skipped on a 9-hour-old heartbeat.\n\n**Phase 2**\n- Reminders settings — default (today's three, mostly off) — the no-regression\n  guard for an existing user.\n- Reminders settings — fully customized, several nudges on, cap visible.\n- Per-day schedule editor, weekday/weekend split.\n- Quiet-hours editor.\n- Daily-cap explainer.\n- Reminders settings under large text.",
+  "description": "Stopped Otterpace sending nudges that were wrong. The evening goal nudge was a fixed 7pm UNCalendarNotificationTrigger, and iOS will not let a pre-scheduled trigger read HealthKit when it fires, so it went out whether you were at 3,000 steps or 14,000 — the hedging copy was the tell. It is now a one-shot armed only when you are genuinely short and only when 7pm is near enough to trust the step count, re-evaluated on every HealthKit background wake and cancelled the moment you hit your goal. The server cron had the mirror-image bug, deciding from a last_movement_at that only updates when the app reports, so it pushed 'Stretch your legs?' at people who had been walking all afternoon. A new ActivityFreshness contract gives every nudge one place to ask how old its picture is, with the rule that unknown freshness suppresses rather than guesses. A Settings row states that promise out loud, because a nudge that does not fire is otherwise indistinguishable from a broken feature.\n\nDeviated from the plan on the server fix: it specified a max-age guard on last_movement_at, but a genuinely idle user HAS an old last_movement_at, so that guard would have suppressed exactly the nudges the feature exists to send. Keyed the check to a dedicated device heartbeat (last_heartbeat_at) instead, which distinguishes 'they have been still for nine hours' from 'we have not heard from this phone in nine hours'. Deliberately not reusing updated_at, since stampNudgeSent also bumps it and our own outgoing push would have masqueraded as fresh evidence from the device. Also closed the double-notification: a user with both the local and server paths on could receive two identical nudges minutes apart; the heartbeat now carries the locally-armed fire time so the server stands down.\n\nPhase 2 (custom times, per-day schedules, quiet-hours editor, tone, daily cap, pacing nudges) stays queued — the plan's own argument is that landing more nudge types on top of a false-positive problem is how an app gets its notifications turned off permanently.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/plans/nudges-correctness-then-customization.md\t.codeyam/plans/completed/nudges-correctness-then-customization.md",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-account-sync.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-health-sync-on.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-import-race-review.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-race-editor-custom-distance.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-races-list.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-training-phase-building.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/step-highwater.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "App/App.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Account/AccountSyncService.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/CodeyamIsolationHost.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ContentView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Model.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/MovementFreshnessNote.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Notifications/ActivityFreshness.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Notifications/MovementActivityMonitor.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Notifications/MovementReminders.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/SettingsView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/ActivityFreshnessTests.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": "api/_lib/account.ts",
+      "status": "modified"
+    },
+    {
+      "path": "api/_lib/nudge.ts",
+      "status": "modified"
+    },
+    {
+      "path": "api/account/health.ts",
+      "status": "modified"
+    },
+    {
+      "path": "api/cron/movement-nudge.ts",
+      "status": "modified"
+    },
+    {
+      "path": "test/api/account-handlers.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": "test/api/nudge.test.ts",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/movement-freshness-note-both-states.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/movement-freshness-note-fresh.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/movement-freshness-note-stale.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/movement-freshness-note-both-states--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/movement-freshness-note-both-states--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/movement-freshness-note-fresh--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/movement-freshness-note-fresh--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/movement-freshness-note-stale--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/movement-freshness-note-stale--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-activity-data-stale--iphone-16.png",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-activity-data-stale--iphone-16.png.hash",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/scenarios/settings-reminders-activity-data-stale.json",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/CodeyamIsolated/MovementFreshnessNoteIsolated.swift",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Accessibility — Large Text Today",
+      "screenshotPath": "accessibility-large-text-today--iphone-16.png"
+    },
+    {
+      "name": "Movement Freshness Note - Both States",
+      "screenshotPath": "movement-freshness-note-both-states--iphone-16.png"
+    },
+    {
+      "name": "Movement Freshness Note - Fresh",
+      "screenshotPath": "movement-freshness-note-fresh--iphone-16.png"
+    },
+    {
+      "name": "Movement Freshness Note - Stale",
+      "screenshotPath": "movement-freshness-note-stale--iphone-16.png"
+    },
+    {
+      "name": "Settings",
+      "screenshotPath": "settings--iphone-16.png"
+    },
+    {
+      "name": "Settings - Appearance Picker - Bolt",
+      "screenshotPath": "settings-appearance-picker-bolt--iphone-16.png"
+    },
+    {
+      "name": "Settings — AI Coach All Three Connected",
+      "screenshotPath": "settings-ai-coach-all-three-connected--iphone-16.png"
+    },
+    {
+      "name": "Settings — AI Coach Anthropic Migrated",
+      "screenshotPath": "settings-ai-coach-anthropic-migrated--iphone-16.png"
+    },
+    {
+      "name": "Settings — AI Coach No Key",
+      "screenshotPath": "settings-ai-coach-no-key--iphone-16.png"
+    },
+    {
+      "name": "Settings — Account Sync",
+      "screenshotPath": "settings-account-sync--iphone-16.png"
+    },
+    {
+      "name": "Settings — Custom Goal",
+      "screenshotPath": "settings-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Settings — Delete All Journal Entries",
+      "screenshotPath": "settings-delete-all-journal-entries--iphone-16.png"
+    },
+    {
+      "name": "Settings — Health Sync On",
+      "screenshotPath": "settings-health-sync-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Races List",
+      "screenshotPath": "settings-races-list--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders On",
+      "screenshotPath": "settings-reminders-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders, Activity Data Stale",
+      "screenshotPath": "settings-reminders-activity-data-stale--iphone-16.png"
+    },
+    {
+      "name": "Settings — Replay Tour Row",
+      "screenshotPath": "settings-replay-tour-row--iphone-16.png"
+    },
+    {
+      "name": "Settings — Training Phase (Building)",
+      "screenshotPath": "settings-training-phase-building--iphone-16.png"
+    },
+    {
+      "name": "Today - Almost There",
+      "screenshotPath": "today-almost-there--iphone-16.png"
+    },
+    {
+      "name": "Today - Computed Nudge",
+      "screenshotPath": "today-computed-nudge--iphone-16.png"
+    },
+    {
+      "name": "Today - Day One (Connect)",
+      "screenshotPath": "today-day-one-connect--iphone-16.png"
+    },
+    {
+      "name": "Today - Fresh Start",
+      "screenshotPath": "today-fresh-start--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed",
+      "screenshotPath": "today-goal-crushed--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed - Bolt Theme",
+      "screenshotPath": "today-goal-crushed-bolt-theme--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed - Fieldnote Theme",
+      "screenshotPath": "today-goal-crushed-fieldnote-theme--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed - Garden Theme",
+      "screenshotPath": "today-goal-crushed-garden-theme--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed - Orbit Theme",
+      "screenshotPath": "today-goal-crushed-orbit-theme--iphone-16.png"
+    },
+    {
+      "name": "Today - Long Content",
+      "screenshotPath": "today-long-content--iphone-16.png"
+    },
+    {
+      "name": "Today - Midday Nudge",
+      "screenshotPath": "today-midday-nudge--iphone-16.png"
+    },
+    {
+      "name": "Today - Recovery Caution",
+      "screenshotPath": "today-recovery-caution--iphone-16.png"
+    },
+    {
+      "name": "Today - Walking-Focused Nudge",
+      "screenshotPath": "today-walking-focused-nudge--iphone-16.png"
+    },
+    {
+      "name": "Today - Zero-Step Morning",
+      "screenshotPath": "today-zero-step-morning--iphone-16.png"
+    },
+    {
+      "name": "Today — Custom Goal",
+      "screenshotPath": "today-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Today — Strong Weekend, Fresh Week",
+      "screenshotPath": "today-strong-weekend-fresh-week--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 466,
+    "passed": 466,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 466,
+        "passed": 466
+      }
+    ]
+  }
+}

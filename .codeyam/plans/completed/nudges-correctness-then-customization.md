@@ -7,6 +7,40 @@ order: 7
 dependsOn: ["quiet-hours-timezone-fix"]
 ---
 
+## Scope resolved for this build (2026-08-05)
+
+The fleshing-out pass this draft asked for. **This cycle builds Phase 1 only.**
+Phase 2 stays queued as written below.
+
+1. **Scope — Phase 1 (correctness) only.** Confirmed with the user. Phase 2's
+   customization and pacing families are explicitly NOT in this build.
+2. **Goal nudge — extend the existing HealthKit observer.** Confirmed with the
+   user. `MovementActivityMonitor` already runs an `HKObserverQuery` with hourly
+   background delivery for step/distance and re-arms on new data; generalize it to
+   re-evaluate the goal nudge and cancel it once the goal is met. **No
+   `BGAppRefreshTask`** — it needs new `BGTaskSchedulerPermittedIdentifiers` and
+   `App.swift` registration and still guarantees no cadence. Consequence to
+   handle: the monitor today only starts when `inactivityEnabled` (see
+   `MovementActivityMonitor.start`), so it must start when **goal OR inactivity**
+   is on.
+3. **Server staleness — max-age guard only.** *Assumption, not user-confirmed.*
+   A staleness guard in the pure `shouldNudge` policy: when `lastMovementAt` is
+   older than the max age, suppress rather than guess. Deliberately NOT pushing a
+   health heartbeat on background wake — that uploads a health snapshot with the
+   user outside the app and needs a `SyncConsent` copy review first. Accepted
+   tradeoff: for a user who rarely opens the app the server nudge goes quiet,
+   which is this plan's own "suppression is the safer default".
+4. **Local/server de-dup — included, bounded.** *Assumption, not user-confirmed.*
+   Cheapest honest fix: the health heartbeat carries the locally-armed inactivity
+   fire time, so the server's existing `lastNudgeSentAt` de-dup covers both paths.
+   **This is the first item to cut** if it needs more plumbing than that; the
+   Phase 2 `NudgeBudget` arbiter is its natural long-term home.
+
+Open questions deliberately left unresolved (all Phase 2 or out of scope): pacing
+nudge selection, per-day-of-week schedules, user-editable quiet hours, goal-nudge
+timing, `CoachProfile.trainingPhase` steering, and the widget / Live Activity
+question (its own plan).
+
 ## Summary
 
 **Draft — needs a fleshing-out pass before running.** This merges two earlier

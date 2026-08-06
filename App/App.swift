@@ -15,10 +15,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // Never observe in a scenario/isolation capture, and only when the user has
-        // turned the inactivity reminder on.
+        // turned on a reminder that depends on real data. The goal nudge counts
+        // now: it is armed from a live step read rather than pre-scheduled, so a
+        // goal-only user still needs this observer to wake the app.
         guard !HealthSource.isScenarioSeeded() else { return true }
         let settings = ReminderSettings.load()
-        if settings.inactivityEnabled {
+        if settings.inactivityEnabled || settings.goalEnabled {
             let monitor = MovementActivityMonitor(source: HealthSource.make(), scheduler: MovementReminderScheduler())
             monitor.start(settings: settings)
             self.monitor = monitor

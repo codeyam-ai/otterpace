@@ -366,7 +366,10 @@ public struct SettingsView: View {
                 inactivityHours: ReminderSettings.load().inactivityHours,
                 // The server resolves quiet hours in THIS zone. Without it the
                 // scan falls back to UTC, which is the bug this fixes.
-                timeZone: TimeZone.current.identifier
+                timeZone: TimeZone.current.identifier,
+                // If this device already has an inactivity nudge armed, say so —
+                // the server stands down rather than sending a duplicate.
+                localNudgeArmedAt: model.armedInactivityISO()
             )
             await accountSync.pushHealth(snapshot, session: session.state)
         }
@@ -739,6 +742,19 @@ public struct SettingsView: View {
                     }
                     .pickerStyle(.segmented)
                 }
+                // Only the two DATA-DRIVEN nudges depend on a current picture of
+                // your activity. The daily reminder is a plain clock alarm, so it
+                // is never affected and saying otherwise would be misleading.
+                // Also gated on a live HealthKit connection. `today` starts out
+                // `.empty` (disconnected) and fills in asynchronously, so keying
+                // the note off freshness alone flashed an alarming amber "out of
+                // date" on every launch before the real data landed. And a user
+                // who never connected Health isn't looking at stale data — they
+                // have no data, which is a different message entirely.
+                if (reminders.goalEnabled || reminders.inactivityEnabled) && model.today.healthKitConnected {
+                    Divider().opacity(0.3)
+                    MovementFreshnessNote(isStale: movementPictureIsStale)
+                }
                 if reminders.anyEnabled && !notifAuthorized {
                     Text("Allow notifications in iOS Settings to receive these.")
                         .font(Typography.caption).foregroundColor(Palette.amber)
@@ -746,6 +762,17 @@ public struct SettingsView: View {
                 }
             }
         }
+    }
+
+    /// Whether the movement picture behind the nudges is too old to act on —
+    /// the same `ActivityFreshness` contract the schedulers themselves consult,
+    /// so what Settings claims and what the nudges do can never drift apart.
+    private var movementPictureIsStale: Bool {
+        // Only ever consulted once connected (see the call site), so this is a
+        // pure question about AGE — the disconnected case is handled by not
+        // rendering the note at all rather than by calling it "stale".
+        ActivityFreshness.isStale(minutesSinceLastMovement: model.today.minutesSinceLastMovement,
+                                  for: .inactivity)
     }
 
     private func reminderToggle(_ title: String, isOn: Bool, _ change: @escaping (Bool) -> Void) -> some View {
@@ -790,14 +817,22 @@ public struct SettingsView: View {
         }
     }
 
-    /// (Re)apply the daily + goal reminders, and start/stop real-movement
-    /// observation for the inactivity nudge so turning it on begins observing the
-    /// user's actual movement (and turning it off tears the observer down).
+    /// (Re)apply the daily reminder, and start/stop real-movement observation for
+    /// the two data-driven nudges so turning either on begins observing the user's
+    /// actual movement (and turning both off tears the observer down).
+    ///
+    /// The goal nudge is armed here rather than by `applyForeground`, because it
+    /// may only be scheduled once something has read the real step count.
     @MainActor private func applyReminders() {
         reminderScheduler.applyForeground(reminders)
-        if reminders.inactivityEnabled {
+        if reminders.inactivityEnabled || reminders.goalEnabled {
             model.startMovementMonitoring(reminderScheduler, settings: reminders)
+            // Both unconditional: each clears its own pending request when its
+            // reminder is off. Skipping the disabled one would strand an already-
+            // armed notification (turn inactivity off while goal stays on, and the
+            // observer keeps running, so nothing else would ever take it down).
             Task { await model.rearmInactivity(reminderScheduler, settings: reminders) }
+            Task { await model.rearmGoal(reminderScheduler, settings: reminders) }
         } else {
             model.stopMovementMonitoring()
         }

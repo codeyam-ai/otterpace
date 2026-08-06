@@ -89,7 +89,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const lastMovementAt = health["lastMovementAt"];
       const inactivityHours = health["inactivityHours"];
       if (typeof lastMovementAt === "string" && typeof inactivityHours === "number") {
-        await mirrorMovement(userId, lastMovementAt, inactivityHours, updatedAt, timeZoneFrom(health)).catch(() => {});
+        // Optional: when the device already has an inactivity nudge armed, pass
+        // its fire time through so the cron stands down instead of delivering a
+        // duplicate. Absent on an older client, which simply means no de-dup.
+        const localArmed = health["localNudgeArmedAt"];
+        await mirrorMovement(
+          userId,
+          lastMovementAt,
+          inactivityHours,
+          updatedAt,
+          timeZoneFrom(health),
+          typeof localArmed === "string" ? localArmed : null,
+        ).catch(() => {});
       }
 
       res.status(200).json({ applied: true, ...row });

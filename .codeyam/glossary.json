@@ -7,6 +7,13 @@
   },
   {
     "conformsToView": false,
+    "description": "The one question every nudge asks before it speaks: how old is our picture of this user, and is it fresh enough to act on. Holds per-nudge thresholds - 30 minutes for the goal nudge, which names a specific step count, versus 6 hours for inactivity, which only claims a gap exists - plus age, isFresh, shouldSuppress, and a minutes-based isStale helper for the Settings row. The rule is that unknown freshness SUPPRESSES rather than guesses: a nudge that does not fire is a missed encouragement, but a nudge that fires wrongly teaches the user the app is dumb and they turn notifications off permanently. Deliberately the opposite call from localHourIn's UTC fallback, because an unknown timezone is a rollout gap where suppressing would silently disable the feature, while unknown freshness is a real signal that we do not know enough to speak. The goal threshold doubles as the maximum lead time for arming, which is what verify-at-fire-time means in practice.",
+    "filePath": "Sources/AppCore/Notifications/ActivityFreshness.swift",
+    "name": "ActivityFreshness",
+    "testFile": "Tests/AppCoreTests/ActivityFreshnessTests.swift"
+  },
+  {
+    "conformsToView": false,
     "description": "Pure binning behind the progress heatmap: lays Monday-start week columns over the selected span, bins each day 0-4 per metric (distance/active-minutes relative to the window max, steps against the goal), derives month markers, and summarizes a tapped day.",
     "filePath": "Sources/AppCore/ActivityHeatmap.swift",
     "name": "ActivityHeatmap",
@@ -518,6 +525,13 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "Pure scheduling math for the evening goal nudge, and the fix for this app's oldest false positive. The nudge used to be a fixed 7pm UNCalendarNotificationTrigger; iOS will not let a pre-scheduled trigger read HealthKit at fire time, so it went out whether the runner was at 3,000 steps or 14,000, and the copy had to hedge around not knowing. fireDate returns a one-shot fire time only when the nudge is still TRUE - nil once the goal is met, nil with no goal set, nil when the hour has already passed, and nil when 7pm is further out than a step count read now can be trusted. The movement observer re-runs it on every new HealthKit sample, so the answer stays current up to the hour and the nudge is cancelled the moment the goal is reached.",
+    "filePath": "Sources/AppCore/Notifications/MovementReminders.swift",
+    "name": "GoalNudgeSchedule",
+    "testFile": "Tests/AppCoreTests/MovementRemindersTests.swift"
+  },
+  {
     "description": "SwiftUI Shape drawing an upward-curving arc used for Buddy's smiling eyes.",
     "filePath": "Sources/AppCore/PuffyBuddy.swift",
     "name": "HappyArc",
@@ -790,6 +804,17 @@
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
       "kind": "no-isolation-harness"
     }
+  },
+  {
+    "conformsToView": true,
+    "description": "The Settings row that says out loud what the app does when it cannot see your activity. Two states: a green up-to-date line reassuring that Buddy only nudges from activity it can actually see, and an amber out-of-date line explaining that it will stay quiet rather than guess. Exists because the suppression rule behind the movement nudges is otherwise invisible - a nudge that does not fire looks exactly like a feature that is broken - so naming it turns why did it go quiet into a deliberate promise. Props-driven on a single isStale flag so both states render in isolation; the staleness decision itself comes from ActivityFreshness, the same contract the schedulers consult, so what this row claims and what the nudges do cannot drift apart. Only shown for the two data-driven nudges, never for the plain daily clock alarm, and never when Health is disconnected - no data is a different message from stale data.",
+    "filePath": "Sources/AppCore/MovementFreshnessNote.swift",
+    "name": "MovementFreshnessNote",
+    "scenarios": [
+      "movement-freshness-note-fresh",
+      "movement-freshness-note-stale",
+      "movement-freshness-note-both-states"
+    ]
   },
   {
     "conformsToView": false,
@@ -1822,6 +1847,12 @@
     "filePath": "api/_lib/account.ts",
     "name": "healthEndpoint",
     "testFile": "test/api/account.test.ts"
+  },
+  {
+    "description": "Whether the server has heard from the device recently enough to act on its picture of the user. Exists because last_movement_at cannot answer that on its own: a genuinely idle user and a user whose phone simply has not reported look identical through it, so a naive max-age guard on last_movement_at would suppress exactly the nudges the feature exists to send. Keyed instead to a dedicated device heartbeat, which is why mirrorMovement stamps last_heartbeat_at rather than reusing updated_at - stampNudgeSent also bumps updated_at, so our own outgoing push would otherwise masquerade as fresh evidence from the phone. A missing or unparseable heartbeat degrades to not-stale rather than suppressing, matching localHourIn's rollout-gap reasoning: an absent field means an older client, and silencing those users would disable the feature for them entirely.",
+    "filePath": "api/_lib/nudge.ts",
+    "name": "heartbeatIsStale",
+    "testFile": "test/api/nudge.test.ts"
   },
   {
     "description": "Reduces fetched HTML to bounded readable text for extraction: strips script and style blocks and all tags, decodes a few common entities, and collapses whitespace, so the model sees the page's text without markup or token bloat.",

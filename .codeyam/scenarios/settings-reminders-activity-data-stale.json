@@ -1,0 +1,44 @@
+{
+  "name": "Settings — Reminders, Activity Data Stale",
+  "id": "498c2ef7-111e-48d8-b185-d2c796b25473",
+  "url": "/",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbSettingsScroll": "reminders",
+      "rbStartScreen": "",
+      "rbSyncSettings": true,
+      "otterpaceRemindDailyMinute": 0,
+      "rbCoachPreviewScroll": "",
+      "rbRaceEditorCustomValue": "",
+      "rbRaceEditorCustomUnit": "",
+      "rbMinutesSinceMovement": 500,
+      "rbShowSettings": true,
+      "rbSyncHealth": false,
+      "otterpaceRemindDailyHour": 18,
+      "rbShowRaceEditor": false,
+      "rbSteps": 8000,
+      "rbConnected": true,
+      "otterpaceRemindInactivityHours": 3,
+      "otterpaceRemindInactivity": true,
+      "rbPreviewMode": "",
+      "otterpaceRemindGoal": true,
+      "rbContentSize": "",
+      "rbShowHistory": false,
+      "rbShowCoachDataPreview": false,
+      "rbRacesJSON": "",
+      "rbStartTab": "today",
+      "otterpaceRemindDaily": true,
+      "rbGoalSteps": 10000,
+      "rbSignedInUserID": "001234.abcDEF",
+      "rbDate": "2026-06-22",
+      "rbShowWeeklyReview": false,
+      "rbShowKeyProviderPicker": false
+    }
+  },
+  "scenarioType": "application",
+  "pageFilePath": "Sources/AppCore/SettingsView.swift"
+}

@@ -156,6 +156,105 @@
       "runner": "tests"
     },
     {
+      "description": "a future-dated observation from clock skew clamps to zero instead of reading as a negative age that passes every threshold",
+      "file": "Tests/AppCoreTests/ActivityFreshnessTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityFreshnessTests › testAgeClampsFutureObservationToZero",
+      "line": 26,
+      "registeredAt": "2026-08-05T20:02:49.916447+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "age returns nil when nothing has been observed, so callers can tell unknown apart from recent",
+      "file": "Tests/AppCoreTests/ActivityFreshnessTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityFreshnessTests › testAgeIsNilWhenNothingObserved",
+      "line": 15,
+      "registeredAt": "2026-08-05T20:02:35.631034+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "age measures elapsed time backwards from now",
+      "file": "Tests/AppCoreTests/ActivityFreshnessTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityFreshnessTests › testAgeMeasuresBackwardsFromNow",
+      "line": 19,
+      "registeredAt": "2026-08-05T20:02:42.820691+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "the goal nudge requires a recent read because it names a specific step count",
+      "file": "Tests/AppCoreTests/ActivityFreshnessTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityFreshnessTests › testGoalNeedsAFreshPicture",
+      "line": 40,
+      "registeredAt": "2026-08-05T20:03:03.799797+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "inactivity tolerates a much older picture than the goal nudge, because it only claims a gap exists",
+      "file": "Tests/AppCoreTests/ActivityFreshnessTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityFreshnessTests › testInactivityToleratesAnOlderPictureThanGoal",
+      "line": 50,
+      "registeredAt": "2026-08-05T20:03:10.504879+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "staleness flips correctly across the six hour inactivity bound",
+      "file": "Tests/AppCoreTests/ActivityFreshnessTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityFreshnessTests › testIsStaleAcrossTheInactivityBound",
+      "line": 73,
+      "registeredAt": "2026-08-05T20:03:29.414492+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "a negative minute count from upstream clock skew clamps to just-moved instead of reading as wildly fresh",
+      "file": "Tests/AppCoreTests/ActivityFreshnessTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityFreshnessTests › testIsStaleClampsNegativeMinutes",
+      "line": 81,
+      "registeredAt": "2026-08-05T20:03:36.201916+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "the minutes-based staleness helper agrees with the date-based suppression rule at every boundary, so Settings cannot promise silence while a nudge still fires",
+      "file": "Tests/AppCoreTests/ActivityFreshnessTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityFreshnessTests › testIsStaleMatchesTheSuppressionRule",
+      "line": 61,
+      "registeredAt": "2026-08-05T20:03:23.197474+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "the same minute count reads fresh for inactivity and stale for the goal nudge, proving the per-nudge threshold is applied",
+      "file": "Tests/AppCoreTests/ActivityFreshnessTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityFreshnessTests › testIsStaleUsesThePerNudgeThreshold",
+      "line": 87,
+      "registeredAt": "2026-08-05T20:03:42.988465+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "a value landing exactly on the threshold still counts as fresh",
+      "file": "Tests/AppCoreTests/ActivityFreshnessTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityFreshnessTests › testThresholdBoundaryIsInclusive",
+      "line": 94,
+      "registeredAt": "2026-08-05T20:03:16.655819+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "unknown freshness suppresses every nudge kind rather than guessing",
+      "file": "Tests/AppCoreTests/ActivityFreshnessTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityFreshnessTests › testUnknownFreshnessSuppressesEveryNudge",
+      "line": 34,
+      "registeredAt": "2026-08-05T20:02:56.990724+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "Active-minutes bins by duration, ranking a slow long walk above a fast short run.",
       "file": "Tests/AppCoreTests/ActivityHeatmapTests.swift",
       "format": "junit-xml",
@@ -2719,6 +2818,24 @@
       "runner": "tests"
     },
     {
+      "description": "with nothing armed the de-dup hint is nil, which the server reads as send your own nudge",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testArmedInactivityISONilWhenDisabled",
+      "line": 185,
+      "registeredAt": "2026-08-05T20:04:50.386781+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "arming records the fire time so the health heartbeat can tell the server this device already covers the idle spell",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testArmedInactivityISOReflectsTheArmedNudge",
+      "line": 175,
+      "registeredAt": "2026-08-05T20:04:43.584432+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "A non-positive hours setting is floored to 1h so the nudge never fires in the past.",
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
@@ -2764,6 +2881,51 @@
       "runner": "tests"
     },
     {
+      "description": "the goal nudge arms for 7pm when the runner is genuinely short and the hour is near enough to trust the step count",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testGoalArmedWhenShortAndHourIsNear",
+      "line": 113,
+      "registeredAt": "2026-08-05T20:03:57.328804+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "the goal nudge is not armed once its hour has passed, so the next day is decided against the next day's data",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testGoalNotArmedAfterTheHourHasPassed",
+      "line": 128,
+      "registeredAt": "2026-08-05T20:04:11.359754+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "the goal nudge is not armed once the step goal is met, the exact false positive the fixed 7pm calendar trigger produced",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testGoalNotArmedOnceGoalIsMet",
+      "line": 107,
+      "registeredAt": "2026-08-05T20:03:50.369251+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "the goal nudge is not armed hours ahead, because a step count read now says nothing about this evening",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testGoalNotArmedTooFarAhead",
+      "line": 122,
+      "registeredAt": "2026-08-05T20:04:04.212252+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "with no goal set there is nothing to be short of, so nothing is armed",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testGoalNotArmedWithoutAGoal",
+      "line": 133,
+      "registeredAt": "2026-08-05T20:04:17.903019+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "With the inactivity reminder off, re-arm clears any pending nudge and never schedules.",
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
@@ -2779,6 +2941,33 @@
       "key": "AppCoreTests.MovementRemindersTests › testRearmComputesFireFromLastMovement",
       "line": 73,
       "registeredAt": "2026-07-08T15:24:46Z",
+      "runner": "tests"
+    },
+    {
+      "description": "the model reads real step data and arms the goal nudge when the runner is short",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testRearmGoalArmsWhenShort",
+      "line": 141,
+      "registeredAt": "2026-08-05T20:04:24.016227+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "the model takes a pending goal nudge down once the goal is met, rather than merely skipping scheduling",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testRearmGoalCancelsOnceGoalIsMet",
+      "line": 152,
+      "registeredAt": "2026-08-05T20:04:30.076213+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "turning the goal reminder off clears any pending nudge instead of leaving it armed",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testRearmGoalClearsWhenDisabled",
+      "line": 162,
+      "registeredAt": "2026-08-05T20:04:36.842384+00:00",
       "runner": "tests"
     },
     {

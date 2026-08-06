@@ -40,10 +40,19 @@ public struct SyncableHealthSnapshot: Codable, Equatable {
     /// what lets the server resolve each user's own hour. Optional so an older
     /// snapshot still round-trips; the server falls back to UTC without it.
     public var timeZone: String?
+    /// ISO fire time of an inactivity nudge this device has already armed, when it
+    /// has one.
+    ///
+    /// Both the local scheduler and the server cron can decide the same idle spell
+    /// warrants a nudge, and a user with both paths on would receive two identical
+    /// "stretch your legs?" notifications minutes apart. Telling the server the
+    /// device has it covered lets the server stand down. Optional: absent simply
+    /// means no de-dup, never a wrong decision.
+    public var localNudgeArmedAt: String?
 
     public init(steps: Int, distanceMiles: Double, activeMinutes: Int, activeEnergyKcal: Int,
                 lastMovementAt: String? = nil, inactivityHours: Int? = nil,
-                timeZone: String? = nil) {
+                timeZone: String? = nil, localNudgeArmedAt: String? = nil) {
         self.steps = steps
         self.distanceMiles = distanceMiles
         self.activeMinutes = activeMinutes
@@ -51,6 +60,7 @@ public struct SyncableHealthSnapshot: Codable, Equatable {
         self.lastMovementAt = lastMovementAt
         self.inactivityHours = inactivityHours
         self.timeZone = timeZone
+        self.localNudgeArmedAt = localNudgeArmedAt
     }
 }
 

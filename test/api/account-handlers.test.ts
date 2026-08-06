@@ -247,7 +247,7 @@ describe("account/health movement mirror (timezone)", () => {
 
   it("forwards a valid IANA zone to the push row", async () => {
     await putHealth({ ...BASE, timeZone: "America/New_York" });
-    expect(lib.mirrorMovement).toHaveBeenCalledWith("u1", LAST_MOVEMENT, 2, UPDATED_AT, "America/New_York");
+    expect(lib.mirrorMovement).toHaveBeenCalledWith("u1", LAST_MOVEMENT, 2, UPDATED_AT, "America/New_York", null);
   });
 
   // Underscores and a `+` are both legal in IANA identifiers; rejecting them
@@ -256,7 +256,7 @@ describe("account/health movement mirror (timezone)", () => {
     for (const zone of ["Europe/Isle_of_Man", "Etc/GMT+5", "UTC"]) {
       lib.mirrorMovement.mockClear();
       await putHealth({ ...BASE, timeZone: zone });
-      expect(lib.mirrorMovement).toHaveBeenCalledWith("u1", LAST_MOVEMENT, 2, UPDATED_AT, zone);
+      expect(lib.mirrorMovement).toHaveBeenCalledWith("u1", LAST_MOVEMENT, 2, UPDATED_AT, zone, null);
     }
   });
 
@@ -264,7 +264,7 @@ describe("account/health movement mirror (timezone)", () => {
   // helper preserves the stored zone rather than treating it as "clear it".
   it("passes null when the snapshot carries no zone", async () => {
     await putHealth(BASE);
-    expect(lib.mirrorMovement).toHaveBeenCalledWith("u1", LAST_MOVEMENT, 2, UPDATED_AT, null);
+    expect(lib.mirrorMovement).toHaveBeenCalledWith("u1", LAST_MOVEMENT, 2, UPDATED_AT, null, null);
   });
 
   // Every one of these must degrade to null (→ UTC fallback), never reach Intl
@@ -274,7 +274,7 @@ describe("account/health movement mirror (timezone)", () => {
     for (const bad of ["../../etc/passwd", "x".repeat(65), "", "America/New York", "<script>", 42, null]) {
       lib.mirrorMovement.mockClear();
       await putHealth({ ...BASE, timeZone: bad });
-      expect(lib.mirrorMovement).toHaveBeenCalledWith("u1", LAST_MOVEMENT, 2, UPDATED_AT, null);
+      expect(lib.mirrorMovement).toHaveBeenCalledWith("u1", LAST_MOVEMENT, 2, UPDATED_AT, null, null);
     }
   });
 

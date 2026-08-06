@@ -13,6 +13,28 @@ export interface NudgeState {
   inactivityHours: number;
   /** ISO timestamp of the last nudge we sent this user, for de-dup. */
   lastNudgeSentAt: string | null;
+  /**
+   * ISO timestamp of the last time the DEVICE reported in — not the last time
+   * the user moved. This is the difference between "they have been still for six
+   * hours" (nudge) and "we have not heard from this phone in six hours, so we
+   * have no idea what they have been doing" (stay quiet).
+   *
+   * `last_movement_at` cannot answer that on its own: an idle user and an
+   * unreported user look identical through it, which is why a naive max-age
+   * guard on `last_movement_at` would suppress precisely the nudges this feature
+   * exists to send.
+   *
+   * Null on an older client that predates the field; see `heartbeatIsStale` for
+   * why that degrades rather than suppresses.
+   */
+  heartbeatAt: string | null;
+  /**
+   * ISO fire time of an inactivity nudge the DEVICE has already armed for this
+   * idle spell, or null when it has none. Lets the server stand down instead of
+   * delivering a second "stretch your legs?" minutes from the local one — a user
+   * with both paths on could previously get both.
+   */
+  localNudgeArmedAt: string | null;
 }
 
 export interface QuietHours {
@@ -73,12 +95,42 @@ export function isQuietHour(hour: number, quiet: QuietHours = DEFAULT_QUIET_HOUR
 }
 
 /**
+ * How old the device's last check-in may be before the server stops trusting its
+ * picture of this user. Mirrors `ActivityFreshness.inactivityMaxAge` on the
+ * client (6h) so device and server agree on what "too old to act on" means.
+ */
+export const MAX_HEARTBEAT_AGE_MS = 6 * 3600_000;
+
+/**
+ * True when we have not heard from the device recently enough to act.
+ *
+ * A MISSING heartbeat degrades to "not stale" rather than suppressing, matching
+ * `localHourIn`'s UTC fallback and for the same reason: an absent field is a
+ * rollout gap (an older client that never sent one), and suppressing on it would
+ * silently disable the nudge for every user who hasn't updated. A heartbeat we
+ * *do* have and which *is* old is a real signal, and that one suppresses.
+ */
+export function heartbeatIsStale(heartbeatAt: string | null, now: Date, maxAgeMs: number = MAX_HEARTBEAT_AGE_MS): boolean {
+  if (!heartbeatAt) return false; // rollout gap → degrade, don't disable
+  const at = Date.parse(heartbeatAt);
+  if (Number.isNaN(at)) return false; // unparseable → same treatment as absent
+  return now.getTime() - at > maxAgeMs;
+}
+
+/**
  * Decide whether to send a movement nudge to one user right now.
  *
  *   • no known movement            → no (nothing to key off).
+ *   • device heartbeat is stale    → no (our picture is too old to act on; we
+ *                                   cannot tell an idle user from an unreported
+ *                                   one, so we say nothing).
  *   • moved within inactivityHours → no (they're not idle yet).
  *   • already nudged this idle spell (lastNudgeSentAt is after the last movement)
  *                                  → no (one nudge per idle window, never spam).
+ *   • the device already has a local nudge armed for this idle spell
+ *                                  → no (it will fire on-device; two identical
+ *                                   nudges minutes apart is the "this app is
+ *                                   dumb" signal we're removing).
  *   • current local hour is quiet  → no (no overnight pings).
  *   • otherwise                    → yes.
  *
@@ -90,6 +142,11 @@ export function shouldNudge(state: NudgeState, now: Date, localHour: number, qui
   const lastMovement = Date.parse(state.lastMovementAt);
   if (Number.isNaN(lastMovement)) return false;
 
+  // Checked BEFORE the idle math: when the device has gone quiet, a large
+  // `idleMs` is evidence of nothing. The old code read it as certainty and
+  // pushed "Stretch your legs?" at people who had been walking all afternoon.
+  if (heartbeatIsStale(state.heartbeatAt, now)) return false;
+
   const idleMs = now.getTime() - lastMovement;
   const thresholdMs = Math.max(1, state.inactivityHours) * 3600_000;
   if (idleMs < thresholdMs) return false; // still within the active window
@@ -100,6 +157,15 @@ export function shouldNudge(state: NudgeState, now: Date, localHour: number, qui
   if (state.lastNudgeSentAt) {
     const lastNudge = Date.parse(state.lastNudgeSentAt);
     if (!Number.isNaN(lastNudge) && lastNudge > lastMovement) return false;
+  }
+
+  // The device already has one armed for this same idle spell — let it fire
+  // locally rather than doubling up. Scoped to the spell (armed AFTER the last
+  // movement) so a leftover timestamp from an earlier spell can't mute the
+  // server indefinitely.
+  if (state.localNudgeArmedAt) {
+    const armed = Date.parse(state.localNudgeArmedAt);
+    if (!Number.isNaN(armed) && armed > lastMovement) return false;
   }
 
   if (isQuietHour(localHour, quiet)) return false;

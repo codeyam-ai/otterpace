@@ -48,6 +48,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           lastMovementAt: user.last_movement_at,
           inactivityHours: user.inactivity_hours ?? 3,
           lastNudgeSentAt: user.last_nudge_sent_at,
+          // How recently the DEVICE reported, so a user whose phone has gone
+          // quiet is left alone instead of nudged from a stale picture.
+          heartbeatAt: user.last_heartbeat_at,
+          localNudgeArmedAt: user.local_nudge_armed_at,
         },
         now,
         localHour,

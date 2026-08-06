@@ -1,5 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { shouldNudge, isQuietHour, localHourIn, DEFAULT_QUIET_HOURS, type NudgeState } from "../../api/_lib/nudge.ts";
+import {
+  shouldNudge,
+  isQuietHour,
+  localHourIn,
+  heartbeatIsStale,
+  DEFAULT_QUIET_HOURS,
+  MAX_HEARTBEAT_AGE_MS,
+  type NudgeState,
+} from "../../api/_lib/nudge.ts";
 
 // Unit tests for the pure server-side movement-nudge policy. No network — the
 // decision is deterministic given (state, now, localHour), which is exactly why
@@ -8,7 +16,16 @@ import { shouldNudge, isQuietHour, localHourIn, DEFAULT_QUIET_HOURS, type NudgeS
 const NOW = new Date("2026-07-08T15:00:00Z"); // a non-quiet hour by default
 
 function state(over: Partial<NudgeState> = {}): NudgeState {
-  return { lastMovementAt: null, inactivityHours: 3, lastNudgeSentAt: null, ...over };
+  // heartbeatAt/localNudgeArmedAt default to null: that is the older-client
+  // shape, which must keep behaving exactly as before (degrade, don't disable).
+  return {
+    lastMovementAt: null,
+    inactivityHours: 3,
+    lastNudgeSentAt: null,
+    heartbeatAt: null,
+    localNudgeArmedAt: null,
+    ...over,
+  };
 }
 
 describe("isQuietHour", () => {
@@ -131,6 +148,62 @@ describe("localHourIn", () => {
   });
 });
 
+describe("heartbeat staleness", () => {
+  // Absent field = a client that predates it. Suppressing here would silently
+  // disable the nudge for everyone who hasn't updated, so it degrades instead —
+  // the same call `localHourIn` makes for a missing timezone.
+  it("treats a missing heartbeat as usable rather than disabling the feature", () => {
+    expect(heartbeatIsStale(null, NOW)).toBe(false);
+    expect(heartbeatIsStale("not-a-date", NOW)).toBe(false);
+  });
+
+  it("flags a heartbeat older than the max age", () => {
+    const old = new Date(NOW.getTime() - MAX_HEARTBEAT_AGE_MS - 60_000).toISOString();
+    const recent = new Date(NOW.getTime() - 30 * 60_000).toISOString();
+    expect(heartbeatIsStale(old, NOW)).toBe(true);
+    expect(heartbeatIsStale(recent, NOW)).toBe(false);
+  });
+
+  // The headline bug: someone walked all afternoon without opening the app, so
+  // last_movement_at still says this morning. We must not read that as certainty.
+  it("stays quiet when the device has not reported recently", () => {
+    const lastMovementAt = new Date(NOW.getTime() - 9 * 3600_000).toISOString();
+    const heartbeatAt = new Date(NOW.getTime() - 9 * 3600_000).toISOString();
+    expect(shouldNudge(state({ lastMovementAt, heartbeatAt }), NOW, 15)).toBe(false);
+  });
+
+  // The case a naive max-age guard on `last_movement_at` would have broken: the
+  // user really has been still for 9h, and the phone is reporting in fine. This
+  // is the nudge the whole feature exists to send — it must still go out.
+  it("still nudges a genuinely idle user whose device IS reporting", () => {
+    const lastMovementAt = new Date(NOW.getTime() - 9 * 3600_000).toISOString();
+    const heartbeatAt = new Date(NOW.getTime() - 5 * 60_000).toISOString(); // 5m ago
+    expect(shouldNudge(state({ lastMovementAt, heartbeatAt }), NOW, 15)).toBe(true);
+  });
+});
+
+describe("local/server de-dup", () => {
+  const lastMovementAt = new Date(NOW.getTime() - 5 * 3600_000).toISOString();
+
+  // Both paths can decide the same idle spell warrants a nudge. Without this the
+  // user gets two identical "stretch your legs?" minutes apart.
+  it("stands down when the device already armed one for this idle spell", () => {
+    const localNudgeArmedAt = new Date(NOW.getTime() - 2 * 3600_000).toISOString(); // after the movement
+    expect(shouldNudge(state({ lastMovementAt, localNudgeArmedAt }), NOW, 15)).toBe(false);
+  });
+
+  // Scoped to the spell: a stale armed-time from an EARLIER idle window must not
+  // mute the server forever.
+  it("ignores an armed time from a previous idle spell", () => {
+    const localNudgeArmedAt = new Date(NOW.getTime() - 8 * 3600_000).toISOString(); // before the movement
+    expect(shouldNudge(state({ lastMovementAt, localNudgeArmedAt }), NOW, 15)).toBe(true);
+  });
+
+  it("sends when the device has nothing armed", () => {
+    expect(shouldNudge(state({ lastMovementAt, localNudgeArmedAt: null }), NOW, 15)).toBe(true);
+  });
+});
+
 describe("quiet hours end-to-end, per zone", () => {
   // One instant, two users: the fix is that they get different answers.
   // 2026-07-16T01:00:00Z = 21:00 in New York (quiet) and 01:00 UTC (also quiet),
@@ -139,6 +212,8 @@ describe("quiet hours end-to-end, per zone", () => {
     lastMovementAt: "2026-07-15T10:00:00Z",
     inactivityHours: 2,
     lastNudgeSentAt: null,
+    heartbeatAt: null,
+    localNudgeArmedAt: null,
   };
   const asOf = new Date("2026-07-15T23:00:00Z"); // 19:00 New York, 23:00 UTC
 

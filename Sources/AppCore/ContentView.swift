@@ -160,12 +160,16 @@ public struct ContentView: View {
             let settings = ReminderSettings.load()
             switch phase {
             case .active:
-                reminderScheduler.applyForeground(settings)   // daily + goal
+                reminderScheduler.applyForeground(settings)   // daily only
                 // Re-arm the inactivity nudge from REAL movement (opening the app is
                 // not movement, so we no longer just cancel it), and keep the
                 // background observer alive while the reminder is on.
                 model.startMovementMonitoring(reminderScheduler, settings: settings)
                 Task { await model.rearmInactivity(reminderScheduler, settings: settings) }
+                // The goal nudge is verified, never pre-scheduled: decide it here
+                // against the step count we can actually read, and again on every
+                // observer wake. Opening the app is the most reliable chance we get.
+                Task { await model.rearmGoal(reminderScheduler, settings: settings) }
                 revalidateSessionIfNeeded()   // confirm the Apple credential on foreground
             case .background:
                 // Arm from the latest known movement as we leave the foreground.

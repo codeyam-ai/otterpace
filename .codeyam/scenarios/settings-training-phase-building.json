@@ -24,7 +24,9 @@
       "rbShowRacePrompt": false,
       "rbShowCoachDataPreview": false,
       "rbCoachPreviewScroll": "",
-      "rbShowKeyProviderPicker": false
+      "rbShowKeyProviderPicker": false,
+      "otterpaceRemindGoal": false,
+      "otterpaceRemindInactivity": false
     }
   },
   "scenarioType": "application",

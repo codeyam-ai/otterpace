@@ -1,0 +1,16 @@
+{
+  "name": "Movement Freshness Note - Fresh",
+  "id": "6227496e-ed56-4ef5-aaaf-313a49471882",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "MovementFreshnessNote",
+      "CODEYAM_ISOLATE_SCENARIO": "Default"
+    }
+  },
+  "componentName": "MovementFreshnessNote",
+  "scenarioType": "component"
+}

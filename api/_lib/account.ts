@@ -176,6 +176,16 @@ export interface PushRow {
    *  Null for an older client that never sent one; the nudge scan falls back to
    *  the UTC hour in that case. `alter table account_push add column time_zone text;` */
   time_zone: string | null;
+  /** When the DEVICE last checked in. Distinct from `updated_at`, which the
+   *  server also bumps when it stamps a nudge send — that would make our own
+   *  push look like fresh evidence from the phone. Null for an older client;
+   *  the nudge scan degrades rather than suppressing (see `heartbeatIsStale`).
+   *  `alter table account_push add column last_heartbeat_at timestamptz;` */
+  last_heartbeat_at: string | null;
+  /** Fire time of an inactivity nudge the device has already armed for this idle
+   *  spell, so the server can stand down instead of sending a duplicate.
+   *  `alter table account_push add column local_nudge_armed_at timestamptz;` */
+  local_nudge_armed_at: string | null;
   updated_at: string;
 }
 
@@ -219,6 +229,10 @@ export async function addPushToken(userId: string, token: string, platform: stri
     time_zone: existing?.time_zone ?? null,
     inactivity_hours: existing?.inactivity_hours ?? null,
     last_nudge_sent_at: existing?.last_nudge_sent_at ?? null,
+    // Same rationale as time_zone: re-registering a device must not discard the
+    // freshness/de-dup state the nudge scan reads.
+    last_heartbeat_at: existing?.last_heartbeat_at ?? null,
+    local_nudge_armed_at: existing?.local_nudge_armed_at ?? null,
     updated_at: now,
   });
 }
@@ -256,6 +270,7 @@ export async function mirrorMovement(
   inactivityHours: number,
   now: string,
   timeZone?: string | null,
+  localNudgeArmedAt?: string | null,
 ): Promise<void> {
   const existing = await getPush(userId);
   if (!existing) return; // no push registration → nothing to mirror
@@ -263,6 +278,11 @@ export async function mirrorMovement(
     ...existing,
     last_movement_at: lastMovementAt,
     inactivity_hours: inactivityHours,
+    // THIS is the heartbeat: the device just told us something, so stamp when.
+    // Deliberately not `updated_at`, which `stampNudgeSent` also bumps — our own
+    // outgoing push must never masquerade as a fresh report from the phone.
+    last_heartbeat_at: now,
+    local_nudge_armed_at: localNudgeArmedAt ?? null,
     // Only overwrite when this heartbeat actually carried a zone: an older
     // client omits it, and a null must not clobber a good stored value.
     time_zone: timeZone ?? existing.time_zone ?? null,

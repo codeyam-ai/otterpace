@@ -1,0 +1,16 @@
+{
+  "name": "Movement Freshness Note - Both States",
+  "id": "443d0bf1-2c18-4e04-8380-afbdb59afd7b",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Both States",
+      "CODEYAM_ISOLATE_COMPONENT": "MovementFreshnessNote"
+    }
+  },
+  "componentName": "MovementFreshnessNote",
+  "scenarioType": "component"
+}

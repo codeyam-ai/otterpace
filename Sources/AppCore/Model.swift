@@ -214,6 +214,12 @@ public final class OtterpaceModel: ObservableObject {
     private var movementMonitor: MovementActivityMonitor?
     #endif
 
+    /// Fire time of the inactivity nudge this device currently has armed, or nil
+    /// when none is pending. Recorded so the health heartbeat can tell the server
+    /// the device has this idle spell covered — otherwise both paths fire and the
+    /// user gets the same "stretch your legs?" twice, minutes apart.
+    public private(set) var armedInactivityFireAt: Date?
+
     public init(today: TodayState, source: HealthDataSource = SeededHealthDataSource(),
                 defaults: UserDefaults = .standard) {
         self.today = today
@@ -557,12 +563,49 @@ public final class OtterpaceModel: ObservableObject {
     public func rearmInactivity(_ scheduler: MovementReminderScheduling,
                                 settings: ReminderSettings, now: Date = Date()) async {
         guard settings.inactivityEnabled else {
+            armedInactivityFireAt = nil
             scheduler.armInactivity(fireAt: nil, settings: settings)
             return
         }
         let last = await source.lastMovementDate()
         let fireAt = InactivitySchedule.fireDate(lastMovement: last, hours: settings.inactivityHours, now: now)
+        armedInactivityFireAt = fireAt
         scheduler.armInactivity(fireAt: fireAt, settings: settings)
+    }
+
+    /// The armed inactivity fire time as ISO-8601, for the heartbeat's de-dup
+    /// hint. Nil when nothing is pending, which the server reads as "no local
+    /// nudge covering this spell — send yours".
+    @MainActor
+    public func armedInactivityISO() -> String? {
+        guard let at = armedInactivityFireAt else { return nil }
+        return ISO8601DateFormatter().string(from: at)
+    }
+
+    /// Re-decide the evening goal nudge against REAL step data and arm (or take
+    /// down) the notification. This is the replacement for the fixed 7pm calendar
+    /// trigger: the old one fired whether you were at 3,000 steps or 14,000
+    /// because a pre-scheduled trigger cannot read HealthKit when it fires.
+    ///
+    /// Called on foreground and from the movement observer on every new sample, so
+    /// the decision tracks the real step count right up to the hour — and cancels
+    /// the moment the goal is met. The decision itself is the pure, unit-tested
+    /// `GoalNudgeSchedule.fireDate`.
+    @MainActor
+    public func rearmGoal(_ scheduler: MovementReminderScheduling,
+                          settings: ReminderSettings, now: Date = Date()) async {
+        guard settings.goalEnabled else {
+            scheduler.armGoal(fireAt: nil, settings: settings)
+            return
+        }
+        // Read steps fresh rather than trusting `today` — the cached snapshot may
+        // be hours old in a background wake, which is the whole class of bug this
+        // replaces.
+        let state = await source.loadToday()
+        let fireAt = GoalNudgeSchedule.fireDate(steps: state.steps,
+                                                goalSteps: state.goalSteps,
+                                                now: now)
+        scheduler.armGoal(fireAt: fireAt, settings: settings)
     }
 
     /// The ISO-8601 timestamp of the user's last real movement, or nil when none
