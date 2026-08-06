@@ -305,7 +305,7 @@
       ],
       [
         23,
-        "Finalize: pick `session-finalize` (~7 min full suite) or `session-checkpoint --defer` (~30 s). Both stamp the relevant state; do not bypass the menu."
+        "Finalize: this branch is sticky Fast Commit. Run `codeyam-editor editor session-checkpoint --compile-only` (verify-build only; the full audit, tests, and finalize invariants are deferred to `session-finalize`). Do NOT run `session-finalize` — the user already chose to defer. If verify-build fails, fix the compile/lint error and re-run the same command. The deferred trailer is stamped on the feature commit at the Commit step via `mark-deferred`."
       ],
       [
         24,
@@ -675,7 +675,7 @@
       ],
       [
         16,
-        "Finalize: pick `session-finalize` (~7 min full suite) or `session-checkpoint --defer` (~30 s). Both stamp the relevant state; do not bypass the menu."
+        "Finalize: this branch is sticky Fast Commit. Run `codeyam-editor editor session-checkpoint --compile-only` (verify-build only; the full audit, tests, and finalize invariants are deferred to `session-finalize`). Do NOT run `session-finalize` — the user already chose to defer. If verify-build fails, fix the compile/lint error and re-run the same command. The deferred trailer is stamped on the feature commit at the Commit step via `mark-deferred`."
       ],
       [
         17,
