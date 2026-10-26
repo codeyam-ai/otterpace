@@ -116,12 +116,12 @@
     {
       "id": "smart-movement-reminders-driven-by-inactivity",
       "text": "Smart movement reminders driven by inactivity, step gap, time of day, and recent training load",
-      "status": "open",
-      "resolvedAt": null,
-      "resolvedInFeature": null,
+      "status": "delivered",
+      "resolvedAt": "2026-10-26T20:18:43.259416+00:00",
+      "resolvedInFeature": "Good-morning and wind-down inactivity nudges",
       "planSlug": "good-morning-and-wind-down-inactivity-nudges",
-      "note": null,
-      "decidedBy": null
+      "note": "Inactivity, step-gap (goal) and time-of-day nudges shipped; training-load-aware wording not yet built.",
+      "decidedBy": "user"
     },
     {
       "id": "privacy-forward-defaults-healthkit-stays-local",
