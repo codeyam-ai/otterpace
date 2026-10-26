@@ -1,0 +1,21 @@
+{
+  "name": "RaceImportNoKey - Import No Coach",
+  "id": "b1c2e87c-b757-4ae3-ad7b-98c8e3b2d131",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbCoachConnected": false,
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Import No Coach",
+      "CODEYAM_ISOLATE_COMPONENT": "RaceImportNoKey"
+    }
+  },
+  "componentName": "RaceImportNoKey",
+  "scenarioType": "component",
+  "description": "The RaceImportNoKey component."
+}

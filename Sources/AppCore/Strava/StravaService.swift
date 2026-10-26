@@ -111,8 +111,18 @@ public final class StravaService: NSObject, ObservableObject {
         var request = URLRequest(url: StravaConfig.apiBase.appendingPathComponent("strava/activities"))
         request.setValue(deviceKey.current(), forHTTPHeaderField: "x-device-key")
         let (data, resp) = try await URLSession.shared.data(for: request)
-        guard (resp as? HTTPURLResponse)?.statusCode == 200 else { throw StravaError.failed }
+        return try Self.decodeActivities(data, statusCode: (resp as? HTTPURLResponse)?.statusCode)
+    }
+
+    /// Map the backend's activities response to `LatestWorkout`s. Anything but a
+    /// 200 is a real failure — distinct from a legitimate empty list.
+    nonisolated static func decodeActivities(_ data: Data, statusCode: Int?) throws -> [LatestWorkout] {
+        try requireOK(statusCode)
         return try JSONDecoder().decode(ActivitiesResponse.self, from: data).activities.map { $0.workout }
+    }
+
+    nonisolated static func requireOK(_ statusCode: Int?) throws {
+        guard statusCode == 200 else { throw StravaError.failed }
     }
 
     // MARK: Networking
@@ -124,8 +134,35 @@ public final class StravaService: NSObject, ObservableObject {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (data, resp) = try await URLSession.shared.data(for: request)
-        guard (resp as? HTTPURLResponse)?.statusCode == 200 else { throw StravaError.failed }
+        try Self.requireOK((resp as? HTTPURLResponse)?.statusCode)
         return data
+    }
+
+    // MARK: OAuth URL handling (platform-free, so it unit-tests on macOS)
+
+    /// Strava's authorize page for this install. `state` carries the device key
+    /// so the server-side callback can pair the code with it.
+    nonisolated static func authorizeURL(clientID: String, deviceKey: String) -> URL? {
+        var comps = URLComponents(string: "https://www.strava.com/oauth/authorize")!
+        comps.queryItems = [
+            .init(name: "client_id", value: clientID),
+            .init(name: "response_type", value: "code"),
+            .init(name: "redirect_uri", value: StravaConfig.redirectURI),
+            .init(name: "approval_prompt", value: "auto"),
+            .init(name: "scope", value: StravaConfig.scope),
+            .init(name: "state", value: deviceKey),
+        ]
+        return comps.url
+    }
+
+    /// The OAuth `code` from the app's callback URL, or nil when it's missing or
+    /// empty (e.g. the user denied access and Strava sent `error=` instead).
+    nonisolated static func authorizationCode(from callbackURL: URL?) -> String? {
+        guard let callbackURL,
+              let items = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?.queryItems,
+              let code = items.first(where: { $0.name == "code" })?.value, !code.isEmpty
+        else { return nil }
+        return code
     }
 
     private struct ActivitiesResponse: Decodable {
@@ -145,16 +182,9 @@ public final class StravaService: NSObject, ObservableObject {
 
     #if os(iOS)
     private func authorize(deviceKey: String) async throws -> String {
-        var comps = URLComponents(string: "https://www.strava.com/oauth/authorize")!
-        comps.queryItems = [
-            .init(name: "client_id", value: StravaConfig.clientID),
-            .init(name: "response_type", value: "code"),
-            .init(name: "redirect_uri", value: StravaConfig.redirectURI),
-            .init(name: "approval_prompt", value: "auto"),
-            .init(name: "scope", value: StravaConfig.scope),
-            .init(name: "state", value: deviceKey),
-        ]
-        guard let authURL = comps.url else { throw StravaError.failed }
+        guard let authURL = Self.authorizeURL(clientID: StravaConfig.clientID, deviceKey: deviceKey) else {
+            throw StravaError.failed
+        }
 
         return try await withCheckedThrowingContinuation { continuation in
             let session = ASWebAuthenticationSession(
@@ -168,10 +198,7 @@ public final class StravaService: NSObject, ObservableObject {
                     }
                     return
                 }
-                guard let callbackURL,
-                      let items = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?.queryItems,
-                      let code = items.first(where: { $0.name == "code" })?.value, !code.isEmpty
-                else {
+                guard let code = Self.authorizationCode(from: callbackURL) else {
                     continuation.resume(throwing: StravaError.failed); return
                 }
                 continuation.resume(returning: code)

@@ -1,5 +1,32 @@
 [
   {
+    "conformsToView": false,
+    "description": "Establishes and revokes the bearer session with the Otterpace backend, storing the token in AccountSessionStore. Network and storage are injected; failures are non-fatal so account sync just stays off and the app remains local.",
+    "filePath": "Sources/AppCore/Account/AccountSession.swift",
+    "name": "AccountSessionService",
+    "untestabilityReason": {
+      "justification": "Thin URLSession client for the backend session endpoints; its token storage is covered by AccountSessionTests.",
+      "kind": "platform-glue"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Keychain-backed storage for the backend bearer session token, built on the TokenStoring seam so tests can inject an in-memory store. Treats an empty stored value as no token.",
+    "filePath": "Sources/AppCore/Account/AccountSession.swift",
+    "name": "AccountSessionStore",
+    "testFile": "Tests/AppCoreTests/AccountSessionTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "Namespace holding the backend API base URL used by account sync and session calls.",
+    "filePath": "Sources/AppCore/Account/AccountSyncTransport.swift",
+    "name": "AccountSyncConfig",
+    "untestabilityReason": {
+      "justification": "Constant namespace holding a single URL.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
     "description": "Optional account-sync service for signed-in users: gates every push on sign-in and the relevant opt-in, hard-gates health upload behind the health opt-in, reconciles prefs last-write-wins, and purges remote data on account deletion.",
     "filePath": "Sources/AppCore/Account/AccountSyncService.swift",
     "name": "AccountSyncService",
@@ -72,6 +99,26 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "Lightweight, dependency-free PostHog client that POSTs product-usage events keyed to an anonymous Keychain identifier. It is a silent no-op when no project key is configured, so tests and scenario captures never send network calls.",
+    "filePath": "Sources/AppCore/Analytics/Analytics.swift",
+    "name": "Analytics",
+    "untestabilityReason": {
+      "justification": "Wraps Info.plist config, Keychain identity and an HTTP capture endpoint; disabled in test environments.",
+      "kind": "platform-glue"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "UIApplicationDelegate that handles the background-relaunch case: when iOS wakes the app to deliver new HealthKit data it re-establishes the MovementActivityMonitor so inactivity and goal nudges re-arm against real movement. It also registers for remote notifications and forwards the device token for the opt-in server-driven nudge.",
+    "filePath": "App/App.swift",
+    "name": "AppDelegate",
+    "untestabilityReason": {
+      "justification": "Bridges UIApplication launch and remote-notification callbacks to the app's services; the decision logic it feeds is tested elsewhere.",
+      "kind": "platform-glue"
+    }
+  },
+  {
     "description": "The RunBuddy app icon composed in code: Buddy the otter (halo suppressed) on a full-bleed opaque coral brand gradient, authored at a nominal canvas and resolution-independent so ImageRenderer can rasterize it to the 1024 marketing PNG. Satisfies App Store constraints (opaque, square, no text).",
     "filePath": "Sources/AppCore/AppIconArtwork.swift",
     "name": "AppIconArtwork",
@@ -99,6 +146,13 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "Validity of a stored Apple credential (authorized, revoked, not found, unknown), decoupled from AuthenticationServices so the session logic can be tested.",
+    "filePath": "Sources/AppCore/Auth/AppleCredentialChecker.swift",
+    "name": "AppleCredentialState",
+    "testFile": "Tests/AppCoreTests/SessionStoreTests.swift"
+  },
+  {
     "description": "The Ask Coach first-open state: a friendly Buddy and a prompt inviting the user to ask, shown whenever the conversation has no messages yet.",
     "filePath": "Sources/AppCore/AskCoachEmptyState.swift",
     "name": "AskCoachEmptyState",
@@ -114,6 +168,16 @@
     "scenarios": [
       "askcoachheader-connected"
     ]
+  },
+  {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders AskCoachHeader with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/AskCoachHeaderIsolated.swift",
+    "name": "AskCoachHeaderIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders AskCoachHeader fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
   },
   {
     "description": "The compose bar pinned to the bottom of the Ask Coach screen: a text field bound to the parent's draft and a send button that activates only when the draft has non-whitespace content.",
@@ -141,6 +205,16 @@
     "untestabilityReason": {
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the ask-coach-run-or-rest and ask-coach-empty-chat application scenarios.",
       "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "The Bolt theme's mascot mark: a sharp lightning glyph drawn as a SwiftUI path that scales to a size and takes the theme color.",
+    "filePath": "Sources/AppCore/Theming/ThemeMarks.swift",
+    "name": "BoltMark",
+    "untestabilityReason": {
+      "justification": "Pure vector drawing with no branching or state.",
+      "kind": "trivial-wrapper"
     }
   },
   {
@@ -178,6 +252,16 @@
   },
   {
     "conformsToView": true,
+    "description": "The app's mascot slot: PuffyBuddy for the Default theme, otherwise the theme's mark, wrapped on mood surfaces in a mood-accent halo so mood still reads through color.",
+    "filePath": "Sources/AppCore/Theming/ThemeMarks.swift",
+    "name": "BuddyView",
+    "untestabilityReason": {
+      "justification": "Small dispatcher view choosing between PuffyBuddy and ThemeMark by theme; no scenario targets ThemeMarks.swift directly.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": true,
     "description": "A titled card: an uppercase caption over arbitrary content on the shared cardStyle() surface. Extracted because the same container existed as a private helper in SettingsView and was then copied into CoachDataPreview — two private copies of one container is how two screens start drifting apart visually. SettingsView still holds its own copy on purpose: migrating it would touch every card on that screen and re-render all twelve of its committed scenario screenshots, a large unrelated diff, so that migration is tracked separately rather than smuggled into an unrelated feature.",
     "filePath": "Sources/AppCore/CardSection.swift",
     "name": "CardSection",
@@ -193,6 +277,16 @@
     "untestabilityReason": {
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the ask-coach-run-or-rest and ask-coach-knee-pain application scenarios.",
       "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "One line in the Ask Coach conversation: user or coach role, text, and for coach lines the Buddy mood and safety flag so the bubble can tint and show a shield.",
+    "filePath": "Sources/AppCore/AskCoachView.swift",
+    "name": "ChatMessage",
+    "untestabilityReason": {
+      "justification": "Plain identifiable data struct with no logic.",
+      "kind": "type-only"
     }
   },
   {
@@ -213,6 +307,16 @@
       "checkincard-prompt",
       "checkincard-logged"
     ]
+  },
+  {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders CheckInCard with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/CheckInCardIsolated.swift",
+    "name": "CheckInCardIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders CheckInCard fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
   },
   {
     "description": "The AI coach recommendation card, with a calm brand treatment normally and an amber shield-marked treatment when the recommendation carries a safety flag.",
@@ -247,6 +351,16 @@
   },
   {
     "conformsToView": true,
+    "description": "CodeYam isolation host that renders CoachConsoleLinkRow with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/CoachConsoleLinkRowIsolated.swift",
+    "name": "CoachConsoleLinkRowIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders CoachConsoleLinkRow fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": true,
     "description": "The read-only 'What Buddy sees' screen, reached from the Settings AI Coach card. Shows, in plain English, exactly what would be sent to the user's AI provider right now: where it goes, today's activity totals, recent runs and walks, the weekly load series, races, the onboarding profile, and a closing list of what is never sent. It reads the SAME TodayState that AskCoachView hands to RemoteCoach (`let context = model.today`) rather than assembling its own snapshot — a parallel assembly could drift from the real payload and quietly start lying about what leaves the device, so sharing the value makes drift impossible by construction. Composes seven card components and holds no markup of its own. Carries one scenario-only hook, `rbCoachPreviewScroll`, mirroring SettingsView's `rbSettingsScroll`, so a capture can open the screen scrolled to a below-the-fold card.",
     "filePath": "Sources/AppCore/CoachDataPreview.swift",
     "name": "CoachDataPreview",
@@ -267,6 +381,16 @@
       "coachdatarow-shared",
       "coachdatarow-not-shared"
     ]
+  },
+  {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders CoachDataRow with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/CoachDataRowIsolated.swift",
+    "name": "CoachDataRowIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders CoachDataRow fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
   },
   {
     "description": "Buddy mock AI coach. Given a free-text question, the current TodayState, and the recent conversation history, it routes through CoachIntent and builds a curated, context-aware, safety-aware CoachReply. Pure and deterministic. Genuine safety signals still win: a genuinely hard run or a true load spike tilts recovery-ward with the safety flag, and sharp or worsening pain triggers the clinician-caution lockdown. But it trusts the athlete by default: ordinary post-run soreness gets calm reassurance without a flag, a routine easy run is no longer treated as hard, and a declared build is affirmed rather than rested. It threads conversation history to vary and de-repeat the closing check-in question, and abstains honestly when the load trend is insufficient.",
@@ -304,6 +428,16 @@
     ]
   },
   {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders CoachKeyField with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/CoachKeyFieldIsolated.swift",
+    "name": "CoachKeyFieldIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders CoachKeyField fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
     "conformsToView": false,
     "description": "Stores the user's own provider API keys in the Keychain, one account per CoachProvider, and remembers which one is active. Reuses the injectable TokenStoring seam, so tests inject an in-memory store while production uses KeychainTokenStore. Several providers may be connected at once; exactly one is active and only a connected provider can be — activeProvider falls back to the first connected provider whenever the remembered choice is gone, which is what makes disconnecting the active provider promote another instead of dropping the user to the offline CoachEngine. Migration from the single-key era is a no-op by construction because anthropic still reads the original coach-anthropic-key account. Also honors the scenario seed hooks so a simulator capture can render connected rows without a real secret; activeKey stays nil under a seed, correctly leaving a captured conversation on the deterministic mock.",
     "filePath": "Sources/AppCore/Coach/RemoteCoach.swift",
@@ -327,6 +461,16 @@
   },
   {
     "conformsToView": true,
+    "description": "CodeYam isolation host that renders CoachPreviewAboutYouCard with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/CoachPreviewAboutYouCardIsolated.swift",
+    "name": "CoachPreviewAboutYouCardIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders CoachPreviewAboutYouCard fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": true,
     "description": "Today's activity totals as the coach would receive them: date, steps against goal, active minutes, distance, energy, and time since last movement. When Apple Health is not connected every row reads 'Not shared' and a caption explains why, rather than the card vanishing — 'nothing is shared from Health' is itself a fact worth showing on a screen about what gets shared.",
     "filePath": "Sources/AppCore/CoachPreviewActivityCard.swift",
     "name": "CoachPreviewActivityCard",
@@ -337,6 +481,16 @@
   },
   {
     "conformsToView": true,
+    "description": "CodeYam isolation host that renders CoachPreviewActivityCard with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/CoachPreviewActivityCardIsolated.swift",
+    "name": "CoachPreviewActivityCardIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders CoachPreviewActivityCard fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": true,
     "description": "Where the data goes — the first card on the Coach Data Preview, naming the active provider and stating that Otterpace does not store the payload. It leads because the answer reframes everything below it: with no provider connected nothing is sent anywhere at all, and a reader who learns that first reads the rest as 'what would be shared' rather than 'what is being taken from me right now'.",
     "filePath": "Sources/AppCore/CoachPreviewDestinationCard.swift",
     "name": "CoachPreviewDestinationCard",
@@ -344,6 +498,26 @@
       "coachpreviewdestinationcard-connected",
       "coachpreviewdestinationcard-no-provider"
     ]
+  },
+  {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders CoachPreviewDestinationCard with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/CoachPreviewDestinationCardIsolated.swift",
+    "name": "CoachPreviewDestinationCardIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders CoachPreviewDestinationCard fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Shared sample data (workouts, load history and related values) for the Coach Data Preview isolation hosts, so each card's two scenarios differ only by the thing under test.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/CoachPreviewFixtures.swift",
+    "name": "CoachPreviewFixtures",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview fixtures; supplies sample data for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
   },
   {
     "conformsToView": true,
@@ -367,6 +541,16 @@
   },
   {
     "conformsToView": true,
+    "description": "CodeYam isolation host that renders CoachPreviewLoadCard with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/CoachPreviewLoadCardIsolated.swift",
+    "name": "CoachPreviewLoadCardIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders CoachPreviewLoadCard fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": true,
     "description": "The honest counterpart to everything above: what never leaves the device. Every claim is one the code actually keeps and was verified rather than asserted — the key travels as the x-ai-key request header and never inside the JSON body, api/coach.ts and api/_lib/llm.ts contain no logging and no persistence, and RemoteCoach.RequestBody carries only question, context, and history with no identity fields. If any of those change this copy becomes wrong and must change with them, which is why the claims are enumerated rather than left as a vague reassurance.",
     "filePath": "Sources/AppCore/CoachPreviewNeverSentCard.swift",
     "name": "CoachPreviewNeverSentCard",
@@ -387,6 +571,16 @@
   },
   {
     "conformsToView": true,
+    "description": "CodeYam isolation host that renders CoachPreviewRacesCard with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/CoachPreviewRacesCardIsolated.swift",
+    "name": "CoachPreviewRacesCardIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders CoachPreviewRacesCard fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": true,
     "description": "The recent runs and walks included in the coach payload, newest first, with distance and pace. Names the data sources via coachWorkoutSources because 'where did this come from' is a different question from 'what is it' — a Strava-imported run is data the user connected a second service to share.",
     "filePath": "Sources/AppCore/CoachPreviewWorkoutsCard.swift",
     "name": "CoachPreviewWorkoutsCard",
@@ -394,6 +588,16 @@
       "coachpreviewworkoutscard-populated",
       "coachpreviewworkoutscard-empty"
     ]
+  },
+  {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders CoachPreviewWorkoutsCard with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/CoachPreviewWorkoutsCardIsolated.swift",
+    "name": "CoachPreviewWorkoutsCardIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders CoachPreviewWorkoutsCard fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
   },
   {
     "conformsToView": false,
@@ -434,6 +638,33 @@
     ]
   },
   {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders CoachProviderRow with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/CoachProviderRowIsolated.swift",
+    "name": "CoachProviderRowIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders CoachProviderRow fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Codable coach recommendation shape: Buddy mood, headline, body, recommendation type (move, walk, run, rest, celebrate, caution) and safety flag.",
+    "filePath": "Sources/AppCore/Model.swift",
+    "name": "CoachRecommendation",
+    "untestabilityReason": {
+      "justification": "Plain Codable data struct with no logic.",
+      "kind": "type-only"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "A single coach answer: the detected intent, the reply text, the Buddy mood to show, and whether a safety flag applies.",
+    "filePath": "Sources/AppCore/CoachEngine.swift",
+    "name": "CoachReply",
+    "testFile": "Tests/AppCoreTests/IntegrationModuleTests.swift"
+  },
+  {
     "conformsToView": false,
     "description": "The BYO-key headers every coach-backed request carries: x-ai-provider naming the provider and x-ai-key carrying the key. Centralized because RemoteCoach and RaceImportClient must stay byte-identical here — a drift would authenticate one feature and 400 the other. An Anthropic key also rides the legacy x-anthropic-key header so an app build shipping ahead of the backend keeps working, while the backend still accepts that header so an older installed app keeps working; neither side can be upgraded atomically, so compatibility runs both ways. Non-Anthropic keys deliberately omit the legacy header, or an older backend would spend an OpenAI/Gemini key against Anthropic.",
     "filePath": "Sources/AppCore/Coach/RemoteCoach.swift",
@@ -458,6 +689,26 @@
     "filePath": "Sources/AppCore/Coach/CoachTutorial.swift",
     "name": "CoachTutorial",
     "testFile": "Tests/AppCoreTests/CoachTutorialTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "Generated router that renders a single component in isolation on the simulator, chosen by the CODEYAM_ISOLATE_COMPONENT and CODEYAM_ISOLATE_SCENARIO launch env vars. Returns nil when no component is selected so the app renders its normal root.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/CodeyamIsolationHost.swift",
+    "name": "CodeyamIsolationHost",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host router; selects an isolated view for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Extension adding Color(hex:), which builds a color from a 0xRRGGBB literal so the theme token tables stay terse.",
+    "filePath": "Sources/AppCore/Theming/ThemeSystem.swift",
+    "name": "Color",
+    "untestabilityReason": {
+      "justification": "Bit-shift initializer with no branching.",
+      "kind": "trivial-wrapper"
+    }
   },
   {
     "description": "The day-one empty state shown before Apple Health is connected: Buddy waving, a warm explainer, the connect call-to-action, and a privacy reassurance.",
@@ -496,6 +747,26 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "Journal check-in rating of the runner's energy (low, okay, good), with a short label used in coach payloads and UI copy.",
+    "filePath": "Sources/AppCore/Journal/JournalEntry.swift",
+    "name": "EnergyLevel",
+    "untestabilityReason": {
+      "justification": "Enum of choices with display labels only.",
+      "kind": "type-only"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Extension adding the theme environment value, so views can read the resolved Theme with @Environment(\\.theme).",
+    "filePath": "Sources/AppCore/Theming/ThemeSystem.swift",
+    "name": "EnvironmentValues",
+    "untestabilityReason": {
+      "justification": "Get/set passthrough to the ThemeKey environment key.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
     "description": "Loads a TrueType font at a given size (PIL ImageFont.truetype wrapper) for OG-card text.",
     "filePath": "Scripts/make-og-card.py",
     "name": "F",
@@ -514,6 +785,36 @@
       "feelselector-rough-day-selected",
       "feelselector-great-day-selected"
     ]
+  },
+  {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders FeelSelector with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/FeelSelectorIsolated.swift",
+    "name": "FeelSelectorIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders FeelSelector fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "The Fieldnote theme's mascot mark: a letterpress field seal with a double ring, tick marks and a river route.",
+    "filePath": "Sources/AppCore/Theming/ThemeMarks.swift",
+    "name": "FieldnoteMark",
+    "untestabilityReason": {
+      "justification": "Pure vector drawing with no branching or state.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "The Garden theme's mascot mark: a water-lily monogram, an O ring with a sprig growing through it.",
+    "filePath": "Sources/AppCore/Theming/ThemeMarks.swift",
+    "name": "GardenMark",
+    "untestabilityReason": {
+      "justification": "Pure vector drawing with no branching or state.",
+      "kind": "trivial-wrapper"
+    }
   },
   {
     "description": "macOS-only dev tool (SwiftPM executable) that rasterizes AppIconArtwork via ImageRenderer and writes the opaque 1024x1024 AppIcon-1024.png, flattening onto the coral background so the output has no alpha channel. Regenerates the icon when the mascot art changes.",
@@ -541,6 +842,16 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "Whether the app may read health data: not determined (show Connect), authorized, denied (show the Settings prompt), or unavailable on platforms without HealthKit.",
+    "filePath": "Sources/AppCore/Health/HealthDataSource.swift",
+    "name": "HealthAuthState",
+    "untestabilityReason": {
+      "justification": "Enum describing HealthKit authorization outcome; pure data shape with no logic.",
+      "kind": "type-only"
+    }
+  },
+  {
     "description": "Non-shaming state shown when Health access is denied: explainer + Open Settings button. Reached only via the real HealthKit denial path in production.",
     "filePath": "Sources/AppCore/HealthDeniedView.swift",
     "name": "HealthDeniedView",
@@ -550,10 +861,27 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "Reads live activity from HealthKit on a real device: today's steps, distance and active energy, recent workouts, and the last movement time. The iOS-only part just runs the queries; what it does with the results (today's dashboard state, workout distance and pace, latest movement) lives in static helpers that build and test on macOS.",
+    "filePath": "Sources/AppCore/Health/HealthKitDataSource.swift",
+    "name": "HealthKitDataSource",
+    "testFile": "Tests/AppCoreTests/HealthKitDataSourceTests.swift"
+  },
+  {
     "description": "Selects the activity data source at launch: SeededHealthDataSource when a CodeYam scenario seeded rb* keys, else the real HealthKitDataSource (production). isScenarioSeeded detects the seed.",
     "filePath": "Sources/AppCore/Health/HealthDataSource.swift",
     "name": "HealthSource",
     "testFile": "Tests/AppCoreTests/HealthDataSourceTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "One cell of the activity heatmap: the ISO date, the raw metric value, and a 0-4 intensity level used for coloring.",
+    "filePath": "Sources/AppCore/ActivityHeatmap.swift",
+    "name": "HeatmapDay",
+    "untestabilityReason": {
+      "justification": "Plain data struct for a grid cell; the bucketing logic is in ActivityHeatmap.",
+      "kind": "type-only"
+    }
   },
   {
     "conformsToView": true,
@@ -563,6 +891,16 @@
     "untestabilityReason": {
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
       "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "What a tapped heatmap day shows: the date title, that day's workouts, and total miles and minutes, with isRestDay when there are no workouts.",
+    "filePath": "Sources/AppCore/ActivityHeatmap.swift",
+    "name": "HeatmapDaySummary",
+    "untestabilityReason": {
+      "justification": "Data struct with one derived flag; the rollup that builds it lives in ActivityHeatmap.",
+      "kind": "type-only"
     }
   },
   {
@@ -596,6 +934,16 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "Which activity measure the heatmap colors by (distance, active minutes, or steps vs goal), with a display label for each.",
+    "filePath": "Sources/AppCore/ActivityHeatmap.swift",
+    "name": "HeatmapMetric",
+    "untestabilityReason": {
+      "justification": "Enum of metric choices with display labels only.",
+      "kind": "type-only"
+    }
+  },
+  {
     "conformsToView": true,
     "description": "Segmented filter choosing Distance, Active minutes, or Steps vs. goal.",
     "filePath": "Sources/AppCore/HeatmapMetricPicker.swift",
@@ -626,6 +974,13 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "How much history the heatmap shows (week, month, three months), with labels and week counts. Range changes the visible span only; cells stay one day each.",
+    "filePath": "Sources/AppCore/ActivityHeatmap.swift",
+    "name": "HeatmapRange",
+    "testFile": "Tests/AppCoreTests/ActivityHeatmapTests.swift"
+  },
+  {
     "conformsToView": true,
     "description": "Capsule selector for the visible span: Week, Month, or 3-Month.",
     "filePath": "Sources/AppCore/HeatmapRangePicker.swift",
@@ -648,6 +1003,13 @@
     "filePath": "Sources/AppCore/HintCopy.swift",
     "name": "HintTopic",
     "testFile": "Tests/AppCoreTests/HintCopyTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "Pure scheduling math for the real-inactivity nudge: fires the user's chosen number of hours after their last real movement, clamps an overdue time to a short buffer, and holds anything that would land in overnight quiet hours until 8am via NudgeDaypart.",
+    "filePath": "Sources/AppCore/Notifications/MovementReminders.swift",
+    "name": "InactivitySchedule",
+    "testFile": "Tests/AppCoreTests/MovementRemindersTests.swift"
   },
   {
     "conformsToView": true,
@@ -698,6 +1060,16 @@
   },
   {
     "conformsToView": true,
+    "description": "CodeYam isolation host that renders JournalChipRow with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/JournalChipRowIsolated.swift",
+    "name": "JournalChipRowIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders JournalChipRow fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": true,
     "description": "The chips an entry recorded, rendered inline as a compact read-only strip, shared by the Today check-in card and the history row so a logged entry looks the same wherever it appears. Renders nothing at all when no chips were recorded, so an entry that is just a rating and a note leaves no blank band behind.",
     "filePath": "Sources/AppCore/Journal/JournalChipSummary.swift",
     "name": "JournalChipSummary",
@@ -706,6 +1078,16 @@
       "journalchipsummary-partial",
       "journalchipsummary-nothing-recorded"
     ]
+  },
+  {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders JournalChipSummary with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/JournalChipSummaryIsolated.swift",
+    "name": "JournalChipSummaryIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders JournalChipSummary fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
   },
   {
     "conformsToView": true,
@@ -720,6 +1102,16 @@
   },
   {
     "conformsToView": true,
+    "description": "CodeYam isolation host that renders JournalEditorHeader with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/JournalEditorHeaderIsolated.swift",
+    "name": "JournalEditorHeaderIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders JournalEditorHeader fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": true,
     "description": "The full journal editor, used for BOTH a daily check-in and a post-run note — the workout link is simply passed in and retitles it. Structured chips lead and free text follows, because chips are one tap on a phone and are what the coach can reason over reliably. Presented as a full-cover overlay rather than a sheet, matching Activity History and Weekly Review: fullScreenCover is unavailable on macOS, and a launch-seeded overlay must render complete on the first frame so a capture is never caught mid-transition.",
     "filePath": "Sources/AppCore/Journal/JournalEditorSheet.swift",
     "name": "JournalEditorSheet",
@@ -730,12 +1122,32 @@
   },
   {
     "conformsToView": true,
+    "description": "CodeYam isolation host that renders JournalEditorSheet with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/JournalEditorSheetIsolated.swift",
+    "name": "JournalEditorSheetIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders JournalEditorSheet fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": true,
     "description": "The invitation shown where a journal history would be but nothing has been written yet: Buddy plus 'A line about today is enough.' Deliberately carries no streak language, no missed-day count, and nothing that turns an empty journal into a failure — a journaling feature is exactly where a wellness app usually breaks the never-shame rule Buddy already follows.",
     "filePath": "Sources/AppCore/Journal/JournalEmptyState.swift",
     "name": "JournalEmptyState",
     "scenarios": [
       "journalemptystate-default"
     ]
+  },
+  {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders JournalEmptyState with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/JournalEmptyStateIsolated.swift",
+    "name": "JournalEmptyStateIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders JournalEmptyState fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
   },
   {
     "conformsToView": false,
@@ -757,6 +1169,16 @@
   },
   {
     "conformsToView": true,
+    "description": "CodeYam isolation host that renders JournalEntryRow with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/JournalEntryRowIsolated.swift",
+    "name": "JournalEntryRowIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders JournalEntryRow fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": true,
     "description": "The journal's free-text field: a labeled TextEditor in the app's card chrome, asking 'Anything else?' rather than instructing — the note is optional and always available but never required, because a journal that demands prose gets abandoned in a week. Takes a subject so the spoken label reads 'Note about this workout' rather than a bare 'Note'. Hides the TextEditor's own opaque background where the OS supports it so the themed card fill shows through.",
     "filePath": "Sources/AppCore/Journal/JournalNoteField.swift",
     "name": "JournalNoteField",
@@ -764,6 +1186,16 @@
       "journalnotefield-empty",
       "journalnotefield-filled"
     ]
+  },
+  {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders JournalNoteField with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/JournalNoteFieldIsolated.swift",
+    "name": "JournalNoteFieldIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders JournalNoteField fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
   },
   {
     "conformsToView": false,
@@ -778,6 +1210,43 @@
     "filePath": "Sources/AppCore/Journal/JournalStore.swift",
     "name": "JournalStore",
     "testFile": "Tests/AppCoreTests/JournalStoreTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "Production TokenStoring implementation over Security-framework generic-password Keychain items. Stores the Apple user ID, session token and Strava device key; tests inject an in-memory store instead.",
+    "filePath": "Sources/AppCore/Auth/KeychainTokenStore.swift",
+    "name": "KeychainTokenStore",
+    "untestabilityReason": {
+      "justification": "Thin wrapper over the Keychain Security APIs, which are not available in the unit suite.",
+      "kind": "platform-glue"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "A single workout (type, distance, duration, pace, date, source) from HealthKit or Strava, used across Today, activity history and the coach context.",
+    "filePath": "Sources/AppCore/Model.swift",
+    "name": "LatestWorkout",
+    "testFile": "Tests/AppCoreTests/ModelTests.swift"
+  },
+  {
+    "conformsToView": true,
+    "description": "Private view used by the GenerateAppIcon script to render the transparent launch-screen image: PuffyBuddy centered in a square with clear margins so it sits on the coral launch background.",
+    "filePath": "Scripts/GenerateAppIcon/main.swift",
+    "name": "LaunchBuddyMark",
+    "untestabilityReason": {
+      "justification": "Tiny build-script view that sizes PuffyBuddy for PNG export; no branching.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "The app's single spacing and chrome scale (xs-xl spacing, screen gutters, card corner radius and insets), so screens stop hardcoding one-off paddings.",
+    "filePath": "Sources/AppCore/Theme.swift",
+    "name": "Layout",
+    "untestabilityReason": {
+      "justification": "Constant namespace of layout values.",
+      "kind": "trivial-wrapper"
+    }
   },
   {
     "description": "A provider-side failure already mapped to the status the iOS app handles: 401 invalid_key, 429 rate_limited, 502 upstream_error. The message names the actual provider, so a rejected OpenAI key does not tell the user Anthropic refused it.",
@@ -806,6 +1275,23 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "The app's shared easing animations: a standard ease-out for content settling into place and a longer ease for full-screen overlays.",
+    "filePath": "Sources/AppCore/Theme.swift",
+    "name": "Motion",
+    "untestabilityReason": {
+      "justification": "Constant namespace of two Animation values.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "HealthKit background observer that keeps the data-driven nudges honest: on every new step or distance sample it re-arms the inactivity nudge from the real last movement and re-checks the evening goal nudge. The iOS-only part wires HealthKit; the decisions (whether to observe, what to re-arm) are static helpers tested on macOS.",
+    "filePath": "Sources/AppCore/Notifications/MovementActivityMonitor.swift",
+    "name": "MovementActivityMonitor",
+    "testFile": "Tests/AppCoreTests/MovementRemindersTests.swift"
+  },
+  {
     "conformsToView": true,
     "description": "The Settings row that says out loud what the app does when it cannot see your activity. Two states: a green up-to-date line reassuring that Buddy only nudges from activity it can actually see, and an amber out-of-date line explaining that it will stay quiet rather than guess. Exists because the suppression rule behind the movement nudges is otherwise invisible - a nudge that does not fire looks exactly like a feature that is broken - so naming it turns why did it go quiet into a deliberate promise. Props-driven on a single isStale flag so both states render in isolation; the staleness decision itself comes from ActivityFreshness, the same contract the schedulers consult, so what this row claims and what the nudges do cannot drift apart. Only shown for the two data-driven nudges, never for the plain daily clock alarm, and never when Health is disconnected - no data is a different message from stale data.",
     "filePath": "Sources/AppCore/MovementFreshnessNote.swift",
@@ -817,6 +1303,55 @@
     ]
   },
   {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders MovementFreshnessNote with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/MovementFreshnessNoteIsolated.swift",
+    "name": "MovementFreshnessNoteIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders MovementFreshnessNote fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Production scheduler for the movement reminders on UNUserNotificationCenter. The iOS-only part only hands requests to the notification center; which requests to make (the daily reminder's repeating time, the goal and inactivity one-shots with their copy and delay, or nil to take one down) comes from static helpers tested on macOS.",
+    "filePath": "Sources/AppCore/Notifications/MovementReminders.swift",
+    "name": "MovementReminderScheduler",
+    "testFile": "Tests/AppCoreTests/MovementRemindersTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "Buckets a local time into quiet (9pm-8am), morning (8-11am), daytime (11am-7pm) or evening (7-9pm) for the inactivity nudge, mirroring the server's DEFAULT_QUIET_HOURS, MORNING_END_HOUR and EVENING_START_HOUR. deferringQuietHours moves an overnight fire time to the next 8:00 local so the on-device nudge never fires at 1am or a minute after the phone is picked up at 6:45am.",
+    "filePath": "Sources/AppCore/Notifications/MovementReminders.swift",
+    "name": "NudgeDaypart",
+    "testFile": "Tests/AppCoreTests/MovementRemindersTests.swift"
+  },
+  {
+    "conformsToView": true,
+    "description": "First-run flow: a swipeable intro carousel with Buddy, then personalization steps (goal, walking habits, other training, training phase, look, AI coaching). Answers persist on-device and feed the coach context through TodayState.",
+    "filePath": "Sources/AppCore/Onboarding/OnboardingFlowView.swift",
+    "name": "OnboardingFlowView",
+    "scenarios": [
+      "welcome-meet-buddy",
+      "welcome-day-by-day-coaching",
+      "welcome-ask-me-anything",
+      "welcome-large-text",
+      "onboarding-intro-garden-day-by-day",
+      "onboarding-intro-fieldnote-ask-me-anything",
+      "onboarding-set-goal-8k",
+      "onboarding-walking-habits",
+      "onboarding-other-training",
+      "onboarding-training-phase",
+      "onboarding-choose-your-look",
+      "onboarding-choose-your-look-otter",
+      "onboarding-choose-your-look-orbit",
+      "onboarding-choose-your-look-fieldnote",
+      "onboarding-choose-your-look-garden",
+      "onboarding-add-ai-coaching-skip",
+      "onboarding-ai-coaching-connected"
+    ]
+  },
+  {
     "conformsToView": false,
     "description": "Pure launch-gating and step model for the personalized onboarding flow. hasSeen/markSeen/shouldShow decide whether to show the flow at launch (forced when rbStartScreen is onboarding, hidden once seen or under a scenario seed). introPageCount/personalizationStepCount/stepCount model the swipeable intro carousel plus the four personalization steps (goal, walking habits, other training, AI key); pageCount is a back-compat alias for the intro count. startPage reads and clamps rbOnboardingPage into 0..<stepCount so a scenario can target any intro page or personalization step for capture.",
     "filePath": "Sources/AppCore/Onboarding/OnboardingState.swift",
@@ -824,10 +1359,50 @@
     "testFile": "Tests/AppCoreTests/OnboardingStateTests.swift"
   },
   {
+    "conformsToView": false,
+    "description": "A one-shot notification ready for the trigger: its title, body and delay until it fires. Built by MovementReminderScheduler.goalRequest and inactivityRequest.",
+    "filePath": "Sources/AppCore/Notifications/MovementReminders.swift",
+    "name": "OneShotReminder",
+    "untestabilityReason": {
+      "justification": "Plain value type with no logic; its contents are asserted in MovementReminderPlumbingTests.",
+      "kind": "type-only"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "The Orbit theme's mascot mark: an icy water-world planet with a thin ring and glow.",
+    "filePath": "Sources/AppCore/Theming/ThemeMarks.swift",
+    "name": "OrbitMark",
+    "untestabilityReason": {
+      "justification": "Pure vector drawing with no branching or state.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
     "description": "Observable model for the Today dashboard. Reads the days TodayState from flat rb-prefixed UserDefaults keys seeded at launch, including a multi-week loadHistory series, and exposes derived values goalProgress clamped to 1.0, stepsRemaining, goalReached, plus a connect action. setTrainingPhase persists the declared training phase through CoachProfileStore and applies it to today.profile immediately so it reaches coaching, preserving the profiles other fields. ingestStravaWorkouts also populates loadHistory.",
     "filePath": "Sources/AppCore/Model.swift",
     "name": "OtterpaceModel",
     "testFile": "Tests/AppCoreTests/ModelTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "ViewModifier for full-cover overlays that respects Reduce Motion: a fade when reduce motion is on, otherwise slide up from the bottom with a fade.",
+    "filePath": "Sources/AppCore/ViewStyles.swift",
+    "name": "OverlayTransition",
+    "untestabilityReason": {
+      "justification": "Single environment-driven choice between two transitions.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Theme-resolved brand color tokens. Each token reads the currently selected theme from ThemeStore, so every Palette call site retints when the user switches looks.",
+    "filePath": "Sources/AppCore/Theme.swift",
+    "name": "Palette",
+    "untestabilityReason": {
+      "justification": "Namespace of color constants; no branching.",
+      "kind": "trivial-wrapper"
+    }
   },
   {
     "description": "Buddy the otter mascot in the puffy 3D style, drawn across all seven moods with small round ears, a broad soft muzzle, and glossy eyes.",
@@ -871,6 +1446,13 @@
     "testFile": "Tests/AppCoreTests/RaceGoalsTests.swift"
   },
   {
+    "conformsToView": false,
+    "description": "A race parsed from the web with every field optional, since a sparse page may give only some. It maps to a RaceGoal with sensible defaults for the race editor.",
+    "filePath": "Sources/AppCore/Coach/RaceImportClient.swift",
+    "name": "RaceDraft",
+    "testFile": "Tests/AppCoreTests/RaceImportPersistenceTests.swift"
+  },
+  {
     "conformsToView": true,
     "description": "The add/edit race sheet presented from the Settings Races card: a name field, a distance capsule row of presets (5K/10K/Half/Marathon) plus a Custom option with a typed numeric field and a segmented mi/km unit toggle, a date picker, a location field, and optional notes. Custom distance is entered in the chosen unit and stored losslessly (km kept at full precision); the entered unit is persisted on the RaceGoal so editing reopens in that unit. Save builds a RaceGoal; Cancel dismisses.",
     "filePath": "Sources/AppCore/RaceEditorView.swift",
@@ -902,6 +1484,55 @@
   },
   {
     "conformsToView": true,
+    "description": "The race import and search sheets' empty state when no AI coach key fits: explains a key is needed, naming the active provider when one is connected, and offers adding the race manually.",
+    "filePath": "Sources/AppCore/RaceImportView.swift",
+    "name": "RaceImportNoKey",
+    "scenarios": [
+      "raceimportnokey-import-no-coach",
+      "raceimportnokey-search-with-openai"
+    ]
+  },
+  {
+    "conformsToView": true,
+    "description": "CodeYam isolated-component preview host; renders RaceImportNoKey with and without a connected provider for scenario capture.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/RaceImportNoKeyIsolated.swift",
+    "name": "RaceImportNoKeyIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "The race-import endpoint's reply: the extracted RaceDraft plus a confidence score and the missing fields the editor flags for the user to double-check.",
+    "filePath": "Sources/AppCore/Coach/RaceImportClient.swift",
+    "name": "RaceImportResult",
+    "untestabilityReason": {
+      "justification": "Codable response shape with no logic.",
+      "kind": "type-only"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "Shared chrome for the race import and race search sheets: themed background, a Cancel button and centered title, and a scrolling content area.",
+    "filePath": "Sources/AppCore/RaceImportView.swift",
+    "name": "RaceImportScaffold",
+    "scenarios": [
+      "raceimportscaffold-import-from-url"
+    ]
+  },
+  {
+    "conformsToView": true,
+    "description": "CodeYam isolated-component preview host; renders RaceImportScaffold with sample content for scenario capture.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/RaceImportScaffoldIsolated.swift",
+    "name": "RaceImportScaffoldIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": true,
     "description": "The import-from-URL sheet opened from the Settings Races card. A URL field and Import button call the race-import backend with the user's BYO Anthropic key, then hand a prefilled RaceGoal seed plus the fields to double-check to the caller so the editor opens pre-filled. Mirrors AskCoachView's degradation: with no coach key it shows a connect-key explainer, and on any failure it surfaces a message plus an add-manually fallback, so the user is never blocked.",
     "filePath": "Sources/AppCore/RaceImportView.swift",
     "name": "RaceImportSheet",
@@ -909,6 +1540,16 @@
       "raceimportsheet-input",
       "raceimportsheet-no-key"
     ]
+  },
+  {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders RaceImportSheet with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/RaceImportSheetIsolated.swift",
+    "name": "RaceImportSheetIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders RaceImportSheet fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
   },
   {
     "conformsToView": true,
@@ -931,6 +1572,13 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "One online race-search candidate (name, date, distance, location, source URL) that the user can pick or re-import in full; it maps to a RaceGoal.",
+    "filePath": "Sources/AppCore/Coach/RaceImportClient.swift",
+    "name": "RaceSearchResult",
+    "testFile": "Tests/AppCoreTests/RaceImportPersistenceTests.swift"
+  },
+  {
     "conformsToView": true,
     "description": "The search-online sheet opened from the Settings Races card. A query field calls the race-search backend with the user's BYO Anthropic key and lists candidate races; tapping one hands its draft to the caller to open the editor pre-filled. Handles working, no-results, and error states, and degrades to manual entry when there is no coach key.",
     "filePath": "Sources/AppCore/RaceImportView.swift",
@@ -941,11 +1589,45 @@
     ]
   },
   {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders RaceSearchSheet with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/RaceSearchSheetIsolated.swift",
+    "name": "RaceSearchSheetIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders RaceSearchSheet fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
     "conformsToView": false,
     "description": "On-device persistence for the user's races: a single JSON-array UserDefaults key (otterpaceRaces) with an injectable UserDefaults, mirroring the workouts JSON-array pattern. Exposes load/save plus add/update/remove CRUD helpers that decode, mutate, and re-encode the array; update upserts by id and remove filters by id. Returns the mutated array so callers can update TodayState immediately.",
     "filePath": "Sources/AppCore/RaceGoals.swift",
     "name": "RaceStore",
     "testFile": "Tests/AppCoreTests/RaceGoalsTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "Buddy's never-shame wording for every movement reminder. inactivity(at:) picks the inactivity nudge's title and body from the local time it fires at: Good morning in the morning, Stretch your legs in the daytime, Winding down in the evening. The strings are pinned word for word to the server's nudge copy.",
+    "filePath": "Sources/AppCore/Notifications/MovementReminders.swift",
+    "name": "ReminderCopy",
+    "testFile": "Tests/AppCoreTests/MovementRemindersTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "Namespace of stable notification request identifiers for the daily, goal and inactivity reminders, plus the full list used to cancel them all.",
+    "filePath": "Sources/AppCore/Notifications/MovementReminders.swift",
+    "name": "ReminderID",
+    "untestabilityReason": {
+      "justification": "Constant namespace of identifier strings.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "The user's reminder preferences (daily reminder and time, goal nudge, inactivity nudge and hours) persisted in UserDefaults, all defaulting off so previews never schedule anything.",
+    "filePath": "Sources/AppCore/Notifications/MovementReminders.swift",
+    "name": "ReminderSettings",
+    "testFile": "Tests/AppCoreTests/MovementRemindersTests.swift"
   },
   {
     "conformsToView": false,
@@ -971,6 +1653,16 @@
     ]
   },
   {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders RollingWindowNote with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/RollingWindowNoteIsolated.swift",
+    "name": "RollingWindowNoteIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders RollingWindowNote fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
     "description": "HealthDataSource that serves the TodayState seeded by a scenario's rb* UserDefaults — the pre-HealthKit behavior, now behind the source seam so previews are unchanged.",
     "filePath": "Sources/AppCore/Health/HealthDataSource.swift",
     "name": "SeededHealthDataSource",
@@ -982,6 +1674,16 @@
     "filePath": "Sources/AppCore/Account/PushRegistrationService.swift",
     "name": "ServerPushGate",
     "testFile": "Tests/AppCoreTests/PushRegistrationServiceTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "The app's sign-in state: undecided (show sign-in), guest (continue without an account), or signed in with an Apple user ID.",
+    "filePath": "Sources/AppCore/Auth/SessionStore.swift",
+    "name": "SessionState",
+    "untestabilityReason": {
+      "justification": "Enum of signed-in/out session states; pure data shape.",
+      "kind": "type-only"
+    }
   },
   {
     "description": "Optional Sign in with Apple session state (undecided / guest / signedIn). Stores the Apple user identifier locally via an injectable TokenStoring (Keychain in prod). The session is durable: revalidate() confirms the stored Apple credential on launch/foreground (throttled per revalidationWindow), and only a genuine revocation ends it gracefully into guest via endSession() — transient/offline checks keep the user signed in. Never gates HealthKit.",
@@ -997,6 +1699,16 @@
     "scenarios": [
       "settingsactionrow-variants"
     ]
+  },
+  {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders SettingsActionRow with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/SettingsActionRowIsolated.swift",
+    "name": "SettingsActionRowIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders SettingsActionRow fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
   },
   {
     "conformsToView": true,
@@ -1025,6 +1737,20 @@
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, shown via the sign-in-welcome application scenario.",
       "kind": "no-isolation-harness"
     }
+  },
+  {
+    "conformsToView": false,
+    "description": "Journal check-in rating of how the runner slept (poor, okay, good), with a short label for coach payloads and UI copy.",
+    "filePath": "Sources/AppCore/Journal/JournalEntry.swift",
+    "name": "SleepQuality",
+    "testFile": "Tests/AppCoreTests/JournalTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "Journal check-in soreness rating (none, mild, sore, painful). Painful is kept separate from sore so the coach treats it as a signal to back off, and isElevated marks levels that soften recommendations when repeated.",
+    "filePath": "Sources/AppCore/Journal/JournalEntry.swift",
+    "name": "SorenessLevel",
+    "testFile": "Tests/AppCoreTests/JournalCoachingTests.swift"
   },
   {
     "conformsToView": false,
@@ -1078,6 +1804,63 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "Namespace for the Strava integration's constants: API base, Keychain and defaults keys, OAuth callback scheme, redirect URI and scope, plus the public client ID read from Info.plist.",
+    "filePath": "Sources/AppCore/Strava/StravaService.swift",
+    "name": "StravaConfig",
+    "untestabilityReason": {
+      "justification": "Constant namespace with one Info.plist lookup.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Random per-install UUID kept in the Keychain through TokenStoring and used to key the user's Strava tokens on the server without any personal data.",
+    "filePath": "Sources/AppCore/Strava/StravaService.swift",
+    "name": "StravaDeviceKey",
+    "untestabilityReason": {
+      "justification": "Get-or-create wrapper over Keychain token storage.",
+      "kind": "platform-glue"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Errors from the Strava connect flow: not configured, cancelled, or failed.",
+    "filePath": "Sources/AppCore/Strava/StravaService.swift",
+    "name": "StravaError",
+    "untestabilityReason": {
+      "justification": "Error enum with no logic.",
+      "kind": "type-only"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Connects Strava as an optional activity source: runs the OAuth web login, has the backend exchange and store the tokens against an anonymous device key, and imports activities through the backend proxy. Building the authorize URL, reading the callback's code and decoding the activities response are static helpers covered by unit tests.",
+    "filePath": "Sources/AppCore/Strava/StravaService.swift",
+    "name": "StravaService",
+    "testFile": "Tests/AppCoreTests/StravaServiceTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "Private extension adding capitalizedFirst, which uppercases only the first character so option labels like 'some days' display as 'Some days'.",
+    "filePath": "Sources/AppCore/Onboarding/OnboardingFlowView.swift",
+    "name": "String",
+    "untestabilityReason": {
+      "justification": "One-line string helper used only for display labels.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "The @main SwiftUI App entry point. It adapts AppDelegate and builds the WindowGroup, rendering CodeyamIsolationHost in isolation captures or the normal ContentView wrapped in ThemedAppRoot.",
+    "filePath": "App/App.swift",
+    "name": "SwiftUIApp",
+    "untestabilityReason": {
+      "justification": "App entry point that only wires the scene and delegate adaptor; no logic of its own.",
+      "kind": "platform-glue"
+    }
+  },
+  {
     "description": "Persists the two independent sync opt-ins (settings, and health off-by-default) plus the one-time health-consent acknowledgement; health sync cannot be enabled without consent.",
     "filePath": "Sources/AppCore/Account/SyncConsent.swift",
     "name": "SyncConsentStore",
@@ -1087,6 +1870,30 @@
     "description": "Pure last-write-wins reconciliation of a local value against an optional remote one, returning the winner plus whether to push local or adopt remote.",
     "filePath": "Sources/AppCore/Account/AccountSyncService.swift",
     "name": "SyncMerge",
+    "testFile": "Tests/AppCoreTests/AccountSyncTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "Result of the last-write-wins merge in SyncMerge.resolve: the winning value plus whether the local value should be pushed or the remote value adopted.",
+    "filePath": "Sources/AppCore/Account/AccountSyncService.swift",
+    "name": "SyncResolution",
+    "untestabilityReason": {
+      "justification": "Plain result struct with no logic; the merge that produces it lives in SyncMerge.",
+      "kind": "type-only"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Codable snapshot of the day's health totals (steps, distance, active minutes, energy) that can sync to the account, plus optional movement-heartbeat fields (last movement, inactivity hours, timezone, local nudge time) used by the server-driven inactivity nudge.",
+    "filePath": "Sources/AppCore/Account/AccountSyncService.swift",
+    "name": "SyncableHealthSnapshot",
+    "testFile": "Tests/AppCoreTests/AccountSyncTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "The small Codable preferences payload that syncs across devices; currently just the daily step goal.",
+    "filePath": "Sources/AppCore/Account/AccountSyncService.swift",
+    "name": "SyncablePreferences",
     "testFile": "Tests/AppCoreTests/AccountSyncTests.swift"
   },
   {
@@ -1107,11 +1914,41 @@
     ]
   },
   {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders ThemeChoiceRow with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/ThemeChoiceRowIsolated.swift",
+    "name": "ThemeChoiceRowIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders ThemeChoiceRow fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
     "conformsToView": false,
     "description": "The five selectable looks (default, bolt, orbit, fieldnote, garden). Each maps to its resolved Theme token set plus a display name and one-line education blurb shown in the onboarding step and the Settings picker. Default is the shipping identity and the default.",
     "filePath": "Sources/AppCore/Theming/ThemeSystem.swift",
     "name": "ThemeID",
     "testFile": "Tests/AppCoreTests/ThemeStoreTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "Private EnvironmentKey behind the theme environment value, defaulting to the Default theme.",
+    "filePath": "Sources/AppCore/Theming/ThemeSystem.swift",
+    "name": "ThemeKey",
+    "untestabilityReason": {
+      "justification": "EnvironmentKey declaration with a single default value.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "Dispatcher view that renders the selected theme's mark (Bolt, Orbit, Fieldnote, Garden) at a given size, or nothing for Default, which uses PuffyBuddy.",
+    "filePath": "Sources/AppCore/Theming/ThemeMarks.swift",
+    "name": "ThemeMark",
+    "untestabilityReason": {
+      "justification": "Switch over the theme id that forwards to the matching mark view.",
+      "kind": "trivial-wrapper"
+    }
   },
   {
     "conformsToView": false,
@@ -1132,6 +1969,33 @@
     ]
   },
   {
+    "conformsToView": true,
+    "description": "CodeYam isolation host that renders ThemeSwatch with fixture data for each named component scenario, so it can be captured on its own.",
+    "filePath": "Sources/AppCore/CodeyamIsolated/ThemeSwatchIsolated.swift",
+    "name": "ThemeSwatchIsolated",
+    "untestabilityReason": {
+      "justification": "CodeYam isolated-component preview host; renders ThemeSwatch fixtures for scenario capture, no app logic.",
+      "kind": "scaffold"
+    }
+  },
+  {
+    "conformsToView": true,
+    "description": "Wraps the app content, owns the shared ThemeStore, and injects the resolved theme and matching light or dark color scheme so a theme switch re-themes the whole tree.",
+    "filePath": "Sources/AppCore/Theming/ThemeSystem.swift",
+    "name": "ThemedAppRoot",
+    "untestabilityReason": {
+      "justification": "Root wrapper that only applies environment and color-scheme modifiers; theme resolution is tested in ThemeStoreTests.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Generic wrapper pairing a synced payload with the updatedAt timestamp the remote recorded, which the last-write-wins merge compares against local state.",
+    "filePath": "Sources/AppCore/Account/AccountSyncService.swift",
+    "name": "TimestampedPayload",
+    "testFile": "Tests/AppCoreTests/AccountSyncTests.swift"
+  },
+  {
     "description": "The full Today surface composed from the header, Buddy summary, stats row, and the coach, latest-activity, and weekly-load cards. Exercised by the Today dashboard application scenarios.",
     "filePath": "Sources/AppCore/TodayView.swift",
     "name": "TodayDashboard",
@@ -1148,6 +2012,13 @@
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
       "kind": "no-isolation-harness"
     }
+  },
+  {
+    "conformsToView": false,
+    "description": "The full Codable snapshot behind the Today dashboard and coach context: health connection, the day's step, distance and energy totals, latest workout, weekly load and profile data. Built from HealthKit in production and injected from the scenario seed in previews.",
+    "filePath": "Sources/AppCore/Model.swift",
+    "name": "TodayState",
+    "testFile": "Tests/AppCoreTests/ModelTests.swift"
   },
   {
     "conformsToView": true,
@@ -1184,6 +2055,26 @@
     "testFile": "Tests/AppCoreTests/TourStateTests.swift"
   },
   {
+    "conformsToView": false,
+    "description": "Other training the user does alongside walking and running (running, strength, cycling, mobility, sports), collected in onboarding for the coach profile.",
+    "filePath": "Sources/AppCore/Onboarding/CoachProfile.swift",
+    "name": "TrainingKind",
+    "untestabilityReason": {
+      "justification": "Enum of choices with display labels only.",
+      "kind": "type-only"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "The user's self-declared training phase (base, building, maintaining, recovering). It lets the coach tell an intended build from a red flag, but never overrides safety rules or a real load spike.",
+    "filePath": "Sources/AppCore/Onboarding/CoachProfile.swift",
+    "name": "TrainingPhase",
+    "untestabilityReason": {
+      "justification": "Enum of choices with display labels only.",
+      "kind": "type-only"
+    }
+  },
+  {
     "description": "Colored pill describing the weeks training-load trend, with distinct colors for spiking, recovering, building, and steady, and a neutral Baseline label for the insufficient case when there is not yet enough history to judge.",
     "filePath": "Sources/AppCore/TrendBadge.swift",
     "name": "TrendBadge",
@@ -1217,12 +2108,106 @@
     "testFile": "Tests/AppCoreTests/ModelTests.swift"
   },
   {
+    "conformsToView": false,
+    "description": "Extension adding hinted(_:label:), which attaches an InfoHint beneath any view without restructuring its layout.",
+    "filePath": "Sources/AppCore/InfoHint.swift",
+    "name": "View",
+    "untestabilityReason": {
+      "justification": "One-line layout passthrough that stacks an InfoHint under the view.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Extension adding scrollContentBackgroundHidden(), which hides a TextEditor's opaque background on iOS 16+/macOS 13+ so the themed card fill shows through, while still building on the macOS 12 floor.",
+    "filePath": "Sources/AppCore/Journal/JournalNoteField.swift",
+    "name": "View",
+    "untestabilityReason": {
+      "justification": "OS-availability passthrough to a single SwiftUI modifier.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Extension adding tourAnchor(_:), which tags a Today section with an anchor preference so the guided tour overlay can spotlight it.",
+    "filePath": "Sources/AppCore/Tour/TodayTourOverlay.swift",
+    "name": "View",
+    "untestabilityReason": {
+      "justification": "One-line anchorPreference passthrough.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "Extension adding the shared chrome modifiers: cardStyle() for the standard card fill, stroke and shadow, screenScrollContent() for page margins, cardSectionLabel() for section headers, and overlayTransition().",
+    "filePath": "Sources/AppCore/ViewStyles.swift",
+    "name": "View",
+    "untestabilityReason": {
+      "justification": "Modifier passthroughs that apply shared Layout and Palette tokens.",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "When the user usually walks (mornings, midday, evenings, varies), collected in onboarding for the coach profile.",
+    "filePath": "Sources/AppCore/Onboarding/CoachProfile.swift",
+    "name": "WalkTime",
+    "untestabilityReason": {
+      "justification": "Enum of choices with display labels only.",
+      "kind": "type-only"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "How often the user usually walks (rarely, some days, most days, daily), with a short label for the coach payload and UI copy.",
+    "filePath": "Sources/AppCore/Onboarding/CoachProfile.swift",
+    "name": "WalkVolume",
+    "untestabilityReason": {
+      "justification": "Enum of choices with display labels only.",
+      "kind": "type-only"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "One Monday-start week of workouts with its training-load rollup: total miles, run count, rest days, and days elapsed. Produced by ActivityHistory grouping for the history list.",
+    "filePath": "Sources/AppCore/ActivityHistory.swift",
+    "name": "WeekGroup",
+    "untestabilityReason": {
+      "justification": "Plain data struct; the grouping that fills it is in ActivityHistory.",
+      "kind": "type-only"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "The week's training-load summary: mileage, days run, longest run, rest days, load trend, days elapsed, and trailing 7-day rolling totals. The coach and weekly review use it to judge build-ups and spikes.",
+    "filePath": "Sources/AppCore/Model.swift",
+    "name": "WeeklyLoad",
+    "testFile": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift"
+  },
+  {
     "description": "The week's training-load snapshot: mileage, run days, longest run, and rest days, with a trend badge.",
     "filePath": "Sources/AppCore/WeeklyLoadCard.swift",
     "name": "WeeklyLoadCard",
     "untestabilityReason": {
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
       "kind": "no-isolation-harness"
+    }
+  },
+  {
+    "conformsToView": false,
+    "description": "One week's mileage rollup (week start, miles, run days) in the coach-facing loadHistory series. Kept small so several weeks fit under the backend context size cap.",
+    "filePath": "Sources/AppCore/Model.swift",
+    "name": "WeeklyLoadPoint",
+    "testFile": "Tests/AppCoreTests/StarterQuestionsTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "A generated weekly recap: five prose sections, a Buddy mood and a highlighted focus area derived from the week's training load. hasActivity is false for an empty week, which shows the first-week prompt instead.",
+    "filePath": "Sources/AppCore/WeeklyReviewEngine.swift",
+    "name": "WeeklyReview",
+    "untestabilityReason": {
+      "justification": "Plain output struct; the generation logic is in WeeklyReviewEngine and tested in WeeklyReviewEngineTests.",
+      "kind": "type-only"
     }
   },
   {
@@ -1832,6 +2817,12 @@
     "testFile": "test/api/strava-handlers.test.ts"
   },
   {
+    "description": "Returns whether the day has any real data (steps, active minutes, distance, or an observed last movement), so a fresh install shows dashes instead of honest-looking zeros.",
+    "filePath": "Sources/AppCore/Formatters.swift",
+    "name": "hasDayData",
+    "testFile": "Tests/AppCoreTests/FormattersTests.swift"
+  },
+  {
     "description": "SHA-256 hex of a session token — only this hash is ever persisted, never the raw token.",
     "filePath": "api/_lib/session.ts",
     "name": "hashToken",
@@ -2024,6 +3015,12 @@
     "testFile": "test/api/strava.test.ts"
   },
   {
+    "description": "Formats a mileage value, dropping the decimal for whole numbers and otherwise showing one decimal place. Shared by coach copy and the activity-week rollups so they never drift.",
+    "filePath": "Sources/AppCore/Formatters.swift",
+    "name": "miles",
+    "testFile": "Tests/AppCoreTests/FormattersTests.swift"
+  },
+  {
     "description": "Mirror the latest movement heartbeat (last-movement time, inactivity setting, and the client's IANA timezone) onto an existing push row so the cron scans one table; no-ops when the user has no push registration. The timezone is written only when the heartbeat actually carried one — an older client omits it, and letting that null overwrite a good stored value would silently drop the user back to the UTC quiet-hours fallback this feature exists to remove.",
     "filePath": "api/_lib/account.ts",
     "name": "mirrorMovement",
@@ -2042,6 +3039,12 @@
     "testFile": "test/api/llm.test.ts"
   },
   {
+    "description": "The time-since-you-moved label, which shows a dash when the day has no data instead of the misleading 'now'.",
+    "filePath": "Sources/AppCore/Formatters.swift",
+    "name": "movementDisplay",
+    "testFile": "Tests/AppCoreTests/FormattersTests.swift"
+  },
+  {
     "description": "Renders minutes-since-last-movement as a compact label: now at or below zero, bare minutes under an hour, and hours-plus-minutes above, dropping the minutes part when it is zero.",
     "filePath": "Sources/AppCore/Formatters.swift",
     "name": "movementLabel",
@@ -2052,6 +3055,12 @@
     "filePath": "api/coach.ts",
     "name": "normalizeHistory",
     "testFile": "test/api/coach.test.ts"
+  },
+  {
+    "description": "Server-side wording for the movement push, chosen from the user's local hour: Good morning from quiet end to 11am, Winding down from 7pm to quiet start, Stretch your legs otherwise. Mirrors the on-device ReminderCopy so local and server nudges read identically; the cron builds the payload per user from it.",
+    "filePath": "api/_lib/nudge.ts",
+    "name": "nudgeCopyFor",
+    "testFile": "test/api/nudge.test.ts"
   },
   {
     "description": "Formats a speed in meters per second as a mm:ss/mi pace string with zero-padded seconds.",
@@ -2102,6 +3111,15 @@
     "filePath": "api/_lib/apns.ts",
     "name": "providerToken",
     "testFile": "test/api/apns.test.ts"
+  },
+  {
+    "description": "Private helper that scales a unit-space coordinate by the mark size into a CGPoint, keeping the theme-mark path code terse.",
+    "filePath": "Sources/AppCore/Theming/ThemeMarks.swift",
+    "name": "pt",
+    "untestabilityReason": {
+      "justification": "One-line arithmetic helper.",
+      "kind": "trivial-wrapper"
+    }
   },
   {
     "description": "Build the account_push Supabase table endpoint from SUPABASE_URL.",
@@ -2194,6 +3212,12 @@
     "filePath": "api/_lib/account.ts",
     "name": "stampNudgeSent",
     "testFile": "test/api/account-push.test.ts"
+  },
+  {
+    "description": "A stat tile's value: the real value when the day has data, otherwise a dash. It keys off the whole day, so a real zero on an active day still shows.",
+    "filePath": "Sources/AppCore/Formatters.swift",
+    "name": "statValue",
+    "testFile": "Tests/AppCoreTests/FormattersTests.swift"
   },
   {
     "description": "Builds the VoiceOver spoken summary for the step-goal ring, mirroring the three caption states with whole-number step, goal, and remaining counts; never shame-based.",

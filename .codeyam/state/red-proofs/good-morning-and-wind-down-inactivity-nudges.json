@@ -1,0 +1,65 @@
+{
+  "provenAt": "2026-10-26T17:20:25Z",
+  "slug": "good-morning-and-wind-down-inactivity-nudges",
+  "paths": [
+    "api/cron/movement-nudge.ts"
+  ],
+  "runScope": [
+    "api/cron/movement-nudge.ts"
+  ],
+  "tests": {
+    "picks each user's nudge copy from their own local hour": {
+      "withoutFix": "missing",
+      "withFix": "missing",
+      "established": {
+        "kind": "attestedByHand",
+        "method": "manual revert: git stash of api/cron/movement-nudge.ts (vitest runner is not wired to the editor), ran npx vitest, restored",
+        "evidence": "without fix: 1 failed | 6 passed in cron-handler.test.ts, the failing test being this one; with fix: 7/7 pass"
+      }
+    },
+    "testFireDateLateEveningDefersToNextMorning": {
+      "withoutFix": "missing",
+      "withFix": "missing",
+      "established": {
+        "kind": "attestedByHand",
+        "method": "fault injection: NudgeDaypart.deferringQuietHours returned its input unchanged and ReminderCopy.inactivity(at:) returned the daytime pair; ran refresh-tests on MovementRemindersTests.swift; removed the injection",
+        "evidence": "with faults: 4 failed / 468 passed (exactly the two deferral and two copy tests); restored: 472/472 pass"
+      }
+    },
+    "testFireDatePastDueBeforeMorningDefersToEight": {
+      "withoutFix": "missing",
+      "withFix": "missing",
+      "established": {
+        "kind": "attestedByHand",
+        "method": "fault injection: NudgeDaypart.deferringQuietHours returned its input unchanged and ReminderCopy.inactivity(at:) returned the daytime pair; ran refresh-tests on MovementRemindersTests.swift; removed the injection",
+        "evidence": "with faults: 4 failed / 468 passed (exactly the two deferral and two copy tests); restored: 472/472 pass"
+      }
+    },
+    "testInactivityCopyByDaypart": {
+      "withoutFix": "missing",
+      "withFix": "missing",
+      "established": {
+        "kind": "attestedByHand",
+        "method": "fault injection: NudgeDaypart.deferringQuietHours returned its input unchanged and ReminderCopy.inactivity(at:) returned the daytime pair; ran refresh-tests on MovementRemindersTests.swift; removed the injection",
+        "evidence": "with faults: 4 failed / 468 passed (exactly the two deferral and two copy tests); restored: 472/472 pass"
+      }
+    },
+    "testMorningAndEveningCopyNeverMentionElapsedTime": {
+      "withoutFix": "missing",
+      "withFix": "missing",
+      "established": {
+        "kind": "attestedByHand",
+        "method": "fault injection: NudgeDaypart.deferringQuietHours returned its input unchanged and ReminderCopy.inactivity(at:) returned the daytime pair; ran refresh-tests on MovementRemindersTests.swift; removed the injection",
+        "evidence": "with faults: 4 failed / 468 passed (exactly the two deferral and two copy tests); restored: 472/472 pass"
+      }
+    }
+  },
+  "proof": {
+    "verdict": "provenByHand",
+    "attested": [
+      "testMorningAndEveningCopyNeverMentionElapsedTime"
+    ],
+    "method": "fault injection: NudgeDaypart.deferringQuietHours returned its input unchanged and ReminderCopy.inactivity(at:) returned the daytime pair; ran refresh-tests on MovementRemindersTests.swift; removed the injection",
+    "evidence": "with faults: 4 failed / 468 passed (exactly the two deferral and two copy tests); restored: 472/472 pass"
+  }
+}

@@ -730,7 +730,7 @@
       "file": "Tests/AppCoreTests/BuddyMoodTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.BuddyMoodTests › testInitFromKnownRaw",
-      "line": 9,
+      "line": 8,
       "registeredAt": "2026-06-22T19:41:43.420273+00:00",
       "runner": "tests"
     },
@@ -2009,6 +2009,60 @@
       "runner": "tests"
     },
     {
+      "description": "Last movement is the newest of the step and distance samples, ignoring a type with no samples.",
+      "file": "Tests/AppCoreTests/HealthKitDataSourceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.HealthKitDataSourceTests › testLatestMovementPicksNewestKnownSample",
+      "line": 66,
+      "registeredAt": "2026-10-26T19:10:16.139778+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Pace formatting pads seconds to two digits, e.g. 605 seconds per mile reads 10:05/mi.",
+      "file": "Tests/AppCoreTests/HealthKitDataSourceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.HealthKitDataSourceTests › testPacePerMilePadsSeconds",
+      "line": 60,
+      "registeredAt": "2026-10-26T19:10:16.139580+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Active minutes count only today's workouts, and the Today card prefers the latest run over a newer walk.",
+      "file": "Tests/AppCoreTests/HealthKitDataSourceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.HealthKitDataSourceTests › testTodayStateCountsTodaysMinutesAndPrefersRun",
+      "line": 15,
+      "registeredAt": "2026-10-26T19:10:16.138853+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "No workouts → no latest workout, no weekly load, and an empty series.",
+      "file": "Tests/AppCoreTests/HealthKitDataSourceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.HealthKitDataSourceTests › testTodayStateWithNoHistory",
+      "line": 34,
+      "registeredAt": "2026-10-26T19:10:16.139033+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A 5 km run in 30 minutes → 3.1 miles at 9:39/mi.",
+      "file": "Tests/AppCoreTests/HealthKitDataSourceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.HealthKitDataSourceTests › testWorkoutConvertsDistanceAndPace",
+      "line": 44,
+      "registeredAt": "2026-10-26T19:10:16.139219+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "No recorded distance (e.g. yoga) → zero miles and no pace.",
+      "file": "Tests/AppCoreTests/HealthKitDataSourceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.HealthKitDataSourceTests › testWorkoutWithoutDistanceHasNoPace",
+      "line": 53,
+      "registeredAt": "2026-10-26T19:10:16.139406+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "The three confusions that prompted this feature must each be answered.",
       "file": "Tests/AppCoreTests/HintCopyTests.swift",
       "format": "junit-xml",
@@ -2818,11 +2872,92 @@
       "runner": "tests"
     },
     {
+      "description": "The observer runs when either data-driven nudge is on, and only then.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementReminderPlumbingTests › testMonitorObservesWhenEitherNudgeIsOn",
+      "line": 291,
+      "registeredAt": "2026-10-26T19:10:16.135091+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Short of the goal near 7pm → the goal nudge is armed for 7pm.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementReminderPlumbingTests › testMonitorRearmArmsGoalWhenShort",
+      "line": 309,
+      "registeredAt": "2026-10-26T19:10:16.135668+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A background wake re-arms the inactivity nudge from the real last movement, and leaves the goal nudge alone when it's off.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementReminderPlumbingTests › testMonitorRearmArmsInactivityFromLastMovement",
+      "line": 299,
+      "registeredAt": "2026-10-26T19:10:16.135407+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Goal already met → the wake takes any pending goal nudge down.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementReminderPlumbingTests › testMonitorRearmCancelsGoalOnceMet",
+      "line": 319,
+      "registeredAt": "2026-10-26T19:10:16.135911+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The daily reminder repeats at the user's chosen time, and only when on.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementReminderPlumbingTests › testSchedulerDailyTimeOnlyWhenEnabled",
+      "line": 329,
+      "registeredAt": "2026-10-26T19:10:16.136153+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A just-past fire time still schedules (a trigger needs a positive delay).",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementReminderPlumbingTests › testSchedulerDelayClampsPastFireTimes",
+      "line": 363,
+      "registeredAt": "2026-10-26T19:10:16.137077+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The evening goal nudge is a one-shot with the goal copy.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementReminderPlumbingTests › testSchedulerGoalRequest",
+      "line": 346,
+      "registeredAt": "2026-10-26T19:10:16.136621+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The inactivity request carries the time-of-day copy and the delay to fire.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementReminderPlumbingTests › testSchedulerInactivityRequestUsesDaypartCopy",
+      "line": 336,
+      "registeredAt": "2026-10-26T19:10:16.136405+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Off, or no fire time (the nudge is no longer true) → nothing to schedule, which the scheduler turns into \"take the pending request down\".",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementReminderPlumbingTests › testSchedulerRequestsNilWhenOffOrNoFireTime",
+      "line": 354,
+      "registeredAt": "2026-10-26T19:10:16.136857+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "with nothing armed the de-dup hint is nil, which the server reads as send your own nudge",
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testArmedInactivityISONilWhenDisabled",
-      "line": 185,
+      "line": 266,
       "registeredAt": "2026-08-05T20:04:50.386781+00:00",
       "runner": "tests"
     },
@@ -2831,8 +2966,17 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testArmedInactivityISOReflectsTheArmedNudge",
-      "line": 175,
+      "line": 256,
       "registeredAt": "2026-08-05T20:04:43.584432+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "NudgeDaypart buckets each boundary minute correctly: quiet until 8am, morning until 11am, daytime until 7pm, evening until 9pm, then quiet.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testDaypartBoundaries",
+      "line": 87,
+      "registeredAt": "2026-10-26T17:21:09.126336+00:00",
       "runner": "tests"
     },
     {
@@ -2840,8 +2984,17 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testFireDateClampsNonPositiveHours",
-      "line": 36,
+      "line": 47,
       "registeredAt": "2026-07-08T15:24:46Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A daytime inactivity fire time is left exactly as computed; the quiet-hours deferral only touches overnight times.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testFireDateDaytimeIsUnchanged",
+      "line": 81,
+      "registeredAt": "2026-10-26T17:21:09.126102+00:00",
       "runner": "tests"
     },
     {
@@ -2849,7 +3002,7 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testFireDateDefersWhenJustMoved",
-      "line": 19,
+      "line": 29,
       "registeredAt": "2026-07-08T15:24:46Z",
       "runner": "tests"
     },
@@ -2858,8 +3011,17 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testFireDateFiresOneHourOut",
-      "line": 13,
+      "line": 22,
       "registeredAt": "2026-07-08T15:24:46Z",
+      "runner": "tests"
+    },
+    {
+      "description": "An inactivity nudge that would fire at 11:30pm is held until 8:00 the next morning instead of firing during quiet hours.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testFireDateLateEveningDefersToNextMorning",
+      "line": 66,
+      "registeredAt": "2026-10-26T17:21:09.125590+00:00",
       "runner": "tests"
     },
     {
@@ -2867,8 +3029,17 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testFireDateNilWhenNoMovement",
-      "line": 31,
+      "line": 42,
       "registeredAt": "2026-07-08T15:24:46Z",
+      "runner": "tests"
+    },
+    {
+      "description": "An overnight idle spell picked up at 6:45am no longer fires a minute later; the past-due nudge is held until 8:00 that same morning.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testFireDatePastDueBeforeMorningDefersToEight",
+      "line": 74,
+      "registeredAt": "2026-10-26T17:21:09.125866+00:00",
       "runner": "tests"
     },
     {
@@ -2876,7 +3047,7 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testFireDatePastDueClampsToBuffer",
-      "line": 25,
+      "line": 35,
       "registeredAt": "2026-07-08T15:24:46Z",
       "runner": "tests"
     },
@@ -2885,7 +3056,7 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testGoalArmedWhenShortAndHourIsNear",
-      "line": 113,
+      "line": 194,
       "registeredAt": "2026-08-05T20:03:57.328804+00:00",
       "runner": "tests"
     },
@@ -2894,7 +3065,7 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testGoalNotArmedAfterTheHourHasPassed",
-      "line": 128,
+      "line": 209,
       "registeredAt": "2026-08-05T20:04:11.359754+00:00",
       "runner": "tests"
     },
@@ -2903,7 +3074,7 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testGoalNotArmedOnceGoalIsMet",
-      "line": 107,
+      "line": 188,
       "registeredAt": "2026-08-05T20:03:50.369251+00:00",
       "runner": "tests"
     },
@@ -2912,7 +3083,7 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testGoalNotArmedTooFarAhead",
-      "line": 122,
+      "line": 203,
       "registeredAt": "2026-08-05T20:04:04.212252+00:00",
       "runner": "tests"
     },
@@ -2921,8 +3092,26 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testGoalNotArmedWithoutAGoal",
-      "line": 133,
+      "line": 214,
       "registeredAt": "2026-08-05T20:04:17.903019+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The inactivity nudge says Good morning in the morning, Stretch your legs in the daytime and Winding down in the evening, pinned word for word to the server copy.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testInactivityCopyByDaypart",
+      "line": 98,
+      "registeredAt": "2026-10-26T17:21:09.126565+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The morning and evening nudge copy never says how long you have been still, since sleep looks like stillness.",
+      "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.MovementRemindersTests › testMorningAndEveningCopyNeverMentionElapsedTime",
+      "line": 113,
+      "registeredAt": "2026-10-26T17:21:09.126817+00:00",
       "runner": "tests"
     },
     {
@@ -2930,7 +3119,7 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testRearmClearsWhenDisabled",
-      "line": 85,
+      "line": 166,
       "registeredAt": "2026-07-08T15:24:46Z",
       "runner": "tests"
     },
@@ -2939,7 +3128,7 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testRearmComputesFireFromLastMovement",
-      "line": 73,
+      "line": 151,
       "registeredAt": "2026-07-08T15:24:46Z",
       "runner": "tests"
     },
@@ -2948,7 +3137,7 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testRearmGoalArmsWhenShort",
-      "line": 141,
+      "line": 222,
       "registeredAt": "2026-08-05T20:04:24.016227+00:00",
       "runner": "tests"
     },
@@ -2957,7 +3146,7 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testRearmGoalCancelsOnceGoalIsMet",
-      "line": 152,
+      "line": 233,
       "registeredAt": "2026-08-05T20:04:30.076213+00:00",
       "runner": "tests"
     },
@@ -2966,7 +3155,7 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testRearmGoalClearsWhenDisabled",
-      "line": 162,
+      "line": 243,
       "registeredAt": "2026-08-05T20:04:36.842384+00:00",
       "runner": "tests"
     },
@@ -2975,7 +3164,7 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testSeededLastMovementFallsBackToMinutesSinceMovement",
-      "line": 57,
+      "line": 135,
       "registeredAt": "2026-07-08T15:24:46Z",
       "runner": "tests"
     },
@@ -2984,7 +3173,7 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testSeededLastMovementFromExplicitKey",
-      "line": 50,
+      "line": 128,
       "registeredAt": "2026-07-08T15:24:46Z",
       "runner": "tests"
     },
@@ -2993,7 +3182,7 @@
       "file": "Tests/AppCoreTests/MovementRemindersTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.MovementRemindersTests › testSeededLastMovementNilWhenUnseeded",
-      "line": 64,
+      "line": 142,
       "registeredAt": "2026-07-08T15:24:46Z",
       "runner": "tests"
     },
@@ -3683,6 +3872,78 @@
       "runner": "tests"
     },
     {
+      "description": "A denied login (Strava sends `error=` and no code), an empty code, or no callback at all is a failure, never an empty code sent to the server.",
+      "file": "Tests/AppCoreTests/StravaServiceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StravaServiceTests › testAuthorizationCodeNilWhenMissingOrEmpty",
+      "line": 31,
+      "registeredAt": "2026-10-26T19:10:16.137700+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The callback's `code` is what gets exchanged for tokens.",
+      "file": "Tests/AppCoreTests/StravaServiceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StravaServiceTests › testAuthorizationCodeReadFromCallback",
+      "line": 24,
+      "registeredAt": "2026-10-26T19:10:16.137486+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The authorize page carries the app's client id and the device key as `state`, so the server-side callback can pair the code with this install.",
+      "file": "Tests/AppCoreTests/StravaServiceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StravaServiceTests › testAuthorizeURLCarriesClientIDAndDeviceKey",
+      "line": 11,
+      "registeredAt": "2026-10-26T19:10:16.137289+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Without a configured client id, connect explains instead of opening a login.",
+      "file": "Tests/AppCoreTests/StravaServiceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StravaServiceTests › testConnectWithoutClientIDExplains",
+      "line": 62,
+      "registeredAt": "2026-10-26T19:10:16.138451+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Connected with nothing imported yet is a legitimate empty list, not an error.",
+      "file": "Tests/AppCoreTests/StravaServiceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StravaServiceTests › testDecodeActivitiesEmptyListIsNotAnError",
+      "line": 50,
+      "registeredAt": "2026-10-26T19:10:16.138082+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A 200 response maps each activity to a LatestWorkout.",
+      "file": "Tests/AppCoreTests/StravaServiceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StravaServiceTests › testDecodeActivitiesMapsWorkouts",
+      "line": 38,
+      "registeredAt": "2026-10-26T19:10:16.137888+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A non-200 (or no HTTP response at all) is a real failure the caller can show.",
+      "file": "Tests/AppCoreTests/StravaServiceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StravaServiceTests › testDecodeActivitiesThrowsOnNon200",
+      "line": 56,
+      "registeredAt": "2026-10-26T19:10:16.138268+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Not connected → no network call, just an empty list.",
+      "file": "Tests/AppCoreTests/StravaServiceTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.StravaServiceTests › testFetchActivitiesWhenNotConnectedReturnsEmpty",
+      "line": 71,
+      "registeredAt": "2026-10-26T19:10:16.138650+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "Picking a theme persists it to UserDefaults until the user changes it again.",
       "file": "Tests/AppCoreTests/ThemeStoreTests.swift",
       "format": "junit-xml",
@@ -3912,7 +4173,7 @@
       "file": "Tests/AppCoreTests/WeeklyReviewEngineTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.WeeklyReviewEngineTests › testDeterministic",
-      "line": 150,
+      "line": 134,
       "registeredAt": "2026-06-23T20:47:35.691695+00:00",
       "runner": "tests"
     },

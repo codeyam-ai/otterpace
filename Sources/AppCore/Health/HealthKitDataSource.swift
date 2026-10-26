@@ -64,41 +64,16 @@ public final class HealthKitDataSource: HealthDataSource {
         async let workouts = recentWorkouts()
 
         let now = Date()
-        let isoDate = DateFormatter.iso.string(from: now)
-        let history = await workouts                       // newest-first, last ~30 days
-        let todayISO = isoDate
-        // Active minutes = time spent in workouts logged today.
-        let activeMinutes = history
-            .filter { $0.date == todayISO }
-            .reduce(0) { $0 + $1.durationMinutes }
-        // Latest run (preferred) or latest workout of any kind, for the Today card.
-        let latest = history.first(where: { $0.type == "run" }) ?? history.first
-        // Weekly Load / Activity History derive from the same workout list.
-        let load = history.isEmpty ? nil : ActivityHistory.weeklyLoad(from: history, asOf: now)
-        // The multi-week series the coaches reason from (empty when no history).
-        let loadHistory = history.isEmpty ? [] : ActivityHistory.loadHistory(from: history)
-
-        return TodayState(
-            healthKitConnected: true,
-            date: isoDate,
-            steps: Int(await steps),
-            goalSteps: goalSteps,
-            activeMinutes: activeMinutes,
-            distanceMiles: await distance,
-            activeEnergyKcal: Int(await energy),
-            minutesSinceLastMovement: 0,
-            latestWorkout: latest,
-            weeklyLoad: load,
-            workouts: history,
-            loadHistory: loadHistory
-        )
+        return Self.todayState(steps: await steps, distanceMiles: await distance, energyKcal: await energy,
+                               goalSteps: goalSteps, history: await workouts,
+                               date: Self.isoDay.string(from: now), now: now)
     }
 
     public func lastMovementDate() async -> Date? {
         // Newest step OR distance sample end-date = the last time we saw movement.
         async let steps = mostRecentSampleDate(.stepCount)
         async let dist = mostRecentSampleDate(.distanceWalkingRunning)
-        return [await steps, await dist].compactMap { $0 }.max()
+        return Self.latest([await steps, await dist])
     }
 
     /// End-date of the single most-recent sample of a quantity type, or nil.
@@ -135,18 +110,10 @@ public final class HealthKitDataSource: HealthDataSource {
     /// the date is the workout's local calendar day so it groups under the day the
     /// user actually moved.
     private static func map(_ w: HKWorkout) -> LatestWorkout {
-        let meters = w.totalDistance?.doubleValue(for: .meter()) ?? 0
-        let miles = meters / 1609.344
-        let minutes = Int((w.duration / 60).rounded())
-        let pace = (miles > 0 && w.duration > 0) ? pacePerMile(secondsPerMile: w.duration / miles) : ""
-        return LatestWorkout(
-            type: activityName(w.workoutActivityType),
-            distanceMiles: (miles * 10).rounded() / 10,
-            durationMinutes: minutes,
-            pace: pace,
-            date: DateFormatter.iso.string(from: w.startDate),
-            source: "healthkit"
-        )
+        workout(type: activityName(w.workoutActivityType),
+                meters: w.totalDistance?.doubleValue(for: .meter()) ?? 0,
+                durationSeconds: w.duration,
+                date: isoDay.string(from: w.startDate))
     }
 
     /// The app's coarse activity vocabulary (run | walk | ride | workout), matching
@@ -158,12 +125,6 @@ public final class HealthKitDataSource: HealthDataSource {
         case .cycling:                return "ride"
         default:                      return "workout"
         }
-    }
-
-    /// Format a "mm:ss/mi" pace from seconds-per-mile.
-    private static func pacePerMile(secondsPerMile: Double) -> String {
-        let total = Int(secondsPerMile.rounded())
-        return "\(total / 60):\(String(format: "%02d", total % 60))/mi"
     }
 
     /// Sum a cumulative quantity from midnight to now.
@@ -181,20 +142,6 @@ public final class HealthKitDataSource: HealthDataSource {
     }
 }
 
-private extension DateFormatter {
-    static let iso: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        f.locale = Locale(identifier: "en_US_POSIX")
-        // Explicitly the user's LOCAL calendar day: "today" pairs with the local-day
-        // step sums, and a workout's date is the day the user actually moved. (This
-        // differs intentionally from ActivityHistory's fixed-UTC date math, which
-        // only does deterministic week-bucketing on these date-only strings.)
-        f.timeZone = .current
-        return f
-    }()
-}
-
 #else
 
 // Non-iOS (e.g. the macOS test build): HealthKit isn't used. Report unavailable so
@@ -208,3 +155,75 @@ public final class HealthKitDataSource: HealthDataSource {
 }
 
 #endif
+
+// Everything the HealthKit reader does with the numbers once it has them, kept
+// outside the iOS-only block so it unit-tests in the macOS build. The HealthKit
+// glue above only runs the queries and hands their raw results to these.
+extension HealthKitDataSource {
+    /// Today's dashboard state from raw HealthKit sums and the recent workout list
+    /// (newest-first). Active minutes are the workouts logged today; the Today card
+    /// prefers the latest run over any other workout; weekly load and the
+    /// multi-week series derive from the same list.
+    static func todayState(steps: Double, distanceMiles: Double, energyKcal: Double, goalSteps: Int,
+                           history: [LatestWorkout], date: String, now: Date) -> TodayState {
+        let activeMinutes = history
+            .filter { $0.date == date }
+            .reduce(0) { $0 + $1.durationMinutes }
+        let latest = history.first(where: { $0.type == "run" }) ?? history.first
+        let load = history.isEmpty ? nil : ActivityHistory.weeklyLoad(from: history, asOf: now)
+        let loadHistory = history.isEmpty ? [] : ActivityHistory.loadHistory(from: history)
+
+        return TodayState(
+            healthKitConnected: true,
+            date: date,
+            steps: Int(steps),
+            goalSteps: goalSteps,
+            activeMinutes: activeMinutes,
+            distanceMiles: distanceMiles,
+            activeEnergyKcal: Int(energyKcal),
+            minutesSinceLastMovement: 0,
+            latestWorkout: latest,
+            weeklyLoad: load,
+            workouts: history,
+            loadHistory: loadHistory
+        )
+    }
+
+    /// One HealthKit workout in the app's shape. Distance is 0 when HealthKit
+    /// didn't record one (e.g. yoga), and then there's no pace either.
+    static func workout(type: String, meters: Double, durationSeconds: TimeInterval, date: String) -> LatestWorkout {
+        let miles = meters / 1609.344
+        let pace = (miles > 0 && durationSeconds > 0) ? pacePerMile(secondsPerMile: durationSeconds / miles) : ""
+        return LatestWorkout(
+            type: type,
+            distanceMiles: (miles * 10).rounded() / 10,
+            durationMinutes: Int((durationSeconds / 60).rounded()),
+            pace: pace,
+            date: date,
+            source: "healthkit"
+        )
+    }
+
+    /// Format a "mm:ss/mi" pace from seconds-per-mile.
+    static func pacePerMile(secondsPerMile: Double) -> String {
+        let total = Int(secondsPerMile.rounded())
+        return "\(total / 60):\(String(format: "%02d", total % 60))/mi"
+    }
+
+    /// The newest of the movement timestamps we found, ignoring types with none.
+    static func latest(_ dates: [Date?]) -> Date? {
+        dates.compactMap { $0 }.max()
+    }
+
+    /// Explicitly the user's LOCAL calendar day: "today" pairs with the local-day
+    /// step sums, and a workout's date is the day the user actually moved. (This
+    /// differs intentionally from ActivityHistory's fixed-UTC date math, which only
+    /// does deterministic week-bucketing on these date-only strings.)
+    static let isoDay: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = .current
+        return f
+    }()
+}

@@ -97,10 +97,50 @@ public enum InactivitySchedule {
     /// movement. Returns `nil` when there's no movement to key off (nothing to
     /// schedule). A time already in the past clamps to `now + pastDueBuffer` so an
     /// overdue nudge fires promptly rather than being dropped.
-    public static func fireDate(lastMovement: Date?, hours: Int, now: Date = Date()) -> Date? {
+    ///
+    /// A fire time inside the overnight quiet window (`NudgeDaypart`, mirroring the
+    /// server's `DEFAULT_QUIET_HOURS`) moves to the next quiet-end hour. Sleep looks
+    /// like stillness, so without this an overnight spell fired at 1am, or 60s after
+    /// the phone was picked up at 6:45. Deferred, it lands in the morning window and
+    /// gets the good-morning copy; any movement before then re-arms it as usual.
+    public static func fireDate(lastMovement: Date?, hours: Int, now: Date = Date(),
+                                calendar: Calendar = .current) -> Date? {
         guard let last = lastMovement else { return nil }
         let candidate = last.addingTimeInterval(TimeInterval(max(1, hours) * 3600))
-        return candidate > now ? candidate : now.addingTimeInterval(pastDueBuffer)
+        let fire = candidate > now ? candidate : now.addingTimeInterval(pastDueBuffer)
+        return NudgeDaypart.deferringQuietHours(fire, calendar: calendar)
+    }
+}
+
+/// The parts of the local day the inactivity nudge cares about. Mirrors the
+/// server's `DEFAULT_QUIET_HOURS` / `MORNING_END_HOUR` / `EVENING_START_HOUR`
+/// (api/_lib/nudge.ts) so both paths agree on when to stay quiet and what to say.
+public enum NudgeDaypart: Equatable {
+    case morning, daytime, evening, quiet
+
+    /// Overnight quiet window: from 9pm (inclusive) to 8am (exclusive), no nudges.
+    public static let quietStartHour = 21
+    public static let quietEndHour = 8
+    /// Morning runs from quiet end up to 11am; evening from 7pm up to quiet start.
+    public static let morningEndHour = 11
+    public static let eveningStartHour = 19
+
+    public static func at(_ date: Date, calendar: Calendar = .current) -> NudgeDaypart {
+        let hour = calendar.component(.hour, from: date)
+        if hour >= quietStartHour || hour < quietEndHour { return .quiet }
+        if hour < morningEndHour { return .morning }
+        if hour >= eveningStartHour { return .evening }
+        return .daytime
+    }
+
+    /// `date` unchanged outside quiet hours; otherwise the next quiet-end hour
+    /// (the same morning if before it, the next morning if after quiet start).
+    public static func deferringQuietHours(_ date: Date, calendar: Calendar = .current) -> Date {
+        guard at(date, calendar: calendar) == .quiet,
+              let morning = GoalNudgeSchedule.todayAt(hour: quietEndHour, now: date, calendar: calendar)
+        else { return date }
+        if morning > date { return morning }
+        return calendar.date(byAdding: .day, value: 1, to: morning) ?? date
     }
 }
 
@@ -170,8 +210,28 @@ public enum ReminderCopy {
     /// someone who is genuinely short — and it can say so plainly. Still never a
     /// scold: short is stated as a fact, with an easy way to close it.
     public static let goalBody = "You're a little short of your step goal — a relaxed walk gets you there. No rush."
+    /// The daytime inactivity pair. Mirrored by the server's `NUDGE_DAYTIME`.
     public static let inactivityTitle = "Stretch your legs?"
     public static let inactivityBody = "It's been a little while since you moved. A couple of easy minutes is plenty."
+    /// Sleep counts as stillness, so the first nudge of the day and the last one
+    /// would otherwise say "it's been a while since you moved". These say good
+    /// morning / wind down instead, and never mention elapsed time. Mirrored by
+    /// the server's `NUDGE_MORNING` / `NUDGE_EVENING`.
+    public static let inactivityMorningTitle = "Good morning ☀️"
+    public static let inactivityMorningBody = "Buddy's up and stretching. Whenever you're ready, an easy start to the day is plenty."
+    public static let inactivityEveningTitle = "Winding down 🌙"
+    public static let inactivityEveningBody = "Hope today was a good one. A gentle stretch before bed is a nice way to close it out, or just rest."
+
+    /// The inactivity nudge's wording for the local time it fires at.
+    public static func inactivity(at fireAt: Date, calendar: Calendar = .current) -> (title: String, body: String) {
+        switch NudgeDaypart.at(fireAt, calendar: calendar) {
+        case .morning: return (inactivityMorningTitle, inactivityMorningBody)
+        case .evening: return (inactivityEveningTitle, inactivityEveningBody)
+        // `.quiet` only arises when a caller skips `InactivitySchedule.fireDate`;
+        // fall back to the neutral daytime copy rather than guess.
+        case .daytime, .quiet: return (inactivityTitle, inactivityBody)
+        }
+    }
 }
 
 /// Schedules/cancels the local notifications. The real implementation talks to
@@ -237,10 +297,7 @@ public struct MovementReminderScheduler: MovementReminderScheduling {
         // NOTE: the inactivity reminder is intentionally left alone here — opening
         // the app is not movement, so it must not reset the clock. It's re-armed
         // from the real last-movement time via `armInactivity` (see the monitor).
-        if settings.dailyEnabled {
-            var when = DateComponents()
-            when.hour = settings.dailyHour
-            when.minute = settings.dailyMinute
+        if let when = Self.dailyTime(settings) {
             schedule(id: ReminderID.daily, title: ReminderCopy.dailyTitle, body: ReminderCopy.dailyBody,
                      trigger: UNCalendarNotificationTrigger(dateMatching: when, repeats: true))
         } else {
@@ -257,28 +314,21 @@ public struct MovementReminderScheduler: MovementReminderScheduling {
     }
 
     public func armGoal(fireAt: Date?, settings: ReminderSettings) {
-        guard settings.goalEnabled, let fireAt = fireAt else {
-            center.removePendingNotificationRequests(withIdentifiers: [ReminderID.goal])
-            return
-        }
-        // One-shot, like the inactivity nudge: a repeating trigger is exactly the
-        // thing that couldn't re-check itself. Tomorrow's nudge gets armed
-        // tomorrow, against tomorrow's data.
-        let interval = max(1, fireAt.timeIntervalSinceNow)
-        schedule(id: ReminderID.goal, title: ReminderCopy.goalTitle, body: ReminderCopy.goalBody,
-                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false))
+        arm(ReminderID.goal, Self.goalRequest(fireAt: fireAt, settings: settings))
     }
 
     public func armInactivity(fireAt: Date?, settings: ReminderSettings) {
-        guard settings.inactivityEnabled, let fireAt = fireAt else {
-            center.removePendingNotificationRequests(withIdentifiers: [ReminderID.inactivity])
+        arm(ReminderID.inactivity, Self.inactivityRequest(fireAt: fireAt, settings: settings))
+    }
+
+    /// Schedule a one-shot request, or take down any pending one when nil.
+    private func arm(_ id: String, _ request: OneShotReminder?) {
+        guard let request else {
+            center.removePendingNotificationRequests(withIdentifiers: [id])
             return
         }
-        // Absolute fire time → a positive delay for the trigger (clamped so a
-        // just-past date still schedules rather than throwing).
-        let interval = max(1, fireAt.timeIntervalSinceNow)
-        schedule(id: ReminderID.inactivity, title: ReminderCopy.inactivityTitle, body: ReminderCopy.inactivityBody,
-                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false))
+        schedule(id: id, title: request.title, body: request.body,
+                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: request.delay, repeats: false))
     }
 
     public func cancelAll() {
@@ -307,3 +357,45 @@ public struct MovementReminderScheduler: MovementReminderScheduling {
     public func cancelAll() {}
 }
 #endif
+
+/// A one-shot notification ready to hand to the trigger: what it says and how
+/// long until it fires.
+public struct OneShotReminder: Equatable {
+    public let title: String
+    public let body: String
+    public let delay: TimeInterval
+}
+
+// What the scheduler asks UNUserNotificationCenter for, kept outside the iOS-only
+// block so it unit-tests in the macOS build. The iOS scheduler above only hands
+// these answers to the notification center.
+extension MovementReminderScheduler {
+    /// The daily reminder's repeating clock time, or nil when it's off.
+    static func dailyTime(_ settings: ReminderSettings) -> DateComponents? {
+        guard settings.dailyEnabled else { return nil }
+        return DateComponents(hour: settings.dailyHour, minute: settings.dailyMinute)
+    }
+
+    /// The evening goal nudge, or nil to take it down (off, or `GoalNudgeSchedule`
+    /// says the nudge is no longer true). One-shot, like the inactivity nudge: a
+    /// repeating trigger is exactly the thing that couldn't re-check itself.
+    static func goalRequest(fireAt: Date?, settings: ReminderSettings, now: Date = Date()) -> OneShotReminder? {
+        guard settings.goalEnabled, let fireAt else { return nil }
+        return OneShotReminder(title: ReminderCopy.goalTitle, body: ReminderCopy.goalBody,
+                               delay: delay(until: fireAt, now: now))
+    }
+
+    /// The inactivity nudge, worded for the time it fires, or nil to take it down.
+    static func inactivityRequest(fireAt: Date?, settings: ReminderSettings, now: Date = Date(),
+                                  calendar: Calendar = .current) -> OneShotReminder? {
+        guard settings.inactivityEnabled, let fireAt else { return nil }
+        let copy = ReminderCopy.inactivity(at: fireAt, calendar: calendar)
+        return OneShotReminder(title: copy.title, body: copy.body, delay: delay(until: fireAt, now: now))
+    }
+
+    /// Absolute fire time → a positive trigger delay, clamped so a just-past date
+    /// still schedules rather than throwing.
+    static func delay(until fireAt: Date, now: Date) -> TimeInterval {
+        max(1, fireAt.timeIntervalSince(now))
+    }
+}

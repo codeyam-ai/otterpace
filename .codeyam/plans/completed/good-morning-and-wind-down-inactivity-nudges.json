@@ -1,0 +1,40 @@
+{
+  "claimStartedAt": "2026-10-26T16:59:54Z",
+  "completedAt": "2026-10-26T20:14:31Z",
+  "completedBy": {
+    "agentProvider": "claude",
+    "codeyamEditorVersion": "0.1.0",
+    "currentStep": "backend-step18",
+    "machine": "Nadias-MacBook-Pro-2.local",
+    "originId": "1ad88252-7146-42f5-8c6d-ee60cfe5b606",
+    "pid": 41752,
+    "priority": 0,
+    "selectedPlan": "good-morning-and-wind-down-inactivity-nudges",
+    "sessionId": "49e79e14-fe2f-4194-bb53-ee433738039f",
+    "startedAt": "2026-10-26T16:59:54Z"
+  },
+  "createdAt": "2026-10-26T16:55:44Z",
+  "deliverables": [
+    "Sources/AppCore/CodeyamIsolated/CodeyamIsolationHost.swift",
+    "Sources/AppCore/CodeyamIsolated/RaceImportNoKeyIsolated.swift",
+    "Sources/AppCore/CodeyamIsolated/RaceImportScaffoldIsolated.swift",
+    "Sources/AppCore/Health/HealthKitDataSource.swift",
+    "Sources/AppCore/Notifications/MovementActivityMonitor.swift",
+    "Sources/AppCore/Notifications/MovementReminders.swift",
+    "Sources/AppCore/RaceImportView.swift",
+    "Sources/AppCore/Strava/StravaService.swift",
+    "Sources/AppCore/TodayView.swift",
+    "Tests/AppCoreTests/HealthKitDataSourceTests.swift",
+    "Tests/AppCoreTests/MovementRemindersTests.swift",
+    "Tests/AppCoreTests/StravaServiceTests.swift",
+    "api/_lib/nudge.ts",
+    "api/cron/movement-nudge.ts",
+    "test/api/cron-handler.test.ts",
+    "test/api/nudge.test.ts"
+  ],
+  "journalTimestamp": "2026-10-26T20:14:31Z",
+  "mode": "ui",
+  "planFile": "completed/good-morning-and-wind-down-inactivity-nudges.md",
+  "slug": "good-morning-and-wind-down-inactivity-nudges",
+  "title": "Good-morning and wind-down inactivity nudges"
+}

@@ -88,6 +88,7 @@ public struct TodayDashboard: View {
 
     public var body: some View {
         ZStack {
+            ScrollViewReader { scroller in
             ScrollView {
                 VStack(spacing: Layout.cardSpacing) {
                     TodayHeader(date: model.today.date, onSettings: onSettings)
@@ -127,6 +128,7 @@ public struct TodayDashboard: View {
                         }
                     )
                     .tourAnchor(.checkIn)
+                    .id("checkIn")
                     if let workout = model.today.latestWorkout {
                         WorkoutCard(
                             workout: workout,
@@ -146,6 +148,16 @@ public struct TodayDashboard: View {
                 .screenScrollContent()
             }
             .refreshable { await model.refresh() }
+            // Scenario-only hook, like Settings' `rbSettingsScroll`: a capture can
+            // seed `rbTodayScroll` (e.g. "checkIn") to open Today scrolled to a
+            // below-the-fold card so its state is in the frame. Production never
+            // carries this key.
+            .onAppear {
+                let target = UserDefaults.standard.string(forKey: "rbTodayScroll") ?? ""
+                guard !target.isEmpty else { return }
+                scroller.scrollTo(target, anchor: .center)
+            }
+            }
 
             if showHistory {
                 ActivityHistoryView(model: model, onClose: { withAnimation(Motion.overlay) { showHistory = false } })

@@ -244,7 +244,7 @@ struct RaceSearchSheet: View {
 // MARK: - Shared chrome
 
 /// Header + gradient + scroll shell so both sheets look native and match the app.
-private struct RaceImportScaffold<Content: View>: View {
+struct RaceImportScaffold<Content: View>: View {
     let title: String
     var onCancel: () -> Void
     @ViewBuilder var content: () -> Content
@@ -275,7 +275,7 @@ private struct RaceImportScaffold<Content: View>: View {
 
 /// The no-key state: mirrors AskCoachView's locked state — explain, and offer the
 /// manual path so the user is never blocked.
-private struct RaceImportNoKey: View {
+struct RaceImportNoKey: View {
     /// The sheet-specific verb ("Importing" / "Searching") so the two sheets'
     /// no-key states read distinctly instead of sharing identical copy.
     let action: String

@@ -1,20 +1,20 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { listNudgeCandidates, stampNudgeSent, removePushToken } from "../_lib/account.js";
 import { buildAps, providerToken, sendPush } from "../_lib/apns.js";
-import { shouldNudge, DEFAULT_QUIET_HOURS, localHourIn } from "../_lib/nudge.js";
+import { shouldNudge, DEFAULT_QUIET_HOURS, localHourIn, nudgeCopyFor } from "../_lib/nudge.js";
 import { env } from "../_lib/strava.js";
 
 // Scheduled scan for the server-driven movement nudge (Vercel cron, see
 // vercel.json). For every opted-in user with a fresh last-movement time, decides
 // with the pure `shouldNudge` policy whether they've been idle past their
 // threshold — once per idle window, never during quiet hours — and sends the
-// APNs "Stretch your legs?" push. Stamps `last_nudge_sent_at` on a send and
-// prunes tokens APNs reports as unregistered.
+// APNs push. Stamps `last_nudge_sent_at` on a send and prunes tokens APNs reports
+// as unregistered.
 //
-// Copy mirrors the on-device `ReminderCopy.inactivity*` so the server and local
-// nudges read identically.
-const NUDGE_TITLE = "Stretch your legs?";
-const NUDGE_BODY = "It's been a little while since you moved. A couple of easy minutes is plenty.";
+// The wording is chosen per user from their local hour (`nudgeCopyFor`): a
+// "Good morning" note just after quiet hours, a "Winding down" note in the
+// evening, and "Stretch your legs?" in between. It mirrors the on-device
+// `ReminderCopy.inactivity(at:)` so the server and local nudges read identically.
 
 // Vercel cron hits this unauthenticated from within the platform; a shared secret
 // (CRON_SECRET, sent as `Authorization: Bearer`) blocks public invocation.
@@ -34,7 +34,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const now = new Date();
     const jwt = providerToken(env("APNS_KEY_ID"), env("APNS_TEAM_ID"), env("APNS_AUTH_KEY"), now);
-    const payload = buildAps(NUDGE_TITLE, NUDGE_BODY);
 
     const candidates = await listNudgeCandidates();
     let sent = 0;
@@ -58,6 +57,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         DEFAULT_QUIET_HOURS,
       );
       if (!due) continue;
+
+      // Built per user, not once per scan: two users in different zones in the
+      // same scan can be in different parts of their day.
+      const copy = nudgeCopyFor(localHour, DEFAULT_QUIET_HOURS);
+      const payload = buildAps(copy.title, copy.body);
 
       let delivered = false;
       for (const token of user.tokens) {

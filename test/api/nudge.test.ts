@@ -6,6 +6,10 @@ import {
   heartbeatIsStale,
   DEFAULT_QUIET_HOURS,
   MAX_HEARTBEAT_AGE_MS,
+  nudgeCopyFor,
+  NUDGE_MORNING,
+  NUDGE_DAYTIME,
+  NUDGE_EVENING,
   type NudgeState,
 } from "../../api/_lib/nudge.ts";
 
@@ -227,5 +231,55 @@ describe("quiet hours end-to-end, per zone", () => {
     // 06:00 UTC = 02:00 New York — quiet in both, for different reasons.
     const night = new Date("2026-07-16T06:00:00Z");
     expect(shouldNudge(state, night, localHourIn("America/New_York", night))).toBe(false);
+  });
+});
+
+describe("nudgeCopyFor", () => {
+  // Sleep reads as stillness, so the first nudge after quiet hours always sees a
+  // long idle spell. It must greet, not report how long you've been still.
+  it("says good morning from quiet end up to 11am", () => {
+    expect(nudgeCopyFor(8)).toBe(NUDGE_MORNING);
+    expect(nudgeCopyFor(10)).toBe(NUDGE_MORNING);
+  });
+
+  it("keeps the daytime copy from 11am up to 7pm", () => {
+    expect(nudgeCopyFor(11)).toBe(NUDGE_DAYTIME);
+    expect(nudgeCopyFor(18)).toBe(NUDGE_DAYTIME);
+  });
+
+  it("winds down from 7pm up to quiet start", () => {
+    expect(nudgeCopyFor(19)).toBe(NUDGE_EVENING);
+    expect(nudgeCopyFor(20)).toBe(NUDGE_EVENING);
+  });
+
+  it("follows the quiet window it is given", () => {
+    // A later quiet end shifts the morning window with it.
+    expect(nudgeCopyFor(8, { startHour: 22, endHour: 9 })).toBe(NUDGE_DAYTIME);
+    expect(nudgeCopyFor(9, { startHour: 22, endHour: 9 })).toBe(NUDGE_MORNING);
+    expect(nudgeCopyFor(21, { startHour: 22, endHour: 9 })).toBe(NUDGE_EVENING);
+  });
+
+  it("never mentions elapsed time outside the daytime window", () => {
+    for (const copy of [NUDGE_MORNING, NUDGE_EVENING]) {
+      expect(copy.body).not.toMatch(/while since you moved/);
+    }
+  });
+
+  // Pinned to the Swift `ReminderCopy.inactivity*` strings (MovementRemindersTests
+  // pins the same text): the local/server de-dup only stays invisible if both
+  // paths say exactly the same thing.
+  it("matches the on-device copy word for word", () => {
+    expect(NUDGE_MORNING).toEqual({
+      title: "Good morning ☀️",
+      body: "Buddy's up and stretching. Whenever you're ready, an easy start to the day is plenty.",
+    });
+    expect(NUDGE_DAYTIME).toEqual({
+      title: "Stretch your legs?",
+      body: "It's been a little while since you moved. A couple of easy minutes is plenty.",
+    });
+    expect(NUDGE_EVENING).toEqual({
+      title: "Winding down 🌙",
+      body: "Hope today was a good one. A gentle stretch before bed is a nice way to close it out, or just rest.",
+    });
   });
 });

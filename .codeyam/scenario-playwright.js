@@ -1,3 +1,5 @@
+// codeyam-generated — DO NOT EDIT.
+// codeyam-editor: 0.1.7  build: c05c551ce98f20d6ba1b84c5a7c08623eafda2a7  source-sha256: 50fed448c040f57ee3c0f38128628b8bd752a12b249342024537a56d6cc0d860
 const {
   hasLoadingMarkers,
   shouldStopWaitingForImages,
@@ -146,20 +148,54 @@ function defaultReadServerState() {
   return JSON.parse(fs.readFileSync(statePath, "utf8"));
 }
 
-// Resolve the `localhost` origin that serves the iframe-harness route. The
-// harness is mounted on the editor's control-api listener, whose port is
-// recorded in `.codeyam/server-state.json` as `controlPort` (the same file the
-// top-level loader already reads for `appPort`). Returns
-// `http://localhost:<controlPort>` — a secure context the nested iframe
-// inherits — or null when the state file is missing/unreadable, in which case
-// the caller falls back to the legacy in-page `setContent` harness.
-// `readStateFile` is injectable so the resolver is unit-testable without disk.
-function resolveHarnessOrigin({ readStateFile = defaultReadServerState } = {}) {
+// Resolve the loopback origin that serves the iframe-harness route. The harness
+// is mounted on the editor's control-api listener, whose port is recorded in
+// `.codeyam/server-state.json` as `controlPort` (the same file the top-level
+// loader already reads for `appPort`). Returns `http://127.0.0.1:<controlPort>`
+// — a secure context the nested iframe inherits, exactly as `localhost` is — or
+// null when the state file is missing/unreadable, in which case the caller falls
+// back to the legacy in-page `setContent` harness. `readStateFile` is injectable
+// so the resolver is unit-testable without disk.
+//
+// The HOST is taken from `targetUrl` — the URL the iframe will load — and only
+// the port comes from server-state. That mirroring is load-bearing, because the
+// two capture modes address the editor by different loopback spellings:
+// `/__codeyam_preview` captures are pinned to `127.0.0.1` (PROXY_CAPTURE_LOOPBACK
+// in handlers.rs, matching the forwarder's own pinning) while direct app-port
+// captures use `localhost`. `localhost` and `127.0.0.1` are DIFFERENT sites to
+// the cookie jar, so whenever the harness host and the iframe host disagree the
+// nested load is cross-site — and the `cy_session` cookie is `SameSite=Lax`,
+// which rides top-level navigations only. It is therefore withheld from the
+// iframe request (and from the `/api/*` calls the framed page makes), and the
+// token-gated routes answer 401 on a non-loopback bind.
+//
+// Hardcoding EITHER spelling only moves the failure between the two modes:
+// `localhost` 401s every `/__codeyam_preview` capture, `127.0.0.1` 401s the
+// framed page's own `/api/scenarios` + `/api/render-environment` calls. Raising
+// the cookie to `SameSite=None` fixes neither — Chromium rejects `None` without
+// `Secure`, and these origins are plain http. Mirroring the target's host is what
+// keeps the harness same-site in both modes, which is also the same-origin model
+// the `/__codeyam_preview` subpath proxy exists to provide.
+//
+// `targetUrl` omitted or unparseable falls back to `127.0.0.1`, the spelling the
+// proxy-route capture (the token-gated one) uses.
+function resolveHarnessOrigin({
+  readStateFile = defaultReadServerState,
+  targetUrl = null,
+} = {}) {
   try {
     const state = readStateFile();
     const port = state && state.controlPort;
     if (typeof port === "number" && port > 0) {
-      return `http://localhost:${port}`;
+      let host = "127.0.0.1";
+      if (targetUrl) {
+        try {
+          host = new URL(targetUrl).hostname || host;
+        } catch (_) {
+          /* unparseable target — keep the proxy-route default */
+        }
+      }
+      return `http://${host}:${port}`;
     }
   } catch (_) {
     /* missing/unreadable state — fall back to setContent */
@@ -300,16 +336,45 @@ async function collectVisibleTextLength(target) {
 }
 
 // Inject a capture-only stylesheet that snaps entrance animations to their
-// FINAL frame: remove animation/transition timing and force the common
-// "hidden until revealed" symptoms (`opacity:0`, an entrance `transform`) back
-// to their resting values. This is the belt to `scrollThroughDocument`'s
-// suspenders — it covers pure-CSS keyframe entrances that are mid-flight or
-// stuck at an `opacity:0` start state even after the observers fired. It
-// targets the generic CSS symptom, not any framework's reveal class, so it
-// works for any stack. The caller gates this OFF when a scenario declares an
-// interactive state, so an intentionally animated/collapsed interactive frame
-// is never clobbered. Idempotent (a single injected style id) and best-effort.
-// Returns true when the style is present after the call.
+// FINAL frame: remove animation/transition timing, then reveal the elements an
+// entrance animation left INVISIBLE. This is the belt to
+// `scrollThroughDocument`'s suspenders — it covers pure-CSS keyframe entrances
+// that are mid-flight or stuck at an `opacity:0` start state even after the
+// observers fired. It targets the generic CSS symptom, not any framework's
+// reveal class, so it works for any stack. The caller gates this OFF when a
+// scenario declares an interactive state, so an intentionally animated /
+// collapsed interactive frame is never clobbered. Idempotent (a single injected
+// style id) and best-effort. Returns true when the style is present after the
+// call.
+//
+// The reveal is conditional on ANIMATION EVIDENCE, not on transparency alone:
+// an element is revealed only when, before the reset lands, an animation or a
+// transition was actually holding it back. An element resting at `opacity: 0`
+// with neither is hidden BY INTENT — a closed dropdown, a hover-only action, an
+// empty toast slot, an off-screen drawer — and is left exactly as the app
+// rendered it. Elements carrying an explicit hidden-intent signal
+// (`aria-hidden="true"`, `inert`, or `pointer-events: none`), on themselves or
+// on an ancestor, are skipped even when a transition is declared — that is the
+// resting shape of a closed popover which animates on open.
+//
+// It is never a blanket `opacity: 1 !important` / `transform: none !important`
+// over `*`. A blanket rule cannot tell an entrance animation's `opacity: 0` from
+// DELIBERATE, resting state — a disabled control's dim, a muted row, a
+// collapsed chevron's rotation — so it silently flattened every one of them out
+// of every screenshot the capture pipeline produced. Two scenarios differing
+// only in such a state then captured byte-identically and collided in the
+// distinct-capture gate, and the collision was unfixable in the component: the
+// state rendered correctly in a real browser (verified: computed opacity 0.4 vs
+// 1) and was erased only at capture time. Anything already visible is now left
+// exactly as the app rendered it.
+//
+// The reveal's TRANSFORM half additionally stops at the SVG boundary, because a
+// CSS `transform` overrides the SVG `transform` presentation attribute: inside
+// an `<svg>` it erases the static geometry that CONSTRUCTS the drawing instead
+// of neutralizing an entrance animation, so a revealed SVG node lands on the
+// origin. Invisible SVG nodes are therefore revealed in place — opacity forced,
+// transform left alone. See the loop below for why the boundary is
+// `ownerSVGElement` rather than `closest("svg")`.
 async function forceFinalVisualState(target) {
   return target.evaluate(() => {
     const STYLE_ID = "__codeyam_force_final_state";
@@ -322,17 +387,251 @@ async function forceFinalVisualState(target) {
     if (typeof document.createElement !== "function") return false;
     const style = document.createElement("style");
     style.id = STYLE_ID;
+    // Temporal properties only — these carry no resting state, so removing
+    // them cannot erase anything the app meant to show.
     style.textContent =
       "*, *::before, *::after {" +
       "animation: none !important;" +
       "transition: none !important;" +
-      "opacity: 1 !important;" +
-      "transform: none !important;" +
       "}";
     const head = document.head || document.documentElement;
     if (!head || typeof head.appendChild !== "function") return false;
+
+    // Which elements is an animation or a transition ACTUALLY holding back?
+    // Snapshot that BEFORE the stylesheet lands, because injecting it destroys
+    // the evidence: `animation: none` / `transition: none` clears
+    // `animationName`, empties the running-animation list, and zeroes every
+    // duration. Only elements in this set are eligible for the reveal below.
+    const isAnimationHeld = (el) => {
+      let animations = null;
+      if (typeof el.getAnimations === "function") {
+        try {
+          animations = el.getAnimations();
+        } catch (_) {
+          animations = null;
+        }
+      }
+      if (animations && animations.length > 0) return true;
+      // No `getAnimations` (older engines) falls through to the computed-style
+      // evidence below — never to "reveal every invisible element".
+      let computed = null;
+      try {
+        computed = getComputedStyle(el);
+      } catch (_) {
+        return false;
+      }
+      if (!computed) return false;
+      const animationName = computed.animationName;
+      if (
+        typeof animationName === "string" &&
+        animationName !== "" &&
+        animationName !== "none"
+      ) {
+        return true;
+      }
+      const properties = computed.transitionProperty;
+      if (
+        typeof properties !== "string" ||
+        properties === "" ||
+        properties === "none"
+      ) {
+        return false;
+      }
+      const coversVisibility = properties
+        .split(",")
+        .map((property) => property.trim())
+        .some(
+          (property) =>
+            property === "opacity" ||
+            property === "transform" ||
+            property === "all",
+        );
+      if (!coversVisibility) return false;
+      const durations = computed.transitionDuration;
+      if (typeof durations !== "string") return false;
+      // A declared transition with a zero duration animates nothing, so it is
+      // not holding anything back.
+      return durations.split(",").some((duration) => parseFloat(duration) > 0);
+    };
+
+    // Explicit "this is hidden on purpose" signals, which outrank animation
+    // evidence. A closed popover carries its open-transition while resting
+    // closed, so a transition alone cannot distinguish it from an entrance the
+    // capture should finish. An ancestor counts: hiding a whole subtree is the
+    // common spelling.
+    const hasHiddenIntent = (el, computed) => {
+      if (computed && computed.pointerEvents === "none") return true;
+      if (typeof el.closest === "function") {
+        try {
+          if (el.closest('[aria-hidden="true"], [inert]')) return true;
+        } catch (_) {
+          // Fall through to the self-only checks below.
+        }
+      }
+      if (el.inert === true) return true;
+      if (
+        typeof el.getAttribute === "function" &&
+        el.getAttribute("aria-hidden") === "true"
+      ) {
+        return true;
+      }
+      return false;
+    };
+
+    const heldByAnimation = new Set();
+    if (typeof document.querySelectorAll === "function") {
+      for (const el of document.querySelectorAll("*")) {
+        if (isAnimationHeld(el)) heldByAnimation.add(el);
+      }
+    }
+
     head.appendChild(style);
+
+    // With animations disabled above, an element held back by an entrance
+    // animation now computes to its pre-animation resting state — typically
+    // `opacity: 0`, often paired with a translate/scale that parks it offscreen.
+    // Reveal exactly those, and only those: membership in the pre-reset
+    // `heldByAnimation` snapshot is what separates them from UI the app is
+    // deliberately holding at `opacity: 0`, which stays hidden. An element at
+    // any visible opacity is left untouched either way.
+    //
+    // The transform half of the reveal STOPS at the SVG boundary. A CSS
+    // `transform` overrides the SVG `transform` presentation attribute, so
+    // inside an `<svg>` a forced `transform: none` does not neutralize an
+    // entrance animation — it erases the static rotate/translate/scale that
+    // CONSTRUCTS the drawing, revealing the node collapsed on the origin. The
+    // opacity half is still right there (a node at ~0 shows nothing either
+    // way), so an invisible SVG node is revealed IN PLACE. The boundary test is
+    // `ownerSVGElement` and NOT `closest("svg")`: HTML inside a
+    // `<foreignObject>` is a real HTMLElement with no `ownerSVGElement`, so it
+    // keeps the full reveal — `closest("svg")` would silently strand its
+    // genuine CSS entrance transform.
+    if (typeof document.querySelectorAll !== "function") return true;
+    const INVISIBLE_EPSILON = 0.01;
+    for (const el of document.querySelectorAll("*")) {
+      let computed = null;
+      try {
+        computed = getComputedStyle(el);
+      } catch (_) {
+        continue;
+      }
+      if (!computed) continue;
+      const opacity = parseFloat(computed.opacity);
+      if (!Number.isFinite(opacity) || opacity > INVISIBLE_EPSILON) continue;
+      if (!heldByAnimation.has(el)) continue;
+      if (hasHiddenIntent(el, computed)) continue;
+      if (!el.style || typeof el.style.setProperty !== "function") continue;
+      const inSvg =
+        el.ownerSVGElement != null ||
+        (typeof el.tagName === "string" && el.tagName.toLowerCase() === "svg");
+      el.style.setProperty("opacity", "1", "important");
+      if (!inSvg) el.style.setProperty("transform", "none", "important");
+    }
     return true;
+  });
+}
+
+// Center the isolated-component wrapper in the viewport before the shot.
+//
+// The capture pipeline always shoots the full viewport (`page.screenshot({
+// fullPage: false })`) and never an element clip, so an isolation page that
+// does not center its own component strands it in the top-left corner of every
+// frame. Next.js does this in its isolation layout and the query-param stacks
+// do it in `.codeyam/harness/isolate.tsx`, but the server-rendered scaffolds
+// historically did not — and neither do pages hand-authored before that was
+// fixed. This pass closes the gap at capture time, for any stack.
+//
+// It MEASURES rather than assumes: a wrapper that is already centered is left
+// alone, so pages that already do the right thing are byte-identical. The
+// `#codeyam-capture` marker (the cross-stack isolation convention; expo emits
+// it via `nativeID`) is the gate, so an ordinary route capture is never
+// touched. Centering is applied to `<body>` and to each ancestor strictly
+// between body and the wrapper — never to the wrapper itself, which frequently
+// carries the component's own padding/background and must keep its own box.
+// Each axis independently falls back to `flex-start` when the wrapper overflows
+// the viewport, so an oversized component loses its bottom/right edge rather
+// than being clipped symmetrically out of its top/left one.
+//
+// Idempotent (a single injected style id), best-effort, and returns a small
+// result object describing what it did.
+async function centerCaptureWrapper(target) {
+  return target.evaluate(() => {
+    const STYLE_ID = "__codeyam_center_capture";
+    const ANCESTOR_CLASS = "__codeyam-center-ancestor";
+    // Subpixel layout and fractional scrollbar widths make exact gap equality
+    // unreliable; a couple of px of slop keeps already-centered pages on the
+    // no-op branch.
+    const TOLERANCE_PX = 2;
+
+    if (typeof document.getElementById !== "function") {
+      return { applied: false, reason: "no-dom" };
+    }
+    if (document.getElementById(STYLE_ID)) {
+      return { applied: false, reason: "already-applied" };
+    }
+    const wrapper = document.getElementById("codeyam-capture");
+    if (!wrapper || typeof wrapper.getBoundingClientRect !== "function") {
+      return { applied: false, reason: "no-capture-marker" };
+    }
+
+    const rect = wrapper.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    const leftGap = rect.left;
+    const rightGap = viewportWidth - rect.right;
+    const topGap = rect.top;
+    const bottomGap = viewportHeight - rect.bottom;
+
+    const fitsHorizontally = rect.width <= viewportWidth;
+    const fitsVertically = rect.height <= viewportHeight;
+    const centeredHorizontally =
+      fitsHorizontally && Math.abs(leftGap - rightGap) <= TOLERANCE_PX;
+    const centeredVertically =
+      fitsVertically && Math.abs(topGap - bottomGap) <= TOLERANCE_PX;
+
+    if (centeredHorizontally && centeredVertically) {
+      return { applied: false, reason: "already-centered" };
+    }
+
+    const horizontal = fitsHorizontally ? "center" : "flex-start";
+    const vertical = fitsVertically ? "center" : "flex-start";
+
+    // Stamp the ancestor chain so the injected rule targets exactly the
+    // elements between <body> and the wrapper and cannot leak elsewhere.
+    let node = wrapper.parentElement;
+    while (node && node !== document.body) {
+      if (node.classList && typeof node.classList.add === "function") {
+        node.classList.add(ANCESTOR_CLASS);
+      }
+      node = node.parentElement;
+    }
+
+    if (typeof document.createElement !== "function") {
+      return { applied: false, reason: "no-dom" };
+    }
+    const style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent =
+      "body, ." +
+      ANCESTOR_CLASS +
+      " {" +
+      "margin: 0;" +
+      "min-height: 100vh;" +
+      "display: flex;" +
+      "align-items: " +
+      vertical +
+      ";" +
+      "justify-content: " +
+      horizontal +
+      ";" +
+      "}";
+    const head = document.head || document.documentElement;
+    if (!head || typeof head.appendChild !== "function") {
+      return { applied: false, reason: "no-dom" };
+    }
+    head.appendChild(style);
+    return { applied: true, horizontal, vertical };
   });
 }
 
@@ -575,9 +874,31 @@ async function loadScenarioInIframe(
     // and the nested scenario iframe inherits it (the Sveltia-class fix). The
     // inner iframe `src` is still `url`, so the document-response probe above is
     // unchanged.
-    await page.goto(buildHarnessUrl(resolvedHarnessOrigin, url, background), {
+    const harnessUrl = buildHarnessUrl(resolvedHarnessOrigin, url, background);
+    const harnessResponse = await page.goto(harnessUrl, {
       waitUntil: "domcontentloaded",
     });
+    // Fail loudly on a fail-closed harness-auth rejection BEFORE the blind 30s
+    // `#scenario-frame` wait below. On a non-loopback (0.0.0.0 / cloud) bind the
+    // harness control-API route is session-token-gated; a generated
+    // `.codeyam/capture.js` (or an editor binary) that predates the `cy_session`
+    // cookie injection navigates without a token -> the server refuses the
+    // request with 401 -> the harness document never renders -> every component
+    // scenario times out on `#scenario-frame` with a generic Playwright error
+    // that hides the real cause. Surfacing the 401 here turns that blind timeout
+    // into a one-line root cause on the very first failing capture, naming both
+    // fixes. (Route/page scenarios navigate top-level to the un-gated app proxy,
+    // so they never hit this path.)
+    if (harnessResponse && harnessResponse.status() === 401) {
+      throw new Error(
+        `Capture harness route ${harnessUrl} returned 401 (fail-closed ` +
+          `session-token auth on a non-loopback bind). The capture script did not ` +
+          `send the \`cy_session\` token — most often a generated ` +
+          `\`.codeyam/capture.js\` (or an editor binary) that predates session-token ` +
+          `injection. Fixes: refresh the editor binary on this VM, or set ` +
+          `\`CODEYAM_INSECURE_BIND=1\` and restart the editor.`,
+      );
+    }
   } else {
     // Degraded fallback: no resolvable harness origin (server-state missing), so
     // use the legacy in-page harness. The top-level document is then
@@ -677,6 +998,14 @@ async function loadScenarioTopLevel(
   }
 }
 
+// The CSS selector for "clickable / interactive" elements — buttons, links,
+// role=button, form controls, <summary>, and anything with an onclick. Shared
+// by the candidate-label collector (below) and the text-target resolver
+// (`resolveTextTarget`), which prefers an interactive element over a plain
+// text node when a click/press label matches both.
+const INTERACTIVE_SELECTOR =
+  "button, a[href], [role=button], input, select, textarea, summary, [onclick]";
+
 // Collect up to 20 distinct visible labels of interactive elements on the
 // page — buttons, links, role=button, form controls, <summary>, and anything
 // with an onclick. Used to build an ACTIONABLE error when an interaction's
@@ -685,9 +1014,7 @@ async function loadScenarioTopLevel(
 // mean one of these?" hint. Pure read (no clicks); falls back to value /
 // aria-label / placeholder when an element has no text.
 async function collectInteractiveLabels(frame) {
-  return frame.evaluate(() => {
-    const selector =
-      "button, a[href], [role=button], input, select, textarea, summary, [onclick]";
+  return frame.evaluate((selector) => {
     const nodes = Array.from(document.querySelectorAll(selector));
     const labels = nodes
       .map((node) => {
@@ -701,7 +1028,92 @@ async function collectInteractiveLabels(frame) {
       })
       .filter((label) => label.length > 0);
     return Array.from(new Set(labels)).slice(0, 20);
-  });
+  }, INTERACTIVE_SELECTOR);
+}
+
+// How many candidate labels an error message may echo. Deliberately tighter
+// than `collectInteractiveLabels`' own 20-label read cap: the labels are the
+// USER'S page content, so every one printed is a line of their app leaked into
+// the terminal. Enough to answer "did you mean one of these?", not enough to
+// transcribe the page.
+const CANDIDATE_LABEL_CAP = 8;
+
+// Render the candidate labels for an error message, capped and counted. Shared
+// by the no-match and action-failed paths so the echo policy lives in one place.
+async function candidateLabelSummary(frame) {
+  const candidates = await collectInteractiveLabels(frame);
+  if (candidates.length === 0) return "(none found on page)";
+  const shown = candidates.slice(0, CANDIDATE_LABEL_CAP);
+  const rest = candidates.length - shown.length;
+  return rest > 0 ? `${shown.join(", ")} (+${rest} more)` : shown.join(", ");
+}
+
+// Compose the "no element matched" error, branched on the form the caller
+// ACTUALLY passed. Pure and string-returning so both branches are asserted
+// without a browser.
+//
+// The substring advice ("prefer an exact CSS selector") only applies to a text
+// label. Printing it at a caller who already passed `#id` contradicts its own
+// input and reads as misdirection — the failure mode that sent two sessions
+// hunting a selector bug when the page had simply not hydrated. The candidate
+// labels ride with the text branch for the same reason: they answer "did you
+// mean one of these?", a question only a text match can have asked, and every
+// label printed is a line of the user's own page echoed into the terminal.
+function noMatchGuidance({ targetDesc, matchedByText, candidateLabels }) {
+  const queryParamHint =
+    `Many filter/status/sort states are also reachable directly via a ` +
+    `URL query param (e.g. add "?status=active" to the path) with no ` +
+    `interaction at all.`;
+  if (matchedByText) {
+    return (
+      `preview-interact: no element matched ${targetDesc}. ` +
+      `Text is matched as a case-insensitive SUBSTRING, so a misspelled or ` +
+      `over-specific label matches nothing — prefer an exact/role/testid CSS ` +
+      `selector (e.g. {"selector":"[data-testid=\\"save\\"]"}) for a precise ` +
+      `target. ${queryParamHint} ` +
+      `Candidate interactive labels: ${candidateLabels}`
+    );
+  }
+  return (
+    `preview-interact: no element matched ${targetDesc}. ` +
+    `That is already an exact CSS selector, so nothing on the page matches ` +
+    `it as written — confirm the element is present in THIS state (it may be ` +
+    `behind a tab, dialog, or conditional render), that the id/attribute is ` +
+    `spelled as the markup emits it, and that the page rendered and hydrated ` +
+    `at all. ${queryParamHint}`
+  );
+}
+
+// Describe the elements a substring text match resolved, so an ambiguity
+// warning can name the competing controls (e.g. the preset button "Bet" vs the
+// disclosure button "…or bet on"). Reads each matched element's inner text via
+// Playwright's `allInnerTexts`, caps the list at 5, and trims each to a single
+// short line. Pure read; degrades to a count-only description if the locator
+// API or the page can't produce texts.
+async function describeMatchCandidates(baseLocator, matchCount) {
+  const CAP = 5;
+  const MAX_LEN = 60;
+  let texts = [];
+  try {
+    if (typeof baseLocator.allInnerTexts === "function") {
+      texts = await baseLocator.allInnerTexts();
+    }
+  } catch (_) {
+    texts = [];
+  }
+  const described = texts
+    .map((t) => String(t).replace(/\s+/g, " ").trim())
+    .filter((t) => t.length > 0)
+    .slice(0, CAP)
+    .map((t) => (t.length > MAX_LEN ? `${t.slice(0, MAX_LEN)}…` : t))
+    .map((t) => `"${t}"`);
+  if (described.length === 0) {
+    return [`${matchCount} elements (text unavailable)`];
+  }
+  if (matchCount > described.length) {
+    described.push(`…and ${matchCount - described.length} more`);
+  }
+  return described;
 }
 
 // Drive a single user-style interaction against the settled frame before the
@@ -714,16 +1126,103 @@ async function collectInteractiveLabels(frame) {
 // `Enter`). On a no-match target this THROWS with the list of candidate
 // interactive labels — the capture script's outer catch turns that into a
 // failed capture with an actionable message, never a silent blank screenshot.
-async function performInteraction(frame, interaction, { timeoutMs = 5000 } = {}) {
+//
+// Resolve a visible-text target to the element most likely intended, instead
+// of blindly taking the first substring hit. A bare
+// `getByText(text, { exact: false })` is a case-insensitive SUBSTRING match, so
+// a label can land on a plain text node or a placeholder rather than the chip /
+// button the agent meant (observed: a `"Japan"` click hit placeholder text, not
+// the chip; a `"Bet"` click hit a disclosure button described "or bet on"). We
+// try increasingly-loose locators in priority order and take the first that
+// matches anything:
+//   1. exact + interactive   (for click/press)
+//   2. exact
+//   3. substring + interactive   (for click/press)
+//   4. substring
+// so an exact, clickable element wins over a substring plain-text node. Returns
+// the winning tier's locator plus its match count; when nothing matches at all,
+// returns the substring locator (count 0) so the caller's zero-match error path
+// still fires with its candidate-label hint.
+async function resolveTextTarget(frame, text, action) {
+  const preferInteractive = action === "click" || action === "press";
+  const exactBase = frame.getByText(text, { exact: true });
+  const substrBase = frame.getByText(text, { exact: false });
+
+  const tiers = [];
+  // `.and()` (Playwright ≥1.34) intersects two locators to the elements
+  // matching both — here, the text element that is ALSO interactive. Guard on
+  // its presence so a locator without `.and` degrades to text-only tiers.
+  if (preferInteractive && typeof exactBase.and === "function") {
+    const interactive = frame.locator(INTERACTIVE_SELECTOR);
+    tiers.push(exactBase.and(interactive));
+    tiers.push(exactBase);
+    tiers.push(substrBase.and(interactive));
+    tiers.push(substrBase);
+  } else {
+    tiers.push(exactBase);
+    tiers.push(substrBase);
+  }
+
+  for (const loc of tiers) {
+    const count = await loc.count();
+    if (count > 0) {
+      return { baseLocator: loc, matchCount: count };
+    }
+  }
+  return { baseLocator: substrBase, matchCount: 0 };
+}
+
+// Pick the single element to act on from a resolved locator. When more than one
+// candidate remains within the winning tier, prefer a VISIBLE element over a
+// hidden one rather than acting on raw `.first()` (a hidden duplicate — an
+// off-screen menu clone, an aria-hidden mirror — is almost never the intended
+// target). Degrades to `.first()` when the locator API lacks a visible filter
+// or no candidate is visible.
+async function pickBestCandidate(baseLocator, matchCount) {
+  if (matchCount <= 1) {
+    return baseLocator.first();
+  }
+  try {
+    if (typeof baseLocator.filter === "function") {
+      const visible = baseLocator.filter({ visible: true });
+      if ((await visible.count()) > 0) {
+        return visible.first();
+      }
+    }
+  } catch (_) {
+    // Locator API without a `{ visible: true }` filter — fall through.
+  }
+  return baseLocator.first();
+}
+
+// Text matching prefers an EXACT, INTERACTIVE element over a looser substring /
+// plain-text hit (see `resolveTextTarget`), so the first attempt lands on the
+// chip or button the agent meant. When a genuine ambiguity survives that
+// resolution (>1 candidate in the winning tier), we still act — on the best
+// visible candidate — but push an actionable warning naming every candidate
+// into the optional `warnings` array so the agent can switch to an exact
+// selector; a zero-match throws an error that spells out the substring caveat
+// and the exact-selector / URL-query-param alternatives.
+async function performInteraction(
+  frame,
+  interaction,
+  { timeoutMs = 5000, warnings } = {},
+) {
   const { action, selector, text, value } = interaction || {};
 
-  let locator;
+  let baseLocator;
   let targetDesc;
+  let matchedByText = false;
+  let matchCount;
   if (typeof text === "string" && text.length > 0) {
-    locator = frame.getByText(text, { exact: false }).first();
+    const resolved = await resolveTextTarget(frame, text, action);
+    baseLocator = resolved.baseLocator;
+    matchCount = resolved.matchCount;
     targetDesc = `text "${text}"`;
+    matchedByText = true;
   } else if (typeof selector === "string" && selector.length > 0) {
-    locator = frame.locator(selector).first();
+    baseLocator = frame.locator(selector);
+    matchCount = await baseLocator.count();
     targetDesc = `selector "${selector}"`;
   } else {
     throw new Error(
@@ -731,14 +1230,34 @@ async function performInteraction(frame, interaction, { timeoutMs = 5000 } = {})
     );
   }
 
-  const matchCount = await locator.count();
   if (matchCount === 0) {
-    const candidates = await collectInteractiveLabels(frame);
-    const candidateList =
-      candidates.length > 0 ? candidates.join(", ") : "(none found on page)";
+    // Candidate labels are collected ONLY for the text branch — see
+    // `noMatchGuidance` for why a CSS-selector miss neither needs them nor
+    // should echo the user's page content back at them.
     throw new Error(
-      `preview-interact: no element matched ${targetDesc}. ` +
-        `Candidate interactive labels: ${candidateList}`,
+      noMatchGuidance({
+        targetDesc,
+        matchedByText,
+        candidateLabels: matchedByText
+          ? await candidateLabelSummary(frame)
+          : null,
+      }),
+    );
+  }
+
+  const locator = await pickBestCandidate(baseLocator, matchCount);
+
+  // Ambiguity warning: a text target that still resolves >1 element within the
+  // winning tier acts on the best visible candidate, which may not be the one
+  // intended. Name the competing elements instead of silently proceeding. Only
+  // fires for text matches — an explicit selector that matches many is the
+  // caller's deliberate choice.
+  if (matchedByText && matchCount > 1 && Array.isArray(warnings)) {
+    warnings.push(
+      `preview-interact: ${targetDesc} matched ${matchCount} elements — acting on the best visible candidate. ` +
+        `Text resolution prefers an exact, interactive match, but several remain, so this may not be the element you meant. ` +
+        `Candidates: ${(await describeMatchCandidates(baseLocator, matchCount)).join(" | ")}. ` +
+        `Use an exact/role/testid selector to disambiguate.`,
     );
   }
 
@@ -764,12 +1283,9 @@ async function performInteraction(frame, interaction, { timeoutMs = 5000 } = {})
         );
     }
   } catch (error) {
-    const candidates = await collectInteractiveLabels(frame);
-    const candidateList =
-      candidates.length > 0 ? candidates.join(", ") : "(none found on page)";
     throw new Error(
       `preview-interact: action "${action}" failed against ${targetDesc}: ${error.message || String(error)}. ` +
-        `Candidate interactive labels: ${candidateList}`,
+        `Candidate interactive labels: ${await candidateLabelSummary(frame)}`,
     );
   }
 }
@@ -829,11 +1345,12 @@ async function performInteractionSequence(
     settleMs = 5000,
     loadingMarkers,
     settle = waitForStablePage,
+    warnings,
   } = {},
 ) {
   for (let i = 0; i < interactions.length; i += 1) {
     try {
-      await performInteraction(frame, interactions[i], { timeoutMs });
+      await performInteraction(frame, interactions[i], { timeoutMs, warnings });
     } catch (err) {
       // Prefix the failing step's index so a miss in a multi-step sequence is
       // locatable, matching the model-side `interactions[i]` validator.
@@ -845,6 +1362,7 @@ async function performInteractionSequence(
 
 module.exports = {
   logCaptureTiming,
+  defaultReadServerState,
   resolveTcpTarget,
   assertAppPortReachable,
   escapeHtmlAttribute,
@@ -856,6 +1374,7 @@ module.exports = {
   scrollThroughDocument,
   collectVisibleTextLength,
   forceFinalVisualState,
+  centerCaptureWrapper,
   collectImageStates,
   waitForImagesSettled,
   waitForAnimationsSettled,
@@ -865,6 +1384,9 @@ module.exports = {
   loadScenarioInIframe,
   loadScenarioTopLevel,
   collectInteractiveLabels,
+  candidateLabelSummary,
+  noMatchGuidance,
+  describeMatchCandidates,
   performInteraction,
   waitForPredicate,
   performInteractionSequence,

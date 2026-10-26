@@ -1,0 +1,20 @@
+{
+  "name": "RaceImportScaffold - Import From URL",
+  "id": "ea61523c-ea74-42de-880e-585c44a1429c",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default"
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_COMPONENT": "RaceImportScaffold",
+      "CODEYAM_ISOLATE_SCENARIO": "Import From URL"
+    }
+  },
+  "componentName": "RaceImportScaffold",
+  "scenarioType": "component",
+  "description": "The RaceImportScaffold component."
+}

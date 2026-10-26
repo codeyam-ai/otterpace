@@ -172,3 +172,44 @@ export function shouldNudge(state: NudgeState, now: Date, localHour: number, qui
 
   return true;
 }
+
+/** Local hour [0-23] the morning window ends (exclusive). Morning starts at quiet end. */
+export const MORNING_END_HOUR = 11;
+/** Local hour [0-23] the evening window starts (inclusive). Evening ends at quiet start. */
+export const EVENING_START_HOUR = 19;
+
+export interface NudgeCopy {
+  title: string;
+  body: string;
+}
+
+// Copy mirrors the on-device `ReminderCopy.inactivity*` pairs so the server and
+// local nudges read identically — the local/server de-dup only stays invisible
+// if the two paths say the same thing.
+export const NUDGE_MORNING: NudgeCopy = {
+  title: "Good morning ☀️",
+  body: "Buddy's up and stretching. Whenever you're ready, an easy start to the day is plenty.",
+};
+export const NUDGE_DAYTIME: NudgeCopy = {
+  title: "Stretch your legs?",
+  body: "It's been a little while since you moved. A couple of easy minutes is plenty.",
+};
+export const NUDGE_EVENING: NudgeCopy = {
+  title: "Winding down 🌙",
+  body: "Hope today was a good one. A gentle stretch before bed is a nice way to close it out, or just rest.",
+};
+
+/**
+ * The inactivity nudge's wording for the local hour it goes out at.
+ *
+ * Sleep counts as stillness, so the first nudge after quiet hours always sees a
+ * long "idle spell" — "it's been a while since you moved" is the wrong thing to
+ * say at 8am, and again at bedtime. So the morning window (quiet end → 11am)
+ * says good morning and the evening window (7pm → quiet start) says wind down;
+ * neither mentions elapsed time. Everything else keeps the daytime copy.
+ */
+export function nudgeCopyFor(localHour: number, quiet: QuietHours = DEFAULT_QUIET_HOURS): NudgeCopy {
+  if (localHour >= quiet.endHour && localHour < MORNING_END_HOUR) return NUDGE_MORNING;
+  if (localHour >= EVENING_START_HOUR && localHour < quiet.startHour) return NUDGE_EVENING;
+  return NUDGE_DAYTIME;
+}

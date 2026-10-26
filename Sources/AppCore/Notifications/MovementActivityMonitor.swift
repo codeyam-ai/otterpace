@@ -39,9 +39,9 @@ public final class MovementActivityMonitor {
         // on this observer too (it is no longer a fixed calendar trigger), so
         // gating solely on `inactivityEnabled` would leave a goal-only user with
         // nothing waking the app — and their nudge would silently never arm.
-        guard settings.inactivityEnabled || settings.goalEnabled else { stop(); return }
+        guard Self.observes(settings) else { stop(); return }
 
-        Task { await rearm(settings) }   // arm now from the latest known movement
+        Task { await Self.rearm(settings, source: self.source, scheduler: self.scheduler) }   // arm now from the latest known movement
 
         for id in Self.movementIDs {
             guard let type = HKQuantityType.quantityType(forIdentifier: id) else { continue }
@@ -54,7 +54,7 @@ public final class MovementActivityMonitor {
         let observer = HKObserverQuery(sampleType: steps, predicate: nil) { [weak self] _, completion, _ in
             guard let self else { completion(); return }
             Task {
-                await self.rearm(settings)
+                await Self.rearm(settings, source: self.source, scheduler: self.scheduler)
                 completion()   // tell HealthKit we've handled this background wake
             }
         }
@@ -80,27 +80,6 @@ public final class MovementActivityMonitor {
         scheduler.armInactivity(fireAt: nil, settings: current)
         scheduler.armGoal(fireAt: nil, settings: current)
     }
-
-    /// Re-evaluate EVERY data-driven reminder against fresh data and (re)arm or
-    /// cancel each one. Generalized from inactivity-only: a nudge whose premise no
-    /// longer holds must be taken down, not just left pending — that is what makes
-    /// "verify at fire time" real rather than a better guess at schedule time.
-    private func rearm(_ settings: ReminderSettings) async {
-        if settings.inactivityEnabled {
-            let last = await source.lastMovementDate()
-            let fireAt = InactivitySchedule.fireDate(lastMovement: last, hours: settings.inactivityHours)
-            await MainActor.run { scheduler.armInactivity(fireAt: fireAt, settings: settings) }
-        }
-        if settings.goalEnabled {
-            // Reads today's steps live. `fireDate` returns nil once the goal is
-            // met (cancelling any pending nudge) or while the hour is further out
-            // than the step count can be trusted — the observer arms it nearer
-            // the time on a later wake.
-            let state = await source.loadToday()
-            let fireAt = GoalNudgeSchedule.fireDate(steps: state.steps, goalSteps: state.goalSteps)
-            await MainActor.run { scheduler.armGoal(fireAt: fireAt, settings: settings) }
-        }
-    }
 }
 
 #else
@@ -113,3 +92,38 @@ public final class MovementActivityMonitor {
 }
 
 #endif
+
+// The observer's decisions, kept outside the iOS-only block so they unit-test in
+// the macOS build against a seeded source and a spy scheduler. The HealthKit glue
+// above only decides WHEN to call these.
+extension MovementActivityMonitor {
+    /// Observe when EITHER data-driven nudge is on. The goal nudge depends on this
+    /// observer too (it is no longer a fixed calendar trigger), so gating solely on
+    /// `inactivityEnabled` would leave a goal-only user with nothing waking the
+    /// app — and their nudge would silently never arm.
+    static func observes(_ settings: ReminderSettings) -> Bool {
+        settings.inactivityEnabled || settings.goalEnabled
+    }
+
+    /// Re-evaluate EVERY data-driven reminder against fresh data and (re)arm or
+    /// cancel each one. Generalized from inactivity-only: a nudge whose premise no
+    /// longer holds must be taken down, not just left pending — that is what makes
+    /// "verify at fire time" real rather than a better guess at schedule time.
+    static func rearm(_ settings: ReminderSettings, source: HealthDataSource,
+                      scheduler: MovementReminderScheduling, now: Date = Date()) async {
+        if settings.inactivityEnabled {
+            let last = await source.lastMovementDate()
+            let fireAt = InactivitySchedule.fireDate(lastMovement: last, hours: settings.inactivityHours, now: now)
+            await MainActor.run { scheduler.armInactivity(fireAt: fireAt, settings: settings) }
+        }
+        if settings.goalEnabled {
+            // Reads today's steps live. `fireDate` returns nil once the goal is
+            // met (cancelling any pending nudge) or while the hour is further out
+            // than the step count can be trusted — the observer arms it nearer
+            // the time on a later wake.
+            let state = await source.loadToday()
+            let fireAt = GoalNudgeSchedule.fireDate(steps: state.steps, goalSteps: state.goalSteps, now: now)
+            await MainActor.run { scheduler.armGoal(fireAt: fireAt, settings: settings) }
+        }
+    }
+}

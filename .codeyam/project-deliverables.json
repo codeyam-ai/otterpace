@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "derivedFromHash": "79b1556d3fc1d530f44f7bff0d0819b6cfac3659eab6b7cb9127bcb4122c3884",
+  "derivedAt": "2026-10-26T17:00:36.586155+00:00",
+  "deliverables": [
+    {
+      "id": "today-dashboard-steps-goal-progress-time-since",
+      "text": "Today dashboard: steps, goal progress, time since last movement, active minutes, latest run/walk, weekly load snapshot, Buddy mood, and coach recommendation",
+      "status": "delivered",
+      "resolvedAt": null,
+      "resolvedInFeature": null,
+      "planSlug": null,
+      "note": null,
+      "decidedBy": null
+    },
+    {
+      "id": "healthkit-integration-reading-steps-distance",
+      "text": "HealthKit integration reading steps, distance, workouts, active energy, and optional heart rate",
+      "status": "delivered",
+      "resolvedAt": null,
+      "resolvedInFeature": null,
+      "planSlug": null,
+      "note": null,
+      "decidedBy": null
+    },
+    {
+      "id": "strava-integration-oauth-connect-recent",
+      "text": "Strava integration: OAuth connect, recent activity import, dedup against HealthKit, used in coach context",
+      "status": "delivered",
+      "resolvedAt": null,
+      "resolvedInFeature": null,
+      "planSlug": null,
+      "note": null,
+      "decidedBy": null
+    },
+    {
+      "id": "ai-running-coach-daily-movement-run-walk-rest",
+      "text": "AI running coach: daily movement, run/walk/rest, weekly plan, race goal planning, post-run reflection, injury-risk flags",
+      "status": "delivered",
+      "resolvedAt": null,
+      "resolvedInFeature": null,
+      "planSlug": null,
+      "note": null,
+      "decidedBy": null
+    },
+    {
+      "id": "coach-context-engine-built-from-structured",
+      "text": "Coach context engine built from structured activity, goals, races, and user notes, with a user-inspectable context preview",
+      "status": "delivered",
+      "resolvedAt": null,
+      "resolvedInFeature": null,
+      "planSlug": null,
+      "note": null,
+      "decidedBy": null
+    },
+    {
+      "id": "coaching-safety-rules-no-diagnosis-conservative",
+      "text": "Coaching safety rules: no diagnosis, conservative mileage, medical-care prompts for warning-sign pain",
+      "status": "delivered",
+      "resolvedAt": null,
+      "resolvedInFeature": null,
+      "planSlug": null,
+      "note": null,
+      "decidedBy": null
+    },
+    {
+      "id": "coach-modes-local-mock-coach-and-bring-your-own",
+      "text": "Coach modes: local mock coach and bring-your-own API key",
+      "status": "delivered",
+      "resolvedAt": null,
+      "resolvedInFeature": null,
+      "planSlug": null,
+      "note": null,
+      "decidedBy": null
+    },
+    {
+      "id": "ask-coach-chat-screen-and-weekly-review-summary",
+      "text": "Ask Coach chat screen and weekly review summary",
+      "status": "delivered",
+      "resolvedAt": null,
+      "resolvedInFeature": null,
+      "planSlug": null,
+      "note": null,
+      "decidedBy": null
+    },
+    {
+      "id": "activity-history-workouts-weekly-mileage-run",
+      "text": "Activity history: workouts, weekly mileage, run frequency, training load basics",
+      "status": "delivered",
+      "resolvedAt": null,
+      "resolvedInFeature": null,
+      "planSlug": null,
+      "note": null,
+      "decidedBy": null
+    },
+    {
+      "id": "buddy-mascot-states-reflecting-progress-streaks",
+      "text": "Buddy mascot states reflecting progress, streaks, recovery, and race countdown",
+      "status": "delivered",
+      "resolvedAt": null,
+      "resolvedInFeature": null,
+      "planSlug": null,
+      "note": null,
+      "decidedBy": null
+    },
+    {
+      "id": "onboarding-with-healthkit-permission-flow",
+      "text": "Onboarding with HealthKit permission flow",
+      "status": "delivered",
+      "resolvedAt": null,
+      "resolvedInFeature": null,
+      "planSlug": null,
+      "note": null,
+      "decidedBy": null
+    },
+    {
+      "id": "smart-movement-reminders-driven-by-inactivity",
+      "text": "Smart movement reminders driven by inactivity, step gap, time of day, and recent training load",
+      "status": "open",
+      "resolvedAt": null,
+      "resolvedInFeature": null,
+      "planSlug": "good-morning-and-wind-down-inactivity-nudges",
+      "note": null,
+      "decidedBy": null
+    },
+    {
+      "id": "privacy-forward-defaults-healthkit-stays-local",
+      "text": "Privacy-forward defaults: HealthKit stays local, optional Strava, no account required, clear delete/export",
+      "status": "delivered",
+      "resolvedAt": null,
+      "resolvedInFeature": null,
+      "planSlug": null,
+      "note": null,
+      "decidedBy": null
+    },
+    {
+      "id": "open-source-showcase-readme-contributor-guide",
+      "text": "Open-source showcase: README, contributor guide, CodeYam docs and simulation scenarios",
+      "status": "delivered",
+      "resolvedAt": null,
+      "resolvedInFeature": null,
+      "planSlug": null,
+      "note": null,
+      "decidedBy": null
+    }
+  ]
+}

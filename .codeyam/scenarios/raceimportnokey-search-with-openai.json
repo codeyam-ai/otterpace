@@ -1,0 +1,21 @@
+{
+  "name": "RaceImportNoKey - Search With OpenAI",
+  "id": "5c2796ec-7ebe-4089-87f9-331246a004fa",
+  "dimensions": [
+    "iPhone 16"
+  ],
+  "mocks": {},
+  "deviceState": {
+    "preferences": {
+      "rbTheme": "default",
+      "rbCoachConnected": false
+    },
+    "launchEnv": {
+      "CODEYAM_ISOLATE_SCENARIO": "Search With OpenAI",
+      "CODEYAM_ISOLATE_COMPONENT": "RaceImportNoKey"
+    }
+  },
+  "componentName": "RaceImportNoKey",
+  "scenarioType": "component",
+  "description": "The RaceImportNoKey component."
+}

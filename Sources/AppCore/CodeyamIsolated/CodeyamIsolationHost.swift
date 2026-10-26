@@ -57,6 +57,10 @@ public enum CodeyamIsolationHost {
             return AnyView(JournalNoteFieldIsolated(scenario: scenario))
         case "MovementFreshnessNote":
             return AnyView(MovementFreshnessNoteIsolated(scenario: scenario))
+        case "RaceImportNoKey":
+            return AnyView(RaceImportNoKeyIsolated(scenario: scenario))
+        case "RaceImportScaffold":
+            return AnyView(RaceImportScaffoldIsolated(scenario: scenario))
         case "RaceImportSheet":
             return AnyView(RaceImportSheetIsolated(scenario: scenario))
         case "RaceSearchSheet":

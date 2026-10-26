@@ -84,6 +84,7 @@ describe("cron/movement-nudge scan", () => {
     account.stampNudgeSent.mockReset().mockResolvedValue(undefined);
     account.removePushToken.mockReset().mockResolvedValue(undefined);
     apns.sendPush.mockReset().mockResolvedValue({ ok: true, status: 200 });
+    apns.buildAps.mockClear();
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
@@ -110,6 +111,25 @@ describe("cron/movement-nudge scan", () => {
     expect(apns.sendPush).toHaveBeenCalledWith("tok-u-ny", expect.anything(), "jwt");
     expect(account.stampNudgeSent).toHaveBeenCalledOnce();
     expect(account.stampNudgeSent).toHaveBeenCalledWith("u-ny", NOW.toISOString());
+  });
+
+  // The wording is chosen per user too. At 13:00 UTC it is 09:00 in New York
+  // (morning) and 14:00 in London (daytime); a payload built once for the scan
+  // would hand both of them the same words.
+  it("picks each user's nudge copy from their own local hour", async () => {
+    vi.setSystemTime(new Date("2026-07-16T13:00:00Z"));
+    const idle = { last_movement_at: "2026-07-16T05:00:00Z" };
+    account.listNudgeCandidates.mockResolvedValue([
+      { ...candidate("u-ny", "America/New_York"), ...idle },
+      { ...candidate("u-london", "Europe/London"), ...idle },
+    ]);
+
+    const r = res();
+    await handler({ headers: {} } as never, r as never);
+
+    expect(r.out.body).toEqual({ scanned: 2, sent: 2 });
+    expect(apns.buildAps).toHaveBeenNthCalledWith(1, "Good morning ☀️", expect.any(String));
+    expect(apns.buildAps).toHaveBeenNthCalledWith(2, "Stretch your legs?", expect.any(String));
   });
 
   // A hostile or simply unknown identifier from one client must not throw out of

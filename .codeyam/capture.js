@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// codeyam-generated — DO NOT EDIT.
+// codeyam-editor: 0.1.7  build: c05c551ce98f20d6ba1b84c5a7c08623eafda2a7  source-sha256: c5d6ec4e43d4ec78890d4ea3baa8bf1b35fb44dbe3a40424b9f03b54e9030e7e
 
 // Render environment (colorScheme, deviceScaleFactor, userAgent, locale,
 // timezoneId, reduceMotion, forcedColors) is read from config when present
@@ -34,6 +36,15 @@ const CAPTURE_LAUNCH_SIGSEGV_RETRIES = 2;
 // Short backoff between SIGSEGV retries so the transient fault has a moment to
 // clear; small enough not to eat the per-slug recapture budget.
 const CAPTURE_LAUNCH_SIGSEGV_BACKOFF_MS = 250;
+
+// The sentinel the reverse proxy stamps on its dev-server-down placeholder —
+// the other half of this contract is
+// `crates/proxy-http/src/reverse_proxy.rs::DEV_SERVER_DOWN_HEADER`, and the two
+// spellings are deliberately greppable from each other. Keyed on the header
+// rather than the placeholder's copy for two reasons: the response is a 200, so
+// no status check can see it, and the copy is per-framework prose that drifts
+// the moment `render_placeholder` is reworded.
+const DEV_SERVER_DOWN_HEADER = "x-codeyam-dev-server-down";
 
 // Pin the headless capture browser's `localhost` resolution to the IPv4
 // loopback the editor's listeners bind. The browser-facing preview origin is
@@ -161,10 +172,12 @@ const {
 const {
   attachHttpMocks,
   isDeclaredErrorMock,
+  unmockedRouteFrom,
 } = require("./scenario-mocks");
 
 const {
   assertAppPortReachable,
+  defaultReadServerState,
   loadScenarioInIframe,
   loadScenarioTopLevel,
   resolveHarnessOrigin,
@@ -175,10 +188,118 @@ const {
   scrollThroughDocument,
   collectVisibleTextLength,
   forceFinalVisualState,
+  centerCaptureWrapper,
   performInteraction,
   waitForPredicate,
   performInteractionSequence,
 } = require("./scenario-playwright");
+
+// Name of the cookie the editor's control-API accepts the session token in —
+// must match `SESSION_COOKIE` in crates/control-api/src/origin_guard.rs. On a
+// non-loopback (cloud) bind the control-API requires this token on the harness
+// route (`/__codeyam_harness`); without it the top-level harness navigation 401s
+// and `#scenario-frame` never attaches, so EVERY capture times out. The browser
+// UI carries this cookie automatically; the headless capturer does not, so we
+// inject it here from the on-box 0600 token file.
+const SESSION_COOKIE = "cy_session";
+
+// The loopback names the editor can be addressed by. A cookie is scoped by
+// HOST, and the jar does NOT treat these as interchangeable: a cookie stored for
+// `localhost` is simply not sent to `127.0.0.1`. That matters because the two
+// token-gated capture routes resolve their origin differently — the harness
+// route via `resolveHarnessOrigin()` (typically `localhost`), the preview-proxy
+// route via `PROXY_CAPTURE_LOOPBACK` in handlers.rs, which is deliberately
+// IPv4-pinned to `127.0.0.1` so it matches the forwarder's own pinning. Scoping
+// the cookie to `localhost` alone therefore authenticated the harness route and
+// left every `/__codeyam_preview` capture with no credential, so `preview-verify`
+// / `preview-interact` / `preview-flow` all 401'd on a non-loopback bind.
+// Emitting one cookie per alias is the fix: same token, same on-box editor,
+// whichever name the capture URL happens to use.
+const LOOPBACK_COOKIE_DOMAINS = ["localhost", "127.0.0.1"];
+
+// Extract the host from an origin string, or null when it is unparseable.
+function originHost(origin) {
+  try {
+    return new URL(origin).hostname;
+  } catch (_) {
+    return null;
+  }
+}
+
+// Read the on-box `.codeyam/session-token` (0600), or `null` when there is
+// none. Every control-API call the capture makes is token-gated on a
+// non-loopback bind, and its three callers were each re-deriving this path;
+// one reader means a capture cannot authenticate one route and silently fail
+// to authenticate another. Never throws — an unreadable file reads as absent,
+// which degrades to the un-credentialed behavior a loopback bind is happy with.
+function readSessionToken() {
+  try {
+    const p = path.join(process.cwd(), ".codeyam", "session-token");
+    return fs.existsSync(p) ? fs.readFileSync(p, "utf8").trim() || null : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+// Build the Playwright cookie array that authenticates the capture context to
+// the editor's token-gated control-API. Reads the on-box `.codeyam/session-token`
+// (0600) and emits a `cy_session` cookie for every host the capture might address
+// the editor by (see `LOOPBACK_COOKIE_DOMAINS`); cookies are port-agnostic, so
+// one per host covers the harness origin on the control port, the preview-proxy
+// route, and any `/api` call on the app-proxy port. A non-loopback harness origin
+// (a cloud tunnel domain) additionally gets its own host, since no loopback alias
+// would match it. Returns `[]` — a no-op — when there is no token file (a
+// loopback bind that never persisted one) or no resolvable harness origin, so a
+// laptop capture is completely unaffected. `deps` is injectable so the builder is
+// unit-testable without disk.
+function buildSessionTokenCookies({
+  readTokenFile = readSessionToken,
+  harnessOrigin = resolveHarnessOrigin(),
+} = {}) {
+  try {
+    const token = readTokenFile();
+    if (!token || !harnessOrigin) return [];
+    const host = originHost(harnessOrigin);
+    const domains = [...LOOPBACK_COOKIE_DOMAINS];
+    // A tunnelled/cloud harness origin is not a loopback alias, so it needs its
+    // own entry or the harness navigation goes out uncredentialed.
+    if (host && !domains.includes(host)) domains.push(host);
+    return domains.map((domain) => ({
+      name: SESSION_COOKIE,
+      value: token,
+      domain,
+      path: "/",
+      httpOnly: true,
+      sameSite: "Lax",
+    }));
+  } catch (_) {
+    // A missing/unreadable token file must never break capture on a loopback
+    // bind where the token isn't required anyway — degrade to no cookie.
+    return [];
+  }
+}
+
+// True when a non-empty on-box `.codeyam/session-token` exists (the same
+// 0600 file `buildSessionTokenCookies` reads). Used by the capability-skew
+// guard to tell "no token, loopback bind, nothing to inject" (fine) apart from
+// "a token exists but the capture produced no cookie" (a stale capture script
+// heading into a guaranteed 401). Never throws — an unreadable file reports
+// absent, degrading to today's behavior.
+function onBoxSessionTokenExists() {
+  return readSessionToken() !== null;
+}
+
+// Pure predicate behind the capability-skew guard: true when the capture WILL
+// use the token-gated harness route (an origin resolved) yet produced NO
+// `cy_session` cookie despite an on-box token existing — the signature of a
+// generated `.codeyam/capture.js` stale relative to the harness route, heading
+// into a guaranteed 401. Separated from the throw so the decision is
+// unit-testable without a browser context. Returns false the moment any leg is
+// absent (loopback bind with no harness origin, no token, or a cookie was
+// produced), so a healthy capture never trips it.
+function captureAuthSkewDetected({ harnessOrigin, cookieCount, tokenExists }) {
+  return Boolean(harnessOrigin) && cookieCount === 0 && Boolean(tokenExists);
+}
 
 const {
   getInitScript,
@@ -188,8 +309,133 @@ const {
 } = require("./scenario-handlers");
 
 const {
-  probeInteractivity,
+  buildCounterpartProbe,
+  subpathHydrationEscalation,
+  waitForHydration,
 } = require("./scenario-interactivity");
+
+// The content frame's own URL, or `null` when it cannot answer.
+//
+// `frame.url()` is the only correct source for the URL a hydration verdict is
+// ABOUT. `page.url()` is the top-level document, which under the iframe harness
+// is the wrapper — carrying the real route only percent-encoded inside its
+// `?src=` parameter. `loadScenarioTopLevel` / `loadScenarioInIframe` both
+// document the returned frame as uniformly usable, and its URL is right in every
+// load shape: a top-level navigation (redirects followed, which is why
+// `page.url()` was preferred originally), the harness iframe, the degraded
+// `setContent` harness whose ancestor is `about:blank`, and a frame re-pointed
+// by a `navigate` step — where a decoded `?src=` would be stale.
+//
+// A frame detached by a navigation mid-capture throws or returns `""`, and a
+// reporting detail must never cost the capture, so every caller falls back to
+// exactly the behavior that shipped before this existed.
+function safeFrameUrl(frame) {
+  try {
+    const value = frame && frame.url();
+    return typeof value === "string" && value ? value : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+// Resolve where the subpath-hydration verdict is POSTed and what headers carry
+// it, or `null` when there is no reachable control port to report to. Pure.
+//
+// Split out of `reportSubpathHydrationFailure` because the AUTH half is where
+// the real defect lives and the network half is what makes it untestable. Every
+// control-API route is session-token-gated; this call is made from Node rather
+// than from the browser context, so it carries no `cy_session` cookie and the
+// token must ride as a Bearer header. Omit it and the POST is refused, the
+// escalation silently never happens, and the capture still reports success —
+// exactly the invisible failure this whole feature exists to end. As a pure
+// function that contract is asserted with no server running.
+//
+// A loopback bind that never persisted a token yields no header, which the
+// editor accepts; that is why the token is optional rather than required.
+function subpathHydrationReportTarget({ controlPort, token }) {
+  if (!(controlPort > 0)) return null;
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return {
+    url: `http://127.0.0.1:${controlPort}/api/editor-preview-subpath-hydration`,
+    headers,
+  };
+}
+
+// Tell the editor that this route proved dead under the `/__codeyam_preview`
+// mount and alive at the app's own origin, so `/api/config` can escalate the
+// preview off the subpath for the rest of the session.
+//
+// The verdict is worthless unless it reaches the decision-maker, and the
+// capture process is the only thing that ever runs the two-origin experiment.
+// It travels over the editor's control plane rather than a file so it is read
+// on the next `/api/config` resolution — a launch-time channel could not vary
+// per route.
+//
+// FAIL-SOFT ON EVERY LEG. A missing state file, a control port that is not
+// listening, a non-2xx, a timeout: none of them may change the capture's
+// outcome. The capture's job is to report what it saw, and it has already done
+// that by the time this runs; a reporting failure costs the escalation, never
+// the finding.
+async function reportSubpathHydrationFailure(
+  escalation,
+  { readServerState = defaultReadServerState, readToken = readSessionToken } = {},
+) {
+  try {
+    const state = readServerState();
+    const target = subpathHydrationReportTarget({
+      controlPort: state && state.controlPort,
+      token: readToken(),
+    });
+    if (!target) return false;
+    const response = await fetch(target.url, {
+      method: "POST",
+      headers: target.headers,
+      body: JSON.stringify({
+        failedUrl: escalation.failedUrl,
+        counterpartUrl: escalation.counterpartUrl,
+      }),
+      signal: AbortSignal.timeout(5000),
+    });
+    return response.ok;
+  } catch (_) {
+    return false;
+  }
+}
+
+// Decide-and-report the subpath-hydration escalation for one hydration verdict.
+//
+// Two call sites now run this exact sequence — the top-level wait in
+// `runScenarioCheck` and the per-`navigate` wait in `runFlowSteps` — and both
+// must read the verdict the same way, since a difference between them would be
+// a route that escalates at the top level and silently does not one navigation
+// deep. Hoisted once the second call site made the duplication real.
+//
+// Returns the escalation payload (or `null`) rather than a boolean, so the
+// decision is assertable without a control port or a browser; `reportSubpath
+// HydrationFailure` is already fail-soft on every leg, so a reporting failure
+// costs the escalation and never the capture.
+//
+// Deliberately does NOT touch the caller's issue list: whether the finding is
+// reported as an issue is the CALLER's concern and the two sites differ on it.
+//
+// `report` is injectable for the same reason `reportSubpathHydrationFailure`
+// takes its own readers: the real one POSTs to the live control port, which a
+// unit test must never do.
+async function escalateSubpathHydration(
+  hydration,
+  { report = reportSubpathHydrationFailure } = {},
+) {
+  const escalation = subpathHydrationEscalation({
+    crossOrigin: hydration.crossOrigin,
+    url: hydration.issue && hydration.issue.url,
+    counterpartUrl: hydration.counterpartUrl,
+  });
+  if (escalation) {
+    await report(escalation);
+  }
+  return escalation;
+}
 
 // Read project-specific loading markers from `.codeyam/stack.json`
 // (`capture.loadingMarkers`). The capture script runs with cwd = project dir
@@ -235,6 +481,27 @@ function scenarioScriptsLiveSocket(config) {
   } catch (_) {
     return false;
   }
+}
+
+// Classify what a driven interaction actually did, from the DOM fingerprint on
+// either side of it plus the page's hydration state. Pure, so the distinction
+// this encodes is unit-tested without a browser.
+//
+// A click that changed nothing has two very different causes, and reporting both
+// as "none" is what let a dead page masquerade as a flaky harness: a page that
+// NEVER HYDRATED could not have responded to ANY interaction (no client JS is
+// running), whereas a hydrated page with an unchanged DOM really does mean the
+// control is inert. Keeping them apart is what tells a reader whether to go look
+// at their component or at the environment.
+//
+// `hydrated` is the three-valued signal from `waitForHydration`: only a PROVEN
+// dead page (`false`) earns "unhydrated". `null` means the wait could not judge
+// (unknown framework, no controls, probe threw) and must keep reporting "none" —
+// never invent a hydration fault we cannot prove.
+function classifyInteractionEffect(beforeFingerprint, afterFingerprint, hydrated) {
+  if (beforeFingerprint !== afterFingerprint) return "changed";
+  if (hydrated === false) return "unhydrated";
+  return "none";
 }
 
 async function getDOMFingerprint(frame) {
@@ -318,6 +585,22 @@ function isCrossOriginRequest(url, appOrigin) {
 function isCaptureFatalRequestFailure(url, appOrigin) {
   if (!appOrigin) return true;
   return !isCrossOriginRequest(url, appOrigin);
+}
+
+// True when this response is the reverse proxy's dev-server-down placeholder
+// rather than the app. The proxy stamps `DEV_SERVER_DOWN_HEADER` on exactly
+// that response and four Rust consumers already key on it; this is the fifth,
+// and the first on the capture side. Header names are compared
+// case-insensitively — Playwright lowercases them, but the contract is the
+// header, not Playwright's normalization of it. A null response is not a
+// placeholder (the null-response case has its own branch). Pure, so the
+// decision is unit-testable without a live browser or a downed dev server.
+function isDevServerPlaceholderResponse(response) {
+  if (!response || typeof response.headers !== "function") return false;
+  const headers = response.headers() || {};
+  return Object.keys(headers).some(
+    (name) => name.toLowerCase() === DEV_SERVER_DOWN_HEADER,
+  );
 }
 
 // Return a copy of `headers` with every name in `markerNames` removed.
@@ -487,15 +770,49 @@ function pushRedirectMismatchIssue(issues, requestedUrl, frame, response, config
   );
 }
 
+// How many visible text nodes `dumpPageState` samples. Named because two
+// callers must agree on it: the sampler itself, and `verifyProbeSeedLanded`,
+// which can only treat "probe not found" as proof of absence when the sample
+// did NOT hit this cap.
+const PAGE_STATE_TEXT_NODE_CAP = 40;
+
+// Fallback for how long `verifyProbeSeedLanded` re-reads a frame that is still
+// showing committed content. Mirrors `SEED_LANDING_BUDGET` in
+// `seed_landing.rs`, and is used ONLY when the editor did not send
+// `config.seedLandingBudgetMs` — a capture request from a binary that predates
+// the field. Degrading to today's constant is deliberate: degrading to zero
+// would fail on the first read, which is exactly the bug being fixed.
+const SEED_LANDING_BUDGET_MS = 10000;
+
+// Gap between frame re-reads. Mirrors `SEED_LANDING_POLL_INTERVAL` in
+// `seed_landing.rs` for the same reason the budget does — the two halves of one
+// gate should not sample at visibly different rates when a report compares
+// their logs.
+const SEED_LANDING_RETRY_INTERVAL_MS = 250;
+
+// The re-read budget this capture applies, in milliseconds.
+//
+// A non-finite, negative, or absent value falls back to the constant above; a
+// zero is treated as absent for the same reason the Rust resolver does it, so a
+// config typo cannot turn the gate into "fail on the first read" across a whole
+// corpus.
+function readSeedLandingBudgetMs(config) {
+  const raw = config && config.seedLandingBudgetMs;
+  return typeof raw === "number" && Number.isFinite(raw) && raw > 0
+    ? raw
+    : SEED_LANDING_BUDGET_MS;
+}
+
 // Read-only page-state snapshot for `capture-state`: the full localStorage
-// map, a bounded sample of visible text nodes (document order), and — when a
+// map, a bounded sample of visible text nodes (document order), the page's
+// head metadata (`<title>` plus every named `<meta>`'s content), and — when a
 // selector is given — that element's text. Evaluated in-page against the
 // settled frame so it reflects exactly what a real capture saw (the proxy
 // already injected the scenario's seed into the served HTML). Every read is
 // individually guarded so a sandboxed/cross-origin localStorage never throws
 // the whole capture; the worst case is an empty section, not a failure.
 async function dumpPageState(frame, selector) {
-  return frame.evaluate((sel) => {
+  return frame.evaluate(([sel, textNodeCap]) => {
     const localStorage = {};
     try {
       for (let i = 0; i < window.localStorage.length; i++) {
@@ -535,12 +852,44 @@ async function dumpPageState(frame, selector) {
         },
       );
       let node;
-      while ((node = walker.nextNode()) && visibleText.length < 40) {
+      while ((node = walker.nextNode()) && visibleText.length < textNodeCap) {
         const text = (node.textContent || "").replace(/\s+/g, " ").trim();
         if (text) visibleText.push(text);
       }
     } catch (_) {
       /* no body / detached document */
+    }
+
+    // Head metadata, deliberately its OWN field rather than more `visibleText`.
+    // `capture-state` consumers read `visibleText` as "text a reader sees on
+    // the page", and a `<title>` is not that. But a page that renders its
+    // seeded values only into `<title>` / `<meta content>` — a title-only page
+    // is exactly the reported case — still received the seed, and the Rust
+    // poll already counts it: matching the raw response body, head markup is
+    // in its haystack. Collecting the same surface here is what lets the two
+    // halves of one gate agree about what counts as the render.
+    const headMetadata = [];
+    try {
+      const title = (document.title || "").replace(/\s+/g, " ").trim();
+      if (title) headMetadata.push(title);
+    } catch (_) {
+      /* detached document */
+    }
+    try {
+      // `name` or `property` only: a bare `<meta charset>` or an
+      // `http-equiv` carries no authored content, and requiring one of the two
+      // naming attributes keeps the haystack to metadata someone declared.
+      const metas = document.querySelectorAll(
+        "meta[name][content], meta[property][content]",
+      );
+      for (let i = 0; i < metas.length && headMetadata.length < textNodeCap; i++) {
+        const content = (metas[i].getAttribute("content") || "")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (content) headMetadata.push(content);
+      }
+    } catch (_) {
+      /* no head / detached document */
     }
 
     let selectorText = null;
@@ -553,22 +902,42 @@ async function dumpPageState(frame, selector) {
       }
     }
 
-    return { localStorage, visibleText, selectorText };
-  }, selector || null);
+    return { localStorage, visibleText, headMetadata, selectorText };
+  }, [selector || null, PAGE_STATE_TEXT_NODE_CAP]);
 }
 
-// Landed-state verification: assert the localStorage the capture INJECTED
-// (`config.browserState.localStorage`, which already carries the seed-session
-// overlay the editor merged in) actually reached the capture browser after the
-// page settled. The core promise of a seeded scenario is remote control of the
-// app — a seed that silently doesn't land produces an empty screenshot that
-// looks like a successful capture of an empty app, which is exactly the
-// failure this guards. Returns a loud `seed-not-landed` issue (which fails the
-// capture, since `ok` requires zero issues) when a non-empty injected seed is
-// missing/empty on read-back, or `null` when there was nothing to verify, the
-// seed landed, or storage is unavailable (sandboxed/opaque origin — never fail
-// the capture over the verifier itself).
-async function verifySeededStorageLanded(frame, config) {
+// Landed-state verification, across every transport a seed can travel: prove
+// the seed reached the frame before the capture is blessed. The core promise of
+// a seeded scenario is remote control of the app — a seed that silently doesn't
+// land produces a screenshot that looks like a successful capture of a
+// different state entirely, which is exactly the failure this guards.
+//
+// Two halves, because a seed reaches the app two structurally different ways:
+//   - storage — the localStorage the capture INJECTED
+//     (`config.browserState.localStorage`, already carrying the seed-session
+//     overlay the editor merged in) is read back from the settled page.
+//   - probes — `config.seedProbes` carries strings the editor derived by
+//     diffing the seeded sandbox against the production tree it was reset from
+//     (see `seed_landing.rs`), so at least one must appear in the rendered
+//     text. This is the half a filesystem-seeded (content-collection) stack
+//     needs: it injects nothing into storage, so the storage half alone
+//     declared every such capture clean no matter what actually rendered.
+//
+// Returns a loud `seed-not-landed` issue (which fails the capture, since `ok`
+// requires zero issues) when a declared seed is missing from the frame, or
+// `null` when NEITHER half had anything to verify, the seed landed, or the
+// read-back itself was unavailable — never fail a capture over the verifier.
+async function verifySeedLanded(frame, config) {
+  const storageIssue = await verifyStorageSeedLanded(frame, config);
+  if (storageIssue) return storageIssue;
+  return await verifyProbeSeedLanded(frame, config);
+}
+
+// The storage half of `verifySeedLanded`, unchanged in behavior: assert every
+// non-empty injected localStorage key is present on read-back. `null` when no
+// storage was seeded — which no longer means "clean", only "this transport had
+// nothing to verify"; the probe half below answers for the filesystem one.
+async function verifyStorageSeedLanded(frame, config) {
   const expected =
     (config && config.browserState && config.browserState.localStorage) || {};
   const expectedKeys = Object.keys(expected);
@@ -617,6 +986,293 @@ async function verifySeededStorageLanded(frame, config) {
   );
 }
 
+// The comparison form both sides of a probe match are reduced to: whitespace
+// collapsed, then lowercased. Mirrors `normalize_for_match` in
+// `seed_landing.rs` — the poll and this frame assertion must agree, or one bug
+// becomes a differently-worded one.
+//
+// Rendering already reflows whitespace. Case-folding is the same argument one
+// step further: an app that lowercases a value before putting it on the page
+// has still put the value on the page.
+function normalizeForMatch(text) {
+  return String(text == null ? "" : text)
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+// Does an already-normalized surface carry `value`?
+//
+// One line, and named anyway, because the probe half asks it of TWO surfaces
+// — the reader-visible body text and the page's head metadata — for both a
+// probe's seeded value and its committed counterpart. Four inline copies of
+// "normalize the needle, then substring-test the haystack" are four chances
+// for one of them to drift, and `normalizeForMatch` exists precisely because
+// this comparison rule drifting is the bug class that keeps recurring here.
+//
+// The haystack is normalized by the caller, once per surface, rather than per
+// probe: it is the long side, and re-normalizing it inside a `.some()` would
+// redo that work for every probe.
+function surfaceCarries(haystack, value) {
+  return haystack.includes(normalizeForMatch(value));
+}
+
+// One entry of `config.seedProbes`, normalized to
+// `{ value, committed, removed }`.
+//
+// A bare string is tolerated as `{ value }` so a version-skewed capture script
+// paired with an older editor degrades to the two-way behavior rather than
+// throwing — an unpaired probe simply can never witness the committed case.
+//
+// `removed` mirrors `ProbeSense` in `seed_landing.rs`: false (the default, and
+// the shape of every probe the editor sent before the removing kind existed)
+// means the seed INTRODUCED `value` and it must appear; true means the seed
+// DELETED it and it must be gone. An unrecognized `sense` string reads as
+// introduced rather than throwing — the same degrade-don't-fail rule the bare
+// string above follows, and never failing a capture over the verifier.
+function readSeedProbe(entry) {
+  if (typeof entry === "string")
+    return { value: entry, committed: null, removed: false };
+  if (!entry || typeof entry.value !== "string") return null;
+  return {
+    value: entry.value,
+    committed: typeof entry.committed === "string" ? entry.committed : null,
+    removed: entry.sense === "removed",
+  };
+}
+
+// Describe an unreadable probe entry precisely enough to name the contract that
+// broke. `typeof` alone answers "object" for the shape that actually matters, so
+// the keys carry the diagnosis: a payload of `{ text, prior }` is a renamed
+// field, `{}` is an empty row, and a nested array is a serialization bug.
+function describeProbeShape(entry) {
+  if (entry === null) return "null";
+  const kind = typeof entry;
+  if (kind !== "object") return kind;
+  if (Array.isArray(entry)) return `array(length ${entry.length})`;
+  const keys = Object.keys(entry);
+  return keys.length === 0 ? "object with no keys" : `object with keys [${keys.join(", ")}]`;
+}
+
+// The probe half of `verifySeedLanded`, classifying the frame three ways rather
+// than two. Each probe carries a discriminating string the editor derived from
+// the seeded sandbox, plus the committed value it replaced at the same file and
+// field:
+//
+//   - a seeded value appears        → the seed reached the render. Clean.
+//   - only a committed counterpart  → this route renders the field and is
+//     appears                         showing UNSEEDED content. The real defect,
+//                                     and a stronger claim than the old one.
+//   - neither appears               → the route does not render these fields at
+//                                     all, so their absence proves nothing. Not
+//                                     an issue; the Rust half already recorded
+//                                     the unverifiable advisory.
+//
+// The two-way reading answered the third case with the second case's loud
+// failure, which blocked correct captures whose route simply had nothing to say
+// about the seeded field — a collection-picker page asserted against a blog
+// post body, or a preview page whose whole purpose is withholding the content.
+//
+// Existence, not coverage — a seed writes many strings and rendering may show
+// only some, so requiring all of them would fail correct captures.
+//
+// "Appears" spans two surfaces, checked in that order: the reader-visible body
+// text, then the page's head metadata. A title-only page renders its seeded
+// title into `<h1>` and its seeded description into `<meta>` and nothing else,
+// so a body-only haystack calls that seed missing while the Rust poll — which
+// matches the raw response body — calls it landed. One gate cannot hold two
+// definitions of the render, and the poll's is the shipped, more permissive
+// one, so this side matches it rather than the other way round.
+//
+// The probes are scoped by the editor before they reach here: only a capture
+// whose OWN merged seed wrote to the sandbox carries any, and a component
+// scenario never does. So the empty short-circuit below is the whole gate this
+// side needs — an unseeded or isolated-component capture simply sends none.
+async function verifyProbeSeedLanded(frame, config) {
+  const rawProbes = (config && config.seedProbes) || [];
+  const probes = rawProbes.map(readSeedProbe).filter(Boolean);
+
+  // An EMPTY `seedProbes` is a legitimate no-op — an unseeded or
+  // isolated-component capture sends none, and there is nothing to verify. A
+  // NON-EMPTY set whose every entry is unreadable is a different animal: it
+  // means this script and the binary that invoked it disagree about the probe
+  // contract, and silently filtering those entries turns "I cannot check the
+  // seed" into "the seed is fine" — a capture that asserts nothing while
+  // reporting success. Say so instead, and name the shape received so the
+  // diagnosis lands on the script/binary contract rather than on the app.
+  if (rawProbes.length > 0 && probes.length === 0) {
+    const shapes = rawProbes.map(describeProbeShape).join("; ");
+    throw new Error(
+      `capture.js does not understand this scenario's seedProbes: received ${rawProbes.length} ` +
+        `entry/entries, none readable as a string or { value: string } — [${shapes}]. This is a ` +
+        `capture-script/binary contract break, not a scenario failure: the seed was never ` +
+        `verified either way. Run \`codeyam-editor editor sync-capture-scripts\` to bring ` +
+        `.codeyam/capture.js up to date with the running binary.`,
+    );
+  }
+
+  if (probes.length === 0) return null; // nothing derived — nothing to verify.
+
+  // The committed value showing is a TRANSIENT state, not a verdict: on a
+  // content-collection stack the seed adapter writes the sandbox and the
+  // content layer re-globs asynchronously, so the first frame read can
+  // legitimately still be rendering what the seed replaced. Reading once and
+  // failing turned that race into false `seed-not-landed` failures on captures
+  // whose seeded string was visibly present seconds later — one scenario failed
+  // while its seeded "Protected preview" appeared twice in the rendered text.
+  //
+  // So only THIS arm gains patience. Every other arm still returns on the first
+  // read, because each is already a settled answer: a seeded value found is a
+  // landing, a capped text sample is inconclusive, and neither-value-present
+  // means the route does not render these fields at all. Re-reading those would
+  // buy nothing and cost the budget.
+  const budgetMs = readSeedLandingBudgetMs(config);
+  const startedAt = Date.now();
+  for (;;) {
+    const verdict = await readSeedVerdict(frame, probes);
+    if (verdict.kind !== "committed-showing") return null;
+    const waitedMs = Date.now() - startedAt;
+    if (waitedMs >= budgetMs) {
+      return seedNotLandedIssue(frame, config, verdict.showing, waitedMs);
+    }
+    await new Promise((r) => setTimeout(r, SEED_LANDING_RETRY_INTERVAL_MS));
+  }
+}
+
+// One read of the frame, classified. The READ half only: it owns the page
+// access and the never-fail-over-the-verifier rule, and delegates every verdict
+// to the pure classifier below.
+//
+// An unreadable frame is `inconclusive`, never a failure — the verifier must
+// not be what fails a capture.
+async function readSeedVerdict(frame, probes) {
+  let state;
+  try {
+    state = await dumpPageState(frame, null);
+  } catch (_) {
+    return { kind: "inconclusive" }; // read-back failed.
+  }
+  if (!state) return { kind: "inconclusive" };
+  return classifySeedFrameState(state, probes);
+}
+
+// Classify one already-read page state against a probe set, the same three ways
+// `classify_served_body` classifies one served response — so the poll and this
+// assertion cannot drift into two definitions of "landed", which is the bug
+// class that keeps recurring here.
+//
+// Returns `{ kind: "landed" | "inconclusive" | "committed-showing", showing }`.
+// Only `committed-showing` is worth re-reading for; the other two are settled.
+//
+// Pure and synchronous, and split from the read above for exactly the reason
+// `classify_served_body` was lifted out of the Rust polling loop: every verdict
+// this gate can reach becomes reachable in a test from a plain state object,
+// with no fake frame and no waiting out a retry budget. The decision used to be
+// expressible only through an async page read.
+function classifySeedFrameState(state, probes) {
+  // First surface: the text a reader actually sees in the capture.
+  const visibleText = state.visibleText || [];
+  const haystack = normalizeForMatch(
+    visibleText.concat(state.selectorText || []).join(" "),
+  );
+
+  // Second surface: a page whose seeded value renders only into `<title>` or a
+  // `<meta content>` still received the seed. The Rust poll already reads it
+  // that way — it matches the raw response body, head markup included — so a
+  // refusal here would leave the two halves of one gate disagreeing about what
+  // counts as the render, which is the reported bug: the poll reports landed
+  // and the frame assertion reports the seed missing, for one served page.
+  //
+  // Deliberately NOT folded into `haystack` above: the two are separate
+  // questions (did the reader see it / did the render receive it), and the cap
+  // rule below applies to the body sample only.
+  const headHaystack = normalizeForMatch((state.headMetadata || []).join(" "));
+  const carries = (value) =>
+    surfaceCarries(haystack, value) || surfaceCarries(headHaystack, value);
+
+  const introduced = probes.filter((probe) => !probe.removed);
+  const removed = probes.filter((probe) => probe.removed);
+
+  if (introduced.some((probe) => carries(probe.value))) {
+    return { kind: "landed" }; // a seeded value reached the render.
+  }
+
+  // A removing probe still on the page is the defect, and a stronger
+  // observation than the committed sweep below: the value is one the seed
+  // explicitly deleted, so the route rendering it cannot be explained away by
+  // the route simply not showing the field. Mirrors the same-ordered arm in
+  // `classify_served_body`.
+  const stillRemoved = removed.find((probe) => carries(probe.value));
+  if (stillRemoved) {
+    return {
+      kind: "committed-showing",
+      showing: { value: stillRemoved.value, committed: stillRemoved.value },
+    };
+  }
+
+  // `dumpPageState` samples a bounded number of text nodes. When it came back
+  // at the cap, "not found" cannot be distinguished from "past the sample", so
+  // the honest answer is inconclusive rather than a failure — same rule the
+  // storage half follows for unavailable storage. It bounds the BODY sample
+  // only; the metadata read above is complete, so a metadata match is
+  // conclusive regardless of where the text walk stopped.
+  //
+  // Below the two match arms above deliberately: a match is conclusive however
+  // the walk ended, and only a MISS needs the sample to have been complete.
+  if (visibleText.length >= PAGE_STATE_TEXT_NODE_CAP) {
+    return { kind: "inconclusive" };
+  }
+
+  // Both surfaces again, and for the same reason: a route emitting the
+  // COMMITTED value into its `<meta description>` demonstrably renders that
+  // field and demonstrably is not rendering the seed. Widening where a seed
+  // counts as landed without widening where its committed counterpart counts
+  // as showing would turn the real defect into a silent pass.
+  const showing = probes.find(
+    (probe) => probe.committed && carries(probe.committed),
+  );
+  if (showing) return { kind: "committed-showing", showing };
+
+  // Every removing probe is gone, which is exactly what the seed set out to
+  // achieve — and the only landing a purely-deleting seed can demonstrate.
+  // Last, because absence is the weakest of the three claims: it is also what
+  // an unrelated route looks like, so it must not pre-empt a positive landing
+  // or a still-showing observation.
+  if (removed.length > 0) return { kind: "landed" };
+
+  // Neither the seed nor what it replaced is on this page: the route does not
+  // render these fields, and demanding one is asserting a fact about a page
+  // that has nothing to say.
+  return { kind: "inconclusive" };
+}
+
+// The loud `seed-not-landed` issue, built once the re-read budget has elapsed
+// with the render still showing what the seed replaced.
+//
+// `waitedMs` is named in the message because a reader who sees "the seed did
+// not land" needs to know the gate was patient before concluding it — and,
+// when a project has raised `seedLandingBudgetMs`, that the raised budget is
+// the one that actually elapsed.
+function seedNotLandedIssue(frame, config, showing, waitedMs) {
+  return createIssue(
+    "seed-not-landed",
+    `The captured frame still showed "${showing.committed}" where this scenario's own seed ` +
+      `wrote "${showing.value}" after ${Math.round(waitedMs / 1000)}s of re-reading — the ` +
+      `served app is rendering COMMITTED content, not the seed. This route demonstrably ` +
+      `renders that field, so its committed value appearing is direct evidence the seed did ` +
+      `not reach the frame — fix the seed; do not delete the scenario. Check, in order: ` +
+      `(1) the seed's tables/files target the collection this route actually renders, ` +
+      `(2) the app cached a content index built before the seed landed, (3) the seed ` +
+      `adapter wrote somewhere the served app does not read, or (4) the dev server was not ` +
+      `launched by the editor, so it resolves committed source instead of ` +
+      `CODEYAM_CONTENT_ROOT/CODEYAM_DATA_ROOT (those roots travel through the spawned ` +
+      `process's environment — there are no .codeyam/tmp/*-root sidecar files to look for, ` +
+      `and their absence is not the fault). If this content layer is simply slow to ` +
+      `rebuild, raise "seedLandingBudgetMs" in .codeyam/editor.json.`,
+    { url: (frame && frame.url && frame.url()) || (config && config.url) },
+  );
+}
+
 // Drive an ordered list of flow steps against ONE already-loaded browser
 // session so a scripted multi-step demo (`editor preview-flow`) is captured as
 // the real round-trip — click state and client transients persist across
@@ -635,8 +1291,25 @@ async function verifySeededStorageLanded(frame, config) {
 // Returns the frame the flow ended on, so the caller's final screenshot and
 // result URL reflect the last navigated route.
 async function runFlowSteps(page, initialFrame, steps, ctx) {
-  const { url, loadingMarkers, navigation, iframeBackground, preflight, harnessOrigin } =
-    ctx;
+  const {
+    url,
+    loadingMarkers,
+    navigation,
+    iframeBackground,
+    preflight,
+    harnessOrigin,
+    hydrationTimeoutMs = 10000,
+    settleMs,
+    probeCounterpart,
+  } = ctx;
+  // Honor a caller-supplied `settleMs` for the in-flow stability windows,
+  // falling back to today's hardcoded defaults (5s for interaction steps, 10s
+  // for a navigate). This stops the field from being silently dropped — the
+  // exact trap that made a reporter's `settleMs: 8000` a no-op.
+  const navigateSettleMs =
+    typeof settleMs === "number" && settleMs > 0 ? settleMs : 10000;
+  const interactionSettleMs =
+    typeof settleMs === "number" && settleMs > 0 ? settleMs : 5000;
   let frame = initialFrame;
 
   for (let i = 0; i < steps.length; i++) {
@@ -655,14 +1328,36 @@ async function runFlowSteps(page, initialFrame, steps, ctx) {
                   harnessOrigin,
                 });
           frame = loadResult.frame;
-          await waitForStablePage(page, frame, 10000, loadingMarkers);
+          await waitForStablePage(page, frame, navigateSettleMs, loadingMarkers);
+          // A navigate loads a fresh route that must re-hydrate before the next
+          // fill/click, or the interaction lands on inert SSR markup (the same
+          // bug the top-level wait fixes, one route deeper). Bounded and
+          // stack-gated exactly like the top-level wait.
+          const navHydration = await waitForHydration(frame, {
+            // `target` is only where we aimed; the frame's own URL is where we
+            // landed, so a redirect during the step is followed. Falls back to
+            // `target` when a detached frame cannot answer.
+            url: safeFrameUrl(frame) || target,
+            timeoutMs: hydrationTimeoutMs,
+            probeCounterpart,
+          });
+          // The mount that breaks a top-level load breaks it here too, and
+          // before this a route that died one navigation deep got no
+          // attribution at all. Report it so the editor can escalate the
+          // preview off the subpath for the rest of the session.
+          //
+          // The returned issue is deliberately NOT pushed: this wait exists to
+          // gate the next interaction, and adding an issue here would give a
+          // flow that passes today a new way to fail. Computing a verdict and
+          // not raising it reads as a bug otherwise — it is the point.
+          await escalateSubpathHydration(navHydration);
           break;
         }
         case "click":
         case "fill":
         case "press":
           await performInteraction(frame, step);
-          await waitForStablePage(page, frame, 5000, loadingMarkers);
+          await waitForStablePage(page, frame, interactionSettleMs, loadingMarkers);
           break;
         case "waitFor":
           await waitForPredicate(frame, step);
@@ -699,9 +1394,14 @@ async function runScenarioCheck(
   config,
   { preflight = assertAppPortReachable, harnessOrigin } = {},
 ) {
-  const resolvedHarnessOrigin =
-    harnessOrigin !== undefined ? harnessOrigin : resolveHarnessOrigin();
   const { url, outputPath, width, height, httpMocks = {} } = config;
+  // The harness host mirrors the capture target's host so the framed load stays
+  // SAME-SITE — see `resolveHarnessOrigin`. A cross-site frame withholds the
+  // SameSite=Lax `cy_session` cookie and every token-gated route 401s.
+  const resolvedHarnessOrigin =
+    harnessOrigin !== undefined
+      ? harnessOrigin
+      : resolveHarnessOrigin({ targetUrl: url });
   // Per-scenario capture-check allowances (see `CaptureAllowances` /
   // `ScenarioDefinition` on the Rust side). Default false so the guards keep
   // their strict behavior for every scenario that does not opt in.
@@ -709,7 +1409,20 @@ async function runScenarioCheck(
   const expectedConsoleErrors = !!(config && config.expectedConsoleErrors);
   let interactionEffect = null;
   let interactionRetried = false;
+  // Non-fatal warnings raised while resolving interaction/flow targets — e.g. a
+  // substring text match that hit more than one element. Surfaced on the result
+  // so the agent sees the ambiguity instead of a silently-wrong first-match.
+  const interactionWarnings = [];
   const issues = [];
+  // Actionable set for self-healing: same-origin routes that returned 4xx with
+  // no scenario mock. A hermetic-proxy/upstream 404 is a *successful* HTTP
+  // response with status 404 (not a Playwright `requestfailed`), so the only
+  // place with method + path + status together is the `page.on("response")`
+  // collector below. De-duped by `"<METHOD> <path>"`; surfaced through
+  // `buildResult` so the Rust failure message can name each unmocked route and
+  // `stub-unmocked-routes` can add stub mocks for them.
+  const unmockedRoutes = [];
+  const unmockedRouteKeys = new Set();
   // Origin of the captured page, used to classify failed requests: only a
   // failure on the page's OWN origin should fail the capture (see
   // `isCaptureFatalRequestFailure`). Derived from `config.url` exactly as
@@ -742,6 +1455,45 @@ async function runScenarioCheck(
   }
   const context = await browser.newContext(contextOptions);
 
+  // Authenticate the capture context to the editor's token-gated control-API
+  // BEFORE any navigation. On a non-loopback bind the harness route requires the
+  // session token; the browser UI carries it as a cookie automatically but the
+  // headless capturer does not, so inject it from the on-box token file. Scoped
+  // to the SAME resolved harness origin the capture navigates to: when no harness
+  // origin resolves (missing server-state, or a test that passes
+  // `harnessOrigin: null`) there is nothing to authenticate to, so no cookie is
+  // added. The `addCookies` guard keeps a mock context that doesn't implement it
+  // from throwing (a real Playwright context always has it).
+  const sessionCookies = buildSessionTokenCookies({
+    harnessOrigin: resolvedHarnessOrigin,
+  });
+  // Capability-skew guard. When the capture WILL use the token-gated harness
+  // route (a harness origin resolved) AND an on-box session token exists, but no
+  // `cy_session` cookie was produced, the token injection is broken — the
+  // generated `.codeyam/capture.js` is stale relative to the harness route it
+  // must authenticate to. Proceeding would hit a guaranteed 401 and strand every
+  // component capture on a `#scenario-frame` timeout. Fail loudly at the source
+  // instead, naming the version skew and its fix — closing the gap between the
+  // harness route (present) and the capture-side auth (absent).
+  if (
+    captureAuthSkewDetected({
+      harnessOrigin: resolvedHarnessOrigin,
+      cookieCount: sessionCookies.length,
+      tokenExists: onBoxSessionTokenExists(),
+    })
+  ) {
+    throw new Error(
+      `The capture harness origin ${resolvedHarnessOrigin} is token-gated and an ` +
+        `on-box \`.codeyam/session-token\` exists, but the capture produced no ` +
+        `\`cy_session\` cookie — the generated \`.codeyam/capture.js\` is stale ` +
+        `relative to the harness route (its session-token injection is missing or ` +
+        `broken). Regenerate the capture script / refresh the editor binary on this VM.`,
+    );
+  }
+  if (sessionCookies.length > 0 && typeof context.addCookies === "function") {
+    await context.addCookies(sessionCookies);
+  }
+
   // Apply the scenario's merged `browserState` (cookies + request
   // headers) to the capture context BEFORE the first navigation.
   // Belt-and-suspenders with the proxy's `Set-Cookie` injection: the
@@ -762,7 +1514,11 @@ async function runScenarioCheck(
   // wait out an in-flight fetch that would otherwise be screenshotted as a
   // loading skeleton.
   const networkTracker = createNetworkTracker(page);
-  await attachHttpMocks(page, httpMocks);
+  // The observer tallies which declared mocks actually fulfilled and inventories
+  // every request the page made, grouped by origin. `appOrigin` lets it split
+  // same-origin from cross-origin — a third-party host the scenario has no
+  // opinion about becomes visible rather than inferred.
+  const mockObserver = await attachHttpMocks(page, httpMocks, { appOrigin });
 
   page.on("pageerror", (error) => {
     pushIssue(issues, handlePageError(error));
@@ -793,6 +1549,30 @@ async function runScenarioCheck(
     pushIssue(issues, issue);
   });
 
+  page.on("response", (response) => {
+    // Collect same-origin 4xx responses that no scenario mock covers — the set
+    // a stub mock would fix. Mirrors the console-guard predicates exactly so the
+    // reported set matches the guard's tolerances: a scenario that provokes
+    // errors by design (`expectedConsoleErrors`) reports none, and a route the
+    // scenario already declares an error mock for is the mock's intended 4xx,
+    // not a missing mock.
+    if (expectedConsoleErrors) return;
+    const req = response.request();
+    const reqUrl = req.url();
+    // Same-origin only — mirror the console/requestfailed origin gate so a
+    // cross-origin sub-resource 4xx is never reported as an unmocked route.
+    if (!isCaptureFatalRequestFailure(reqUrl, appOrigin)) return;
+    // The status-threshold, declared-mock, and path-extraction decision is the
+    // pure `unmockedRouteFrom` helper; the listener keeps only the stateful
+    // same-origin gate above and the dedup below.
+    const route = unmockedRouteFrom(req.method(), reqUrl, response.status(), httpMocks);
+    if (!route) return;
+    const key = `${route.method} ${route.path}`;
+    if (unmockedRouteKeys.has(key)) return;
+    unmockedRouteKeys.add(key);
+    unmockedRoutes.push(route);
+  });
+
   page.on("requestfailed", (request) => {
     // Per-scenario allowance: the broken-image fallback scenario's `<img>` 404
     // is a SAME-origin request failure it exists to demonstrate, so
@@ -813,6 +1593,12 @@ async function runScenarioCheck(
   });
 
   let loaded = false;
+  // Set when the top-level document turned out to be the proxy's
+  // dev-server-down placeholder. Gates the screenshot write below: the frame is
+  // the wrong pixels by definition, and overwriting a previously-correct PNG
+  // with codeyam's placeholder card is the failure that made this guard
+  // necessary — the stale image outlived the failed run and was believed.
+  let devServerPlaceholder = false;
 
   try {
     // Application/route captures navigate at the top level so the
@@ -835,13 +1621,47 @@ async function runScenarioCheck(
     const response = loadResult.response;
     loaded = true;
 
-    if (response && response.status() >= 400) {
+    // The proxy's dev-server-down placeholder is a 200 carrying codeyam's own
+    // sentinel header, so it is checked BEFORE the status branches below —
+    // status alone cannot tell it from the app. Left unchecked, the capture
+    // photographs codeyam's "Ready to scaffold" card, reports success, and
+    // leaves that frame on disk to be shown later as the app's real state.
+    if (isDevServerPlaceholderResponse(response)) {
+      devServerPlaceholder = true;
+      pushIssue(
+        issues,
+        createIssue(
+          "navigation",
+          "Captured the editor's dev-server placeholder, not the app. The proxy " +
+            `answered with \`${DEV_SERVER_DOWN_HEADER}\`, which means the app's dev ` +
+            "server was not serving this request. The screenshot would be of " +
+            "codeyam's own placeholder card. Start the app's dev server and re-run " +
+            "the capture.",
+          { url, devServerDown: true },
+        ),
+      );
+    } else if (response && response.status() >= 400) {
       pushIssue(
         issues,
         createIssue("navigation", `Navigation returned HTTP ${response.status()}`, {
           url: response.url(),
           status: response.status(),
         }),
+      );
+    } else if (!response && config.navigation === "topLevel") {
+      // A real top-level document load always yields a response. A null one
+      // means the status could never be checked — and an unverified status is
+      // not a passing status: a 500 whose error body renders text would
+      // otherwise satisfy `hasContent` and pass as `ok`. Fail loudly instead.
+      // The iframe path stays tolerant: there the app response is matched by
+      // exact URL and is legitimately allowed to miss.
+      pushIssue(
+        issues,
+        createIssue(
+          "navigation",
+          "Navigation response unavailable — could not verify the HTTP status of the top-level document",
+          { url },
+        ),
       );
     }
 
@@ -862,12 +1682,46 @@ async function runScenarioCheck(
       typeof config.stableTimeoutMs === "number" && config.stableTimeoutMs > 0
         ? config.stableTimeoutMs
         : 10000;
+    // Hydration wait cap. Mirrors `stableTimeoutMs`: defaults to 10s, but a slow
+    // Turbopack cold-compile route can extend it via `config.hydrationTimeoutMs`
+    // without a code change. Bounded and near-zero on a healthy page (attaches in
+    // a poll or two); only a genuinely dead page pays the full cap.
+    const hydrationTimeoutMs =
+      typeof config.hydrationTimeoutMs === "number" &&
+      config.hydrationTimeoutMs > 0
+        ? config.hydrationTimeoutMs
+        : 10000;
+    // A scenario's declared `captureTiming` moment, as a FLOOR on when the
+    // frame may be taken. Distinct from `stableTimeoutMs` above, which is a
+    // CAP: `waitForStablePage` returns the moment two consecutive polls match,
+    // so a cap can only ever make a capture happen *sooner*, never later. That
+    // asymmetry is what made a declared capture moment unreachable on a canvas
+    // surface — a scripted terminal replay paints into a <canvas>, so
+    // `document.body.innerHTML` never changes while it plays, the page reads as
+    // stable on the first two polls, and the frame was taken ~1.2s in no matter
+    // what the scenario declared. A scenario whose interesting state arrives
+    // later than that (a `blocked` banner scripted at 1800ms) could never be
+    // captured, and raising `atMs` did nothing because it only raised the cap.
+    const captureAtMs =
+      typeof config.captureAtMs === "number" && config.captureAtMs > 0
+        ? config.captureAtMs
+        : null;
+    const settleStartedAt = Date.now();
     const stableOutcome = await waitForStablePage(
       page,
       frame,
       stableTimeoutMs,
       loadingMarkers,
     );
+    // Held here — after stability, before the content/hydration assertions and
+    // the screenshot — so every downstream check sees the same frame the
+    // scenario asked for rather than an earlier one.
+    if (captureAtMs !== null) {
+      const remainingMs = captureAtMs - (Date.now() - settleStartedAt);
+      if (remainingMs > 0) {
+        await page.waitForTimeout(remainingMs);
+      }
+    }
 
     // DOM-stable does not mean done: a client-side data fetch can still be in
     // flight (the loading skeleton cleared but its replacement content hasn't
@@ -988,18 +1842,57 @@ async function runScenarioCheck(
     // to run before the screenshot. Stack-gated and fail-safe — see
     // scenario-interactivity.js — so backend / static / unknown-framework
     // captures are an automatic pass.
-    const hydrationIssue = await probeInteractivity(frame, {
-      url: page.url() || url,
+    // `hydration.hydrated` is also consulted below to classify interactionEffect:
+    // the wait runs BEFORE any interaction, which is exactly the reading we want
+    // — "was this page alive when we found it," not "did our click revive it."
+    //
+    // WAIT for hydration (not just detect it): the one-shot probe read the
+    // attachment state before React had a chance to hydrate SSR markup, so the
+    // subsequent fill/click landed on inert controls and the submit handler
+    // never fired — yet the run reported success. Waiting here gates the
+    // screenshot AND every interaction branch below (steps / interaction /
+    // interactions[] all run after this line) on the client runtime actually
+    // attaching. Stack-gated and fail-safe: a timed-out wait yields
+    // `hydrated: false` (so a truly dead page still classifies `unhydrated`),
+    // and a non-interactive stack returns instantly.
+    // The hydration verdict is about the CONTENT document, and under the iframe
+    // harness `page.url()` is the harness — with the preview mount present only
+    // percent-encoded, so every `/__codeyam_preview` test on it is false and the
+    // whole escalation path silently never fires. `frame` is the content frame
+    // in every load shape, so its own URL is the one both the message and the
+    // counterpart probe must see.
+    const contentUrl = safeFrameUrl(frame) || page.url() || url;
+    // Built once and shared with `runFlowSteps` below, so a route that dies one
+    // navigation deep gets the same two-origin experiment this wait runs.
+    const probeCounterpart = buildCounterpartProbe(page);
+    const hydration = await waitForHydration(frame, {
+      url: contentUrl,
+      timeoutMs: hydrationTimeoutMs,
+      // `undefined` in production → waitForHydration reads .codeyam/stack.json;
+      // a test injects a stack to force the interactive path without a real file.
+      stack: config.stack,
+      // Fires ONLY on a proven-dead verdict, so a healthy capture pays nothing.
+      // Answers "is it my page or is it this origin?" before the failure is
+      // reported, instead of leaving every session to establish it by hand.
+      probeCounterpart,
     });
-    if (hydrationIssue) {
-      pushIssue(issues, hydrationIssue);
+    if (hydration.issue) {
+      pushIssue(issues, hydration.issue);
     }
+
+    // The two-sided verdict — dead under `/__codeyam_preview`, alive at the
+    // app's own origin — is proof the MOUNT is at fault, not the page. Hand it
+    // to the editor so the next `/api/config` serves this preview from the
+    // origin that works. Gated on the exact shape (see
+    // `subpathHydrationEscalation`); every other verdict, including
+    // `dead-on-both`, reports nothing and the hydration veto stands.
+    await escalateSubpathHydration(hydration);
 
     // Assert the injected seed actually landed in the capture browser, at rest
     // and BEFORE any interaction can legitimately mutate storage. A non-empty
     // seed that didn't reach localStorage means the screenshot will show
     // default/empty state — fail loudly instead of emitting a misleading frame.
-    const seedNotLandedIssue = await verifySeededStorageLanded(frame, config);
+    const seedNotLandedIssue = await verifySeedLanded(frame, config);
     if (seedNotLandedIssue) {
       pushIssue(issues, seedNotLandedIssue);
     }
@@ -1020,6 +1913,10 @@ async function runScenarioCheck(
         iframeBackground: config.iframeBackground,
         preflight,
         harnessOrigin: resolvedHarnessOrigin,
+        warnings: interactionWarnings,
+        hydrationTimeoutMs,
+        settleMs: config.settleMs,
+        probeCounterpart,
       });
     } else if (config.interaction) {
       // Record fingerprint before interaction
@@ -1030,7 +1927,9 @@ async function runScenarioCheck(
       // fill / press (expanded accordion, open modal) without editing app
       // source. A no-match target throws here and is caught below as a failed
       // capture with the candidate-labels hint — never a silent blank shot.
-      await performInteraction(frame, config.interaction);
+      await performInteraction(frame, config.interaction, {
+        warnings: interactionWarnings,
+      });
       await waitForStablePage(page, frame, 5000, loadingMarkers);
 
       // Record fingerprint after interaction
@@ -1040,12 +1939,18 @@ async function runScenarioCheck(
       if (beforeFingerprint === afterFingerprint && config.interaction.action === "click") {
         interactionRetried = true;
         await new Promise((resolve) => setTimeout(resolve, 500));
+        // The retry re-resolves the same target; suppress its ambiguity warning
+        // (already captured on the first attempt) to avoid a duplicate.
         await performInteraction(frame, config.interaction);
         await waitForStablePage(page, frame, 5000, loadingMarkers);
         afterFingerprint = await getDOMFingerprint(frame);
       }
 
-      interactionEffect = beforeFingerprint === afterFingerprint ? "none" : "changed";
+      interactionEffect = classifyInteractionEffect(
+        beforeFingerprint,
+        afterFingerprint,
+        hydration.hydrated,
+      );
     }
 
     // Replay the scenario's PERSISTED interaction sequence (if any) in order,
@@ -1058,6 +1963,7 @@ async function runScenarioCheck(
       await performInteractionSequence(page, frame, config.interactions, {
         settleMs: 5000,
         loadingMarkers,
+        warnings: interactionWarnings,
       });
     }
 
@@ -1074,7 +1980,24 @@ async function runScenarioCheck(
       await forceFinalVisualState(frame).catch(() => {});
     }
 
+    // Center an isolated-component wrapper that is not already centered. The
+    // shot below is full-viewport with no element clip, so an isolation page
+    // that does not center itself lands in the top-left corner. Unlike
+    // forceFinalVisualState this is NOT gated on hasDeclaredInteractiveState:
+    // an isolation page with a declared interaction still needs to be centered,
+    // and moving the wrapper does not clobber its contents the way
+    // animation-forcing does — so a replayed interaction sequence stays valid.
     if (outputPath && loaded) {
+      await centerCaptureWrapper(frame).catch(() => {});
+    }
+
+    // A placeholder capture writes NOTHING. The false `success: true` was the
+    // visible half of this bug; the expensive half was the PNG of codeyam's
+    // "Ready to scaffold" card left on disk, which outlived the run and was
+    // later sent to a user as evidence of the app's real state. Leaving the
+    // previous (or absent) screenshot untouched is what makes the failure
+    // recoverable rather than destructive.
+    if (outputPath && loaded && !devServerPlaceholder) {
       fs.mkdirSync(path.dirname(outputPath), { recursive: true });
       await page.screenshot({ path: outputPath, fullPage: false });
     }
@@ -1085,11 +2008,47 @@ async function runScenarioCheck(
       issues,
       outputPath,
       url: frame.url() || url,
+      unmockedRoutes,
+      mockUsage: { used: mockObserver.used, unused: mockObserver.unused },
+      externalRequests: mockObserver.externalRequests,
+      // Optional: supplied only by callers that know where the viewer's own
+      // browser is served. Absent on every path that does not, which keeps the
+      // reported verdict `false` rather than a guess.
+      viewerOrigin: config.viewerOrigin ?? null,
     });
 
     if (config.interaction) {
       result.interactionEffect = interactionEffect;
       result.interactionRetried = interactionRetried;
+    }
+
+    // Forward the hydration password census so the in-place auth-gate guard can
+    // fire on a route the project never declared. Attached ONLY when the probe
+    // actually took a census: a backend/static/unknown stack returns a null
+    // census having looked at nothing, and emitting hardcoded `false`s there
+    // would read downstream as positive "no password field", "not a credential
+    // form" claims the probe never made.
+    //
+    // Emitted as ONE object rather than three sibling flags because the three
+    // facts are only meaningful together — the two corroborating shapes exist
+    // precisely to qualify the first, and a consumer that received one without
+    // the others would be back to inferring a gate from a bare password field.
+    // `hasPasswordInput` is the discriminator for whether a census happened at
+    // all; the other two are booleans whenever it is.
+    if (typeof hydration.hasPasswordInput === "boolean") {
+      result.passwordCensus = {
+        hasPasswordInput: hydration.hasPasswordInput,
+        credentialForm: hydration.credentialForm === true,
+        formIsThePage: hydration.formIsThePage === true,
+      };
+    }
+
+    // Surface any non-fatal interaction/flow warnings (e.g. an ambiguous
+    // substring text match) so the CLI can print them and the agent can switch
+    // to a precise selector. Only attached when present — a clean run is
+    // byte-for-byte unchanged.
+    if (interactionWarnings.length > 0) {
+      result.warnings = interactionWarnings.slice();
     }
 
     // `capture-state` mode: attach the read-only page-state snapshot so the
@@ -1119,6 +2078,12 @@ async function runScenarioCheck(
       issues,
       outputPath,
       url,
+      unmockedRoutes,
+      // A capture that threw still made requests; the inventory it collected up
+      // to the failure is often exactly what explains the failure.
+      mockUsage: { used: mockObserver.used, unused: mockObserver.unused },
+      externalRequests: mockObserver.externalRequests,
+      viewerOrigin: config.viewerOrigin ?? null,
     });
   } finally {
     await browser.close();
@@ -1146,15 +2111,31 @@ async function main() {
 
 module.exports = {
   runScenarioCheck,
+  classifyInteractionEffect,
   mergeVisibleTextLength,
   runFlowSteps,
   dumpPageState,
-  verifySeededStorageLanded,
+  verifySeedLanded,
+  verifyProbeSeedLanded,
+  classifySeedFrameState,
+  readSeedLandingBudgetMs,
+  surfaceCarries,
+  describeProbeShape,
   readStackLoadingMarkers,
   scenarioScriptsLiveSocket,
   applyBrowserState,
+  buildSessionTokenCookies,
+  readSessionToken,
+  subpathHydrationReportTarget,
+  reportSubpathHydrationFailure,
+  escalateSubpathHydration,
+  safeFrameUrl,
+  captureAuthSkewDetected,
+  SESSION_COOKIE,
   isCrossOriginRequest,
   isCaptureFatalRequestFailure,
+  isDevServerPlaceholderResponse,
+  DEV_SERVER_DOWN_HEADER,
   stripMarkerHeaders,
   main,
   launchChromiumWithSelfHeal,
