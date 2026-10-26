@@ -12,7 +12,20 @@ description: |
 
 # Design exploration
 
-You are helping the user pick a design direction inside the new-project questionnaire's chat substep. The project files do not exist yet — **do not scaffold, install dependencies, or run any `codeyam-editor-dev editor` command**. Your only job is to read the brief and assets, read the bundled design systems, write mockup HTML, and (on the user's pick) POST a single API call.
+You are helping the user pick a design direction inside the new-project questionnaire's chat substep. The project files do not exist yet — **do not scaffold, install dependencies, or run any `codeyam-editor editor` command**. Your only job is to read the brief and assets, read the bundled design systems, write mockup HTML, and (on the user's pick) POST a single API call.
+
+## Round mode — designing against an app that already exists
+
+This skill has two modes. Everything above and below assumes **questionnaire mode** (project does not exist yet). When a **design round** is active — the file `.codeyam/design/rounds/.active` exists, naming a round id — you are in **round mode**, running against an app that already exists, and the following overrides apply. Everything else in this skill (the design read, the tier table, imagery/typography rules, atomic writes, the Step 3b lint self-correction loop) is reused verbatim.
+
+- **Active round + directory.** Read the active round id from `.codeyam/design/rounds/.active`; the round directory is `.codeyam/design/rounds/<round-id>/`. It already holds `current-state.md`, written by the grounding step.
+- **`current-state.md` is a primary input, alongside `projectDescription`.** It describes the surface being modified as it looks TODAY — the scenarios that render it, their data states, and what this round is trying to change. Read it before deriving the design read; the mockups are **variations on that real screen**, not a fresh invention.
+- **The existing `.codeyam/design/design_system.md` (if any) is the anchored tier's reference** instead of a freshly-chosen catalog system.
+- **Step 1 changes.** "Which page to mock up" is already answered by grounding — **do NOT re-ask it.** The count question (2/4/6/8, default 6) and the assets question stay.
+- **Tier semantics gain the existing-app reading.** The **anchored** tier means "the app as it looks today, with the requested change applied" — the safe, minimally-disruptive direction — not a fresh catalog system. Exploratory and off-catalog keep their meaning. The 2/4/6/8 → anchored/exploratory/off-catalog allocation table is reused unchanged.
+- **The `codeyam-editor` command prohibition is LIFTED in round mode.** The project exists and you legitimately need `codeyam-editor editor plan-show`, `... scenarios`, and the capture commands to ground and iterate. (The prohibition stays in questionnaire mode.)
+- **Output paths are round-relative.** `target.json` and every `NN-*-mockup.html` go in the round directory, NEVER `.codeyam/design/project_mockups/`. The mockup/tab/lint API calls take a `?round=<round-id>` scope; the project-wide directory is left untouched.
+- **Selection is handled by the WORKFLOW, not the Step 6 POST.** In round mode do NOT POST `/api/editor-design-select`. The user's pick is recorded by the design workflow's iterate/apply steps (`codeyam-editor editor branch-outcome design-iterate use` then `... design-round --select <mockup>`), which synthesizes an off-catalog token document automatically — closing the handoff gap the questionnaire flow leaves open. Your job in round mode ends at generating and iterating on the mockups; the workflow carries the selection.
 
 **The brief drives; the systems are a floor, not a ceiling.** The user's product description and any uploaded design assets are the primary signal — every mockup must feel like *their* product, not a stock template. The curated design systems in `.codeyam/design/design_systems/` are a quality floor: a vocabulary of robust, internally-consistent languages you can adhere to, stretch, or set aside depending on a mockup's *tier* (Step 2). Your goal across a set is **genuine range** — diverse directions — anchored by at least one safe, on-brief option, and (when the set is large enough) reaching all the way to a fully bespoke, off-catalog direction.
 
@@ -93,16 +106,30 @@ Every slot — anchored, exploratory, off-catalog — threads tone / palette / t
 
 ## Step 3 — declare the count, then generate N mockups across the tiers
 
-**Resolve the control port FIRST — never hardcode 14199.** Every API call below (the tab-switch POST, the Step 3b lint GET, the Step 5 tab-switch, the Step 6 selection POST) must target the project's *live* editor control port, not a fixed `14199`. Under the Project Launcher the questionnaire's editor runs on a **launcher-allocated dynamic port** recorded in `.codeyam/server-state.json`; `14199` is the launcher's *selector* SPA, which returns the SPA shell (**HTTP 200 + HTML**) for any `/api/*` route — so a call aimed there silently no-ops or reports a phantom success. Resolve the port once, before the first API call, and reuse it everywhere. Mirror the precedence the rest of the editor uses (`server-state.json` `controlPort` → `CODEYAM_CONTROL_PORT` env → `14199` default) with a plain file read — do **not** call any `codeyam-editor-dev editor …` command (forbidden during design):
+**Resolve the control port FIRST — never hardcode 14199.** Every API call below (the tab-switch POST, the Step 3b lint GET, the Step 5 tab-switch, the Step 6 selection POST) must target the project's *live* editor control port, not a fixed `14199`. Resolve it once, before the first API call, and reuse it everywhere.
+
+**The project's own `.codeyam/editor.json` `proxy.controlPort` is the answer.** It is a per-project value derived from the project directory, it is committed, and the launcher now prefers it when spawning an editor — so it is stable across restarts and is what a project comes back on. Read it first, letting the gitignored `.codeyam/editor.local.json` override it (that is the layering the rest of the editor uses). `.codeyam/server-state.json` is a *confirmation* that a server is currently running on that port, not the source of the port: it is written only when a project is opened and is **deleted on graceful shutdown**, so it is absent exactly when you are looking for a server that is not up. Use it to check liveness, never to answer "what port do I open?". Use a plain file read — do **not** call any `codeyam-editor editor …` command (forbidden during design):
 
 ```bash
-# Resolve the live editor control port — NOT a hardcoded 14199.
-PORT=$(python3 -c "import json,os; \
-print(json.load(open('.codeyam/server-state.json')).get('controlPort') \
-or os.environ.get('CODEYAM_CONTROL_PORT') or 14199)" 2>/dev/null || echo 14199)
+# Resolve the control port — NOT a hardcoded 14199.
+# Precedence: editor.local.json > editor.json > server-state.json > env > 14199.
+PORT=$(python3 -c "import json,os
+def get(p,*k):
+    try:
+        v=json.load(open(p))
+    except Exception:
+        return None
+    for x in k:
+        if not isinstance(v,dict): return None
+        v=v.get(x)
+    return v
+print(get('.codeyam/editor.local.json','proxy','controlPort')
+   or get('.codeyam/editor.json','proxy','controlPort')
+   or get('.codeyam/server-state.json','controlPort')
+   or os.environ.get('CODEYAM_CONTROL_PORT') or 14199)" 2>/dev/null || echo 14199)
 ```
 
-Use `http://localhost:$PORT` in every `curl` below. If any design-API response comes back as the SPA shell (an HTML body starting with `<!DOCTYPE`/`<html` instead of the expected JSON), the resolved port is pointing at the launcher selector — re-resolve, and if it still returns HTML, ask the user for the editor port. Never report success on a response you didn't confirm is JSON.
+Use `http://localhost:$PORT` in every `curl` below. **A wrong port now announces itself:** an `/api/*` route that is not served returns `404` with a JSON body carrying `role` — `"launcher"` if you reached the cross-project selector, `"editor"` (plus `projectDir`) if you reached a *different* project's editor. Read `role` and re-resolve; if the port still does not answer as this project's editor, ask the user for it. An HTML body starting with `<!DOCTYPE`/`<html` from an `/api/*` call means you are talking to a build that predates that 404 — treat it exactly the same way. Never report success on a response you didn't confirm is JSON.
 
 **Write the target manifest FIRST, before any HTML.** The UI uses this to render placeholder cards for every upcoming slot so the right pane fills in immediately. Write `.codeyam/design/project_mockups/target.json` with exactly:
 
@@ -270,7 +297,7 @@ If it fails, surface the error and let the user pick again.
 
 ## What NOT to do
 
-- **No scaffolding** — do not run `codeyam-editor-dev editor template`, `npm install`, `git init`, or any setup command. The project hasn't decided its tech stack yet.
+- **No scaffolding** — do not run `codeyam-editor editor template`, `npm install`, `git init`, or any setup command. The project hasn't decided its tech stack yet.
 - **No editing `.codeyam/design/design_system.md`** — that's the API's job after the selection POST.
 - **No remote fonts or scripts; remote *content photos* only with a fallback.** Never load remote fonts or `<script>` — the `sandbox=""` iframe blocks scripts outright, and a remote font that fails renders inconsistently. Remote *images*, though, the sandbox *does* load: inline is the default for **robustness** (offline / flaky environments) and **privacy** (a remote fetch leaks the viewer's IP to the host), not because the network is blocked. So — decorative imagery stays inline, and a **representational content-photo slot may use a remote image only when stacked on top of the inline depiction as its fallback layer** (the hybrid in Step 3); no bare remote `<img>` that can render as a broken icon. **User-uploaded `.codeyam/design/user_files/` assets** embedded as base64 `data:` URIs (or inline SVG) are inline content and are **required** when provided (Step 1, Step 3).
 - **No iframe-busting markup** — avoid `<meta http-equiv="refresh">`, `window.parent` access, or anything that breaks the sandbox.

@@ -52,7 +52,7 @@ Run the read-only mapper. It diffs git against the base, maps changed files to
 UI surfaces via the dependency graph, and partitions the result:
 
 ```
-codeyam-editor-dev editor changed-surfaces --base <ref> --format json
+codeyam-editor editor changed-surfaces --base <ref> --format json
 ```
 
 (Omit `--base` for the working-tree delta.) The JSON has:
@@ -79,7 +79,7 @@ existing scenario that demonstrates their change (slug + reason). If a preview i
 up, navigate to one or two so they *see* it:
 
 ```
-codeyam-editor-dev editor preview-nav '{"path":"/","dimension":"<defaultScreenSize>"}'
+codeyam-editor editor preview-nav '{"path":"/","dimension":"<defaultScreenSize>"}'
 ```
 
 **Then propose the uncovered surfaces.** Show the `uncovered` list once (slug +
@@ -92,7 +92,7 @@ user wants, register it additively, then capture:
 cat > .codeyam/tmp/recent-change-<suggestedSlug>-<unique>.json <<'EOF'
 { "slug": "recent-change-<suggestedSlug>", "kind": "application", "url": "<route>", "screen_size": "<defaultScreenSize>" }
 EOF
-codeyam-editor-dev editor register --file .codeyam/tmp/recent-change-<suggestedSlug>-<unique>.json
+codeyam-editor editor register --file .codeyam/tmp/recent-change-<suggestedSlug>-<unique>.json
 ```
 
 - For a `route` surface, `name` is the real URL — use it as the application
@@ -108,8 +108,13 @@ exactly what this flow created and nothing else.
 Then capture screenshots for what you registered:
 
 ```
-codeyam-editor-dev editor recapture-stale --skip-when-clean
+codeyam-editor editor recapture-stale --skip-when-clean --prefer-touched
 ```
+
+`--prefer-touched` orders the just-changed surfaces first so the `--max-seconds`
+budget captures the change you came to see before any unrelated
+environmentally-drifted screenshots. It only reorders — it never excludes or
+expands the set.
 
 - **Preview up:** the user sees their change rendered — surface the captures.
 - **Preview down:** register anyway and say capture is **pending** — the

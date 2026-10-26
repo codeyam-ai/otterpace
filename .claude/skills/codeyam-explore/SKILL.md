@@ -25,7 +25,7 @@ the minimum the user chooses, and only that.
 Before assessing, find out whether this repo is already onboarded. Run:
 
 ```
-codeyam-editor-dev editor migration-status --format json
+codeyam-editor editor migration-status --format json
 ```
 
 Branch on `schema`:
@@ -46,7 +46,7 @@ Branch on `schema`:
 Read the read-only assessment. It mutates nothing on disk:
 
 ```
-codeyam-editor-dev editor assess --format json
+codeyam-editor editor assess --format json
 ```
 
 From the JSON, note:
@@ -75,7 +75,9 @@ is where you are and here is the safest first thing to try."
 
 ## Phase 3 — Present the options menu
 
-Present the menu via `AskUserQuestion`. **Order it so the assessment's
+Present the menu with your harness's structured-question tool (on Claude,
+`AskUserQuestion`), or as plain text listing the options if it has none.
+**Order it so the assessment's
 `recommendedAction` is the first (recommended) option**, then list the rest. For
 each option, the copy must carry the risk framing — name what it does *and* that
 it is additive and reversible. The options:

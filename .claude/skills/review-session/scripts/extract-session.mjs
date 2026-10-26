@@ -11,29 +11,66 @@
 // is present on BOTH formats (current Claude transcripts lead with a `last-prompt` record
 // carrying it) and is NOT a Gemini signal — see detectFormat in extract-session-helpers.mjs.
 //
-// Usage: node extract-session.mjs <path-to-session.jsonl> [--section=<section>]
+// Usage: node extract-session.mjs <path-to-session.jsonl> [--section=<section>] [--format=<format>]
 //
 // Sections:
-//   full        - Full conversation flow (default)
-//   user-only   - Only user messages (prompts/instructions)
-//   decisions   - Tool calls + user messages (shows what was done)
-//   errors      - Only error results and corrections
+//   full         - Full conversation flow (default)
+//   user-only    - Only user messages (prompts/instructions)
+//   decisions    - Tool calls + user messages (shows what was done)
+//   errors       - Only error results and corrections
+//   conversation - Human prompts + agent responses, verbatim, with the
+//                  mechanical layer (tool calls, tool results, thinking,
+//                  injected system-reminder / slash-command / hook records)
+//                  collapsed to one-line beats. Subtractive only: a surviving
+//                  turn is reproduced exactly, never paraphrased.
+//
+// Formats:
+//   markdown - human-readable (default; every existing caller relies on it)
+//   json     - a single structured document, `conversation` section only.
+//              This is the input contract for the `editor session-summarize`
+//              HTML renderer, which consumes structured turns rather than
+//              re-parsing markdown.
 
 import { createReadStream } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { stat } from 'node:fs/promises';
 import { basename } from 'node:path';
-import { detectFormat, detectFormatFromPath } from './extract-session-helpers.mjs';
+import {
+  buildConversationTurns,
+  detectFormat,
+  detectFormatFromPath,
+} from './extract-session-helpers.mjs';
+
+const USAGE =
+  'Usage: node extract-session.mjs <session.jsonl> ' +
+  '[--section=full|user-only|decisions|errors|conversation] [--format=markdown|json]\n';
 
 const inputFile = process.argv[2];
 if (!inputFile) {
-  process.stderr.write('Usage: node extract-session.mjs <session.jsonl> [--section=full|user-only|decisions|errors]\n');
+  process.stderr.write(USAGE);
   process.exit(1);
 }
 
 let section = 'full';
+let format = 'markdown';
 for (const arg of process.argv.slice(3)) {
   if (arg.startsWith('--section=')) section = arg.slice('--section='.length);
+  else if (arg.startsWith('--format=')) format = arg.slice('--format='.length);
+}
+
+if (format !== 'markdown' && format !== 'json') {
+  process.stderr.write(`Unrecognized --format '${format}'. Accepted: markdown, json\n`);
+  process.exit(1);
+}
+// JSON is defined for the conversation section only — the other sections are
+// hand-shaped markdown reports with no structured equivalent, and silently
+// emitting markdown under --format=json would hand a caller piping to a JSON
+// parser an unexplained parse error.
+if (format === 'json' && section !== 'conversation') {
+  process.stderr.write(
+    `--format=json is supported only with --section=conversation (got '${section}')\n`
+  );
+  process.exit(1);
 }
 
 try {
@@ -248,6 +285,9 @@ function appendGeminiMessage(obj) {
 // ── Output formatter ─────────────────────────────────────────────────────
 const output = [];
 
+// Populated only by the `conversation` section; also the JSON document's body.
+let conversationTurns = [];
+
 output.push(`# Session Transcript Review`);
 output.push(`Source: ${basename(inputFile)} (${detectedFormat})`);
 output.push(`Messages: ${messages.length}`);
@@ -285,6 +325,19 @@ if (section === 'user-only') {
         output.push('');
       }
     }
+  }
+} else if (section === 'conversation') {
+  conversationTurns = buildConversationTurns(messages);
+  output.push('## Conversation\n');
+  for (const turn of conversationTurns) {
+    if (turn.kind === 'beat') {
+      output.push(`_${turn.text}_`);
+      output.push('');
+      continue;
+    }
+    output.push(`### ${turn.kind === 'user' ? 'USER' : 'ASSISTANT'} [${formatTs(turn.ts)}]`);
+    output.push(turn.text);
+    output.push('');
   }
 } else if (section === 'decisions') {
   output.push('## Decisions and Actions\n');
@@ -337,7 +390,26 @@ if (section === 'user-only') {
   }
 }
 
-process.stdout.write(output.join('\n'));
+if (section === 'conversation' && format === 'json') {
+  const withTs = conversationTurns.filter((t) => t.ts);
+  process.stdout.write(
+    JSON.stringify(
+      {
+        source: basename(inputFile),
+        format: detectedFormat,
+        messageCount: messages.length,
+        turnCount: conversationTurns.length,
+        firstTs: withTs.length > 0 ? withTs[0].ts : null,
+        lastTs: withTs.length > 0 ? withTs[withTs.length - 1].ts : null,
+        turns: conversationTurns,
+      },
+      null,
+      2
+    ) + '\n'
+  );
+} else {
+  process.stdout.write(output.join('\n'));
+}
 
 /**
  * Format a timestamp as an `HH:MM:SS` string, returning `'?'` when

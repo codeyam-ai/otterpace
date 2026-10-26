@@ -23,7 +23,7 @@ surface.
 ## The one command that does the work
 
 ```bash
-codeyam-editor-dev editor scaffold-app --into <subdir> --stack <stack-id> [--name <name>] [--share-db] [--port <n>]
+codeyam-editor editor scaffold-app --into <subdir> --stack <stack-id> [--name <name>] [--share-db] [--port <n>]
 ```
 
 It validates everything **before writing anything** (unknown stack, colliding
@@ -37,7 +37,7 @@ preserved verbatim), and wires persistence per `--share-db`.
 1. **Understand the new app.** Ask the user a one-line description of what the
    new app is. Keep it short — it drives the stack recommendation.
 
-2. **Recommend a stack.** Run `codeyam-editor-dev editor stacks-recommend --format json`
+2. **Recommend a stack.** Run `codeyam-editor editor stacks-recommend --format json`
    against the description and present the top recommendation (and 1–2
    alternatives) to the user. Confirm their pick — this becomes `--stack`.
 

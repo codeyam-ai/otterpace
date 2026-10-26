@@ -64,7 +64,7 @@ it.** Everything below is the contract; the procedure is the body.
 Confirm the project is initialized for codeyam-editor:
 
 ```bash
-codeyam-editor-dev editor config-show >/dev/null 2>&1 || {
+codeyam-editor editor config-show >/dev/null 2>&1 || {
   echo "Project is not initialized for codeyam-editor. Run /codeyam-onboard first."
   exit 1
 }

@@ -11,7 +11,7 @@ You are running an **autonomous onboarding** of the current project to codeyam-e
 
 Two binary signals when you finish:
 
-1. `codeyam-editor-dev editor health-status --format json` returns `passed: true`.
+1. `codeyam-editor editor health-status --format json` returns `passed: true`.
 2. `.codeyam/onboarding-report.md` exists and summarizes every translation decision you made.
 
 If health-status fails, write the report anyway with the failing checks listed under "Pending" so the user knows what to do next.
@@ -25,7 +25,7 @@ If migration-status (phase 1) reports `legacy_artifacts` outside `.codeyam/`, `e
 Run, **once**:
 
 ```
-codeyam-editor-dev editor migration-status --format json
+codeyam-editor editor migration-status --format json
 ```
 
 The `schema` field tells you which branch:
@@ -50,19 +50,19 @@ The old codeyam tool wrote `.codeyam/config.json` with a different schema. Trans
    - `techStack` → informational only; mention in the onboarding report but do not write into `editor.json`.
 2. Run:
    ```
-   codeyam-editor-dev editor archive-legacy
+   codeyam-editor editor archive-legacy
    ```
    This moves `config.json`, `editor-scenarios/`, `db.sqlite3*`, `llm-calls/`, `rules/`, `proxy-config.json`, `server.json`, `queue.json`, `tmp/`, `bin/`, `editor-mode-context.md`, `design-system.md`, `data-structure.json`, `seed-adapters/`, `seed-adapter.ts`, and the legacy `glossary.json` into `.codeyam/_legacy/`. Re-runs are safe.
 3. **Translate the archived legacy scenarios (phase 2b).** The legacy `editor-scenarios/` files use UUID filenames + `_metadata` wrappers, a different shape than the new schema. Translate them in place rather than asking the user to re-register hundreds of scenarios by hand:
    ```
-   codeyam-editor-dev editor translate-legacy-scenarios --dry-run
+   codeyam-editor editor translate-legacy-scenarios --dry-run
    ```
    The dry-run prints a summary (`translated`, `skipped`, `failed`) plus a per-scenario report. Show the user the summary, then ask: "Translate now (recommended)" / "Skip — leave legacy scenarios in `_legacy/` for manual review" / "Cancel and inspect the report first." On the run path, drop `--dry-run` and re-execute. The report at `.codeyam/translation-report.json` lists every translated scenario, every skip (with reason: `ambiguous-type` / `component-not-found` / `missing-name`), and every failure. Fold the `skipped` and `failed` rows into the onboarding report so the user has a single artifact summarizing what needs manual triage.
 
    After `translate-legacy-scenarios` completes, run:
 
    ```
-   codeyam-editor-dev editor translate-legacy-browser-state
+   codeyam-editor editor translate-legacy-browser-state
    ```
 
    This populates each translated scenario's `browserState.cookies` from the legacy `sessionCookies` data and merges legacy `externalApis` into the new scenario's `mocks.http` (where not already present). Auth-required scenarios (anything behind a login wall) NEED this — without it, the iframe loads without cookies and the app redirects to login. Idempotent; safe to re-run. The report at `.codeyam/browser-state-translation-report.json` lists every migrated / skipped / failed scenario plus the auto-generated `_default-authed` tier (if any). Fold the summary line into the onboarding report.
@@ -70,8 +70,8 @@ The old codeyam tool wrote `.codeyam/config.json` with a different schema. Trans
    The seed adapter writes live JWTs to `.codeyam/tmp/seed-session.json` at seed-time; the proxy overlays those over the scenario's static cookies (10-minute freshness gate). Static cookies (from this translation step) are the fallback; the adapter's fresh values win when present.
 4. **Repair stack layout (phase 2c).** Legacy projects ship `.codeyam/editor.json` but no `.codeyam/stack.json`, and the legacy `app/codeyam-isolate/` scaffold tree sits next to the modern `app/isolated-components/` tree. Without stack.json, the App tab fills with phantom routes. Phase 2c is **unconditional** on the legacy branch — run it even when its commands turn out to be no-ops, and always emit the report section so the user can see what happened. Before running, check that `editor.json:apps[]` is populated; if it is empty, back up to Phase 4 to populate it first, then return here.
 
-   1. `codeyam-editor-dev editor stack-from-apps` — writes `.codeyam/stack.json` from `editor.json:apps[].framework`. If the framework is unsupported the command bails with the known `--stack-id` values; re-run with `--stack-id <id>` (e.g. `nextjs-prisma-sqlite`) or ask the user.
-   2. `codeyam-editor-dev editor migrate-isolation-dir --dry-run` — prints the planned `moved` / `collisions_archived` / `unresolved` rows. Show the user the JSON and ask: "Apply (recommended)" / "Cancel and inspect first." On approval, re-run without `--dry-run`. Fold the resulting JSON (especially `collisions_archived`) into an "Isolation layout cleanup" section of the onboarding report. When `moved: []` and `removed_legacy_dir: false` (the project is already on the modern layout — Margo's case), the report section still gets written, recording "no changes — project already on modern layout".
+   1. `codeyam-editor editor stack-from-apps` — writes `.codeyam/stack.json` from `editor.json:apps[].framework`. If the framework is unsupported the command bails with the known `--stack-id` values; re-run with `--stack-id <id>` (e.g. `nextjs-prisma-sqlite`) or ask the user.
+   2. `codeyam-editor editor migrate-isolation-dir --dry-run` — prints the planned `moved` / `collisions_archived` / `unresolved` rows. Show the user the JSON and ask: "Apply (recommended)" / "Cancel and inspect first." On approval, re-run without `--dry-run`. Fold the resulting JSON (especially `collisions_archived`) into an "Isolation layout cleanup" section of the onboarding report. When `moved: []` and `removed_legacy_dir: false` (the project is already on the modern layout — Margo's case), the report section still gets written, recording "no changes — project already on modern layout".
 
 ## Phase 3 — Install (all branches)
 
@@ -90,7 +90,7 @@ After it runs, read the current `.codeyam/editor.json`. If it has placeholder va
 After `editor init` runs, run:
 
 ```
-codeyam-editor-dev editor migrate-journal --format json
+codeyam-editor editor migrate-journal --format json
 ```
 
 Idempotent and fast. On a modern project with `entries/` already populated, it returns `{"migrated_entries": 0, "pre": {"index_present": false, ...}, "result": "ok"}` in milliseconds. On a project shipping the older `{"entries":[...]}` envelope or pre-rename field names (`time` / `userPrompt` / scenarioScreenshot `path`), it converts everything into the per-entry `entries/<timestamp>.json` layout and removes `index.json`. Capture the JSON for Phase 7's report — the `pre.legacy_envelope` / `pre.legacy_field_names` / `pre.archive_shards` / `migrated_entries` numbers tell the user what was rewritten and how much.
@@ -102,10 +102,12 @@ If `migrate-journal` returns a non-zero exit (a malformed entry the lenient read
 After `editor init` runs, if `.codeyam/seed-adapter.ts` already existed before init (typical for legacy / repair branches), check whether it carries the `// codeyam-adapter-version: N` marker. If the marker is missing or its `N` is less than the shipped current version, run:
 
 ```
-codeyam-editor-dev editor refresh-seed-adapter
+codeyam-editor editor refresh-seed-adapter
 ```
 
-The command compares the installed file against the shipped template + known prior versions. If the file is recognised (pristine prior version or matches the current shipped content), it upgrades automatically with no prompts. If it has been hand-edited, the command refuses and prints the `--force --accept-data-loss` re-run instruction (which backs up the existing file at `.codeyam/seed-adapter.ts.pre-refresh-<timestamp>` before overwriting). When the safe path doesn't apply, **surface the diff and refusal message to the user — do not pass `--accept-data-loss` autonomously.**
+The command compares the installed file against the shipped template + known prior versions. If the file is recognised (pristine prior version or matches the current shipped content), it upgrades automatically with no prompts. If it has been hand-edited, the command refuses and prints the `--force --accept-data-loss` re-run instruction. When the safe path doesn't apply, **surface the diff and refusal message to the user — do not pass `--accept-data-loss` autonomously.**
+
+Every overwrite backs the previous content up to `.codeyam/seed-adapter.ts.pre-refresh-<timestamp>` first — the automatic upgrade as much as the forced one — so a refresh is always recoverable by diffing against that file. The only overwrite without a backup is one where the content was already byte-identical.
 
 ## Phase 3b — Install project dependencies (all branches)
 
@@ -148,12 +150,12 @@ Fields to populate when missing:
 
   > **Reporter pair is load-bearing.** The vitest adapter only parses JSON. Pairing `--reporter=verbose` with `outputFormat: vitest|vitest-json` fails validation at config-load; pairing `--reporter=json` with anything else means the editor can't parse the output. Use `--reporter=json` + `outputFormat: vitest-json` for vitest, and `--json` + `outputFormat: vitest-json` for jest.
 
-  > **Cargo runners must carry `--no-fail-fast`.** For a Rust/cargo runner, include `--no-fail-fast` (on the cargo side, before any ` -- ` separator) in **all four** command variants — `command`, `coverageCommand`, `changedCommand`, and `targetedCommand`. Without it, a single failing test halts `cargo test` and silently drops every *subsequent* crate's test capture, which the editor then mis-reads as deleted tests and phantom audit findings. Example base command: `cargo test --no-fail-fast --workspace`. (`codeyam-editor-dev editor configure-test-commands` proposes the flag for any cargo command that's missing it.)
+  > **Cargo runners must carry `--no-fail-fast`.** For a Rust/cargo runner, include `--no-fail-fast` (on the cargo side, before any ` -- ` separator) in **all four** command variants — `command`, `coverageCommand`, `changedCommand`, and `targetedCommand`. Without it, a single failing test halts `cargo test` and silently drops every *subsequent* crate's test capture, which the editor then mis-reads as deleted tests and phantom audit findings. Example base command: `cargo test --no-fail-fast --workspace`. (`codeyam-editor editor configure-test-commands` proposes the flag for any cargo command that's missing it.)
 - `static_checks[]` — at minimum `tsc --noEmit` for TS projects; `eslint` if configured.
 - `formatters[]` — `prettier` if configured.
 - `screen_sizes`, `default_screen_size` — carry from legacy if present; else `{Desktop: 1440x900, Mobile: 375x667}`.
 
-**Capability check (before you write `apps[]`).** Once you've detected the framework, run `codeyam-editor-dev editor stack-support --framework <detected> --format json` (add `--app-type backend|cli` for non-web projects). Relay the verdict to the user before writing editor.json:
+**Capability check (before you write `apps[]`).** Once you've detected the framework, run `codeyam-editor editor stack-support --framework <detected> --format json` (add `--app-type backend|cli` for non-web projects). Relay the verdict to the user before writing editor.json:
 - `supported` / `fallback` — proceed; visual preview and scenario capture will work (fallback adapts the query-param isolation strategy).
 - `unsupported` — state plainly which codeyam features are off (isolation scaffold, visual preview, scenario capture) and that editor.json + the test workflow still work, so the user decides with eyes open instead of hitting a dead end at isolate-time. Don't run `editor isolate` for an unsupported stack.
 
@@ -166,7 +168,7 @@ By the end of this phase the editor UI is functional. Without it, the App tab fi
 1. **Dependency graph.** Required by the entity-detail page's "components used" list.
 
    ```
-   codeyam-editor-dev editor analyze-imports
+   codeyam-editor editor analyze-imports
    ```
 
    Reports `analyzed`, `entityCount`, `graphSize`, `totalImports`. Write the JSON summary into the report's "Code index" section.
@@ -174,7 +176,7 @@ By the end of this phase the editor UI is functional. Without it, the App tab fi
 2. **Glossary.** Required by the App tab's components/functions enumeration and by the audit gate. Auto-applies the unambiguous adds (entities with `///`/JSDoc + an auto-derivable test file); the rest land as skips with reasons.
 
    ```
-   codeyam-editor-dev editor reconcile-glossary --auto-apply
+   codeyam-editor editor reconcile-glossary --auto-apply
    ```
 
    Capture the `added` count and the full `skipped` list. Surface the skips in the report's Pending section as "Glossary entries needing manual `glossary-add`" with their file paths and reasons (`no /// rustdoc or JSDoc` / `no test file could be auto-derived`).
@@ -182,7 +184,7 @@ By the end of this phase the editor UI is functional. Without it, the App tab fi
 3. **Test registry.** Required by entity-detail page "tests for this function" and the audit's coverage check.
 
    ```
-   codeyam-editor-dev editor bootstrap-registry
+   codeyam-editor editor bootstrap-registry
    ```
 
    Self-warms the test cache via `refresh-tests --force` if cold. Long-running on large projects (a few minutes for ~400 tests). Capture the entries-written count. If `bootstrap-registry` fails (e.g. a project test was already broken before onboarding), the failure is **not** silently swallowed — propagate the full stderr to the report's Pending section, recommend the user fix the failing test, then re-run `editor bootstrap-registry` manually. Onboarding still completes (Phase 6 health-status will catch the missing registry as a hard fail until it's fixed).
@@ -204,18 +206,18 @@ Two goals: (a) prove the registration pipeline works on this project, (b) leave 
    cat > .codeyam/tmp/register-home-<unique>.json <<'EOF'
    { "slug": "home", "kind": "application", "url": "/", "screen_size": "Desktop" }
    EOF
-   codeyam-editor-dev editor register --file .codeyam/tmp/register-home-<unique>.json
+   codeyam-editor editor register --file .codeyam/tmp/register-home-<unique>.json
    ```
 
    `register` deletes the scratch file on success. Do NOT reuse the same filename across calls — each invocation needs a unique path.
-3. If the dev server is running, attempt capture via `codeyam-editor-dev editor recapture-stale --skip-when-clean`. If not running, skip and note it.
+3. If the dev server is running, attempt capture via `codeyam-editor editor recapture-stale --skip-when-clean --prefer-touched` (`--prefer-touched` orders the scenarios you just registered first so the budget captures them before any unrelated environmentally-drifted surface; pure reordering, never expands the set). If not running, skip and note it.
 
 This phase is **best-effort**. If registration fails on a specific component, log it in the report and continue — do not block the whole onboarding on one bad scenario.
 
 ## Phase 6 — Verify
 
 ```
-codeyam-editor-dev editor health-status --format json
+codeyam-editor editor health-status --format json
 ```
 
 Capture the JSON. The report has **three** check arrays: `static_checks`, `smoke_checks`, and `functional_checks`. `passed: true` requires every check across all three to pass. Common causes (and the right fix):
@@ -228,7 +230,7 @@ Capture the JSON. The report has **three** check arrays: `static_checks`, `smoke
   - `scenario_registered` failed → phase 5 produced nothing. Document why in report.
   - `journal_readable` failed → run `editor migrate-journal --format json` and inspect the JSON output. If it surfaces a malformed entry, fix `.codeyam/journal/index.json` by hand (see the marker file at `.codeyam/journal/.migration-failed.json` for the exact error and the failing entry index).
   - `dependencies_installed` failed → `node_modules/` missing or stale relative to `package.json`. Re-run Phase 3b (lockfile-driven install). If it still fails after install, the project may have an unusual setup (workspaces, postinstall scripts) — note in the report.
-  - `clean_settings` failed → `.claude/settings.local.json` carries dead skill permissions or stale hook entries from a prior tool version. Run `codeyam-editor-dev editor scrub-settings` (dry-run) to see findings; if everything reported is safe to remove (dead skills, stale hooks — never plaintext credentials), ask the user, then run `codeyam-editor-dev editor scrub-settings --apply`. Plaintext-credential lookalikes flagged by scrub-settings are **never** auto-removable — surface them in the report and tell the user.
+  - `clean_settings` failed → `.claude/settings.local.json` carries dead skill permissions or stale hook entries from a prior tool version. Run `codeyam-editor editor scrub-settings` (dry-run) to see findings; if everything reported is safe to remove (dead skills, stale hooks — never plaintext credentials), ask the user, then run `codeyam-editor editor scrub-settings --apply`. Plaintext-credential lookalikes flagged by scrub-settings are **never** auto-removable — surface them in the report and tell the user.
 - **Functional layer** (new — these are blocking)
   - `workflow_manifest_parses` failed → `.codeyam/workflow.json` is missing or malformed. Re-run `codeyam-editor init`.
   - `agent_provider_on_path` failed → the configured agent CLI (`claude` / `codex` / `gemini`) isn't installed. The user has to install it; surface this in the report.
@@ -237,7 +239,7 @@ Capture the JSON. The report has **three** check arrays: `static_checks`, `smoke
 
 Phase 6 is allowed to retry phase-3 init once, and may run `scrub-settings --apply` once after user confirmation. Don't loop.
 
-If `$HOME/.codeyam/notify.env` does not exist, suggest `codeyam-editor-dev editor notify-setup --topic <claude-$(whoami)-$(openssl rand -hex 4)>` once and continue. Don't block onboarding on it — the notify hooks are pre-installed and silently no-op until the developer opts in.
+If `$HOME/.codeyam/notify.env` does not exist, suggest `codeyam-editor editor notify-setup --topic <claude-$(whoami)-$(openssl rand -hex 4)>` once and continue. Don't block onboarding on it — the notify hooks are pre-installed and silently no-op until the developer opts in.
 
 ## Phase 7 — Write the report
 
