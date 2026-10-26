@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 import os
 
-BASE="/Users/nadiaeldeib/622-project/site"
+BASE="/Users/nadiaeldeib/otterpace/site"
 W,H=1200,630
 INK=(32,32,42); CORAL=(255,90,60); MUTED=(122,116,128); WHITE=(255,255,255)
 
