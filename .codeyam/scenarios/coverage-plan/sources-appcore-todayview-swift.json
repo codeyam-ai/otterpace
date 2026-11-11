@@ -1,0 +1,54 @@
+{
+  "surface": "Sources/AppCore/TodayView.swift",
+  "surface_kind": "file",
+  "states": [
+    {
+      "dimension": "branches",
+      "value": "branch-1",
+      "rationale": "source-derived state branches=branch-1",
+      "status": "planned"
+    },
+    {
+      "dimension": "branches",
+      "value": "branch-2",
+      "rationale": "source-derived state branches=branch-2",
+      "status": "planned"
+    },
+    {
+      "dimension": "branches",
+      "value": "branch-3",
+      "rationale": "source-derived state branches=branch-3",
+      "status": "planned"
+    },
+    {
+      "dimension": "branches",
+      "value": "branch-4",
+      "rationale": "source-derived state branches=branch-4",
+      "status": "planned"
+    },
+    {
+      "dimension": "branches",
+      "value": "branch-5",
+      "rationale": "source-derived state branches=branch-5",
+      "status": "planned"
+    },
+    {
+      "dimension": "branches",
+      "value": "branch-6",
+      "rationale": "source-derived state branches=branch-6",
+      "status": "planned"
+    },
+    {
+      "dimension": "branches",
+      "value": "branch-7",
+      "rationale": "source-derived state branches=branch-7",
+      "status": "planned"
+    },
+    {
+      "dimension": "branches",
+      "value": "branch-8",
+      "rationale": "source-derived state branches=branch-8",
+      "status": "planned"
+    }
+  ]
+}

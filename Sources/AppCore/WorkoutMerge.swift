@@ -40,6 +40,26 @@ public enum WorkoutMerge {
             .map(\.element)
     }
 
+    /// `base` (the Health snapshot) with its history replaced by Health + Strava.
+    /// With no Strava runs `base` comes back exactly as given — its weekly load is
+    /// never recomputed, so a seeded scenario's hand-set numbers survive. Otherwise
+    /// the merged list is rolled up the same way `HealthKitDataSource.loadToday()`
+    /// does, so a Strava-only user gets a real Weekly Review recap and the coach
+    /// sees the whole trajectory, not one source's half.
+    public static func compose(_ base: TodayState, healthWorkouts: [LatestWorkout],
+                               strava: [LatestWorkout]) -> TodayState {
+        guard !strava.isEmpty else { return base }
+        var state = base
+        let merged = merge(health: healthWorkouts, strava: strava)
+        state.workouts = merged
+        state.latestWorkout = merged.first(where: { $0.type == "run" }) ?? merged.first
+        state.weeklyLoad = ActivityHistory.weeklyLoad(
+            from: merged, asOf: ActivityHistory.referenceDate(fromISO: state.date))
+        state.loadHistory = ActivityHistory.loadHistory(from: merged)
+        state.healthKitConnected = true
+        return state
+    }
+
     /// Whether two activities are the same outing recorded by two sources.
     static func isSameActivity(_ a: LatestWorkout, _ b: LatestWorkout) -> Bool {
         guard a.date == b.date, a.type == b.type else { return false }

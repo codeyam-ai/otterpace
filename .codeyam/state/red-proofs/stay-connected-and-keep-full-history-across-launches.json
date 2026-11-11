@@ -1,0 +1,70 @@
+{
+  "provenAt": "2026-11-11T19:19:12Z",
+  "slug": "stay-connected-and-keep-full-history-across-launches",
+  "paths": [],
+  "runScope": [
+    "Sources/AppCore/WorkoutMerge.swift",
+    "Sources/AppCore/ActivityHistory.swift",
+    "Tests/AppCoreTests/WorkoutMergeTests.swift",
+    "Tests/AppCoreTests/ActivityHistoryTests.swift"
+  ],
+  "neuters": [
+    {
+      "file": "Sources/AppCore/WorkoutMerge.swift",
+      "find": "guard !strava.isEmpty else { return base }",
+      "replace": "guard strava.isEmpty && false else { return base }"
+    },
+    {
+      "file": "Sources/AppCore/ActivityHistory.swift",
+      "find": "value: -days, to: date)",
+      "replace": "value: 0, to: date)"
+    }
+  ],
+  "tests": {
+    "testComposeMarksTheDashboardConnected": {
+      "withoutFix": "fail",
+      "withFix": "pass",
+      "established": {
+        "kind": "measured"
+      }
+    },
+    "testComposeMergesStravaIntoHistoryAndPicksLatestRun": {
+      "withoutFix": "fail",
+      "withFix": "pass",
+      "established": {
+        "kind": "measured"
+      }
+    },
+    "testComposeRollsUpWeeklyLoadAndLoadHistory": {
+      "withoutFix": "fail",
+      "withFix": "pass",
+      "established": {
+        "kind": "measured"
+      }
+    },
+    "testIsoDayCrossesTheYearBoundary": {
+      "withoutFix": "fail",
+      "withFix": "pass",
+      "established": {
+        "kind": "measured"
+      }
+    },
+    "testIsoDayThirtyDaysBack": {
+      "withoutFix": "fail",
+      "withFix": "pass",
+      "established": {
+        "kind": "measured"
+      }
+    }
+  },
+  "proof": {
+    "verdict": "proven",
+    "flipped": [
+      "testComposeMergesStravaIntoHistoryAndPicksLatestRun",
+      "testComposeRollsUpWeeklyLoadAndLoadHistory",
+      "testComposeMarksTheDashboardConnected",
+      "testIsoDayThirtyDaysBack",
+      "testIsoDayCrossesTheYearBoundary"
+    ]
+  }
+}

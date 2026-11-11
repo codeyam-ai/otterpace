@@ -1,0 +1,69 @@
+{
+  "timestamp": "2026-11-11T20:13:20Z",
+  "title": "Stay connected and keep full history across launches",
+  "type": "feature",
+  "userRequest": "## Summary\n\nOtterpace forgets the user's data connections every time the app is cold-launched,\nand it drops history it already had. Three concrete defects, all reported by the\nuser (\"have to reconnect apple health\", \"a lot of my apple health and strava\nhistory is missing from days I didn't explicitly sign into the app\"):\n\n1. **Health \"logs out\" on every cold launch.** The production `OtterpaceModel.init()`\n   starts from `TodayState.empty` (`healthKitConnected: false`) and sets\n   `healthAuth = source.authorizationState()` — but nothing then calls\n   `loadToday()`. `ContentView` only shows the dashboard when\n   `model.today.healthKitConnected` is true, so a user who granted Health access\n   weeks ago lands on `ConnectHero` and must tap Connect again.\n2. **Strava history evaporates.** Strava activities are fetched only from the\n   Settings connect / Retry import actions, kept in memory only, and then\n   overwritten wholesale by the next HealthKit `connect()`/`refresh()`\n   (`today = await source.loadToday()`). Strava and Health workouts are never\n   merged, so a relaunch or a pull-to-refresh silently drops every Strava run.\n3. **Health history is shallow.** `HealthKitDataSource.recentWorkouts` reads only\n   30 days / 60 workouts, and `dailySteps` is never populated outside scenarios —\n   so the heatmap's steps metric is always \"no step data yet\" and older days look\n   missing even though HealthKit has them.\n\nAfter this plan: opening the app always lands on a populated dashboard when Health\naccess (or a Strava connection) exists; Health and Strava workouts are merged and\nde-duplicated; a cached snapshot renders instantly on launch before live reads\nfinish; and the history/heatmap reflect real HealthKit history.\n\n## Key Decisions\n\n- **Restore from evidence, not a new flag.** Auto-load on launch when\n  `healthAuth == .authorized` (HealthKit has been asked) OR `StravaService.isConnected`.\n  No new \"logged in\" boolean to drift out of sync with the real permissions.\n- **Merge, don't replace.** Introduce one pure merge function (Health + Strava →\n  newest-first, de-duplicated by same day + same type + start within ~10 min /\n  distance within ~5%, preferring the Health record) so every load path —\n  connect, refresh, Strava import, background (follow-up plan) — composes the same\n  way. Pure so it unit-tests on macOS like `ActivityHistory`.\n- **Cache the last good snapshot on-device** (workouts, dailySteps, weekly load,\n  last-refreshed time) in the app's own defaults/file, with the same scenario\n  guard `applyOnDeviceState()` uses so captures are untouched. It is a render\n  cache only — live reads always win — and it never leaves the device.\n- **Per-day steps from one statistics-collection query** over the history window\n  rather than N day queries — one HealthKit round-trip.\n- **Widen the HealthKit workout window** to match what the heatmap/history can show\n  (decide the exact window at Explore by reading `ActivityHeatmap`'s range options;\n  likely 90–180 days) — bounded, not \"all time\", to keep reads cheap.\n- Out of scope: background refresh and foreground auto-refresh triggers (follow-up\n  plan `battery-light-background-refresh`), Sign in with Apple (already\n  long-lived via `SessionStore.revalidate`), Strava token refresh (already\n  server-side in `freshAccessToken`).\n\n## Implementation\n\n### 1. Restore connections on cold launch\n\n**File**: `Sources/AppCore/Model.swift`\n\nAdd a `restoreOnLaunch()` (MainActor, async) that: renders the cached snapshot\nimmediately (step 4), then — if `healthAuth == .authorized` — runs `loadToday()`\nand, if Strava is connected, imports Strava, merging both (step 2). Call it from\n`ContentView`'s `.onAppear` in production only (guard `previewMode.isEmpty` and\n`!HealthSource.isScenarioSeeded`).\n\n**File**: `Sources/AppCore/ContentView.swift`\n\nWire the call; the existing `healthKitConnected` gate then shows the dashboard\nwithout a tap. Avoid a flash of `ConnectHero` while the restore is in flight\n(e.g. a cached snapshot sets `healthKitConnected` synchronously, or a brief\n\"restoring\" state).\n\n### 2. Merge Health + Strava workouts\n\n**New file**: `Sources/AppCore/WorkoutMerge.swift`\n\nPure `WorkoutMerge.merge(health:strava:)` with the de-dup rule above. Refactor\n`OtterpaceModel.connect()`, `refresh()` and `ingestStravaWorkouts(_:)` to keep\nthe last Health and Strava lists separately and recompute `workouts`,\n`latestWorkout`, `weeklyLoad` and `loadHistory` from the merge (reusing the\n`ActivityHistory.weeklyLoad` / `loadHistory` rollups `ingestStravaWorkouts`\nalready uses).\n\n### 3. Deeper HealthKit history + per-day steps\n\n**File**: `Sources/AppCore/Health/HealthKitDataSource.swift`\n\nWiden `recentWorkouts(days:limit:)` and add a daily step series via\n`HKStatisticsCollectionQuery` (cumulative sum, 1-day interval) over the same\nwindow, returned in `TodayState.dailySteps`. Update the `dailySteps` doc comment\nin `Model.swift` that says HealthKit gives no per-day series.\n\n### 4. On-device snapshot cache\n\n**New file**: `Sources/AppCore/SnapshotCache.swift`\n\nSave/load the last merged snapshot (+ `refreshedAt`) through the model's\n`defaults`, skipped for scenario-seeded stores. Written after every successful\nload; read in `restoreOnLaunch()`. Cleared on `deleteAccount()` and on Strava\ndisconnect (Strava portion).\n\n### 5. Strava fetch on restore\n\n**File**: `Sources/AppCore/Strava/StravaService.swift`\n\nNo API change expected — `fetchActivities()` already returns `[]` when not\nconnected. Consider raising the backend `perPage` (30 in\n`fetchMappedActivities`, `api/_lib/strava.ts`) to cover the same history window;\nconfirm the Strava rate-limit budget at Explore before changing it.\n\n## Reused existing code\n\n- `OtterpaceModel.connect()` / `refresh()` / `ingestStravaWorkouts(_:)` / `applyOnDeviceState()` from `Sources/AppCore/Model.swift` (glossary entry: `OtterpaceModel`)\n- `HealthKitDataSource.authorizationState()` / `loadToday()` from `Sources/AppCore/Health/HealthKitDataSource.swift` (glossary entry: `HealthKitDataSource`)\n- `ActivityHistory.weeklyLoad` / `loadHistory` from `Sources/AppCore/ActivityHistory.swift` (glossary entry: `ActivityHistory`)\n- `StravaService.isConnected` / `fetchActivities()` from `Sources/AppCore/Strava/StravaService.swift` (glossary entry: `StravaService`)\n- `HealthSource.isScenarioSeeded` scenario guard, as used in `Model.swift`\n- Tests to extend: `Tests/AppCoreTests/ModelTests.swift`, `Tests/AppCoreTests/HealthKitDataSourceTests.swift`, `Tests/AppCoreTests/ActivityHistoryTests.swift`, `Tests/AppCoreTests/StravaServiceTests.swift`\n\n## Scenarios to Demonstrate\n\n- Returning user, Health granted, cold launch → dashboard populated, no Connect hero\n- Health + Strava both connected with overlapping runs → one merged, de-duplicated history\n- Strava-only user relaunches → Strava runs still on Today and in history\n- Heatmap steps metric with a real multi-week per-day step series\n- First-ever launch (nothing granted) → Connect hero unchanged",
+  "description": "Strava and Health history now survive relaunches: the Health/Strava merge was extracted from the model into WorkoutMerge.compose, so a Health refresh keeps Strava runs and a Strava-only user still sees their newest activity, and the date helper isoDay moved from RemoteCoach into ActivityHistory. Added 11 unit tests (WorkoutMergeTests, ActivityHistoryTests); 522/522 pass. Scope verdict: all 14 project deliverables remain delivered; nothing new deferred. Disclosed gap the user accepted at the Save gate: no model-level tests yet for cold-launch cache restore, Health refresh keeping Strava runs, or clearing the Strava/snapshot caches, and no screenshots of the merged-history demos because scenario seeds bypass the merge. Both are follow-up work.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ActivityHistory.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Coach/RemoteCoach.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Model.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/WorkoutMerge.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/ActivityHistoryTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/WorkoutMergeTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/coverage-plan/sources-appcore-todayview-swift.json",
+      "status": "added"
+    },
+    {
+      "path": ".codeyam/state/red-proofs/stay-connected-and-keep-full-history-across-launches.json",
+      "status": "added"
+    }
+  ],
+  "testResults": {
+    "total": 522,
+    "passed": 522,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 522,
+        "passed": 522
+      }
+    ]
+  }
+}

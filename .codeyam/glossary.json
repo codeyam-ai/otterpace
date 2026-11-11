@@ -2628,6 +2628,12 @@
     "testFile": "test/api/llm.test.ts"
   },
   {
+    "description": "Builds the dashboard state from the Health snapshot plus the Strava import: merges both histories via WorkoutMerge.merge, picks the latest run for the Today card, and rolls the merged list up into weekly load and load history. With no Strava runs it returns the Health snapshot untouched, so seeded scenarios keep their hand-set numbers. This is what stops a Health refresh from dropping imported Strava runs.",
+    "filePath": "Sources/AppCore/WorkoutMerge.swift",
+    "name": "compose",
+    "testFile": "Tests/AppCoreTests/WorkoutMergeTests.swift"
+  },
+  {
     "description": "Mint a session for a verified user: generate a 256-bit token, store its hash in Supabase, and return the raw token (shown to the client once).",
     "filePath": "api/_lib/session.ts",
     "name": "createSession",
@@ -2925,6 +2931,12 @@
       "validation"
     ],
     "testFile": "test/api/strava-handlers.test.ts"
+  },
+  {
+    "description": "The ISO yyyy-MM-dd day a given number of days before another ISO day, using UTC date-only math. An unparseable input yields an empty string, which sorts before every real day, so a cutoff built from it drops nothing. Used to trim the coach payload to its trailing 30-day window.",
+    "filePath": "Sources/AppCore/ActivityHistory.swift",
+    "name": "isoDay",
+    "testFile": "Tests/AppCoreTests/ActivityHistoryTests.swift"
   },
   {
     "description": "Builds the short-lived ES256 JWT used to authenticate to the App Store Connect API.",

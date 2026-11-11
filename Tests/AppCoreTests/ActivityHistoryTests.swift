@@ -390,4 +390,33 @@ final class ActivityHistoryTests: XCTestCase {
         XCTAssertEqual(r.miles, 5.0, accuracy: 0.001)
         XCTAssertEqual(r.longestRunMiles, 3.0, accuracy: 0.001)
     }
+
+    // MARK: isoDay
+
+    // Thirty days back from a mid-month date.
+    func testIsoDayThirtyDaysBack() {
+        XCTAssertEqual(ActivityHistory.isoDay(daysBefore: 30, iso: "2026-11-11"), "2026-10-12")
+    }
+
+    // Stepping back across a year boundary.
+    func testIsoDayCrossesTheYearBoundary() {
+        XCTAssertEqual(ActivityHistory.isoDay(daysBefore: 5, iso: "2026-01-03"), "2025-12-29")
+    }
+
+    // Stepping back across a leap day.
+    func testIsoDayCrossesALeapDay() {
+        XCTAssertEqual(ActivityHistory.isoDay(daysBefore: 1, iso: "2028-03-01"), "2028-02-29")
+    }
+
+    // Zero days back is the same day.
+    func testIsoDayZeroDaysIsTheSameDay() {
+        XCTAssertEqual(ActivityHistory.isoDay(daysBefore: 0, iso: "2026-11-11"), "2026-11-11")
+    }
+
+    // An unparseable date yields an empty cutoff, which sorts before every real day.
+    func testIsoDayUnparseableYieldsEmpty() {
+        XCTAssertEqual(ActivityHistory.isoDay(daysBefore: 30, iso: "not-a-date"), "")
+        XCTAssertEqual(ActivityHistory.isoDay(daysBefore: 30, iso: ""), "")
+        XCTAssertTrue("" < "2026-01-01")
+    }
 }

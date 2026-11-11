@@ -288,7 +288,7 @@ public struct RemoteCoach {
         if !context.journal.isEmpty {
             out.journal = Journal.coachSlice(context.journal, asOf: context.date)
         }
-        let cutoff = Self.isoDay(daysBefore: Self.coachHistoryDays, iso: context.date)
+        let cutoff = ActivityHistory.isoDay(daysBefore: Self.coachHistoryDays, iso: context.date)
         out.workouts = Array(context.workouts.filter { $0.date >= cutoff }.prefix(Self.coachMaxWorkouts))
         out.dailySteps = context.dailySteps.filter { $0.key >= cutoff }
         return out
@@ -296,19 +296,6 @@ public struct RemoteCoach {
 
     static let coachHistoryDays = 30
     static let coachMaxWorkouts = 60
-
-    /// The ISO day `days` before `iso` (UTC date math on date-only strings, like
-    /// `ActivityHistory`). An unparseable date yields "" so nothing is dropped.
-    static func isoDay(daysBefore days: Int, iso: String) -> String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.timeZone = TimeZone(identifier: "UTC")
-        guard let date = f.date(from: iso),
-              let earlier = Calendar(identifier: .gregorian).date(byAdding: .day, value: -days, to: date)
-        else { return "" }
-        return f.string(from: earlier)
-    }
 
     /// Ask the real coach. Throws `CoachError` so the caller can decide whether to
     /// fall back to `CoachEngine` (network/server) or surface the problem (bad key).

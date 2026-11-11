@@ -225,17 +225,20 @@ This diffs the runner output against the registry and auto-adds new tests —
 line numbers and descriptions are resolved automatically, so you do not need
 to pass `--line` by hand.
 
-<!-- codeyam:run-and-edit:start -->
+<!-- codeyam:run-and-edit:start d=73504edf447c -->
 ## Develop this project with codeyam-editor
 
 This project is built with [codeyam-editor](https://codeyam.com) — code and runnable data scenarios are authored side by side against a live preview.
 
 ```bash
-# Launch the editor (split-screen terminal + live preview)
-codeyam-editor editor
+# Clone the repo
+git clone https://github.com/codeyam-ai/otterpace && cd otterpace
 
-# Run the tests
-swift test --parallel --disable-swift-testing --xunit-output .codeyam/swift-tests.xml
+# Install codeyam-editor
+npm install -g @codeyam-editor/codeyam-editor@latest
+
+# Launch the editor (split-screen terminal + live preview)
+codeyam-editor start
 ```
 <!-- codeyam:run-and-edit:end -->
 
@@ -249,40 +252,40 @@ the architecture conventions and PR checklist, and note the
 
 [MIT](./LICENSE) © 2026 Codeyam
 
-<!-- codeyam:scenario-gallery:start -->
+<!-- codeyam:scenario-gallery:start d=5f49f9c5d0d1 -->
 ## Scenario gallery
 
 States captured as runnable scenarios with codeyam-editor:
 
 ### Accessibility - Large Text Tour
 
-![Accessibility - Large Text Tour](.codeyam/scenarios/screenshots/accessibility-large-text-tour--iphone-16.png)
+<img src=".codeyam/scenarios/screenshots/accessibility-large-text-tour--iphone-16.png" alt="Accessibility - Large Text Tour" width="280">
 
 ### Accessibility — Large Text Today
 
-![Accessibility — Large Text Today](.codeyam/scenarios/screenshots/accessibility-large-text-today--iphone-16.png)
+<img src=".codeyam/scenarios/screenshots/accessibility-large-text-today--iphone-16.png" alt="Accessibility — Large Text Today" width="280">
 
 ### Activity History — Empty
 
-![Activity History — Empty](.codeyam/scenarios/screenshots/activity-history-empty--iphone-16.png)
+<img src=".codeyam/scenarios/screenshots/activity-history-empty--iphone-16.png" alt="Activity History — Empty" width="280">
 
 ### Activity History — Long Values
 
-![Activity History — Long Values](.codeyam/scenarios/screenshots/activity-history-long-values--iphone-16.png)
+<img src=".codeyam/scenarios/screenshots/activity-history-long-values--iphone-16.png" alt="Activity History — Long Values" width="280">
 
 ### Activity History — Partial Week (Mid-Week)
 
-![Activity History — Partial Week (Mid-Week)](.codeyam/scenarios/screenshots/activity-history-partial-week-mid-week--iphone-16.png)
+<img src=".codeyam/scenarios/screenshots/activity-history-partial-week-mid-week--iphone-16.png" alt="Activity History — Partial Week (Mid-Week)" width="280">
 
 ### Activity History — Rich Multi-Week
 
-![Activity History — Rich Multi-Week](.codeyam/scenarios/screenshots/activity-history-rich-multi-week--iphone-16.png)
+<img src=".codeyam/scenarios/screenshots/activity-history-rich-multi-week--iphone-16.png" alt="Activity History — Rich Multi-Week" width="280">
 
 ### Activity History — Sparse
 
-![Activity History — Sparse](.codeyam/scenarios/screenshots/activity-history-sparse--iphone-16.png)
+<img src=".codeyam/scenarios/screenshots/activity-history-sparse--iphone-16.png" alt="Activity History — Sparse" width="280">
 
 ### App Icon — Showcase
 
-![App Icon — Showcase](.codeyam/scenarios/screenshots/app-icon-showcase--iphone-16.png)
+<img src=".codeyam/scenarios/screenshots/app-icon-showcase--iphone-16.png" alt="App Icon — Showcase" width="280">
 <!-- codeyam:scenario-gallery:end -->

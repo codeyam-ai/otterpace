@@ -486,25 +486,11 @@ public final class OtterpaceModel: ObservableObject {
     }
 
     /// Rebuild `today` from the latest Health snapshot plus the Strava import, then
-    /// re-apply the on-device stores and cache the result. With no Strava runs the
-    /// Health snapshot renders exactly as loaded — its weekly load is never
-    /// recomputed, so a seeded scenario's hand-set numbers survive untouched.
+    /// re-apply the on-device stores and cache the result (see `WorkoutMerge.compose`).
     private func recompose() {
-        var state = healthSnapshot ?? today
-        if !stravaWorkouts.isEmpty {
-            let merged = WorkoutMerge.merge(health: healthSnapshot?.workouts ?? [], strava: stravaWorkouts)
-            state.workouts = merged
-            state.latestWorkout = merged.first(where: { $0.type == "run" }) ?? merged.first
-            // Roll the merged history up the same way `HealthKitDataSource.loadToday()`
-            // does, so a Strava-only user gets a real Weekly Review recap and the
-            // coach sees the shape of the whole trajectory, not one source's half.
-            state.weeklyLoad = ActivityHistory.weeklyLoad(
-                from: merged,
-                asOf: ActivityHistory.referenceDate(fromISO: state.date))
-            state.loadHistory = ActivityHistory.loadHistory(from: merged)
-            state.healthKitConnected = true
-        }
-        today = state
+        today = WorkoutMerge.compose(healthSnapshot ?? today,
+                                     healthWorkouts: healthSnapshot?.workouts ?? [],
+                                     strava: stravaWorkouts)
         applyOnDeviceState()
         saveSnapshot()
     }

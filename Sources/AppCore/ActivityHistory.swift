@@ -61,6 +61,17 @@ public enum ActivityHistory {
         parser.date(from: iso) ?? Date()
     }
 
+    /// The ISO day `days` before `iso`, as "yyyy-MM-dd" (UTC date math on
+    /// date-only strings). An unparseable date yields "", which sorts before every
+    /// real day — so a cutoff built from it drops nothing.
+    static func isoDay(daysBefore days: Int, iso: String) -> String {
+        let f = parser
+        guard let date = f.date(from: iso),
+              let earlier = calendar.date(byAdding: .day, value: -days, to: date)
+        else { return "" }
+        return f.string(from: earlier)
+    }
+
     /// How far into its Monday-start week `now` sits: 1 on Monday through 7 on
     /// Sunday. One definition of "how far into the week are we", shared by the
     /// week rollups and the trend classifier so they can't drift apart.

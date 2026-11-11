@@ -433,6 +433,41 @@
       "runner": "tests"
     },
     {
+      "description": "isoDay steps back across a leap day.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testIsoDayCrossesALeapDay",
+      "registeredAt": "2026-11-11T19:19:17Z",
+      "runner": "tests"
+    },
+    {
+      "description": "isoDay steps back across a year boundary.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testIsoDayCrossesTheYearBoundary",
+      "registeredAt": "2026-11-11T19:19:17Z",
+      "runner": "tests"
+    },
+    {
+      "description": "isoDay steps thirty days back from a mid-month date.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testIsoDayThirtyDaysBack",
+      "registeredAt": "2026-11-11T19:19:17Z",
+      "runner": "tests"
+    },
+    {
+      "description": "isoDay returns an empty cutoff for an unparseable date, sorting before every real day.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testIsoDayUnparseableYieldsEmpty",
+      "registeredAt": "2026-11-11T19:19:17Z",
+      "runner": "tests"
+    },
+    {
+      "description": "isoDay with zero days back returns the same day.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ActivityHistoryTests › testIsoDayZeroDaysIsTheSameDay",
+      "registeredAt": "2026-11-11T19:19:17Z",
+      "runner": "tests"
+    },
+    {
       "description": "The series is capped to maxWeeks (most recent weeks kept).",
       "file": "Tests/AppCoreTests/ActivityHistoryTests.swift",
       "format": "junit-xml",
@@ -2427,7 +2462,7 @@
       "file": "Tests/AppCoreTests/JournalStoreTests.swift",
       "format": "junit-xml",
       "key": "AppCoreTests.JournalStoreTests › testSaveThenLoadRoundTrips",
-      "line": 28,
+      "line": 43,
       "registeredAt": "2026-08-03T16:25:37.559472+00:00",
       "runner": "tests"
     },
@@ -4382,6 +4417,48 @@
       "key": "AppCoreTests.WorkoutMergeTests › testADistanceOutsideToleranceIsKept",
       "line": 37,
       "registeredAt": "2026-11-11T17:16:57.920759+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A Strava copy of a Health run is not double counted in rolled-up mileage.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WorkoutMergeTests › testComposeDoesNotDoubleCountACopiedRun",
+      "registeredAt": "2026-11-11T19:19:17Z",
+      "runner": "tests"
+    },
+    {
+      "description": "A Strava-only user with no runs gets the newest activity on the Today card.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WorkoutMergeTests › testComposeFallsBackToNewestActivityWhenNoRun",
+      "registeredAt": "2026-11-11T19:19:17Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Strava data alone marks the dashboard as connected.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WorkoutMergeTests › testComposeMarksTheDashboardConnected",
+      "registeredAt": "2026-11-11T19:19:17Z",
+      "runner": "tests"
+    },
+    {
+      "description": "compose merges Strava runs into history and the latest run leads the Today card.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WorkoutMergeTests › testComposeMergesStravaIntoHistoryAndPicksLatestRun",
+      "registeredAt": "2026-11-11T19:19:17Z",
+      "runner": "tests"
+    },
+    {
+      "description": "compose rolls the merged history up into weekly load and load history.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WorkoutMergeTests › testComposeRollsUpWeeklyLoadAndLoadHistory",
+      "registeredAt": "2026-11-11T19:19:17Z",
+      "runner": "tests"
+    },
+    {
+      "description": "With no Strava runs, compose returns the Health snapshot untouched, hand-set load included.",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WorkoutMergeTests › testComposeWithNoStravaReturnsBaseUnchanged",
+      "registeredAt": "2026-11-11T19:19:17Z",
       "runner": "tests"
     },
     {

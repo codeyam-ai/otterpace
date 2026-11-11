@@ -1,0 +1,30 @@
+{
+  "claimStartedAt": "2026-11-11T19:42:28Z",
+  "completedAt": "2026-11-11T20:13:20Z",
+  "completedBy": {
+    "agentProvider": "claude",
+    "codeyamEditorVersion": "0.1.7",
+    "currentStep": "ui-step22",
+    "machine": "MacBookPro.mynetworksettings.com",
+    "originId": "1ad88252-7146-42f5-8c6d-ee60cfe5b606",
+    "pid": 50057,
+    "priority": 0,
+    "selectedPlan": "stay-connected-and-keep-full-history-across-launches",
+    "sessionId": "05b94ca0-21c5-4166-b086-935c52456ded",
+    "startedAt": "2026-11-11T19:42:28Z"
+  },
+  "createdAt": "2026-10-26T20:49:35Z",
+  "deliverables": [
+    "Sources/AppCore/ActivityHistory.swift",
+    "Sources/AppCore/Coach/RemoteCoach.swift",
+    "Sources/AppCore/Model.swift",
+    "Sources/AppCore/WorkoutMerge.swift",
+    "Tests/AppCoreTests/ActivityHistoryTests.swift",
+    "Tests/AppCoreTests/WorkoutMergeTests.swift"
+  ],
+  "journalTimestamp": "2026-11-11T20:13:20Z",
+  "mode": "ui",
+  "planFile": "completed/stay-connected-and-keep-full-history-across-launches.md",
+  "slug": "stay-connected-and-keep-full-history-across-launches",
+  "title": "Stay connected and keep full history across launches"
+}
