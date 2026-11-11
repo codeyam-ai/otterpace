@@ -117,10 +117,9 @@ public struct TodayState: Codable, Equatable {
     public var races: [RaceGoal]           // optional upcoming races; [] => none set
     public var profile: CoachProfile?      // optional onboarding personalization; nil => not shared
     /// Per-day step totals keyed by ISO date ("yyyy-MM-dd"), powering the progress
-    /// heatmap's steps-vs-goal metric. Optional and empty by default: HealthKit
-    /// gives us today's steps but no per-day series, so this is populated only
-    /// where a scenario seeds it. [:] => the steps metric shows "no step data yet"
-    /// rather than a grid of misleading zeroes.
+    /// heatmap's steps-vs-goal metric. HealthKit fills it over the history window
+    /// (days with no samples are left out); scenarios seed it directly. [:] => the
+    /// steps metric shows "no step data yet" rather than a grid of misleading zeroes.
     public var dailySteps: [String: Int]
     /// The runner's own account of how it went — post-run notes and daily
     /// check-ins. On-device only; a bounded recent slice rides to the coach.
@@ -220,6 +219,12 @@ public final class OtterpaceModel: ObservableObject {
     /// user gets the same "stretch your legs?" twice, minutes apart.
     public private(set) var armedInactivityFireAt: Date?
 
+    /// The two sources `today`'s history is composed from, kept apart so either
+    /// can refresh without erasing the other. Before this, a Health refresh
+    /// replaced `today` wholesale and silently dropped every imported Strava run.
+    private var healthSnapshot: TodayState?
+    private var stravaWorkouts: [LatestWorkout] = []
+
     public init(today: TodayState, source: HealthDataSource = SeededHealthDataSource(),
                 defaults: UserDefaults = .standard) {
         self.today = today
@@ -250,6 +255,24 @@ public final class OtterpaceModel: ObservableObject {
             // Journal entries are on-device too; load them so what the runner
             // wrote reaches coaching from launch.
             self.today.journal = JournalStore.load(defaults)
+            restoreCachedSnapshot()
+        }
+    }
+
+    /// Render the last good snapshot on the first frame, so a returning user lands
+    /// on their dashboard rather than the Connect hero. With no cache yet (the
+    /// first launch after updating) but Health access already granted, still open
+    /// the dashboard — `restoreOnLaunch()` fills it in moments later.
+    private func restoreCachedSnapshot() {
+        let todayISO = HealthKitDataSource.isoDay.string(from: Date())
+        if let cached = SnapshotCache.load(defaults) {
+            healthSnapshot = cached.healthState(asOf: todayISO)
+            stravaWorkouts = cached.strava
+            recompose()
+        }
+        if healthAuth == .authorized && !today.healthKitConnected {
+            today.healthKitConnected = true
+            today.date = todayISO
         }
     }
 
@@ -427,9 +450,26 @@ public final class OtterpaceModel: ObservableObject {
             let state = await source.requestAuthorization()
             healthAuth = state
             if state == .authorized {
-                today = await source.loadToday()
-                applyOnDeviceState()
+                healthSnapshot = await source.loadToday()
+                recompose()
             }
+        }
+    }
+
+    /// Bring a returning user's data back on launch without a tap: re-read Health
+    /// when access was already granted, and re-import Strava when it is connected.
+    /// The cached snapshot already rendered in `init`; this replaces it with live
+    /// data. `fetchStrava` is injected (the model doesn't own `StravaService`) and
+    /// returns [] when Strava isn't connected; a failed import keeps the cached runs.
+    @MainActor
+    public func restoreOnLaunch(fetchStrava: () async throws -> [LatestWorkout]) async {
+        guard !HealthSource.isScenarioSeeded(defaults) else { return }
+        if healthAuth == .authorized {
+            healthSnapshot = await source.loadToday()
+            recompose()
+        }
+        if let workouts = try? await fetchStrava(), !workouts.isEmpty {
+            ingestStravaWorkouts(workouts)
         }
     }
 
@@ -441,8 +481,38 @@ public final class OtterpaceModel: ObservableObject {
     @MainActor
     public func refresh() async {
         guard healthAuth == .authorized else { return }
-        today = await source.loadToday()
+        healthSnapshot = await source.loadToday()
+        recompose()
+    }
+
+    /// Rebuild `today` from the latest Health snapshot plus the Strava import, then
+    /// re-apply the on-device stores and cache the result. With no Strava runs the
+    /// Health snapshot renders exactly as loaded — its weekly load is never
+    /// recomputed, so a seeded scenario's hand-set numbers survive untouched.
+    private func recompose() {
+        var state = healthSnapshot ?? today
+        if !stravaWorkouts.isEmpty {
+            let merged = WorkoutMerge.merge(health: healthSnapshot?.workouts ?? [], strava: stravaWorkouts)
+            state.workouts = merged
+            state.latestWorkout = merged.first(where: { $0.type == "run" }) ?? merged.first
+            // Roll the merged history up the same way `HealthKitDataSource.loadToday()`
+            // does, so a Strava-only user gets a real Weekly Review recap and the
+            // coach sees the shape of the whole trajectory, not one source's half.
+            state.weeklyLoad = ActivityHistory.weeklyLoad(
+                from: merged,
+                asOf: ActivityHistory.referenceDate(fromISO: state.date))
+            state.loadHistory = ActivityHistory.loadHistory(from: merged)
+            state.healthKitConnected = true
+        }
+        today = state
         applyOnDeviceState()
+        saveSnapshot()
+    }
+
+    private func saveSnapshot() {
+        guard !HealthSource.isScenarioSeeded(defaults) else { return }
+        SnapshotCache.save(CachedSnapshot(health: healthSnapshot, strava: stravaWorkouts,
+                                          refreshedAt: Date()), defaults)
     }
 
     /// Re-apply the on-device race list and coach profile onto the freshly loaded
@@ -459,6 +529,9 @@ public final class OtterpaceModel: ObservableObject {
     /// always authoritative.
     private func applyOnDeviceState() {
         guard !HealthSource.isScenarioSeeded(defaults) else { return }
+        // The goal is the user's live preference, never whatever a cached or
+        // earlier snapshot captured before they changed it.
+        today.goalSteps = UserPreferences.goalSteps(defaults)
         today.races = RaceStore.load(defaults)
         let profile = CoachProfileStore.load(defaults)
         today.profile = profile.isEmpty ? nil : profile
@@ -523,18 +596,31 @@ public final class OtterpaceModel: ObservableObject {
     @MainActor
     public func ingestStravaWorkouts(_ workouts: [LatestWorkout]) {
         guard !workouts.isEmpty else { return }
-        today.workouts = workouts
-        today.latestWorkout = workouts.first(where: { $0.type == "run" }) ?? workouts.first
-        // Roll the imported activities up into the weekly load, the same way
-        // `HealthKitDataSource.loadToday()` does, so a Strava-only user gets a real
-        // Weekly Review recap instead of the empty "first week starts here" prompt.
-        today.weeklyLoad = ActivityHistory.weeklyLoad(
-            from: workouts,
-            asOf: ActivityHistory.referenceDate(fromISO: today.date))
-        // Carry the multi-week series too, so the coach can reason from the shape
-        // of the imported trajectory rather than a single trend flag.
-        today.loadHistory = ActivityHistory.loadHistory(from: workouts)
-        today.healthKitConnected = true
+        stravaWorkouts = workouts
+        recompose()
+    }
+
+    /// Drop the imported Strava runs (the user disconnected Strava), keeping
+    /// everything Health recorded.
+    @MainActor
+    public func clearStravaWorkouts() {
+        guard !stravaWorkouts.isEmpty else { return }
+        stravaWorkouts = []
+        if healthSnapshot == nil {
+            // Strava was the only source: nothing is left to show.
+            today.workouts = []
+            today.latestWorkout = nil
+            today.weeklyLoad = nil
+            today.loadHistory = []
+            today.healthKitConnected = healthAuth == .authorized
+        }
+        recompose()
+    }
+
+    /// Forget the cached snapshot — part of deleting the account on this device.
+    @MainActor
+    public func clearCachedSnapshot() {
+        SnapshotCache.clear(defaults)
     }
 
     // MARK: Training phase (persist through CoachProfileStore + apply immediately)

@@ -62,11 +62,41 @@ public final class HealthKitDataSource: HealthDataSource {
         async let distance = sumToday(.distanceWalkingRunning, unit: .mile())
         async let energy = sumToday(.activeEnergyBurned, unit: .kilocalorie())
         async let workouts = recentWorkouts()
+        async let daily = dailyStepTotals()
 
         let now = Date()
-        return Self.todayState(steps: await steps, distanceMiles: await distance, energyKcal: await energy,
-                               goalSteps: goalSteps, history: await workouts,
-                               date: Self.isoDay.string(from: now), now: now)
+        var state = Self.todayState(steps: await steps, distanceMiles: await distance, energyKcal: await energy,
+                                    goalSteps: goalSteps, history: await workouts,
+                                    date: Self.isoDay.string(from: now), now: now)
+        state.dailySteps = await daily
+        return state
+    }
+
+    /// Per-day step totals over the history window, keyed by local ISO day — the
+    /// heatmap's steps-vs-goal series. One statistics-collection query, not one
+    /// query per day. Days with no samples are left out, so the heatmap can tell
+    /// "no data" from a real zero.
+    private func dailyStepTotals(days: Int = HealthKitDataSource.historyDays) async -> [String: Int] {
+        guard let type = HKQuantityType.quantityType(forIdentifier: .stepCount) else { return [:] }
+        let cal = Calendar.current
+        let end = Date()
+        let anchor = cal.startOfDay(for: end)
+        let start = cal.date(byAdding: .day, value: -(days - 1), to: anchor) ?? anchor
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
+        return await withCheckedContinuation { cont in
+            let q = HKStatisticsCollectionQuery(quantityType: type, quantitySamplePredicate: predicate,
+                                                options: .cumulativeSum, anchorDate: anchor,
+                                                intervalComponents: DateComponents(day: 1))
+            q.initialResultsHandler = { _, collection, _ in
+                var totals: [String: Int] = [:]
+                collection?.enumerateStatistics(from: start, to: end) { stats, _ in
+                    guard let sum = stats.sumQuantity() else { return }
+                    totals[Self.isoDay.string(from: stats.startDate)] = Int(sum.doubleValue(for: .count()))
+                }
+                cont.resume(returning: totals)
+            }
+            store.execute(q)
+        }
     }
 
     public func lastMovementDate() async -> Date? {
@@ -88,10 +118,11 @@ public final class HealthKitDataSource: HealthDataSource {
         }
     }
 
-    /// Read recent workouts (last 30 days, newest-first) and map them to the app's
-    /// `LatestWorkout` shape so the Today card, Weekly Load, Activity History, and
-    /// Weekly Review all populate from live HealthKit data.
-    private func recentWorkouts(days: Int = 30, limit: Int = 60) async -> [LatestWorkout] {
+    /// Read recent workouts (the history window, newest-first) and map them to the
+    /// app's `LatestWorkout` shape so the Today card, Weekly Load, Activity History,
+    /// and Weekly Review all populate from live HealthKit data. The window matches
+    /// the heatmap's widest range, so older days no longer look like missing data.
+    private func recentWorkouts(days: Int = HealthKitDataSource.historyDays, limit: Int = 300) async -> [LatestWorkout] {
         let start = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
         let predicate = HKQuery.predicateForSamples(withStart: start, end: Date(), options: .strictStartDate)
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
@@ -160,6 +191,10 @@ public final class HealthKitDataSource: HealthDataSource {
 // outside the iOS-only block so it unit-tests in the macOS build. The HealthKit
 // glue above only runs the queries and hands their raw results to these.
 extension HealthKitDataSource {
+    /// How far back Health history is read: the heatmap's widest range (13 weeks),
+    /// so every day it can show is backed by real data.
+    static let historyDays = HeatmapRange.threeMonth.weekCount * 7
+
     /// Today's dashboard state from raw HealthKit sums and the recent workout list
     /// (newest-first). Active minutes are the workouts logged today; the Today card
     /// prefers the latest run over any other workout; weekly load and the

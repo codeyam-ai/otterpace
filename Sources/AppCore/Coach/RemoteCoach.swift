@@ -276,16 +276,38 @@ public struct RemoteCoach {
         return message
     }
 
-    /// The context actually put on the wire. The journal is projected down to its
-    /// bounded recent slice here — at the single point where the payload leaves
-    /// the device — so an unbounded diary can never push `loadHistory` out of the
-    /// backend's 16 KB `MAX_CONTEXT_BYTES` cap and quietly degrade the coaching
-    /// this feature exists to improve. Every other field passes through untouched.
+    /// The context actually put on the wire, trimmed here — at the single point
+    /// where the payload leaves the device — so nothing unbounded can push the
+    /// request past the backend's 16 KB `MAX_CONTEXT_BYTES` cap (a 413 means no
+    /// coaching at all). The journal shrinks to its recent slice; the app now keeps
+    /// ~13 weeks of workouts and per-day steps for the heatmap, but the coach gets
+    /// the trailing `coachHistoryDays` of each — the 30-day picture it has always
+    /// had. `loadHistory` is already a compact weekly series and passes untouched.
     func bounded(_ context: TodayState) -> TodayState {
-        guard !context.journal.isEmpty else { return context }
         var out = context
-        out.journal = Journal.coachSlice(context.journal, asOf: context.date)
+        if !context.journal.isEmpty {
+            out.journal = Journal.coachSlice(context.journal, asOf: context.date)
+        }
+        let cutoff = Self.isoDay(daysBefore: Self.coachHistoryDays, iso: context.date)
+        out.workouts = Array(context.workouts.filter { $0.date >= cutoff }.prefix(Self.coachMaxWorkouts))
+        out.dailySteps = context.dailySteps.filter { $0.key >= cutoff }
         return out
+    }
+
+    static let coachHistoryDays = 30
+    static let coachMaxWorkouts = 60
+
+    /// The ISO day `days` before `iso` (UTC date math on date-only strings, like
+    /// `ActivityHistory`). An unparseable date yields "" so nothing is dropped.
+    static func isoDay(daysBefore days: Int, iso: String) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "UTC")
+        guard let date = f.date(from: iso),
+              let earlier = Calendar(identifier: .gregorian).date(byAdding: .day, value: -days, to: date)
+        else { return "" }
+        return f.string(from: earlier)
     }
 
     /// Ask the real coach. Throws `CoachError` so the caller can decide whether to

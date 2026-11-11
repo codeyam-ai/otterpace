@@ -62,6 +62,15 @@ public struct ContentView: View {
         Task { await session.revalidate() }
     }
 
+    /// Bring a returning user's Health and Strava data back on launch, so they
+    /// never have to tap Connect again just because the app was closed. Skipped
+    /// under preview/scenario seeds, like the session check above.
+    private func restoreDataIfNeeded() {
+        guard previewMode.isEmpty, !HealthSource.isScenarioSeeded() else { return }
+        let strava = StravaService()
+        Task { await model.restoreOnLaunch(fetchStrava: { try await strava.fetchActivities() }) }
+    }
+
     /// Open the system Settings app so the user can grant Health access.
     private func openSettings() {
         #if os(iOS)
@@ -153,6 +162,7 @@ public struct ContentView: View {
         .onAppear {
             if previewMode.isEmpty { Analytics.shared.capture("app_opened") }
             revalidateSessionIfNeeded()
+            restoreDataIfNeeded()
         }
         .onChange(of: scenePhase) { phase in
             // Never schedule during a preview/scenario capture.

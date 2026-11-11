@@ -171,6 +171,8 @@ public struct SettingsView: View {
                 // app holds, and "delete my account" has to mean it. Erase them
                 // here or they would outlive the account on this device.
                 model.deleteAllJournalEntries()
+                // Same reasoning for the on-device snapshot cache of their activity.
+                model.clearCachedSnapshot()
             }
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -435,7 +437,10 @@ public struct SettingsView: View {
                     }
                 }
                 actionRow("Disconnect", icon: "xmark.circle", tint: Palette.brandDeep, destructive: true) {
-                    Task { await strava.disconnect() }
+                    Task {
+                        await strava.disconnect()
+                        model.clearStravaWorkouts()   // drop imported runs; Health's stay
+                    }
                 }
             } else {
                 VStack(alignment: .leading, spacing: 8) {
