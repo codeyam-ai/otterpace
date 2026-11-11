@@ -1,0 +1,118 @@
+{
+  "proposals": [
+    {
+      "id": "model-level-tests-for-cache-restore-and-strava-health-merge",
+      "title": "Model-level tests for cache restore and Strava/Health merge",
+      "mode": "backend",
+      "body": "## Summary\nThe Stay-connected feature pulled the Health/Strava merge out into `WorkoutMerge.compose` (Sources/AppCore/WorkoutMerge.swift) and gave it unit tests (Tests/AppCoreTests/WorkoutMergeTests.swift, ActivityHistoryTests.swift). The model paths that call it in Sources/AppCore/Model.swift still have no tests: restoring the snapshot cache on a cold launch, a Health refresh that keeps Strava workouts, and `clearStravaWorkouts` / `clearCachedSnapshot`. The user accepted this gap at the Save gate, so it's follow-up work.\n\n## Key Decisions\n- Test through the model's public surface with an injected cache store, not through UI scenarios. Scenario seeds bypass the merge, so a capture can't show it.\n- Use fixed dates so the newest-activity ordering is deterministic.\n\n## Implementation\n1. Add `Tests/AppCoreTests/ModelHistoryPersistenceTests.swift`.\n2. Cold launch: write a cached snapshot, build a new model, and assert that history and the newest activity load before any network call.\n3. Health refresh: seed Strava workouts, run a Health refresh, and assert the Strava entries are still there and the merged list is in order.\n4. Clearing: assert that `clearStravaWorkouts` removes only Strava entries and that `clearCachedSnapshot` empties the persisted snapshot.\n5. Register the tests with descriptions.",
+      "reason": "The merge logic is tested, but the model paths that use it aren't: cold-launch restore, Health refresh keeping Strava runs, and clearing the caches.",
+      "severity": 3,
+      "source": "session-review",
+      "category": "debt",
+      "status": "pending",
+      "proposedAt": "2026-11-11T20:39:35.860291+00:00",
+      "kind": "tech-debt",
+      "rank": 1,
+      "sightings": 1
+    },
+    {
+      "id": "split-oversized-model-swift-and-settingsview-swift",
+      "title": "Split oversized Model.swift and SettingsView.swift",
+      "mode": "ui",
+      "body": "## Summary\nSources/AppCore/Model.swift is 714 lines and Sources/AppCore/SettingsView.swift is 1017 lines, both far past the ~300-line budget. This feature touched Model.swift again to call `WorkoutMerge.compose`.\n\n## Key Decisions\n- Pure moves only, with no behavior change. The existing 522 tests and scenario captures must stay green and unchanged.\n- Model.swift: move persistence and cache handling (snapshot cache, Strava workout store) and source refresh coordination into extensions or helper types in their own files.\n- SettingsView.swift: split each section (connections, race import, theme, account) into its own subview file.\n\n## Implementation\n1. Pull the Model cache and persistence members into `Model+Persistence.swift`, and refresh orchestration into `Model+Refresh.swift`.\n2. Pull the SettingsView sections into `Settings/<Section>View.swift` files.\n3. Run analyze-imports on the new files explicitly, then refresh tests and confirm the scenario hashes haven't changed.",
+      "reason": "Model.swift (714 lines) and SettingsView.swift (1017 lines) are well over the ~300-line budget, which makes every change to them riskier.",
+      "severity": 2,
+      "source": "session-review",
+      "category": "debt",
+      "status": "pending",
+      "proposedAt": "2026-11-11T20:39:35.860291+00:00",
+      "kind": "tech-debt",
+      "rank": 2,
+      "sightings": 1
+    },
+    {
+      "id": "two-planned-demos-have-no-screenshot-merged-health-strava-history-with-duplicates-removed-and-a-strava-only-relaunch-screenshot-setups-skip-the-merge-by-design",
+      "title": "Two planned demos have no screenshot: merged Health + Strava history with duplicates removed, and a Strava-only relaunch. Screenshot setups skip the merge by design.",
+      "mode": "backend",
+      "body": "## Summary\n\nTwo planned demos have no screenshot: merged Health + Strava history with duplicates removed, and a Strava-only relaunch. Screenshot setups skip the merge by design.\n\nAt the approval gate for \"Stay connected and keep full history across launches\" the user approved the built work past this gap: it differs from what the plan asked for. Built from plan `stay-connected-and-keep-full-history-across-launches` (now at `.codeyam/plans/completed/stay-connected-and-keep-full-history-across-launches.md`).\n\nYour Strava and Health history now survives relaunching the app, and refreshing one source no longer wipes out the other.\n\n## What you can now do\n- Reopen the app and still see your full workout history, Strava runs included\n- Refresh Health data without losing runs that came from Strava\n- Use Strava alone and still see your newest activity on Today\n- Count on the merge logic: it has its own tests, 522/522 passing\n\nRead that plan and the code it changed before planning how to close the gap.",
+      "reason": "Approved past at the approval gate for \"Stay connected and keep full history across launches\".",
+      "source": "session-review",
+      "status": "pending",
+      "proposedAt": "2026-11-11T20:39:35.860291+00:00",
+      "sightings": 1
+    },
+    {
+      "id": "the-duplicate-stale-scenario-review-hung-on-its-last-item-and-was-stopped-curation-was-checked-by-hand-screenshots-were-not-re-captured-because-the-drift-report-was-clean",
+      "title": "The duplicate/stale scenario review hung on its last item and was stopped; curation was checked by hand. Screenshots were not re-captured, because the drift report was clean.",
+      "mode": "backend",
+      "body": "## Summary\n\nThe duplicate/stale scenario review hung on its last item and was stopped; curation was checked by hand. Screenshots were not re-captured, because the drift report was clean.\n\nAt the approval gate for \"Stay connected and keep full history across launches\" the user approved the built work past this gap: it differs from what the plan asked for. Built from plan `stay-connected-and-keep-full-history-across-launches` (now at `.codeyam/plans/completed/stay-connected-and-keep-full-history-across-launches.md`).\n\nYour Strava and Health history now survives relaunching the app, and refreshing one source no longer wipes out the other.\n\n## What you can now do\n- Reopen the app and still see your full workout history, Strava runs included\n- Refresh Health data without losing runs that came from Strava\n- Use Strava alone and still see your newest activity on Today\n- Count on the merge logic: it has its own tests, 522/522 passing\n\nRead that plan and the code it changed before planning how to close the gap.",
+      "reason": "Approved past at the approval gate for \"Stay connected and keep full history across launches\".",
+      "source": "session-review",
+      "status": "pending",
+      "proposedAt": "2026-11-11T20:39:35.860291+00:00",
+      "sightings": 1
+    },
+    {
+      "id": "refactor:Sources/AppCore/Model.swift:1",
+      "title": "refactor -- Split Sources/AppCore/Model.swift (714 production lines)",
+      "mode": "backend",
+      "body": "## Summary\n\nSources/AppCore/Model.swift has 714 production lines against a 500-line budget; this branch added 72. 1 of its functions are over the 150-line entity budget: `OtterpaceModel` (516 lines). Feature work keeps landing in this file. Splitting it along its seams keeps each concern in its own file, so the next change touches less. CodeYam generated this plan from measurements of the files a build cycle touched.\n\n## Key Decisions\n\n- Largest entities: `OtterpaceModel` (516 lines), `TodayState` (93 lines), `WeeklyLoad` (41 lines), `LatestWorkout` (17 lines), `CoachRecommendation` (15 lines).\n- Candidate seams (entities sharing a name prefix usually share a concern):\n  - `Weekly…` (52 lines): WeeklyLoad, WeeklyLoadPoint\n- Split only along seams that are one concern; leave the rest in place.\n- Behavior does not change: this is a move, not a rewrite.\n\n## Implementation\n\n1. Confirm the current numbers: `codeyam-editor editor organization-report --path Sources/AppCore/Model.swift`.\n2. Move each chosen group into its own file beside `Sources/AppCore/Model.swift`, keeping existing callers working.\n3. Reconcile the glossary, test registry and evidence: `codeyam-editor editor relocate-entities --from Sources/AppCore/Model.swift`.\n4. Done when `Sources/AppCore/Model.swift` is within 500 production lines, or what remains is one concern.",
+      "reason": "Sources/AppCore/Model.swift has 714 production lines against a 500-line budget; this branch added 72.",
+      "severity": 2,
+      "source": "refactor",
+      "category": "debt",
+      "status": "pending",
+      "proposedAt": "2026-11-11T20:39:35.860291+00:00",
+      "kind": "tech-debt",
+      "sightings": 1
+    },
+    {
+      "id": "refactor:Sources/AppCore/SettingsView.swift:2",
+      "title": "refactor -- Split Sources/AppCore/SettingsView.swift (1017 production lines)",
+      "mode": "backend",
+      "body": "## Summary\n\nSources/AppCore/SettingsView.swift has 1017 production lines against a 500-line budget; this branch added 5. 1 of its functions are over the 150-line entity budget: `SettingsView` (1009 lines). Feature work keeps landing in this file. Splitting it along its seams keeps each concern in its own file, so the next change touches less. CodeYam generated this plan from measurements of the files a build cycle touched.\n\n## Key Decisions\n\n- Largest entities: `SettingsView` (1009 lines).\n- No shared-name groups were found; split along the largest entities instead.\n- Split only along seams that are one concern; leave the rest in place.\n- Behavior does not change: this is a move, not a rewrite.\n\n## Implementation\n\n1. Confirm the current numbers: `codeyam-editor editor organization-report --path Sources/AppCore/SettingsView.swift`.\n2. Move each chosen group into its own file beside `Sources/AppCore/SettingsView.swift`, keeping existing callers working.\n3. Reconcile the glossary, test registry and evidence: `codeyam-editor editor relocate-entities --from Sources/AppCore/SettingsView.swift`.\n4. Done when `Sources/AppCore/SettingsView.swift` is within 500 production lines, or what remains is one concern.",
+      "reason": "Sources/AppCore/SettingsView.swift has 1017 production lines against a 500-line budget; this branch added 5.",
+      "severity": 2,
+      "source": "refactor",
+      "category": "debt",
+      "status": "pending",
+      "proposedAt": "2026-11-11T20:39:35.860291+00:00",
+      "kind": "tech-debt",
+      "sightings": 1
+    },
+    {
+      "id": "refactor:Sources/AppCore/Health/HealthKitDataSource.swift:0",
+      "title": "refactor -- Break up HealthKitDataSource in Sources/AppCore/Health/HealthKitDataSource.swift (246 lines)",
+      "mode": "backend",
+      "body": "## Summary\n\nSources/AppCore/Health/HealthKitDataSource.swift has 264 production lines against a 500-line budget; this branch added 35. 1 of its functions are over the 150-line entity budget: `HealthKitDataSource` (246 lines). Feature work keeps landing in this file. Splitting it along its seams keeps each concern in its own file, so the next change touches less. CodeYam generated this plan from measurements of the files a build cycle touched.\n\n## Key Decisions\n\n- Largest entities: `HealthKitDataSource` (246 lines).\n- No shared-name groups were found; split along the largest entities instead.\n- Split only along seams that are one concern; leave the rest in place.\n- Behavior does not change: this is a move, not a rewrite.\n\n## Implementation\n\n1. Confirm the current numbers: `codeyam-editor editor organization-report --path Sources/AppCore/Health/HealthKitDataSource.swift`.\n2. Move each chosen group into its own file beside `Sources/AppCore/Health/HealthKitDataSource.swift`, keeping existing callers working.\n3. Reconcile the glossary, test registry and evidence: `codeyam-editor editor relocate-entities --from Sources/AppCore/Health/HealthKitDataSource.swift`.\n4. Done when `Sources/AppCore/Health/HealthKitDataSource.swift` is within 500 production lines, or what remains is one concern.",
+      "reason": "Sources/AppCore/Health/HealthKitDataSource.swift has 264 production lines against a 500-line budget; this branch added 35.",
+      "severity": 2,
+      "source": "refactor",
+      "category": "debt",
+      "status": "pending",
+      "proposedAt": "2026-11-11T20:39:35.860291+00:00",
+      "kind": "tech-debt",
+      "sightings": 1
+    }
+  ],
+  "rounds": [
+    {
+      "at": "2026-11-11T20:39:35.860291+00:00",
+      "feature": "Stay connected and keep full history across launches",
+      "notes": "Resumed at Push after a phase-boundary reset. The push went through cleanly: the queue head was acquired in 1s and nothing was pulled. The persistence tests rank first because the user accepted that gap at the Save gate and it covers data-…",
+      "proposedIds": [
+        "model-level-tests-for-cache-restore-and-strava-health-merge",
+        "split-oversized-model-swift-and-settingsview-swift",
+        "two-planned-demos-have-no-screenshot-merged-health-strava-history-with-duplicates-removed-and-a-strava-only-relaunch-screenshot-setups-skip-the-merge-by-design",
+        "the-duplicate-stale-scenario-review-hung-on-its-last-item-and-was-stopped-curation-was-checked-by-hand-screenshots-were-not-re-captured-because-the-drift-report-was-clean",
+        "refactor:Sources/AppCore/Model.swift:1",
+        "refactor:Sources/AppCore/SettingsView.swift:2",
+        "refactor:Sources/AppCore/Health/HealthKitDataSource.swift:0"
+      ],
+      "rankedIds": [
+        "model-level-tests-for-cache-restore-and-strava-health-merge",
+        "split-oversized-model-swift-and-settingsview-swift"
+      ]
+    }
+  ]
+}
