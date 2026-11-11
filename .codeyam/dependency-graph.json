@@ -28,7 +28,10 @@
     },
     ".claude/skills/review-session/scripts/extract-session.mjs": {
       "imports": [
-        ".claude/skills/review-session/scripts/extract-session-helpers.mjs"
+        ".claude/skills/review-session/scripts/extract-session-helpers.mjs",
+        ".claude/skills/review-session/scripts/session-tokens.mjs",
+        ".claude/skills/review-session/scripts/session-tokens-report.mjs",
+        ".claude/skills/review-session/scripts/session-tokens-subagents.mjs"
       ],
       "importedBy": []
     },
@@ -43,6 +46,49 @@
         ".claude/skills/review-session/scripts/find-last-session-helpers.mjs"
       ],
       "importedBy": []
+    },
+    ".claude/skills/review-session/scripts/session-tokens-carried.mjs": {
+      "imports": [],
+      "importedBy": [
+        ".claude/skills/review-session/scripts/session-tokens.mjs"
+      ]
+    },
+    ".claude/skills/review-session/scripts/session-tokens-labels.mjs": {
+      "imports": [],
+      "importedBy": [
+        ".claude/skills/review-session/scripts/session-tokens.mjs"
+      ]
+    },
+    ".claude/skills/review-session/scripts/session-tokens-report.mjs": {
+      "imports": [
+        ".claude/skills/review-session/scripts/session-tokens.mjs"
+      ],
+      "importedBy": [
+        ".claude/skills/review-session/scripts/extract-session.mjs"
+      ]
+    },
+    ".claude/skills/review-session/scripts/session-tokens-steps.mjs": {
+      "imports": [],
+      "importedBy": [
+        ".claude/skills/review-session/scripts/session-tokens.mjs"
+      ]
+    },
+    ".claude/skills/review-session/scripts/session-tokens-subagents.mjs": {
+      "imports": [],
+      "importedBy": [
+        ".claude/skills/review-session/scripts/extract-session.mjs"
+      ]
+    },
+    ".claude/skills/review-session/scripts/session-tokens.mjs": {
+      "imports": [
+        ".claude/skills/review-session/scripts/session-tokens-carried.mjs",
+        ".claude/skills/review-session/scripts/session-tokens-labels.mjs",
+        ".claude/skills/review-session/scripts/session-tokens-steps.mjs"
+      ],
+      "importedBy": [
+        ".claude/skills/review-session/scripts/extract-session.mjs",
+        ".claude/skills/review-session/scripts/session-tokens-report.mjs"
+      ]
     },
     ".codeyam/capture.js": {
       "imports": [
@@ -652,6 +698,10 @@
       "imports": [],
       "importedBy": []
     },
+    "Sources/AppCore/SnapshotCache.swift": {
+      "imports": [],
+      "importedBy": []
+    },
     "Sources/AppCore/StarterQuestionChips.swift": {
       "imports": [],
       "importedBy": []
@@ -753,6 +803,10 @@
       "importedBy": []
     },
     "Sources/AppCore/WorkoutCard.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/WorkoutMerge.swift": {
       "imports": [],
       "importedBy": []
     },
@@ -888,6 +942,10 @@
       "imports": [],
       "importedBy": []
     },
+    "Tests/AppCoreTests/SnapshotCacheTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
     "Tests/AppCoreTests/StarterQuestionsTests.swift": {
       "imports": [],
       "importedBy": []
@@ -905,6 +963,10 @@
       "importedBy": []
     },
     "Tests/AppCoreTests/WeeklyReviewEngineTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Tests/AppCoreTests/WorkoutMergeTests.swift": {
       "imports": [],
       "importedBy": []
     },
@@ -1232,7 +1294,10 @@
       "imports": [
         ".claude/skills/review-session/scripts/extract-session-helpers.mjs::buildConversationTurns",
         ".claude/skills/review-session/scripts/extract-session-helpers.mjs::detectFormat",
-        ".claude/skills/review-session/scripts/extract-session-helpers.mjs::detectFormatFromPath"
+        ".claude/skills/review-session/scripts/extract-session-helpers.mjs::detectFormatFromPath",
+        ".claude/skills/review-session/scripts/session-tokens.mjs::profileSession",
+        ".claude/skills/review-session/scripts/session-tokens-report.mjs::renderTokensMarkdown",
+        ".claude/skills/review-session/scripts/session-tokens-subagents.mjs::readSubagentLines"
       ],
       "importedBy": []
     },
@@ -1245,6 +1310,28 @@
         ".claude/skills/review-session/scripts/find-last-session-helpers.mjs::sessionSourceLabel"
       ],
       "importedBy": []
+    },
+    ".claude/skills/review-session/scripts/session-tokens-report.mjs::__file_root__": {
+      "filePath": ".claude/skills/review-session/scripts/session-tokens-report.mjs",
+      "name": "__file_root__",
+      "imports": [
+        ".claude/skills/review-session/scripts/session-tokens.mjs::__file_root__"
+      ],
+      "importedBy": []
+    },
+    ".claude/skills/review-session/scripts/session-tokens.mjs::__file_root__": {
+      "filePath": ".claude/skills/review-session/scripts/session-tokens.mjs",
+      "name": "__file_root__",
+      "imports": [
+        ".claude/skills/review-session/scripts/session-tokens-carried.mjs::createCarriedTracker",
+        ".claude/skills/review-session/scripts/session-tokens-labels.mjs::sourcesForToolUse",
+        ".claude/skills/review-session/scripts/session-tokens-steps.mjs::stepFromBanner",
+        ".claude/skills/review-session/scripts/session-tokens-steps.mjs::stepFromHook",
+        ".claude/skills/review-session/scripts/session-tokens-steps.mjs::stepLabel"
+      ],
+      "importedBy": [
+        ".claude/skills/review-session/scripts/session-tokens-report.mjs::__file_root__"
+      ]
     },
     ".codeyam/capture.js::{\n  assertAppPortReachable,\n  defaultReadServerState,\n  loadScenarioInIframe,\n  loadScenarioTopLevel,\n  resolveHarnessOrigin,\n  waitForStablePage,\n  createNetworkTracker,\n  waitForNetworkQuiet,\n  collectContentState,\n  scrollThroughDocument,\n  collectVisibleTextLength,\n  forceFinalVisualState,\n  centerCaptureWrapper,\n  performInteraction,\n  waitForPredicate,\n  performInteractionSequence,\n}": {
       "filePath": ".codeyam/capture.js",
@@ -1693,5 +1780,5 @@
       "importedBy": []
     }
   },
-  "lastUpdated": "2026-10-26T20:17:13Z"
+  "lastUpdated": "2026-11-11T17:30:25Z"
 }

@@ -261,6 +261,13 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "The cached launch snapshot; resets today's totals on a new day while keeping history.",
+    "filePath": "Sources/AppCore/SnapshotCache.swift",
+    "name": "CachedSnapshot",
+    "testFile": "Tests/AppCoreTests/SnapshotCacheTests.swift"
+  },
+  {
     "conformsToView": true,
     "description": "A titled card: an uppercase caption over arbitrary content on the shared cardStyle() surface. Extracted because the same container existed as a private helper in SettingsView and was then copied into CoachDataPreview — two private copies of one container is how two screens start drifting apart visually. SettingsView still holds its own copy on purpose: migrating it would touch every card on that screen and re-render all twelve of its committed scenario screenshots, a large unrelated diff, so that migration is tracked separately rather than smuggled into an unrelated feature.",
     "filePath": "Sources/AppCore/CardSection.swift",
@@ -1747,6 +1754,13 @@
   },
   {
     "conformsToView": false,
+    "description": "Stores the last Health snapshot and Strava import in UserDefaults so a cold launch renders the dashboard.",
+    "filePath": "Sources/AppCore/SnapshotCache.swift",
+    "name": "SnapshotCache",
+    "testFile": "Tests/AppCoreTests/SnapshotCacheTests.swift"
+  },
+  {
+    "conformsToView": false,
     "description": "Journal check-in soreness rating (none, mild, sore, painful). Painful is kept separate from sore so the coach treats it as a signal to back off, and isElevated marks levels that soften recommendations when repeated.",
     "filePath": "Sources/AppCore/Journal/JournalEntry.swift",
     "name": "SorenessLevel",
@@ -2278,6 +2292,13 @@
       "justification": "Native SwiftUI view; no component-isolation harness on this stack, so it is shown via the application scenarios.",
       "kind": "no-isolation-harness"
     }
+  },
+  {
+    "conformsToView": false,
+    "description": "Merges Apple Health and Strava workouts into one newest-first history, dropping Strava copies of Health workouts.",
+    "filePath": "Sources/AppCore/WorkoutMerge.swift",
+    "name": "WorkoutMerge",
+    "testFile": "Tests/AppCoreTests/WorkoutMergeTests.swift"
   },
   {
     "conformsToView": false,

@@ -3773,6 +3773,69 @@
       "runner": "tests"
     },
     {
+      "description": "Clearing the launch cache makes the next load nil.",
+      "file": "Tests/AppCoreTests/SnapshotCacheTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.SnapshotCacheTests › testClearEmptiesTheCache",
+      "line": 53,
+      "registeredAt": "2026-11-11T17:16:58.229212+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A corrupt cached value decodes to nil rather than crashing the launch.",
+      "file": "Tests/AppCoreTests/SnapshotCacheTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.SnapshotCacheTests › testCorruptValueLoadsAsNil",
+      "line": 60,
+      "registeredAt": "2026-11-11T17:16:58.266696+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An untouched store has no cached launch snapshot.",
+      "file": "Tests/AppCoreTests/SnapshotCacheTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.SnapshotCacheTests › testLoadOnAnUntouchedStoreIsNil",
+      "line": 38,
+      "registeredAt": "2026-11-11T17:16:58.153778+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "On a new day the cached Health state resets today's totals but keeps workout history.",
+      "file": "Tests/AppCoreTests/SnapshotCacheTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.SnapshotCacheTests › testNewDayResetsTodaysTotalsButKeepsHistory",
+      "line": 73,
+      "registeredAt": "2026-11-11T17:16:58.345702+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "With Health never read there is no cached Health state on any day.",
+      "file": "Tests/AppCoreTests/SnapshotCacheTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.SnapshotCacheTests › testNoHealthSnapshotStaysNil",
+      "line": 88,
+      "registeredAt": "2026-11-11T17:16:58.387860+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "On the same day the cached Health state renders exactly as cached.",
+      "file": "Tests/AppCoreTests/SnapshotCacheTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.SnapshotCacheTests › testSameDayHealthStateIsUnchanged",
+      "line": 66,
+      "registeredAt": "2026-11-11T17:16:58.305050+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A saved launch snapshot loads back unchanged.",
+      "file": "Tests/AppCoreTests/SnapshotCacheTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.SnapshotCacheTests › testSaveThenLoadRoundTrips",
+      "line": 43,
+      "registeredAt": "2026-11-11T17:16:58.191822+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "Run-or-rest and hit-10K are offered in every state, including day one.",
       "file": "Tests/AppCoreTests/StarterQuestionsTests.swift",
       "format": "junit-xml",
@@ -4301,6 +4364,87 @@
       "key": "AppCoreTests.WeeklyReviewEngineTests › testZeroRunsWithMileageIsSparse",
       "line": 139,
       "registeredAt": "2026-06-23T20:49:34.688711+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A same-day activity of a different type is kept as a separate outing.",
+      "file": "Tests/AppCoreTests/WorkoutMergeTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WorkoutMergeTests › testADifferentTypeOnTheSameDayIsKept",
+      "line": 30,
+      "registeredAt": "2026-11-11T17:16:57.881759+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A same-day run whose distance differs beyond tolerance is kept as a second run.",
+      "file": "Tests/AppCoreTests/WorkoutMergeTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WorkoutMergeTests › testADistanceOutsideToleranceIsKept",
+      "line": 37,
+      "registeredAt": "2026-11-11T17:16:57.920759+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Activities with no distance are matched by duration instead.",
+      "file": "Tests/AppCoreTests/WorkoutMergeTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WorkoutMergeTests › testDistanceLessActivitiesMatchByDuration",
+      "line": 44,
+      "registeredAt": "2026-11-11T17:16:57.959727+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Two genuine same-day runs within one source are both kept.",
+      "file": "Tests/AppCoreTests/WorkoutMergeTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WorkoutMergeTests › testDuplicatesWithinOneSourceAreKept",
+      "line": 53,
+      "registeredAt": "2026-11-11T17:16:57.998825+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Merging two empty sources gives an empty history.",
+      "file": "Tests/AppCoreTests/WorkoutMergeTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WorkoutMergeTests › testEmptySourcesMergeToEmpty",
+      "line": 80,
+      "registeredAt": "2026-11-11T17:16:58.114887+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The merged history is newest-first, with Health first on a same-day tie.",
+      "file": "Tests/AppCoreTests/WorkoutMergeTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WorkoutMergeTests › testMergedHistoryIsNewestFirstWithHealthFirstOnTies",
+      "line": 69,
+      "registeredAt": "2026-11-11T17:16:58.076292+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "One Health workout absorbs at most one matching Strava copy.",
+      "file": "Tests/AppCoreTests/WorkoutMergeTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WorkoutMergeTests › testOneHealthWorkoutAbsorbsAtMostOneStravaCopy",
+      "line": 60,
+      "registeredAt": "2026-11-11T17:16:58.037684+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A Strava copy of a Health run on the same day, type and distance is dropped from the merged history.",
+      "file": "Tests/AppCoreTests/WorkoutMergeTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WorkoutMergeTests › testStravaCopyOfAHealthRunIsDropped",
+      "line": 15,
+      "registeredAt": "2026-11-11T17:16:57.799400+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A Strava activity with no Health counterpart is added to the merged history.",
+      "file": "Tests/AppCoreTests/WorkoutMergeTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.WorkoutMergeTests › testStravaOnlyActivityIsAdded",
+      "line": 22,
+      "registeredAt": "2026-11-11T17:16:57.842871+00:00",
       "runner": "tests"
     }
   ],
