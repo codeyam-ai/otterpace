@@ -1,11 +1,10 @@
 ---
 name: codeyam-new-app
 description: >-
-  Scaffold a brand-new codeyam-native app inside an EXISTING repo — in its own
-  subdirectory, registered as a second apps[] entry, optionally sharing the
-  repo's existing database. The "build something new the codeyam way, against
-  real data" onramp. Isolated so it cannot destabilize the existing app, with
-  the full scenario + preview + TDD loop from line one.
+  Scaffold a brand-new codeyam-native app inside an EXISTING repo — its own
+  subdirectory and apps[] entry, optionally sharing the repo's database.
+  Isolated so it cannot destabilize the existing app, with the full
+  scenario + preview + TDD loop from line one.
 ---
 
 # CodeYam — New Companion App in an Existing Repo

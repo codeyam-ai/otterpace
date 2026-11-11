@@ -1,6 +1,6 @@
 ---
 name: codeyam-see-app
-description: See your existing app rendered as codeyam scenarios. A guided, opt-in, purely additive flow — captures a handful of high-value pages/components as scenarios (writes only under .codeyam/, never touches app source) so you immediately see your real app in real states. Fully reversible via one-step teardown.
+description: See your existing app rendered as codeyam scenarios. A guided, purely additive flow that captures a handful of high-value pages/components as scenarios (writes only under .codeyam/, never app source). Fully reversible via one-step teardown.
 ---
 
 # CodeYam — See Your App as Scenarios

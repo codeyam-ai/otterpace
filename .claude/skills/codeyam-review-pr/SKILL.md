@@ -3,13 +3,10 @@ name: codeyam-review-pr
 user-invocable: true
 disable-model-invocation: false
 description: |
-  Digest an incoming PR: every impacted scenario with before/after
-  captures classified changed/unchanged/new, the tests it adds with
-  their registry descriptions, its blast radius, a grounded narrative of
-  what the PR actually does, and — as one section, not the headline — AI
-  review findings and a codeyam-alignment check. Writes a local digest
-  artifact and, on explicit confirmation, posts a rendered digest as a PR
-  comment. Reviewing runs contributor code, so checkout is consent-gated.
+  Digest an incoming PR: impacted scenarios with before/after captures, the
+  tests it adds, its blast radius, a grounded narrative of what it does,
+  plus AI review findings and a codeyam-alignment check. Posts a PR comment
+  only on confirmation; checkout is consent-gated.
 ---
 
 # Digest and review an incoming PR

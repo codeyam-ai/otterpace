@@ -23,27 +23,37 @@
 //                  injected system-reminder / slash-command / hook records)
 //                  collapsed to one-line beats. Subtractive only: a surviving
 //                  turn is reproduced exactly, never paraphrased.
+//   tokens       - Where the session's tokens went (Claude transcripts only):
+//                  per-turn context, cost split, compactions, carried context
+//                  per source, cost per workflow step, subagents separately.
+//                  `--attribution=last|even` (default last) picks how a
+//                  chained `codeyam-editor editor` call's output is split.
+//                  A sibling `<uuid>/subagents/*.jsonl` dir is read too.
 //
 // Formats:
 //   markdown - human-readable (default; every existing caller relies on it)
-//   json     - a single structured document, `conversation` section only.
-//              This is the input contract for the `editor session-summarize`
-//              HTML renderer, which consumes structured turns rather than
-//              re-parsing markdown.
+//   json     - a single structured document, `conversation` and `tokens`
+//              sections only. For `conversation` this is the input contract
+//              for the `editor session-summarize` HTML renderer, which
+//              consumes structured turns rather than re-parsing markdown.
 
 import { createReadStream } from 'node:fs';
 import { createInterface } from 'node:readline';
-import { stat } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { basename } from 'node:path';
 import {
   buildConversationTurns,
   detectFormat,
   detectFormatFromPath,
 } from './extract-session-helpers.mjs';
+import { profileSession } from './session-tokens.mjs';
+import { renderTokensMarkdown } from './session-tokens-report.mjs';
+import { readSubagentLines } from './session-tokens-subagents.mjs';
 
 const USAGE =
   'Usage: node extract-session.mjs <session.jsonl> ' +
-  '[--section=full|user-only|decisions|errors|conversation] [--format=markdown|json]\n';
+  '[--section=full|user-only|decisions|errors|conversation|tokens] [--format=markdown|json] ' +
+  '[--attribution=last|even]\n';
 
 const inputFile = process.argv[2];
 if (!inputFile) {
@@ -53,22 +63,28 @@ if (!inputFile) {
 
 let section = 'full';
 let format = 'markdown';
+let attribution = 'last';
 for (const arg of process.argv.slice(3)) {
   if (arg.startsWith('--section=')) section = arg.slice('--section='.length);
   else if (arg.startsWith('--format=')) format = arg.slice('--format='.length);
+  else if (arg.startsWith('--attribution=')) attribution = arg.slice('--attribution='.length);
 }
 
 if (format !== 'markdown' && format !== 'json') {
   process.stderr.write(`Unrecognized --format '${format}'. Accepted: markdown, json\n`);
   process.exit(1);
 }
-// JSON is defined for the conversation section only — the other sections are
-// hand-shaped markdown reports with no structured equivalent, and silently
-// emitting markdown under --format=json would hand a caller piping to a JSON
-// parser an unexplained parse error.
-if (format === 'json' && section !== 'conversation') {
+if (attribution !== 'last' && attribution !== 'even') {
+  process.stderr.write(`Unrecognized --attribution '${attribution}'. Accepted: last, even\n`);
+  process.exit(1);
+}
+// JSON is defined for the conversation and tokens sections only — the other
+// sections are hand-shaped markdown reports with no structured equivalent, and
+// silently emitting markdown under --format=json would hand a caller piping to
+// a JSON parser an unexplained parse error.
+if (format === 'json' && section !== 'conversation' && section !== 'tokens') {
   process.stderr.write(
-    `--format=json is supported only with --section=conversation (got '${section}')\n`
+    `--format=json is supported only with --section=conversation or --section=tokens (got '${section}')\n`
   );
   process.exit(1);
 }
@@ -79,6 +95,21 @@ try {
 } catch {
   process.stderr.write(`File not found: ${inputFile}\n`);
   process.exit(1);
+}
+
+// ── Tokens section ────────────────────────────────────────────────────────
+// Needs the raw records (usage blocks, attachments, compaction markers), not
+// the compressed message list every other section builds, so it branches here.
+if (section === 'tokens') {
+  const lines = (await readFile(inputFile, 'utf8')).split('\n');
+  const subagentLines = await readSubagentLines(inputFile);
+  const profile = profileSession(lines, { attribution, subagentLines });
+  process.stdout.write(
+    format === 'json'
+      ? JSON.stringify({ source: basename(inputFile), ...profile }, null, 2) + '\n'
+      : `# Session Token Report\nSource: ${basename(inputFile)}\n\n${renderTokensMarkdown(profile)}`
+  );
+  process.exit(0);
 }
 
 // ── Format detection ──────────────────────────────────────────────────────

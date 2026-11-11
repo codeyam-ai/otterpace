@@ -1,6 +1,6 @@
 ---
 name: codeyam-manual-test-help
-description: Answer a question about ONE manual test, and fix what's wrong. Opened from a test row's "Ask about this test" button with that test's id. Explains how to actually perform the test against the surface it really has, corrects the test in place when the steps are what's wrong, and captures the missing app state when the state the test needs does not exist yet. Never edits application source.
+description: Answer a question about ONE manual test, opened from a test row's "Ask about this test" button. Explains how to perform it, corrects the test's steps in place when they are wrong, and captures missing app state the test needs. Never edits application source.
 ---
 
 # CodeYam — Ask About a Manual Test

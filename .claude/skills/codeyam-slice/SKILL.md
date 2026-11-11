@@ -2,11 +2,10 @@
 name: codeyam-slice
 description: |
   Adopt one vertical slice. Reads `codeyam-editor editor assess`, proposes
-  the single highest-leverage feature/route to take fully through the
-  codeyam loop (deconstruct → test → scenarios) as a worked example on the
-  user's own code, confirms the blast radius, then boots the formal editor
-  workflow at the Deconstruct step scoped to just that slice. The
-  low-commitment adoption path — small, reviewable, reversible.
+  the single highest-leverage feature/route to take through deconstruct →
+  test → scenarios, confirms the blast radius, then boots the editor
+  workflow at Deconstruct scoped to that slice. Small, reviewable,
+  reversible.
 ---
 
 # Adopt One Vertical Slice

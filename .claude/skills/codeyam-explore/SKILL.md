@@ -1,6 +1,6 @@
 ---
 name: codeyam-explore
-description: The first thing to run in an existing repo. Reads `editor assess`, explains where the repo stands in plain language, then offers a small menu of low-risk, clearly-labeled options — diagnose deeper, see your app as scenarios, adopt one vertical slice, go forward-only, or spin up a new companion app. Every option is additive and reversible, so trying codeyam on a real codebase never feels like a commitment. Opt-in and interactive, unlike the autonomous `/codeyam-onboard` flow.
+description: The first thing to run in an existing repo. Reads `editor assess`, explains where the repo stands in plain language, and offers low-risk, reversible options — diagnose deeper, see your app as scenarios, adopt one slice, go forward-only, or start a companion app.
 ---
 
 # CodeYam — Explore (First-Run Options Menu)
@@ -103,6 +103,11 @@ it is additive and reversible. The options:
 - **E. Spin up a new companion app** — scaffold a fresh, codeyam-native app
   alongside the existing repo, leaving the current code entirely untouched.
   *Default when `recommendedAction` is `scaffold-app` / the repo is empty.*
+- **F. Open it in GitHub Codespaces** — offer only when `git remote get-url
+  origin` is a GitHub remote. Adds one file, `.devcontainer/devcontainer.json`,
+  so a new codespace installs the editor and opens it running, plus a README
+  badge snippet to paste. Never rewrites an existing devcontainer file; undo by
+  deleting the file. Never the default.
 
 Always make the additive-and-reversible framing first-class in the copy, not a
 footnote — lowering felt risk is the whole point of this skill.
@@ -126,6 +131,9 @@ a route exists that doesn't, and never silently drop a choice:
 - **E. Spin up a new companion app** → backed by a dedicated scaffold flow
   (`onramp-new-companion-app`). If not installed yet, explain what it will do and
   that the guided flow is coming.
+- **F. Open it in GitHub Codespaces** → run `codeyam-editor editor
+  devcontainer-setup` and relay its output: the file it wrote (or the keys to
+  merge into an existing one), the badge, and any notes.
 
 Routes light up as their backing plans land. This skill is shippable before
 them: it names every option and explains what each does, so the menu is honest

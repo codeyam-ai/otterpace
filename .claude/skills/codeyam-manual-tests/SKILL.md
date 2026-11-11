@@ -1,6 +1,6 @@
 ---
 name: codeyam-manual-tests
-description: Generate manual tests from recent commits — short, human-executable checks for the things an automated test cannot settle. Reads the commits since tests were last generated (or an explicit `range:` you hand it), maps them to the scenarios that demonstrate them, and writes 3–5 tests ranked by what no automated test can reach — discarding anything a unit test already asserts. Also handles a freeform "write me tests for X" request, seeded from chat. Read-only on git; additive under .codeyam/.
+description: Generate 3–5 manual tests from recent commits (or a `range:`) — short human-executable checks for what no automated test can settle, mapped to the scenarios that demonstrate them. Also handles a freeform "write me tests for X" request. Read-only on git; additive under .codeyam/.
 ---
 
 # CodeYam — Generate Manual Tests
@@ -184,6 +184,28 @@ the triage happen. Do not work around it by picking a barrier that will be
 accepted — an unconsidered `real-process` is worse than the free-text note it
 replaced, because it claims a triage was done.
 
+**The barrier is now checked, not trusted.** Naming one was never evidence it
+is true, and the 2026-09-13 run proved it: five tests, five fallbacks — three
+`real-process`, two `real-external` — while
+`buildtabterminalsession-blocked-on-approval` and
+`buildtabsessioncontent-many-queued-plans` sat on disk rendering nearly the
+exact states those tests described. Rung 1 would have hit; rung 3 would have
+saved the rest. So the claim is now falsified in code, at the run boundary:
+
+- `manual-test-add` prints an **advisory on stderr** when a fallback's own
+  commit range touches a file an existing scenario renders, naming the slugs.
+  The write still succeeds — act on it before phase 7.
+- `manual-test-mark-generated` **refuses** (exit `2`, nothing stamped) a run in
+  which any fallback's changed files are already rendered by an existing
+  scenario, and names each test and the slugs that show it.
+
+The honest way through is **the split**, not a different barrier value: keep
+the narrow mechanism test on `no-ui-surface`, and add a sibling test in the same
+run whose `scenario` surface points at one of the named slugs. That sibling is
+what clears the gate — there is no flag to assert a split happened. A project
+with no scenarios is never refused, because nothing can already show its
+change.
+
 ### 5b — The value ladder
 
 Rank every surviving candidate, highest first, and spend the budget from the
@@ -336,6 +358,20 @@ after every add has succeeded.**
 A partial run must not stamp. Stamping resets the commits-since counter, so
 stamping after a failed add silently drops the commits those tests would have
 covered — they would never be offered again.
+
+On success it prints this run's **surface tally** — how many tests landed on
+`scenario`, `uncovered`, and `no-ui-surface`, with the fallbacks split into
+codeyam gaps, inherent barriers, and unclassified legacy records (a `tally`
+object under `--format json`). Read it: an all-fallback run is allowed, but it
+is the tell 5a2 names, and it must not pass unnoticed. Put the tally in the
+phase-8 report.
+
+It may also **refuse** (exit `2`) and name tests whose changed surface an
+existing scenario already renders. A refusal means going back to rung 1 or
+rung 3 of 5a2 for exactly the named tests — revise them onto the scenario, or
+split them and add the `scenario`-surface sibling — then re-running this
+command. **Never re-label a barrier to get past it**; the gate does not read
+the barrier value, only whether a frame already exists.
 
 **Skip this phase entirely on an explicit `range:`** — see phase 1. A run that
 stamps the marker after covering a hand-picked range drops everything between

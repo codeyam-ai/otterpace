@@ -1,6 +1,6 @@
 ---
 name: codeyam-see-recent-change
-description: Demonstrate a recent change as codeyam scenarios. Points codeyam at a recent PR or the last N commits, maps the changed files to the routes/components they affect, and shows the change rendered as scenarios — existing ones that already cover it, plus new ones it offers to capture for surfaces with no scenario yet. Read-only on git; additive on .codeyam/, fully reversible.
+description: Demonstrate a recent change as codeyam scenarios. Points at a recent PR or the last N commits, maps changed files to the routes/components they affect, shows existing covering scenarios and offers to capture new ones. Read-only on git; additive on .codeyam/.
 ---
 
 # CodeYam — Demonstrate a Recent Change

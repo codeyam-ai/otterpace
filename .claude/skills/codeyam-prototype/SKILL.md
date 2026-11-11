@@ -1,12 +1,10 @@
 ---
 name: codeyam-prototype
 description: |
-  Drive a full prototyping session. Ask what the user wants to build, then
-  edit any files needed to bring it to life — components, scenarios, even
-  data — iterating against the live preview until the user has complete
-  confidence in what was prototyped. When the user clicks "Finish and
-  Formalize in Build", write a plan file that boots the editor workflow at
-  the Deconstruct step over the already-prototyped code.
+  Drive a full prototyping session: ask what the user wants to build, edit
+  whatever files bring it to life, and iterate against the live preview
+  until they are confident. On "Finish and Formalize in Build", write a plan
+  that boots the editor workflow at Deconstruct.
 ---
 
 # Prototype A Feature

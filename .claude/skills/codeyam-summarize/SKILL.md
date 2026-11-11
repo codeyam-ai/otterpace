@@ -4,11 +4,9 @@ user-invocable: true
 disable-model-invocation: false
 description: |
   Export this session as a shareable, self-contained HTML document of the
-  conversation itself — every prompt and response, verbatim, with tool
-  calls, command output, and internal steps collapsed to one-line beats.
-  Writes it to a folder you pick (Desktop / Downloads / Documents / inside
-  the project) with a name that is obvious in an email attachment picker.
-  Read-only on the repo; nothing is committed or pushed.
+  conversation — every prompt and response verbatim, tool calls collapsed
+  to one-line beats — into a folder you pick, named for an email attachment
+  picker. Read-only on the repo.
 ---
 
 # Export a session as a shareable conversation

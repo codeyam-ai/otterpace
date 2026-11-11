@@ -1,11 +1,10 @@
 ---
 name: codeyam-chat
 description: |
-  Open-ended conversation about this project or about CodeYam itself. Answer
-  questions grounded in the project's real configuration, deliverables,
-  glossary and scenarios rather than guesses. Explain what CodeYam is and how
-  its scenarios, plans, build workflow and audit gate fit together. When the
-  conversation turns into "build me this", escalate into prototyping.
+  Open-ended conversation about this project or CodeYam itself, grounded in
+  the project's real configuration, deliverables, glossary and scenarios.
+  Explains how scenarios, plans, the build workflow and the audit gate fit
+  together. Escalates into prototyping on "build me this".
 ---
 
 # Chat
