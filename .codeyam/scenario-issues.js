@@ -1,5 +1,5 @@
 // codeyam-generated — DO NOT EDIT.
-// codeyam-editor: 0.1.7  build: c05c551ce98f20d6ba1b84c5a7c08623eafda2a7  source-sha256: 3c039cc1e4caf9697eab9a51646a2779744889ca2e2f6fb79f6b7c32282dde8a
+// codeyam-editor: 0.1.7  build: 283adba28f3fc30f058c87b4f92900dccc81f9e5  source-sha256: c582b56a39e0e81fcc30bf0053446089722d89857bc658efd594d671dea84cb2
 function createIssue(kind, message, extra = {}) {
   const issue = {
     kind,
@@ -113,9 +113,56 @@ function buildResult({
   };
 }
 
+// The message a capture fails with when the scenario frame navigated after its
+// ready signal arrived — a dev server's live reload swapping the page under the
+// shot.
+const RELOADED_AFTER_READY =
+  "The scenario page navigated after it signalled ready (a dev-server live reload)";
+
+// Failure messages that mean the page was reloaded mid-capture rather than that
+// the app is broken: Playwright's destroyed-context and detached-frame errors,
+// and the marker above. Any dev server with live reload (Vite full reload,
+// trunk, Flutter) produces them, so the match names no stack.
+const LIVE_RELOAD_FAILURE_PATTERNS = [
+  /Execution context was destroyed/i,
+  /Frame was detached/i,
+  /navigated after it signalled ready/,
+];
+
+// The first issue of a failed capture whose message names a mid-capture
+// reload, or null. A capture that passed, or failed for any other reason, is
+// never a reload candidate.
+function liveReloadIssue(result) {
+  if (!result || result.ok) return null;
+  return (
+    (result.issues || []).find((issue) =>
+      LIVE_RELOAD_FAILURE_PATTERNS.some((re) => re.test(String(issue.message || ""))),
+    ) || null
+  );
+}
+
+// Run a capture `attempt`, and run it ONCE more when a dev server's live reload
+// interrupted it: the reload is a temporary condition, and the second attempt
+// waits for the ready signal on the reloaded page from scratch. The retry is
+// recorded on the returned result (`reloadRetry`) so it is visible rather than
+// silently absorbed, and a second failure is returned as-is, with its own
+// reason. `onRetry` is told the first failure before the retry starts.
+async function retryOnLiveReload(attempt, { onRetry = () => {} } = {}) {
+  const first = await attempt();
+  const reload = liveReloadIssue(first);
+  if (!reload) return first;
+  onRetry(reload.message);
+  const second = await attempt();
+  second.reloadRetry = { retried: true, firstError: reload.message };
+  return second;
+}
+
 module.exports = {
   createIssue,
   pushIssue,
   buildResult,
   deriveOriginSplit,
+  RELOADED_AFTER_READY,
+  liveReloadIssue,
+  retryOnLiveReload,
 };

@@ -1,5 +1,5 @@
 // codeyam-generated — DO NOT EDIT.
-// codeyam-editor: 0.1.7  build: c05c551ce98f20d6ba1b84c5a7c08623eafda2a7  source-sha256: d8b013d0cb4c1a686f889f66d9fd682b4a6b31458bc618ab492231594c7370d3
+// codeyam-editor: 0.1.7  build: 283adba28f3fc30f058c87b4f92900dccc81f9e5  source-sha256: 842fe8af5acf3082377137298daa0b4f76066a541e64ade3f8516a0947b4cfd6
 // Route matcher for the capture harness — one of THREE implementations of a
 // single semantic. The authority is the Rust engine
 // (crates/mock-engine/src/route_parser.rs), where the contract is written down;
@@ -148,6 +148,10 @@ function splitMockKey(key) {
 // what the usage tally counts — reporting "which declared mock fired" needs the
 // declaration's identity, not just its body, since two keys can carry
 // structurally identical mocks.
+//
+// FIRST match wins, so key order is precedence order: the editor emits
+// `httpMocks` in the mock engine's tier order (a scenario's `GET /x?k=a` ahead
+// of an inherited `GET /x`), and this walk must not re-sort it.
 function findHttpMockEntry(httpMocks, request) {
   const method = request.method().toUpperCase();
   const url = request.url();

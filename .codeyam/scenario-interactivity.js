@@ -1,5 +1,5 @@
 // codeyam-generated — DO NOT EDIT.
-// codeyam-editor: 0.1.7  build: c05c551ce98f20d6ba1b84c5a7c08623eafda2a7  source-sha256: 8ad1de7e5385d8af7889b9884831d134e90ebd5dee2717b179e62e13186bdb30
+// codeyam-editor: 0.1.7  build: 283adba28f3fc30f058c87b4f92900dccc81f9e5  source-sha256: 8ad1de7e5385d8af7889b9884831d134e90ebd5dee2717b179e62e13186bdb30
 const fs = require("fs");
 const path = require("path");
 const { createIssue } = require("./scenario-issues");

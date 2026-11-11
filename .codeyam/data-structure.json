@@ -438,5 +438,37 @@
         "description": "run | walk | ride of the linked workout, used for the row's icon in Activity History"
       }
     ]
+  },
+  {
+    "name": "CachedSnapshot",
+    "description": "The last successfully loaded Today snapshot, stored on-device (UserDefaults-backed, single JSON key) so a cold launch renders the user's real dashboard instantly instead of the 'Connect Apple Health' hero, before live HealthKit/Strava reads finish. Render cache only: live reads always replace it, it never leaves the device, and it is skipped entirely for scenario-seeded stores. Health and Strava workouts are kept as separate lists so the merged history can be recomputed when either source refreshes.",
+    "category": "datastore",
+    "order": 11,
+    "fields": [
+      {
+        "name": "healthWorkouts",
+        "type": "json",
+        "required": false,
+        "description": "Last HealthKit workout list (newest-first); empty => none read yet"
+      },
+      {
+        "name": "stravaWorkouts",
+        "type": "json",
+        "required": false,
+        "description": "Last Strava import (newest-first); empty => not connected or nothing imported"
+      },
+      {
+        "name": "dailySteps",
+        "type": "json",
+        "required": false,
+        "description": "Per-day step totals keyed by ISO date from HealthKit; empty => no series yet"
+      },
+      {
+        "name": "refreshedAt",
+        "type": "datetime",
+        "required": true,
+        "description": "When this snapshot was last refreshed from a live read"
+      }
+    ]
   }
 ]

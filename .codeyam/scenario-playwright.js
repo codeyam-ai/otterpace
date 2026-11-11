@@ -1,9 +1,25 @@
 // codeyam-generated — DO NOT EDIT.
-// codeyam-editor: 0.1.7  build: c05c551ce98f20d6ba1b84c5a7c08623eafda2a7  source-sha256: 50fed448c040f57ee3c0f38128628b8bd752a12b249342024537a56d6cc0d860
+// codeyam-editor: 0.1.7  build: 283adba28f3fc30f058c87b4f92900dccc81f9e5  source-sha256: 04879a603a70426d302141cf4efad69bece3d2790334c0b84d8126a1be4ee628
 const {
   hasLoadingMarkers,
+  isCanvasDominated,
   shouldStopWaitingForImages,
 } = require("./scenario-metrics");
+const {
+  candidateLabelSummary,
+  noMatchGuidance,
+  describeMatchCandidates,
+  resolveTextTarget,
+  pickBestCandidate,
+  pageOf,
+  targetBox,
+  pointIn,
+  devicePixelRatioOf,
+  outsideTargetMessage,
+  outsideTargetError,
+  pointerGeometry,
+  locatorPointGeometry,
+} = require("./scenario-targeting");
 const fs = require("fs");
 
 // PROTOTYPE (improve35 capture diagnostics): append a per-phase timing line to
@@ -100,6 +116,9 @@ function escapeHtmlAttribute(value) {
 // Preview. Callers (via scenario-check.js) pass a concrete color when the
 // UI has detected a background it wants the capture to paint behind the
 // iframe, e.g. `var(--bg-deep)` from the editor shell.
+// The iframe is named `codeyam-preview` (CODEYAM_PREVIEW_FRAME_NAME in
+// ui/src/helpers/previewMockPolicy.ts) so a framed editor page knows it is
+// inside codeyam's own capture, not a hosting IDE's pane.
 function buildIframeHarness(url, { background = "transparent" } = {}) {
   const escapedUrl = escapeHtmlAttribute(url);
   const bg = String(background);
@@ -126,7 +145,7 @@ function buildIframeHarness(url, { background = "transparent" } = {}) {
     </style>
   </head>
   <body>
-    <iframe id="scenario-frame" title="Scenario Preview" src="${escapedUrl}"></iframe>
+    <iframe id="scenario-frame" name="codeyam-preview" title="Scenario Preview" src="${escapedUrl}"></iframe>
   </body>
 </html>`;
 }
@@ -223,10 +242,23 @@ async function collectContentState(target) {
     const loadedImageCount = imgs.filter(
       (img) => img.complete && img.naturalWidth > 0,
     ).length;
+    // Media is counted inside open shadow roots too. `querySelectorAll` stops
+    // at a shadow boundary, and an app that paints inside a web component —
+    // Flutter web draws its canvas under <flutter-view>'s shadow root — would
+    // otherwise read as zero media and zero text, failing the blank gate on a
+    // fully rendered frame.
+    const scopes = [document];
+    for (let i = 0; i < scopes.length; i++) {
+      for (const el of scopes[i].querySelectorAll("*")) {
+        if (el.shadowRoot) scopes.push(el.shadowRoot);
+      }
+    }
     const mediaSelectors = ["svg", "canvas", "video"];
     let mediaBboxCount = 0;
     for (const selector of mediaSelectors) {
-      const nodes = document.querySelectorAll(selector);
+      const nodes = scopes.flatMap((scope) =>
+        Array.from(scope.querySelectorAll(selector)),
+      );
       for (const node of nodes) {
         const rect = node.getBoundingClientRect();
         if (rect.width > 0 && rect.height > 0) {
@@ -767,15 +799,29 @@ async function waitForNetworkQuiet(
 // stack.json `capture.loadingMarkers`); they extend the codeyam-harness
 // defaults so a stable-but-still-loading app screen counts as "not ready"
 // and the loop keeps waiting instead of capturing the loading flash.
-async function waitForStablePage(page, target, timeoutMs = 10000, loadingMarkers = []) {
+//
+// `confirmOnly` is for a page whose app already signalled ready (see
+// `waitForReadySignal`). The signal answers "has it painted?", so a single
+// sample, taken 100 ms in rather than 500, only confirms that no loading marker
+// is up and the root is painted. It does not wait for two identical polls,
+// which put a 1.5 s floor under every capture.
+async function waitForStablePage(
+  page,
+  target,
+  timeoutMs = 10000,
+  loadingMarkers = [],
+  { confirmOnly = false } = {},
+) {
   const started = Date.now();
+  const pollIntervalMs = confirmOnly ? 100 : 500;
+  const requiredStableSamples = confirmOnly ? 1 : 2;
   let lastHtml = "";
   let stableCount = 0;
   let lastHadLoadingMarkers = false;
   let lastHtmlChanged = false;
 
   while (Date.now() - started < timeoutMs) {
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(pollIntervalMs);
 
     const pageState = await target.evaluate(() => {
       const getById = document.getElementById;
@@ -811,9 +857,9 @@ async function waitForStablePage(page, target, timeoutMs = 10000, loadingMarkers
       pageState.rootChildCount === 0 &&
       (pageState.bodyText ?? "").trim().length === 0;
 
-    if (!lastHadLoadingMarkers && !lastHtmlChanged && !rootUnpainted) {
+    if (!lastHadLoadingMarkers && (confirmOnly || !lastHtmlChanged) && !rootUnpainted) {
       stableCount += 1;
-      if (stableCount >= 2) {
+      if (stableCount >= requiredStableSamples) {
         const remaining = () => Math.max(0, timeoutMs - (Date.now() - started));
         await waitForAnimationsSettled(target, {
           timeoutMs: Math.min(2000, remaining()),
@@ -844,6 +890,48 @@ async function waitForStablePage(page, target, timeoutMs = 10000, loadingMarkers
     lastHtmlStillChanging: lastHtmlChanged,
   });
   return { stabilized: false, hadLoadingMarkers: lastHadLoadingMarkers };
+}
+
+// Poll an app-declared ready-signal expression (stack.json
+// `capture.readySignal`) in `target` until it is truthy or `timeoutMs` elapses.
+// This is how a canvas app says "first frame painted": its pixels never move
+// `innerHTML`, so `waitForStablePage` reads it as settled before the wasm has
+// drawn anything. An expression that throws (the app global not yet defined)
+// counts as not-ready rather than failing the wait. Never throws; the caller
+// turns `ready: false` into a capture issue.
+async function waitForReadySignal(target, signal, timeoutMs) {
+  if (!signal) return { awaited: false, ready: true, elapsedMs: 0 };
+  const started = Date.now();
+  const guarded = `(() => { try { return !!(${signal}); } catch (_) { return false; } })()`;
+  try {
+    await target.waitForFunction(guarded, undefined, {
+      timeout: timeoutMs,
+      polling: 100,
+    });
+    const elapsedMs = Date.now() - started;
+    logCaptureTiming("ready-signal", { outcome: "ready", elapsedMs });
+    return { awaited: true, ready: true, elapsedMs };
+  } catch (_) {
+    const elapsedMs = Date.now() - started;
+    logCaptureTiming("ready-signal", { outcome: "timed-out", elapsedMs, timeoutMs });
+    return { awaited: true, ready: false, elapsedMs };
+  }
+}
+
+// Start watching for `frame` to navigate, from the moment its ready signal
+// arrived. A navigation after that point means something reloaded the page
+// under the capture (a dev server's live reload): the frame about to be shot is
+// no longer the one that signalled ready. Returns `{ navigated() }`, read just
+// before the screenshot. A page that cannot report navigations (a stubbed test
+// target) reads as never navigated.
+function watchNavigationAfterReady(page, frame) {
+  let navigated = false;
+  if (page && typeof page.on === "function") {
+    page.on("framenavigated", (navigatedFrame) => {
+      if (navigatedFrame === frame) navigated = true;
+    });
+  }
+  return { navigated: () => navigated };
 }
 
 // `preflight` is injectable so unit tests that drive a mock page can stay
@@ -998,203 +1086,6 @@ async function loadScenarioTopLevel(
   }
 }
 
-// The CSS selector for "clickable / interactive" elements — buttons, links,
-// role=button, form controls, <summary>, and anything with an onclick. Shared
-// by the candidate-label collector (below) and the text-target resolver
-// (`resolveTextTarget`), which prefers an interactive element over a plain
-// text node when a click/press label matches both.
-const INTERACTIVE_SELECTOR =
-  "button, a[href], [role=button], input, select, textarea, summary, [onclick]";
-
-// Collect up to 20 distinct visible labels of interactive elements on the
-// page — buttons, links, role=button, form controls, <summary>, and anything
-// with an onclick. Used to build an ACTIONABLE error when an interaction's
-// target matches nothing: the agent reliably knows a label it rendered, so
-// listing the real candidates turns a silent blank capture into a "did you
-// mean one of these?" hint. Pure read (no clicks); falls back to value /
-// aria-label / placeholder when an element has no text.
-async function collectInteractiveLabels(frame) {
-  return frame.evaluate((selector) => {
-    const nodes = Array.from(document.querySelectorAll(selector));
-    const labels = nodes
-      .map((node) => {
-        const text =
-          (node.innerText || node.textContent || "").trim() ||
-          (typeof node.value === "string" ? node.value.trim() : "") ||
-          (node.getAttribute && node.getAttribute("aria-label")) ||
-          (node.getAttribute && node.getAttribute("placeholder")) ||
-          "";
-        return String(text).trim();
-      })
-      .filter((label) => label.length > 0);
-    return Array.from(new Set(labels)).slice(0, 20);
-  }, INTERACTIVE_SELECTOR);
-}
-
-// How many candidate labels an error message may echo. Deliberately tighter
-// than `collectInteractiveLabels`' own 20-label read cap: the labels are the
-// USER'S page content, so every one printed is a line of their app leaked into
-// the terminal. Enough to answer "did you mean one of these?", not enough to
-// transcribe the page.
-const CANDIDATE_LABEL_CAP = 8;
-
-// Render the candidate labels for an error message, capped and counted. Shared
-// by the no-match and action-failed paths so the echo policy lives in one place.
-async function candidateLabelSummary(frame) {
-  const candidates = await collectInteractiveLabels(frame);
-  if (candidates.length === 0) return "(none found on page)";
-  const shown = candidates.slice(0, CANDIDATE_LABEL_CAP);
-  const rest = candidates.length - shown.length;
-  return rest > 0 ? `${shown.join(", ")} (+${rest} more)` : shown.join(", ");
-}
-
-// Compose the "no element matched" error, branched on the form the caller
-// ACTUALLY passed. Pure and string-returning so both branches are asserted
-// without a browser.
-//
-// The substring advice ("prefer an exact CSS selector") only applies to a text
-// label. Printing it at a caller who already passed `#id` contradicts its own
-// input and reads as misdirection — the failure mode that sent two sessions
-// hunting a selector bug when the page had simply not hydrated. The candidate
-// labels ride with the text branch for the same reason: they answer "did you
-// mean one of these?", a question only a text match can have asked, and every
-// label printed is a line of the user's own page echoed into the terminal.
-function noMatchGuidance({ targetDesc, matchedByText, candidateLabels }) {
-  const queryParamHint =
-    `Many filter/status/sort states are also reachable directly via a ` +
-    `URL query param (e.g. add "?status=active" to the path) with no ` +
-    `interaction at all.`;
-  if (matchedByText) {
-    return (
-      `preview-interact: no element matched ${targetDesc}. ` +
-      `Text is matched as a case-insensitive SUBSTRING, so a misspelled or ` +
-      `over-specific label matches nothing — prefer an exact/role/testid CSS ` +
-      `selector (e.g. {"selector":"[data-testid=\\"save\\"]"}) for a precise ` +
-      `target. ${queryParamHint} ` +
-      `Candidate interactive labels: ${candidateLabels}`
-    );
-  }
-  return (
-    `preview-interact: no element matched ${targetDesc}. ` +
-    `That is already an exact CSS selector, so nothing on the page matches ` +
-    `it as written — confirm the element is present in THIS state (it may be ` +
-    `behind a tab, dialog, or conditional render), that the id/attribute is ` +
-    `spelled as the markup emits it, and that the page rendered and hydrated ` +
-    `at all. ${queryParamHint}`
-  );
-}
-
-// Describe the elements a substring text match resolved, so an ambiguity
-// warning can name the competing controls (e.g. the preset button "Bet" vs the
-// disclosure button "…or bet on"). Reads each matched element's inner text via
-// Playwright's `allInnerTexts`, caps the list at 5, and trims each to a single
-// short line. Pure read; degrades to a count-only description if the locator
-// API or the page can't produce texts.
-async function describeMatchCandidates(baseLocator, matchCount) {
-  const CAP = 5;
-  const MAX_LEN = 60;
-  let texts = [];
-  try {
-    if (typeof baseLocator.allInnerTexts === "function") {
-      texts = await baseLocator.allInnerTexts();
-    }
-  } catch (_) {
-    texts = [];
-  }
-  const described = texts
-    .map((t) => String(t).replace(/\s+/g, " ").trim())
-    .filter((t) => t.length > 0)
-    .slice(0, CAP)
-    .map((t) => (t.length > MAX_LEN ? `${t.slice(0, MAX_LEN)}…` : t))
-    .map((t) => `"${t}"`);
-  if (described.length === 0) {
-    return [`${matchCount} elements (text unavailable)`];
-  }
-  if (matchCount > described.length) {
-    described.push(`…and ${matchCount - described.length} more`);
-  }
-  return described;
-}
-
-// Drive a single user-style interaction against the settled frame before the
-// screenshot, so an interactive state (expanded accordion, open modal, filled
-// field) can be captured without editing app source.
-//
-// The target is matched by visible `text` (preferred — the agent reliably
-// knows the label it rendered) or a CSS `selector`. `action` is click / fill /
-// press; `value` carries the text for `fill` or the key for `press` (e.g.
-// `Enter`). On a no-match target this THROWS with the list of candidate
-// interactive labels — the capture script's outer catch turns that into a
-// failed capture with an actionable message, never a silent blank screenshot.
-//
-// Resolve a visible-text target to the element most likely intended, instead
-// of blindly taking the first substring hit. A bare
-// `getByText(text, { exact: false })` is a case-insensitive SUBSTRING match, so
-// a label can land on a plain text node or a placeholder rather than the chip /
-// button the agent meant (observed: a `"Japan"` click hit placeholder text, not
-// the chip; a `"Bet"` click hit a disclosure button described "or bet on"). We
-// try increasingly-loose locators in priority order and take the first that
-// matches anything:
-//   1. exact + interactive   (for click/press)
-//   2. exact
-//   3. substring + interactive   (for click/press)
-//   4. substring
-// so an exact, clickable element wins over a substring plain-text node. Returns
-// the winning tier's locator plus its match count; when nothing matches at all,
-// returns the substring locator (count 0) so the caller's zero-match error path
-// still fires with its candidate-label hint.
-async function resolveTextTarget(frame, text, action) {
-  const preferInteractive = action === "click" || action === "press";
-  const exactBase = frame.getByText(text, { exact: true });
-  const substrBase = frame.getByText(text, { exact: false });
-
-  const tiers = [];
-  // `.and()` (Playwright ≥1.34) intersects two locators to the elements
-  // matching both — here, the text element that is ALSO interactive. Guard on
-  // its presence so a locator without `.and` degrades to text-only tiers.
-  if (preferInteractive && typeof exactBase.and === "function") {
-    const interactive = frame.locator(INTERACTIVE_SELECTOR);
-    tiers.push(exactBase.and(interactive));
-    tiers.push(exactBase);
-    tiers.push(substrBase.and(interactive));
-    tiers.push(substrBase);
-  } else {
-    tiers.push(exactBase);
-    tiers.push(substrBase);
-  }
-
-  for (const loc of tiers) {
-    const count = await loc.count();
-    if (count > 0) {
-      return { baseLocator: loc, matchCount: count };
-    }
-  }
-  return { baseLocator: substrBase, matchCount: 0 };
-}
-
-// Pick the single element to act on from a resolved locator. When more than one
-// candidate remains within the winning tier, prefer a VISIBLE element over a
-// hidden one rather than acting on raw `.first()` (a hidden duplicate — an
-// off-screen menu clone, an aria-hidden mirror — is almost never the intended
-// target). Degrades to `.first()` when the locator API lacks a visible filter
-// or no candidate is visible.
-async function pickBestCandidate(baseLocator, matchCount) {
-  if (matchCount <= 1) {
-    return baseLocator.first();
-  }
-  try {
-    if (typeof baseLocator.filter === "function") {
-      const visible = baseLocator.filter({ visible: true });
-      if ((await visible.count()) > 0) {
-        return visible.first();
-      }
-    }
-  } catch (_) {
-    // Locator API without a `{ visible: true }` filter — fall through.
-  }
-  return baseLocator.first();
-}
-
 // Text matching prefers an EXACT, INTERACTIVE element over a looser substring /
 // plain-text hit (see `resolveTextTarget`), so the first attempt lands on the
 // chip or button the agent meant. When a genuine ambiguity survives that
@@ -1203,12 +1094,48 @@ async function pickBestCandidate(baseLocator, matchCount) {
 // into the optional `warnings` array so the agent can switch to an exact
 // selector; a zero-match throws an error that spells out the substring caveat
 // and the exact-selector / URL-query-param alternatives.
-async function performInteraction(
+// Verbs that drive the page's mouse / keyboard directly rather than a located
+// element's own handlers — the canvas verbs. A `<canvas>` paints every control
+// into one element, so these aim at a position inside a DOM target (or, for
+// `key` / `type`, at whatever already has focus).
+const PAGE_KEYBOARD_ACTIONS = ["key", "type"];
+const DEFAULT_DRAG_STEPS = 10;
+
+// True for a step whose effect is painted rather than written to the DOM: any
+// positional click/hover, any drag or wheel, and page-level keyboard input.
+// Callers use it to settle on pixels instead of `innerHTML`, and to skip the
+// DOM-only hydration-race retry, which would turn one canvas click into two.
+function isCanvasInteraction(interaction) {
+  const { action, position } = interaction || {};
+  return (
+    action === "drag" ||
+    action === "wheel" ||
+    PAGE_KEYBOARD_ACTIONS.includes(action) ||
+    (position != null && (action === "click" || action === "hover"))
+  );
+}
+
+// Page-level keyboard input. Deliberately not `locator.press`: a `<canvas>`
+// without `tabindex` never receives focus, so a locator-scoped press is
+// delivered nowhere. A preceding click on the canvas gives the app focus.
+async function performKeyboardInteraction(frame, { action, value }) {
+  const keyboard = pageOf(frame).keyboard;
+  if (action === "key") {
+    await keyboard.press(value || "Enter");
+  } else {
+    await keyboard.type(value ?? "");
+  }
+}
+
+// Resolve a step's target to the single element to act on. Shared by
+// `performInteraction` and by callers that need the target's box BEFORE
+// acting (the pixel-effect signal clips its before/after shots to it).
+async function resolveInteractionTarget(
   frame,
   interaction,
-  { timeoutMs = 5000, warnings } = {},
+  { warnings, canvasProbe = probeCanvasDominated } = {},
 ) {
-  const { action, selector, text, value } = interaction || {};
+  const { action, selector, text } = interaction || {};
 
   let baseLocator;
   let targetDesc;
@@ -1241,6 +1168,7 @@ async function performInteraction(
         candidateLabels: matchedByText
           ? await candidateLabelSummary(frame)
           : null,
+        canvasDominated: matchedByText ? await canvasProbe(frame) : false,
       }),
     );
   }
@@ -1261,10 +1189,55 @@ async function performInteraction(
     );
   }
 
+  return { locator, targetDesc };
+}
+
+// Drive a single user-style interaction against the settled frame before the
+// screenshot, so an interactive state (expanded accordion, open modal, filled
+// field) can be captured without editing app source.
+//
+// The target is matched by visible `text` (preferred — the agent reliably
+// knows the label it rendered) or a CSS `selector`. `action` is click / fill /
+// press; `value` carries the text for `fill` or the key for `press` (e.g.
+// `Enter`). On a no-match target this THROWS with the list of candidate
+// interactive labels — the capture script's outer catch turns that into a
+// failed capture with an actionable message, never a silent blank screenshot.
+async function performInteraction(
+  frame,
+  interaction,
+  { timeoutMs = 5000, warnings } = {},
+) {
+  const { action, value, position, from, to, steps, button, deltaX, deltaY } =
+    interaction || {};
+
+  if (PAGE_KEYBOARD_ACTIONS.includes(action)) {
+    try {
+      await performKeyboardInteraction(frame, { action, value });
+    } catch (error) {
+      throw new Error(
+        `preview-interact: action "${action}" failed: ${error.message || String(error)}`,
+      );
+    }
+    return;
+  }
+
+  const { locator, targetDesc } = await resolveInteractionTarget(frame, interaction, {
+    warnings,
+  });
+
+  // Only the keys Playwright accepts, so an absent field never reaches it as
+  // an explicit `undefined`.
+  const pointerOpts = { timeout: timeoutMs };
+  if (position) pointerOpts.position = { x: position.x, y: position.y };
+  if (button) pointerOpts.button = button;
+
+  // Pointer verbs report where they landed; every other verb returns undefined.
+  let geometry;
   try {
     switch (action) {
       case "click":
-        await locator.click({ timeout: timeoutMs });
+        geometry = await locatorPointGeometry(frame, locator, targetDesc, action, position);
+        await locator.click(pointerOpts);
         break;
       case "fill":
         await locator.fill(value ?? "", { timeout: timeoutMs });
@@ -1275,19 +1248,102 @@ async function performInteraction(
       case "hover":
         // Reveals hover-only affordances (an action bar, a tooltip) — one of the
         // most common ephemeral states a resting-render screenshot misses.
-        await locator.hover({ timeout: timeoutMs });
+        geometry = await locatorPointGeometry(frame, locator, targetDesc, action, position);
+        await locator.hover(pointerOpts);
         break;
+      case "drag": {
+        // Pan / select-box / move: built from raw mouse events because a canvas
+        // has no drop target for `locator.dragTo`.
+        const box = await targetBox(locator, targetDesc);
+        const mouse = pageOf(frame).mouse;
+        const start = pointIn(box, from);
+        if (!start.inside) {
+          throw await outsideTargetError(frame, action, "from", from, targetDesc, box);
+        }
+        const end = pointIn(box, to);
+        geometry = pointerGeometry(box, start, end);
+        // Ending off the target can be deliberate (dragging something off the
+        // canvas), so it warns rather than refuses.
+        if (!end.inside) {
+          geometry.warning =
+            `drag ends outside the target: ` +
+            outsideTargetMessage("to", to, targetDesc, box, await devicePixelRatioOf(frame));
+          if (Array.isArray(warnings)) warnings.push(`preview-interact: ${geometry.warning}`);
+        }
+        const mouseButton = { button: button || "left" };
+        await mouse.move(start.x, start.y);
+        await mouse.down(mouseButton);
+        await mouse.move(end.x, end.y, {
+          steps: typeof steps === "number" && steps > 0 ? steps : DEFAULT_DRAG_STEPS,
+        });
+        await mouse.up(mouseButton);
+        break;
+      }
+      case "wheel": {
+        // Zoom / scroll: the wheel event lands wherever the pointer is, so move
+        // there first.
+        const box = await targetBox(locator, targetDesc);
+        const mouse = pageOf(frame).mouse;
+        const at = pointIn(box, position);
+        if (!at.inside) {
+          throw await outsideTargetError(frame, action, "position", position, targetDesc, box);
+        }
+        geometry = pointerGeometry(box, at);
+        await mouse.move(at.x, at.y);
+        await mouse.wheel(deltaX || 0, deltaY || 0);
+        break;
+      }
       default:
         throw new Error(
-          `preview-interact: unknown action "${action}" (expected click | fill | press | hover)`,
+          `preview-interact: unknown action "${action}" (expected click | fill | press | hover | drag | wheel | key | type)`,
         );
     }
   } catch (error) {
+    if (error && error.outsideTarget) throw error;
     throw new Error(
       `preview-interact: action "${action}" failed against ${targetDesc}: ${error.message || String(error)}. ` +
         `Candidate interactive labels: ${await candidateLabelSummary(frame)}`,
     );
   }
+  return geometry;
+}
+
+// One screenshot of `page`, clipped to `clip` when given, as a Buffer. The
+// pixel half of the interaction-effect signal and of the canvas settle. A
+// failed shot returns null, which compares unequal to everything — so a flaky
+// screenshot reads as "changed / not yet settled", never as a false "inert".
+async function pixelSnapshot(page, clip) {
+  try {
+    const opts = { fullPage: false };
+    if (clip && clip.width > 0 && clip.height > 0) opts.clip = clip;
+    return await page.screenshot(opts);
+  } catch (_) {
+    return null;
+  }
+}
+
+function samePixels(a, b) {
+  return Buffer.isBuffer(a) && Buffer.isBuffer(b) && a.equals(b);
+}
+
+// Settle a canvas-painted page: `waitForStablePage` compares `innerHTML`, which
+// a canvas never changes, so after a canvas verb it reads "settled" while the
+// app is still animating a pan or zoom. Wait instead for two consecutive equal
+// screenshots, bounded by `timeoutMs` — the same "real signal, safety bound"
+// rule the DOM settle follows.
+async function waitForPixelStable(
+  page,
+  { clip, timeoutMs = 5000, intervalMs = 150, snapshot = pixelSnapshot } = {},
+) {
+  const deadline = Date.now() + timeoutMs;
+  let previous = await snapshot(page, clip);
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    const current = await snapshot(page, clip);
+    if (samePixels(previous, current)) return true;
+    previous = current;
+  }
+  return false;
 }
 
 // Hold until a visible-text or selector predicate becomes true, bounded by a
@@ -1299,14 +1355,31 @@ async function performInteraction(
 // turns a never-appearing predicate into an actionable failure rather than an
 // infinite hang. `text` is matched case-insensitively as a substring (the
 // agent reliably knows the copy it rendered); `selector` is a CSS selector.
-async function waitForPredicate(frame, predicate, { defaultTimeoutMs = 8000 } = {}) {
+//
+// A text predicate on a canvas-dominated page is refused at once rather than
+// after the full bound: canvas-painted words are never DOM text, so the wait
+// could only time out. A hybrid page (DOM text beside a canvas) is not
+// canvas-dominated and keeps the ordinary wait; a canvas that mounts late is
+// caught on the timeout path, which re-checks and appends the same guidance.
+// A selector predicate is never refused — naming the canvas element itself is
+// a legitimate wait for that element. `canvasProbe` is injectable so unit
+// tests classify the page without a browser.
+async function waitForPredicate(
+  frame,
+  predicate,
+  { defaultTimeoutMs = 8000, canvasProbe = probeCanvasDominated } = {},
+) {
   const { text, selector, timeoutMs } = predicate || {};
   const bound =
     typeof timeoutMs === "number" && timeoutMs > 0 ? timeoutMs : defaultTimeoutMs;
 
   let locator;
   let desc;
-  if (typeof text === "string" && text.length > 0) {
+  const byText = typeof text === "string" && text.length > 0;
+  if (byText) {
+    if (await canvasProbe(frame)) {
+      throw new Error(`waitFor: predicate text "${text}" ${canvasTextWaitGuidance()}`);
+    }
     locator = frame.getByText(text, { exact: false }).first();
     desc = `text "${text}"`;
   } else if (typeof selector === "string" && selector.length > 0) {
@@ -1319,10 +1392,42 @@ async function waitForPredicate(frame, predicate, { defaultTimeoutMs = 8000 } = 
   try {
     await locator.waitFor({ state: "visible", timeout: bound });
   } catch (_) {
+    const lateCanvas = byText && (await canvasProbe(frame));
     throw new Error(
-      `waitFor: predicate ${desc} did not become visible within ${bound}ms`,
+      `waitFor: predicate ${desc} did not become visible within ${bound}ms` +
+        (lateCanvas ? `. The page is now canvas-dominated: ${canvasTextWaitGuidance()}` : ""),
     );
   }
+}
+
+// Is the frame canvas-dominated right now — visible canvas/svg/video and no
+// visible text? Reads the same content state the blank gate classifies on.
+// Best-effort: a frame that cannot be measured reads as NOT canvas, so the
+// caller keeps its ordinary DOM behavior instead of refusing on a guess.
+async function probeCanvasDominated(frame) {
+  try {
+    const state = await collectContentState(frame);
+    const visible = await collectVisibleTextLength(frame);
+    if (typeof visible === "number") state.visibleTextLength = visible;
+    return isCanvasDominated(state);
+  } catch (_) {
+    return false;
+  }
+}
+
+// The redirect a text wait on a canvas page gets: why it cannot work, and the
+// three forms that do.
+function canvasTextWaitGuidance() {
+  return (
+    `cannot be awaited: this page is canvas-dominated (it paints into a ` +
+    `canvas with no visible page text), and canvas-painted words are never ` +
+    `in the DOM, so a text wait could only time out. Instead: wait for the ` +
+    `painted frame to stop changing with {"waitFor":{"canvas":true,"timeoutMs":8000}}; ` +
+    `click by position on the canvas ` +
+    `({"click":{"selector":"canvas","position":{"x":120,"y":40}}}, CSS pixels ` +
+    `from its top-left, read off the frame captured just before the step); or ` +
+    `drop the wait and capture — the capture already settles on pixels.`
+  );
 }
 
 // Drive an ordered sequence of interactions against the settled frame, settling
@@ -1345,6 +1450,7 @@ async function performInteractionSequence(
     settleMs = 5000,
     loadingMarkers,
     settle = waitForStablePage,
+    pixelSettle = waitForPixelStable,
     warnings,
   } = {},
 ) {
@@ -1357,6 +1463,76 @@ async function performInteractionSequence(
       throw new Error(`interactions[${i}]: ${err.message}`);
     }
     await settle(page, frame, settleMs, loadingMarkers);
+    if (isCanvasInteraction(interactions[i])) {
+      await pixelSettle(page, { timeoutMs: settleMs });
+    }
+  }
+}
+
+// The query-param isolation harness renders a placeholder instead of the
+// component when the component manifest has no entry for it (most often a fresh
+// checkout, where the gitignored manifest is absent). That placeholder is a
+// perfectly stable page, so nothing else in the capture path notices it: an
+// interaction against it was reported as a selector miss, and a recapture
+// saved it over the scenario's good committed screenshot. The shipped harness
+// marks it with this attribute; harnesses scaffolded before the marker existed
+// are matched by codeyam's own placeholder wording inside `#codeyam-capture`
+// (a compatibility shim for text codeyam wrote, never app text).
+const ISOLATE_MISSING_ATTR = "data-codeyam-isolate-missing";
+const LEGACY_ISOLATE_MISSING_PATTERN = /^\s*No such component "([^"]*)"/;
+
+// The component name the harness placeholder reports as missing, or null when
+// the frame rendered something else.
+async function isolateMissingComponent(frame) {
+  return frame
+    .evaluate(
+      ({ attr, pattern }) => {
+        const marked = document.querySelector(`[${attr}]`);
+        if (marked) return marked.getAttribute(attr) || "";
+        const wrapper = document.getElementById("codeyam-capture");
+        if (!wrapper) return null;
+        const match = (wrapper.textContent || "").match(new RegExp(pattern));
+        return match ? match[1] : null;
+      },
+      {
+        attr: ISOLATE_MISSING_ATTR,
+        pattern: LEGACY_ISOLATE_MISSING_PATTERN.source,
+      },
+    )
+    .catch(() => null);
+}
+
+// `routing.componentManifest` from `.codeyam/stack.json`, for naming the file
+// in the error; a generic phrase when the stack declares none.
+function componentManifestPath() {
+  try {
+    const stack = JSON.parse(
+      fs.readFileSync(require("path").join(".codeyam", "stack.json"), "utf8"),
+    );
+    const manifest = stack && stack.routing && stack.routing.componentManifest;
+    if (typeof manifest === "string" && manifest) return manifest;
+  } catch (_) {}
+  return "the component manifest";
+}
+
+function isolateMissingComponentMessage(name, manifestPath) {
+  return (
+    `isolation harness has no component "${name}" — the component manifest ` +
+    `(${manifestPath}) is missing it. Run codeyam-editor editor isolate --all, ` +
+    `or restart the dev server to regenerate it.`
+  );
+}
+
+// Fail the capture when the frame is the harness placeholder. Called after the
+// scenario loads and before any interaction or screenshot, so an interaction
+// never runs against the placeholder and the committed PNG is never replaced.
+async function assertIsolatedComponentResolved(
+  frame,
+  { manifestPath = componentManifestPath } = {},
+) {
+  const missing = await isolateMissingComponent(frame);
+  if (missing !== null) {
+    throw new Error(isolateMissingComponentMessage(missing, manifestPath()));
   }
 }
 
@@ -1381,13 +1557,21 @@ module.exports = {
   createNetworkTracker,
   waitForNetworkQuiet,
   waitForStablePage,
+  waitForReadySignal,
+  watchNavigationAfterReady,
   loadScenarioInIframe,
   loadScenarioTopLevel,
-  collectInteractiveLabels,
-  candidateLabelSummary,
-  noMatchGuidance,
-  describeMatchCandidates,
+  isCanvasInteraction,
+  resolveInteractionTarget,
   performInteraction,
+  pixelSnapshot,
+  samePixels,
+  waitForPixelStable,
   waitForPredicate,
+  probeCanvasDominated,
   performInteractionSequence,
+  ISOLATE_MISSING_ATTR,
+  isolateMissingComponent,
+  isolateMissingComponentMessage,
+  assertIsolatedComponentResolved,
 };
