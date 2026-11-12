@@ -50,14 +50,22 @@ if (!group) { console.error(`external group "${GROUP_NAME}" not found`); process
 console.log(`external group: ${GROUP_NAME} (${group.id})`);
 
 // 1) Add the build to the external group (idempotent — 409/422 if already linked).
-const addRes = await api(`/v1/betaGroups/${group.id}/relationships/builds`, "POST", {
-  data: [{ type: "builds", id: build.id }],
+// Linked from the build side: since Nov 2026 the group-side endpoint
+// (/v1/betaGroups/{id}/relationships/builds) 404s on valid builds.
+const addRes = await api(`/v1/builds/${build.id}/relationships/betaGroups`, "POST", {
+  data: [{ type: "betaGroups", id: group.id }],
 });
 if (addRes.ok) console.log(`added build to "${GROUP_NAME}"`);
 else if ([409, 422].includes(addRes.status)) console.log(`build already in "${GROUP_NAME}" (${addRes.status})`);
 else { console.error(`add-to-group failed ${addRes.status}: ${JSON.stringify(addRes.body)}`); process.exit(1); }
 
-// 2) Create the Beta App Review submission.
+// 2) Create the Beta App Review submission (skip if one already exists — ASC
+// answers a duplicate with 422 INVALID_QC_STATE, not 409).
+const existing = await api(`/v1/builds/${build.id}/betaAppReviewSubmission`);
+if (existing.ok && existing.body?.data) {
+  console.log(`already submitted for external review — betaReviewState=${existing.body.data.attributes?.betaReviewState ?? "?"}`);
+  process.exit(0);
+}
 const subRes = await api(`/v1/betaAppReviewSubmissions`, "POST", {
   data: { type: "betaAppReviewSubmissions", relationships: { build: { data: { type: "builds", id: build.id } } } },
 });

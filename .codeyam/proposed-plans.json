@@ -14,8 +14,8 @@
       "kind": "tech-debt",
       "rank": 1,
       "sightings": 1,
-      "offeredCount": 1,
-      "lastOfferedAt": "2026-11-11T20:39:58.906170+00:00"
+      "offeredCount": 2,
+      "lastOfferedAt": "2026-11-12T18:11:54.858687+00:00"
     },
     {
       "id": "split-oversized-model-swift-and-settingsview-swift",
