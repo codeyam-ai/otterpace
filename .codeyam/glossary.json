@@ -208,6 +208,19 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "One closed-app pass that brings the cached dashboard and the server movement heartbeat up to date, run from the HealthKit observer wake and the infrequent BGAppRefreshTask. Builds its own model because no SwiftUI scene exists, refreshes through the background throttle, and only on fresh data re-arms the inactivity nudge and pushes the heartbeat; the AI coach never runs here. Also owns the shared stravaFetcher closure used by every launch and refresh path, and the task identifier that must match Info.plist.",
+    "filePath": "Sources/AppCore/BackgroundRefresh.swift",
+    "name": "BackgroundRefresh",
+    "tags": [
+      "battery-light-background-refresh"
+    ],
+    "untestabilityReason": {
+      "justification": "Wires UserDefaults.standard, StravaService, SessionStore and the live notification scheduler for the iOS background launch; every decision it makes is delegated to RefreshPolicy and OtterpaceModel.refreshIfDue, which are unit-tested in RefreshPolicyTests and ModelRefreshTests.",
+      "kind": "platform-glue"
+    }
+  },
+  {
     "conformsToView": true,
     "description": "The Bolt theme's mascot mark: a sharp lightning glyph drawn as a SwiftUI path that scales to a size and takes the theme color.",
     "filePath": "Sources/AppCore/Theming/ThemeMarks.swift",
@@ -1386,6 +1399,13 @@
     }
   },
   {
+    "conformsToView": false,
+    "description": "Refresh extension of the Today model: refreshIfDue gates Health and Strava reads on RefreshPolicy intervals (15m foreground, 1h background, 3h Strava), adopts a newer composed cache instead of re-reading, and stamps each source only on a successful read.",
+    "filePath": "Sources/AppCore/Model+Refresh.swift",
+    "name": "OtterpaceModel",
+    "testFile": "Tests/AppCoreTests/ModelRefreshTests.swift"
+  },
+  {
     "description": "Observable model for the Today dashboard. Reads the days TodayState from flat rb-prefixed UserDefaults keys seeded at launch, including a multi-week loadHistory series, and exposes derived values goalProgress clamped to 1.0, stepsRemaining, goalReached, plus a connect action. setTrainingPhase persists the declared training phase through CoachProfileStore and applies it to today.profile immediately so it reaches coaching, preserving the profiles other fields. ingestStravaWorkouts also populates loadHistory.",
     "filePath": "Sources/AppCore/Model.swift",
     "name": "OtterpaceModel",
@@ -1611,6 +1631,26 @@
     "filePath": "Sources/AppCore/RaceGoals.swift",
     "name": "RaceStore",
     "testFile": "Tests/AppCoreTests/RaceGoalsTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "The battery-light throttle every automatic data refresh asks first. Minimum intervals per kind - 15 minutes for returning to the app, 1 hour for a background wake, 3 hours for the rate-limited Strava API - plus the 4-hour spacing requested for the iOS background refresh task. shouldRefresh treats never-refreshed as due and clamps a future stamp to now so a skewed clock cannot force a refresh storm. isUsableRead rejects an all-zero background Health read, which means the phone is locked and the data is unknown rather than idle. isNewStravaImport keeps an empty or unchanged import from wiping cached runs or counting as fresh, and shouldAdoptCache tells whether the background path wrote a newer snapshot cache than this model last composed. Pull-to-refresh bypasses it because the user asked explicitly.",
+    "filePath": "Sources/AppCore/RefreshPolicy.swift",
+    "name": "RefreshPolicy",
+    "tags": [
+      "battery-light-background-refresh"
+    ],
+    "testFile": "Tests/AppCoreTests/RefreshPolicyTests.swift"
+  },
+  {
+    "conformsToView": false,
+    "description": "Persists when Health and Strava last obtained fresh data, one UserDefaults key per source, so the RefreshPolicy throttle holds across launches and between the foreground model and the separate background-launch model.",
+    "filePath": "Sources/AppCore/RefreshPolicy.swift",
+    "name": "RefreshStamps",
+    "tags": [
+      "battery-light-background-refresh"
+    ],
+    "testFile": "Tests/AppCoreTests/RefreshPolicyTests.swift"
   },
   {
     "conformsToView": false,
@@ -2524,6 +2564,15 @@
     "testFile": "test/api/session-lib.test.ts"
   },
   {
+    "description": "Claims the model's single refresh slot shared by restoreOnLaunch and refreshIfDue; refuses in a seeded scenario, which must never read live data, or while another restore or refresh is already reading. endRefresh releases it.",
+    "filePath": "Sources/AppCore/Model+Refresh.swift",
+    "name": "beginRefresh",
+    "tags": [
+      "battery-light-background-refresh"
+    ],
+    "testFile": "Tests/AppCoreTests/ModelRefreshTests.swift"
+  },
+  {
     "conformsToView": false,
     "description": "Where the user actually adds credits, per provider. Carried in the out-of-credits message so 'add credits' names a destination instead of sending the user hunting; the iOS ChatBubble lifts it into a tappable link.",
     "filePath": "api/_lib/llm.ts",
@@ -2716,6 +2765,18 @@
     "testFile": "Tests/AppCoreTests/DynamicTypeOverrideTests.swift"
   },
   {
+    "description": "Releases the model refresh slot claimed by beginRefresh; called from a defer in restoreOnLaunch and refreshIfDue.",
+    "filePath": "Sources/AppCore/Model+Refresh.swift",
+    "name": "endRefresh",
+    "tags": [
+      "battery-light-background-refresh"
+    ],
+    "untestabilityReason": {
+      "justification": "single assignment with no branching; its effect is asserted by the beginRefresh exclusivity test in ModelRefreshTests",
+      "kind": "trivial-wrapper"
+    }
+  },
+  {
     "description": "Reads a required environment variable, throwing a typed missing_env error when it is unset.",
     "filePath": "api/_lib/strava.ts",
     "name": "env",
@@ -2746,6 +2807,15 @@
     "filePath": "api/_lib/strava.ts",
     "name": "fetchMappedActivities",
     "testFile": "test/api/strava.test.ts"
+  },
+  {
+    "description": "Calls the injected Strava fetcher and stamps any successful call, even an empty list, so a quiet account is not re-polled; a failed call returns nil and leaves the stamp so the next chance retries. Shared by restoreOnLaunch and refreshIfDue.",
+    "filePath": "Sources/AppCore/Model+Refresh.swift",
+    "name": "fetchStravaStamped",
+    "tags": [
+      "battery-light-background-refresh"
+    ],
+    "testFile": "Tests/AppCoreTests/ModelRefreshTests.swift"
   },
   {
     "description": "Formats a whole number with locale thousands separators for readable step counts, e.g. 11240 becomes 11,240.",
@@ -2865,6 +2935,15 @@
     "filePath": "api/_lib/account.ts",
     "name": "healthEndpoint",
     "testFile": "test/api/account.test.ts"
+  },
+  {
+    "description": "Builds the movement heartbeat the opt-in server nudge reads from what the dashboard shows now - totals, last movement time, inactivity setting, and any locally armed nudge - so the Settings opt-in and every automatic refresh send the same shape.",
+    "filePath": "Sources/AppCore/Model+Refresh.swift",
+    "name": "healthHeartbeat",
+    "tags": [
+      "battery-light-background-refresh"
+    ],
+    "testFile": "Tests/AppCoreTests/ModelRefreshTests.swift"
   },
   {
     "description": "Whether the server has heard from the device recently enough to act on its picture of the user. Exists because last_movement_at cannot answer that on its own: a genuinely idle user and a user whose phone simply has not reported look identical through it, so a naive max-age guard on last_movement_at would suppress exactly the nudges the feature exists to send. Keyed instead to a dedicated device heartbeat, which is why mirrorMovement stamps last_heartbeat_at rather than reusing updated_at - stampNudgeSent also bumps updated_at, so our own outgoing push would otherwise masquerade as fresh evidence from the phone. A missing or unparseable heartbeat degrades to not-stale rather than suppressing, matching localHourIn's rollout-gap reasoning: an absent field means an older client, and silencing those users would disable the feature for them entirely.",
@@ -3165,6 +3244,15 @@
     "filePath": "Sources/AppCore/ActivityHistory.swift",
     "name": "referenceDate",
     "testFile": "Tests/AppCoreTests/ActivityHistoryTests.swift"
+  },
+  {
+    "description": "The OtterpaceModel automatic refresh every non-user path goes through: returning to the app, a HealthKit background wake, and the rare iOS background refresh. Re-reads Health and Strava only when RefreshPolicy says each is due, ignores a locked-phone background read, stamps Strava on any successful call so a quiet account is not re-polled, and when nothing new was read in the foreground adopts a newer cache written by the background path. Shares a single in-flight slot with restoreOnLaunch so overlapping triggers never pay for the same reads twice. Returns true only when fresh data replaced what was on screen, which is the signal to re-send the heartbeat.",
+    "filePath": "Sources/AppCore/Model+Refresh.swift",
+    "name": "refreshIfDue",
+    "tags": [
+      "battery-light-background-refresh"
+    ],
+    "testFile": "Tests/AppCoreTests/ModelRefreshTests.swift"
   },
   {
     "description": "Remove one device token; drops the whole row when it was the last token so a signed-out user leaves no push footprint.",

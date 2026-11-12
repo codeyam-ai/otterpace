@@ -202,11 +202,11 @@ public final class OtterpaceModel: ObservableObject {
     /// "Health access is off" state. Seeded scenarios start `.authorized`.
     @Published public var healthAuth: HealthAuthState
 
-    private let source: HealthDataSource
+    let source: HealthDataSource
     /// The UserDefaults the on-device stores (races, coach profile) read/write.
     /// Kept so `applyOnDeviceState()` and the race mutators use the same store —
     /// `.standard` in the app, an injectable suite in tests.
-    private let defaults: UserDefaults
+    let defaults: UserDefaults
     #if os(iOS)
     /// The live HealthKit movement observer, retained while the inactivity reminder
     /// is on so its background-delivery query stays alive. iOS-only device glue.
@@ -222,8 +222,15 @@ public final class OtterpaceModel: ObservableObject {
     /// The two sources `today`'s history is composed from, kept apart so either
     /// can refresh without erasing the other. Before this, a Health refresh
     /// replaced `today` wholesale and silently dropped every imported Strava run.
-    private var healthSnapshot: TodayState?
-    private var stravaWorkouts: [LatestWorkout] = []
+    /// Internal (not private) from here down so `Model+Refresh.swift` can update them.
+    var healthSnapshot: TodayState?
+    var stravaWorkouts: [LatestWorkout] = []
+    /// When this model last wrote the snapshot cache (or restored from it), so a
+    /// newer cache written by the background-launch path can be told apart.
+    var lastComposedAt: Date?
+    /// True while a launch restore or automatic refresh is reading, so two
+    /// overlapping triggers never pay for the same reads twice.
+    var refreshInFlight = false
 
     public init(today: TodayState, source: HealthDataSource = SeededHealthDataSource(),
                 defaults: UserDefaults = .standard) {
@@ -463,12 +470,14 @@ public final class OtterpaceModel: ObservableObject {
     /// returns [] when Strava isn't connected; a failed import keeps the cached runs.
     @MainActor
     public func restoreOnLaunch(fetchStrava: () async throws -> [LatestWorkout]) async {
-        guard !HealthSource.isScenarioSeeded(defaults) else { return }
+        guard beginRefresh() else { return }
+        defer { endRefresh() }
         if healthAuth == .authorized {
             healthSnapshot = await source.loadToday()
+            RefreshStamps.markHealth(Date(), defaults)
             recompose()
         }
-        if let workouts = try? await fetchStrava(), !workouts.isEmpty {
+        if let workouts = await fetchStravaStamped(fetchStrava, at: Date()), !workouts.isEmpty {
             ingestStravaWorkouts(workouts)
         }
     }
@@ -482,12 +491,15 @@ public final class OtterpaceModel: ObservableObject {
     public func refresh() async {
         guard healthAuth == .authorized else { return }
         healthSnapshot = await source.loadToday()
+        RefreshStamps.markHealth(Date(), defaults)
         recompose()
     }
 
     /// Rebuild `today` from the latest Health snapshot plus the Strava import, then
     /// re-apply the on-device stores and cache the result (see `WorkoutMerge.compose`).
-    private func recompose() {
+    /// Internal (not private) so the refresh extension in `Model+Refresh.swift` can
+    /// compose after a read.
+    func recompose() {
         today = WorkoutMerge.compose(healthSnapshot ?? today,
                                      healthWorkouts: healthSnapshot?.workouts ?? [],
                                      strava: stravaWorkouts)
@@ -497,8 +509,10 @@ public final class OtterpaceModel: ObservableObject {
 
     private func saveSnapshot() {
         guard !HealthSource.isScenarioSeeded(defaults) else { return }
+        let at = Date()
+        lastComposedAt = at
         SnapshotCache.save(CachedSnapshot(health: healthSnapshot, strava: stravaWorkouts,
-                                          refreshedAt: Date()), defaults)
+                                          refreshedAt: at), defaults)
     }
 
     /// Re-apply the on-device race list and coach profile onto the freshly loaded

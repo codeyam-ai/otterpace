@@ -1,0 +1,467 @@
+{
+  "timestamp": "2026-11-12T18:04:42Z",
+  "title": "Battery-light background refresh",
+  "type": "feature",
+  "userRequest": "## Summary\n\nKeep Otterpace's data fresh without the user opening the app, as lightly on the\nbattery as iOS allows. Today nothing refreshes on foreground (only pull-to-refresh\ncalls `OtterpaceModel.refresh()`), nothing refreshes Strava after the first\nimport, and the server-driven nudge's movement heartbeat is uploaded **only** when\nthe user flips Health sync on in Settings (`SettingsView.enableHealthSync`). A\nstale heartbeat and a stale on-device picture are exactly what produce \"get\nmoving\" nudges on very active days. This plan adds foreground refresh, piggybacks\na refresh on the HealthKit background wakes the app already receives, and adds one\ninfrequent `BGAppRefreshTask` — then re-sends the heartbeat from fresh data.\n\nUser constraint, verbatim: *\"be cautious about it - don't overdo it and tax phone\nbattery.\"*\n\n## Key Decisions\n\n- **Reuse the wake we already pay for.** `AppDelegate` already re-registers\n  `MovementActivityMonitor`'s `HKObserverQuery` with `.hourly` background delivery\n  at launch. Extend that wake to also refresh the cached snapshot and heartbeat,\n  rather than adding a second HealthKit observer.\n- **One `BGAppRefreshTask`, long interval.** Request `earliestBeginDate` ≥ 4h and\n  let iOS's own budgeting decide; reschedule only after a run. No\n  `BGProcessingTask`, no `fetch`-mode polling loops, no location, no audio.\n- **Throttle everything.** A single `RefreshPolicy` (pure, unit-tested) answers\n  \"should we refresh now?\" from the last refresh time: foreground ≥ 15 min,\n  background ≥ 1h, Strava ≥ 3h (remote, rate-limited). Pull-to-refresh bypasses it.\n- **Never run the AI coach in the background.** No coach-card regeneration, no\n  spend on the user's API key while the app is closed.\n- **Respect protected data.** HealthKit is unreadable while the phone is locked;\n  a background read that fails or returns nothing must be treated as *unknown*\n  (keep the cache, don't overwrite with zeros, don't push a heartbeat) —\n  consistent with `ActivityFreshness`'s \"when freshness is unknown, stay quiet\".\n- **Heartbeat only when opted in.** Push `SyncableHealthSnapshot` from a refresh\n  only when the existing gates hold (signed in + Health sync consent), exactly as\n  `AppDelegate.registerForPushIfEligible()` gates push.\n\n## Implementation\n\n### 1. Refresh policy\n\n**New file**: `Sources/AppCore/RefreshPolicy.swift`\n\nPure throttle: `shouldRefresh(kind:lastRefreshed:now:)` for `.foreground`,\n`.background`, `.strava`. Unit-tested like `ActivityFreshness`.\n\n### 2. One refresh entry point\n\n**File**: `Sources/AppCore/Model.swift`\n\n`refreshIfDue(_ kind:)` that consults the policy, runs the Health load + (if due)\nStrava import through the merge/cache from the prerequisite plan, and returns\nwhether fresh data was obtained. Unknown/empty background reads leave the cache\nuntouched.\n\n### 3. Foreground refresh\n\n**File**: `Sources/AppCore/ContentView.swift`\n\nCall `model.refreshIfDue(.foreground)` in the existing `scenePhase == .active`\nbranch, before the nudge re-arm calls so they decide from fresh data.\n\n### 4. Background refresh on existing wakes + BGAppRefreshTask\n\n**File**: `App/App.swift`\n\nRegister a `BGAppRefreshTask` handler in `didFinishLaunchingWithOptions`\n(production only, same scenario guard), schedule it on entering background, and\ncomplete it with an expiration handler. Route the `MovementActivityMonitor`\nobserver wake through the same background refresh.\n\n**File**: `App/Info.plist`\n\nAdd `fetch` to `UIBackgroundModes` and a `BGTaskSchedulerPermittedIdentifiers`\nentry (e.g. `com.otterpace.app.refresh`).\n\n### 5. Heartbeat from fresh data\n\n**File**: `Sources/AppCore/Account/AccountSyncService.swift`\n\nAfter a successful refresh, when opted in, push the same `SyncableHealthSnapshot`\nshape `SettingsView.enableHealthSync` builds today. Extract that builder out of\n`SettingsView.swift` so both paths share it.\n\n## Reused existing code\n\n- `MovementActivityMonitor` + `AppDelegate` background-launch path from `Sources/AppCore/Notifications/MovementActivityMonitor.swift` and `App/App.swift` (glossary entry: `MovementActivityMonitor`)\n- `ActivityFreshness` from `Sources/AppCore/Notifications/ActivityFreshness.swift` (glossary entry: `ActivityFreshness`)\n- `AccountSyncService.pushHealth` from `Sources/AppCore/Account/AccountSyncService.swift` (glossary entry: `AccountSyncService`)\n- `OtterpaceModel.refresh()` / `lastMovementISO()` / `armedInactivityISO()` from `Sources/AppCore/Model.swift` (glossary entry: `OtterpaceModel`)\n- Tests to extend: `Tests/AppCoreTests/ModelTests.swift`, `Tests/AppCoreTests/AccountSyncTests.swift`, `Tests/AppCoreTests/MovementRemindersTests.swift`\n\n## Scenarios to Demonstrate\n\n- Return to foreground after 2h → Today shows the new steps/workout without pulling\n- Return to foreground after 2 min → no refresh (throttled)\n- Background wake while locked → cache kept, no heartbeat pushed\n- Very active day with stale heartbeat → refreshed heartbeat, no inactivity nudge",
+  "description": "Keeps the Today dashboard, both movement nudges and the server heartbeat working from fresh Health and Strava data without draining the battery. A new RefreshPolicy throttles automatic reads: Health at most every 15 minutes when the user returns to the app and every hour on a background wake, Strava every 3 hours, with the background task scheduled no more than every 4 hours. Each source is stamped only after a successful read, so a failed Strava import retries on the next opportunity. A background wake adopts a newer cache the foreground already composed instead of re-reading it. The refresh logic moved out of Model.swift into Model+Refresh.swift, and BackgroundRefresh wires the iOS background task and shares one Strava fetcher with ContentView. Returning to the app now refreshes before the inactivity and goal nudges decide, and re-sends the health heartbeat when the data was fresh. Tests: RefreshPolicyTests (16), ModelRefreshTests (18), AccountSyncTests +2; 558 of 558 passing. Scope verdict: this cycle strengthens two already-delivered deliverables, the HealthKit integration and the Strava integration, by keeping their data fresh in the background. All 14 project deliverables remain delivered, and none were deferred, including none decided by the agent alone. Known gaps, both recorded as approval deviations: the closed-app iOS background-task wiring has no automated test because it needs the OS scheduler, and the active-day no-false-nudge case is tested only in parts. Reconcile also re-registered 36 new tests with descriptions and recaptured 31 Today and Settings screenshots whose dependencies changed. Every recaptured frame matched the saved one apart from the status-bar clock.",
+  "modifiedFiles": [
+    {
+      "path": ".codeyam/dependency-graph.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/glossary.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/accessibility-large-text-today--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/accessibility-large-text-today--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-account-sync--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-all-three-connected--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-all-three-connected--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-anthropic-migrated--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-anthropic-migrated--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-no-key--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-ai-coach-no-key--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-appearance-picker-bolt--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-appearance-picker-bolt--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-custom-goal--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-custom-goal--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-delete-all-journal-entries--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-delete-all-journal-entries--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-health-sync-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-races-list--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-races-list--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-activity-data-stale--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-activity-data-stale--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-reminders-on--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-replay-tour-row--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-replay-tour-row--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-training-phase-building--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/settings-training-phase-building--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-almost-there--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-almost-there--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-computed-nudge--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-computed-nudge--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-custom-goal--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-custom-goal--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-day-one-connect--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-day-one-connect--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-fresh-start--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-fresh-start--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-bolt-theme--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-bolt-theme--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-fieldnote-theme--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-fieldnote-theme--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-garden-theme--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-garden-theme--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-orbit-theme--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-goal-crushed-orbit-theme--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-long-content--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-long-content--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-midday-nudge--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-midday-nudge--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-recovery-caution--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-recovery-caution--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-strong-weekend-fresh-week--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-strong-weekend-fresh-week--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-walking-focused-nudge--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-walking-focused-nudge--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-zero-step-morning--iphone-16.png",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/scenarios/screenshots/today-zero-step-morning--iphone-16.png.hash",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-cache.json",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/test-registry.json",
+      "status": "modified"
+    },
+    {
+      "path": "App/App.swift",
+      "status": "modified"
+    },
+    {
+      "path": "App/Info.plist",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Account/AccountSyncService.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/ContentView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Model.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/Notifications/MovementActivityMonitor.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Sources/AppCore/SettingsView.swift",
+      "status": "modified"
+    },
+    {
+      "path": "Tests/AppCoreTests/AccountSyncTests.swift",
+      "status": "modified"
+    },
+    {
+      "path": ".codeyam/state/red-proofs/battery-light-background-refresh.json",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/BackgroundRefresh.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/Model+Refresh.swift",
+      "status": "added"
+    },
+    {
+      "path": "Sources/AppCore/RefreshPolicy.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "status": "added"
+    },
+    {
+      "path": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "status": "added"
+    }
+  ],
+  "scenarioScreenshots": [
+    {
+      "name": "Accessibility — Large Text Today",
+      "screenshotPath": "accessibility-large-text-today--iphone-16.png"
+    },
+    {
+      "name": "Settings",
+      "screenshotPath": "settings--iphone-16.png"
+    },
+    {
+      "name": "Settings - Appearance Picker - Bolt",
+      "screenshotPath": "settings-appearance-picker-bolt--iphone-16.png"
+    },
+    {
+      "name": "Settings — AI Coach All Three Connected",
+      "screenshotPath": "settings-ai-coach-all-three-connected--iphone-16.png"
+    },
+    {
+      "name": "Settings — AI Coach Anthropic Migrated",
+      "screenshotPath": "settings-ai-coach-anthropic-migrated--iphone-16.png"
+    },
+    {
+      "name": "Settings — AI Coach No Key",
+      "screenshotPath": "settings-ai-coach-no-key--iphone-16.png"
+    },
+    {
+      "name": "Settings — Account Sync",
+      "screenshotPath": "settings-account-sync--iphone-16.png"
+    },
+    {
+      "name": "Settings — Custom Goal",
+      "screenshotPath": "settings-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Settings — Delete All Journal Entries",
+      "screenshotPath": "settings-delete-all-journal-entries--iphone-16.png"
+    },
+    {
+      "name": "Settings — Health Sync On",
+      "screenshotPath": "settings-health-sync-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Races List",
+      "screenshotPath": "settings-races-list--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders On",
+      "screenshotPath": "settings-reminders-on--iphone-16.png"
+    },
+    {
+      "name": "Settings — Reminders, Activity Data Stale",
+      "screenshotPath": "settings-reminders-activity-data-stale--iphone-16.png"
+    },
+    {
+      "name": "Settings — Replay Tour Row",
+      "screenshotPath": "settings-replay-tour-row--iphone-16.png"
+    },
+    {
+      "name": "Settings — Training Phase (Building)",
+      "screenshotPath": "settings-training-phase-building--iphone-16.png"
+    },
+    {
+      "name": "Today - Almost There",
+      "screenshotPath": "today-almost-there--iphone-16.png"
+    },
+    {
+      "name": "Today - Computed Nudge",
+      "screenshotPath": "today-computed-nudge--iphone-16.png"
+    },
+    {
+      "name": "Today - Day One (Connect)",
+      "screenshotPath": "today-day-one-connect--iphone-16.png"
+    },
+    {
+      "name": "Today - Fresh Start",
+      "screenshotPath": "today-fresh-start--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed",
+      "screenshotPath": "today-goal-crushed--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed - Bolt Theme",
+      "screenshotPath": "today-goal-crushed-bolt-theme--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed - Fieldnote Theme",
+      "screenshotPath": "today-goal-crushed-fieldnote-theme--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed - Garden Theme",
+      "screenshotPath": "today-goal-crushed-garden-theme--iphone-16.png"
+    },
+    {
+      "name": "Today - Goal Crushed - Orbit Theme",
+      "screenshotPath": "today-goal-crushed-orbit-theme--iphone-16.png"
+    },
+    {
+      "name": "Today - Long Content",
+      "screenshotPath": "today-long-content--iphone-16.png"
+    },
+    {
+      "name": "Today - Midday Nudge",
+      "screenshotPath": "today-midday-nudge--iphone-16.png"
+    },
+    {
+      "name": "Today - Recovery Caution",
+      "screenshotPath": "today-recovery-caution--iphone-16.png"
+    },
+    {
+      "name": "Today - Walking-Focused Nudge",
+      "screenshotPath": "today-walking-focused-nudge--iphone-16.png"
+    },
+    {
+      "name": "Today - Zero-Step Morning",
+      "screenshotPath": "today-zero-step-morning--iphone-16.png"
+    },
+    {
+      "name": "Today — Custom Goal",
+      "screenshotPath": "today-custom-goal--iphone-16.png"
+    },
+    {
+      "name": "Today — Strong Weekend, Fresh Week",
+      "screenshotPath": "today-strong-weekend-fresh-week--iphone-16.png"
+    }
+  ],
+  "testResults": {
+    "total": 558,
+    "passed": 558,
+    "failed": 0,
+    "runners": [
+      {
+        "name": "tests",
+        "total": 558,
+        "passed": 558
+      }
+    ]
+  }
+}

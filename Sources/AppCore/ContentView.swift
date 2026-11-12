@@ -15,6 +15,7 @@ public struct ContentView: View {
     // background arms it. No-ops unless the user enabled a reminder in Settings.
     @Environment(\.scenePhase) private var scenePhase
     private let reminderScheduler: MovementReminderScheduling = MovementReminderScheduler()
+    private let accountSync = AccountSyncService()
 
     // Scenario-only override: when a preview scenario seeds `rbPreviewMode`, the
     // app renders the Buddy style/loader showcase instead of the normal flow.
@@ -67,8 +68,16 @@ public struct ContentView: View {
     /// under preview/scenario seeds, like the session check above.
     private func restoreDataIfNeeded() {
         guard previewMode.isEmpty, !HealthSource.isScenarioSeeded() else { return }
-        let strava = StravaService()
-        Task { await model.restoreOnLaunch(fetchStrava: { try await strava.fetchActivities() }) }
+        let fetchStrava = BackgroundRefresh.stravaFetcher()
+        Task { await model.restoreOnLaunch(fetchStrava: fetchStrava) }
+    }
+
+    /// The throttled automatic refresh on returning to the app (see
+    /// `RefreshPolicy`). Skipped under preview/scenario seeds.
+    @MainActor
+    private func refreshIfDue() async -> Bool {
+        guard previewMode.isEmpty, !HealthSource.isScenarioSeeded() else { return false }
+        return await model.refreshIfDue(.foreground, fetchStrava: BackgroundRefresh.stravaFetcher())
     }
 
     /// Open the system Settings app so the user can grant Health access.
@@ -175,11 +184,21 @@ public struct ContentView: View {
                 // not movement, so we no longer just cancel it), and keep the
                 // background observer alive while the reminder is on.
                 model.startMovementMonitoring(reminderScheduler, settings: settings)
-                Task { await model.rearmInactivity(reminderScheduler, settings: settings) }
-                // The goal nudge is verified, never pre-scheduled: decide it here
-                // against the step count we can actually read, and again on every
-                // observer wake. Opening the app is the most reliable chance we get.
-                Task { await model.rearmGoal(reminderScheduler, settings: settings) }
+                Task {
+                    // Refresh first (throttled to once per 15 min; Strava once per
+                    // 3h) so the dashboard and both nudges decide from fresh data.
+                    let fresh = await refreshIfDue()
+                    await model.rearmInactivity(reminderScheduler, settings: settings)
+                    // The goal nudge is verified, never pre-scheduled: decide it here
+                    // against the step count we can actually read, and again on every
+                    // observer wake. Opening the app is the most reliable chance we get.
+                    await model.rearmGoal(reminderScheduler, settings: settings)
+                    // Re-send the heartbeat from the fresh picture. `pushHealth`
+                    // is a no-op unless signed in with Health sync on.
+                    if fresh {
+                        await accountSync.pushHealth(await model.healthHeartbeat(), session: session.state)
+                    }
+                }
                 revalidateSessionIfNeeded()   // confirm the Apple credential on foreground
             case .background:
                 // Arm from the latest known movement as we leave the foreground.

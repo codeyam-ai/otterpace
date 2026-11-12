@@ -93,6 +93,24 @@
       "runner": "tests"
     },
     {
+      "description": "The heartbeat copies the day's totals and the nudge fields verbatim, and names the device timezone — the server resolves quiet hours in it.",
+      "file": "Tests/AppCoreTests/AccountSyncTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testHeartbeatCopiesTotalsNudgeFieldsAndTimeZone",
+      "line": 92,
+      "registeredAt": "2026-11-12T15:40:22.308819+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "With no movement known and no nudge armed, those fields stay nil rather than inventing a value the server would act on.",
+      "file": "Tests/AppCoreTests/AccountSyncTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.AccountSyncTests › testHeartbeatLeavesUnknownMovementAndNudgeNil",
+      "line": 107,
+      "registeredAt": "2026-11-12T15:40:22.415086+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "With equal timestamps local wins and nothing is pushed when the values match.",
       "format": "junit-xml",
       "key": "AppCoreTests.AccountSyncTests › testMergeEqualTimestampsLocalWinsNoPushWhenSame",
@@ -2710,6 +2728,168 @@
       "runner": "tests"
     },
     {
+      "description": "A background pass never adopts — it is the writer, not the reader, of that cache.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testBackgroundDoesNotAdoptTheCache",
+      "line": 173,
+      "registeredAt": "2026-11-12T15:40:22.519742+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An empty successful import stamps (a quiet account isn't re-polled) but is not fresh.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testEmptyStravaSuccessStampsButIsNotFresh",
+      "line": 117,
+      "registeredAt": "2026-11-12T15:40:22.613491+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A failed import leaves no stamp, so the next chance retries instead of waiting 3h.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testFailedStravaImportLeavesNoStamp",
+      "line": 127,
+      "registeredAt": "2026-11-12T15:40:22.706534+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The first automatic refresh reads Health, shows it, stamps it, and reports fresh.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testFirstForegroundRefreshReadsAndStamps",
+      "line": 62,
+      "registeredAt": "2026-11-12T15:40:22.811853+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "When nothing new was read in the foreground but the background path wrote a newer cache, the foreground shows that cache.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testForegroundAdoptsANewerBackgroundCache",
+      "line": 162,
+      "registeredAt": "2026-11-12T15:40:22.905534+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Once the interval has passed the next return reads again.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testForegroundRefreshAfterIntervalReadsAgain",
+      "line": 81,
+      "registeredAt": "2026-11-12T15:40:23.001092+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Returning again within 15 minutes does not spend another Health read.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testForegroundRefreshWithinIntervalIsSkipped",
+      "line": 72,
+      "registeredAt": "2026-11-12T15:40:23.095170+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The heartbeat is built from what is on screen after the refresh.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testHeartbeatCarriesTheRefreshedTotals",
+      "line": 241,
+      "registeredAt": "2026-11-12T15:40:23.187742+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A locked-phone (all-zero) background read keeps the cached picture, leaves the stamp so the next wake retries, and is not fresh — so no heartbeat is sent.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testLockedBackgroundReadKeepsCacheAndStamp",
+      "line": 93,
+      "registeredAt": "2026-11-12T15:40:23.282937+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "New runs replace what is on screen and count as fresh; the same runs 3h later don't.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testNewStravaRunsAreFreshAndUnchangedAreNot",
+      "line": 137,
+      "registeredAt": "2026-11-12T15:40:23.380077+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A cache older than this model's own last compose is not re-adopted.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testOlderCacheIsNotAdopted",
+      "line": 183,
+      "registeredAt": "2026-11-12T15:40:23.474390+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Only one restore/refresh holds the slot at a time; releasing it frees the slot.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testRefreshSlotIsExclusiveUntilReleased",
+      "line": 195,
+      "registeredAt": "2026-11-12T15:40:23.566280+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "While another refresh holds the slot, refreshIfDue stands down without reading.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testRefreshStandsDownWhileAnotherIsInFlight",
+      "line": 204,
+      "registeredAt": "2026-11-12T15:40:23.659963+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A failed Strava call during launch restore leaves no Strava stamp.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testRestoreOnLaunchFailedStravaLeavesNoStamp",
+      "line": 234,
+      "registeredAt": "2026-11-12T15:40:23.753953+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The launch restore stamps both sources, so the first foreground return right after launch doesn't read them all over again.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testRestoreOnLaunchStampsBothSources",
+      "line": 223,
+      "registeredAt": "2026-11-12T15:40:23.881825+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A seeded scenario never reads live data, so the slot is refused.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testSeededScenarioRefusesTheRefreshSlot",
+      "line": 213,
+      "registeredAt": "2026-11-12T15:40:23.980814+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Strava is not called again inside its 3h window, even when Health is due.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testStravaIsThrottledToThreeHours",
+      "line": 149,
+      "registeredAt": "2026-11-12T15:40:24.071631+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Without Health access nothing is read at all.",
+      "file": "Tests/AppCoreTests/ModelRefreshTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.ModelRefreshTests › testUnauthorizedRefreshDoesNotReadHealth",
+      "line": 106,
+      "registeredAt": "2026-11-12T15:40:24.161074+00:00",
+      "runner": "tests"
+    },
+    {
       "description": "clampGoal pins out-of-range goals to the min and max bounds and rounds in-range values to the nearest 500 increment.",
       "format": "junit-xml",
       "key": "AppCoreTests.ModelTests › testClampGoalBoundsAndRounding",
@@ -3635,6 +3815,150 @@
       "format": "junit-xml",
       "key": "AppCoreTests.RaceImportPersistenceTests › testSearchResultMapsToDraft",
       "registeredAt": "2026-07-06T21:02:55Z",
+      "runner": "tests"
+    },
+    {
+      "description": "Any real signal (steps, a workout, or per-day history) makes a background read usable.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testBackgroundAcceptsAReadWithAnySignal",
+      "line": 73,
+      "registeredAt": "2026-11-12T15:40:24.256290+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "In the background an all-zero read means the phone is locked — unknown, not idle.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testBackgroundRejectsAnAllZeroRead",
+      "line": 68,
+      "registeredAt": "2026-11-12T15:40:24.356392+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A background wake spends an OS-budgeted read, so it waits a full hour.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testBackgroundWaitsAnHour",
+      "line": 33,
+      "registeredAt": "2026-11-12T15:40:24.450161+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A changed or first import replaces what is on screen.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testChangedStravaImportIsNew",
+      "line": 99,
+      "registeredAt": "2026-11-12T15:40:24.540971+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An empty import (not connected / quiet account) must never wipe cached runs.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testEmptyStravaImportIsNotNew",
+      "line": 88,
+      "registeredAt": "2026-11-12T15:40:24.629828+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "In the foreground HealthKit is readable, so even an all-zero day is trusted.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testForegroundTrustsAnEmptyRead",
+      "line": 63,
+      "registeredAt": "2026-11-12T15:40:24.719686+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Returning to the app re-reads Health at most once per 15 minutes.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testForegroundWaitsFifteenMinutes",
+      "line": 27,
+      "registeredAt": "2026-11-12T15:40:24.822842+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A stamp in the future (clock moved back) counts as just refreshed, so a skewed clock cannot force a refresh storm.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testFutureStampCountsAsJustRefreshed",
+      "line": 46,
+      "registeredAt": "2026-11-12T15:40:24.917819+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "The per-kind intervals are the ones the user approved in the plan.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testMinimumIntervalsMatchTheApprovedPlan",
+      "line": 53,
+      "registeredAt": "2026-11-12T15:40:25.013571+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A model that has never composed adopts whatever the cache holds.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testNeverComposedAdoptsAnyCache",
+      "line": 107,
+      "registeredAt": "2026-11-12T15:40:25.106240+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A source that has never refreshed is always due, so a first launch reads data.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testNeverRefreshedIsAlwaysDue",
+      "line": 20,
+      "registeredAt": "2026-11-12T15:40:25.200211+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A cache written after this model composed came from the background path — adopt it.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testNewerCacheIsAdopted",
+      "line": 112,
+      "registeredAt": "2026-11-12T15:40:25.301030+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "A cache this model wrote itself (same time) or an older one is not adopted again.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testSameOrOlderCacheIsNotAdopted",
+      "line": 117,
+      "registeredAt": "2026-11-12T15:40:25.393001+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Stamps persist per source in the given defaults, so the throttle holds across launches and between the foreground and background models.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testStampsRoundTripPerSource",
+      "line": 126,
+      "registeredAt": "2026-11-12T15:40:25.484637+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "Strava is a remote, rate-limited API, so it is polled at most every 3 hours.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testStravaWaitsThreeHours",
+      "line": 39,
+      "registeredAt": "2026-11-12T15:40:25.574118+00:00",
+      "runner": "tests"
+    },
+    {
+      "description": "An unchanged import is not fresh, so it triggers no recompose or heartbeat.",
+      "file": "Tests/AppCoreTests/RefreshPolicyTests.swift",
+      "format": "junit-xml",
+      "key": "AppCoreTests.RefreshPolicyTests › testUnchangedStravaImportIsNotNew",
+      "line": 94,
+      "registeredAt": "2026-11-12T15:40:25.666335+00:00",
       "runner": "tests"
     },
     {

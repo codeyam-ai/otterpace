@@ -85,6 +85,34 @@ final class AccountSyncTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode(SyncableHealthSnapshot.self, from: data), original)
     }
 
+    // MARK: Heartbeat builder
+
+    // The heartbeat copies the day's totals and the nudge fields verbatim, and
+    // names the device timezone — the server resolves quiet hours in it.
+    func testHeartbeatCopiesTotalsNudgeFieldsAndTimeZone() {
+        let today = TodayState(healthKitConnected: true, steps: 6420, activeMinutes: 38,
+                               distanceMiles: 4.2, activeEnergyKcal: 310)
+        let tz = TimeZone(identifier: "America/Denver")!
+        let beat = SyncableHealthSnapshot.heartbeat(from: today, lastMovementAt: "2026-11-12T14:00:00Z",
+                                                    inactivityHours: 2,
+                                                    localNudgeArmedAt: "2026-11-12T16:00:00Z", timeZone: tz)
+        XCTAssertEqual(beat, SyncableHealthSnapshot(steps: 6420, distanceMiles: 4.2, activeMinutes: 38,
+                                                    activeEnergyKcal: 310, lastMovementAt: "2026-11-12T14:00:00Z",
+                                                    inactivityHours: 2, timeZone: "America/Denver",
+                                                    localNudgeArmedAt: "2026-11-12T16:00:00Z"))
+    }
+
+    // With no movement known and no nudge armed, those fields stay nil rather than
+    // inventing a value the server would act on.
+    func testHeartbeatLeavesUnknownMovementAndNudgeNil() {
+        let beat = SyncableHealthSnapshot.heartbeat(from: .empty, lastMovementAt: nil, inactivityHours: 1,
+                                                    localNudgeArmedAt: nil)
+        XCTAssertNil(beat.lastMovementAt)
+        XCTAssertNil(beat.localNudgeArmedAt)
+        XCTAssertEqual(beat.steps, 0)
+        XCTAssertEqual(beat.timeZone, TimeZone.current.identifier)
+    }
+
     // MARK: Guests never sync
 
     func testGuestNeverPushesPreferences() async {

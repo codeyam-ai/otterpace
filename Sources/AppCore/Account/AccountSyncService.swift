@@ -62,6 +62,24 @@ public struct SyncableHealthSnapshot: Codable, Equatable {
         self.timeZone = timeZone
         self.localNudgeArmedAt = localNudgeArmedAt
     }
+
+    /// The movement heartbeat built from the dashboard's current `today`: the
+    /// day's totals plus the last-movement time, inactivity setting, device
+    /// timezone (the server resolves quiet hours in it) and any locally armed
+    /// nudge (so the server stands down rather than sending a duplicate). One
+    /// builder for the Settings opt-in and every automatic refresh.
+    public static func heartbeat(from today: TodayState, lastMovementAt: String?, inactivityHours: Int,
+                                 localNudgeArmedAt: String?,
+                                 timeZone: TimeZone = .current) -> SyncableHealthSnapshot {
+        SyncableHealthSnapshot(steps: today.steps,
+                               distanceMiles: today.distanceMiles,
+                               activeMinutes: today.activeMinutes,
+                               activeEnergyKcal: today.activeEnergyKcal,
+                               lastMovementAt: lastMovementAt,
+                               inactivityHours: inactivityHours,
+                               timeZone: timeZone.identifier,
+                               localNudgeArmedAt: localNudgeArmedAt)
+    }
 }
 
 /// A payload paired with the timestamp the remote recorded for it.

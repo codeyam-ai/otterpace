@@ -286,6 +286,10 @@
       "imports": [],
       "importedBy": []
     },
+    "Sources/AppCore/BackgroundRefresh.swift": {
+      "imports": [],
+      "importedBy": []
+    },
     "Sources/AppCore/BuddyPreviewHost.swift": {
       "imports": [],
       "importedBy": []
@@ -622,6 +626,10 @@
       "imports": [],
       "importedBy": []
     },
+    "Sources/AppCore/Model+Refresh.swift": {
+      "imports": [],
+      "importedBy": []
+    },
     "Sources/AppCore/Model.swift": {
       "imports": [],
       "importedBy": []
@@ -683,6 +691,10 @@
       "importedBy": []
     },
     "Sources/AppCore/RacePromptBanner.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Sources/AppCore/RefreshPolicy.swift": {
       "imports": [],
       "importedBy": []
     },
@@ -910,6 +922,10 @@
       "imports": [],
       "importedBy": []
     },
+    "Tests/AppCoreTests/ModelRefreshTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
     "Tests/AppCoreTests/ModelTests.swift": {
       "imports": [],
       "importedBy": []
@@ -935,6 +951,10 @@
       "importedBy": []
     },
     "Tests/AppCoreTests/RaceImportPersistenceTests.swift": {
+      "imports": [],
+      "importedBy": []
+    },
+    "Tests/AppCoreTests/RefreshPolicyTests.swift": {
       "imports": [],
       "importedBy": []
     },
@@ -1780,5 +1800,5 @@
       "importedBy": []
     }
   },
-  "lastUpdated": "2026-11-11T20:32:38Z"
+  "lastUpdated": "2026-11-12T18:07:18Z"
 }

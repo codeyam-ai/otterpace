@@ -357,22 +357,9 @@ public struct SettingsView: View {
             // Include the movement heartbeat (last-movement time + inactivity
             // setting) so a user who also has push registered gets the opt-in
             // server-driven nudge; harmless for everyone else (the backend only
-            // mirrors it onto an existing push row).
-            let lastMovement = await model.lastMovementISO()
-            let snapshot = SyncableHealthSnapshot(
-                steps: model.today.steps,
-                distanceMiles: model.today.distanceMiles,
-                activeMinutes: model.today.activeMinutes,
-                activeEnergyKcal: model.today.activeEnergyKcal,
-                lastMovementAt: lastMovement,
-                inactivityHours: ReminderSettings.load().inactivityHours,
-                // The server resolves quiet hours in THIS zone. Without it the
-                // scan falls back to UTC, which is the bug this fixes.
-                timeZone: TimeZone.current.identifier,
-                // If this device already has an inactivity nudge armed, say so —
-                // the server stands down rather than sending a duplicate.
-                localNudgeArmedAt: model.armedInactivityISO()
-            )
+            // mirrors it onto an existing push row). Same builder the automatic
+            // refreshes use, so both paths send one shape.
+            let snapshot = await model.healthHeartbeat()
             await accountSync.pushHealth(snapshot, session: session.state)
         }
     }

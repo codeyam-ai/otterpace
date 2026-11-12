@@ -1,0 +1,80 @@
+{
+  "provenAt": "2026-11-12T15:28:55Z",
+  "slug": "battery-light-background-refresh",
+  "paths": [],
+  "runScope": [
+    "Sources/AppCore/RefreshPolicy.swift",
+    "Sources/AppCore/Model+Refresh.swift",
+    "Tests/AppCoreTests/RefreshPolicyTests.swift",
+    "Tests/AppCoreTests/ModelRefreshTests.swift"
+  ],
+  "neuters": [
+    {
+      "file": "Sources/AppCore/RefreshPolicy.swift",
+      "find": "guard kind == .background else { return true }",
+      "replace": "return true"
+    },
+    {
+      "file": "Sources/AppCore/Model+Refresh.swift",
+      "find": "guard let workouts = try? await fetch() else { return nil }",
+      "replace": "let workouts = (try? await fetch()) ?? []"
+    },
+    {
+      "file": "Sources/AppCore/Model+Refresh.swift",
+      "find": "        } else if kind == .foreground {",
+      "replace": "        } else if false {"
+    },
+    {
+      "file": "Sources/AppCore/Model+Refresh.swift",
+      "find": ", !refreshInFlight else { return false }",
+      "replace": " else { return false }"
+    }
+  ],
+  "tests": {
+    "testBackgroundRejectsAnAllZeroRead": {
+      "withoutFix": "fail",
+      "withFix": "pass",
+      "established": {
+        "kind": "measured"
+      }
+    },
+    "testFailedStravaImportLeavesNoStamp": {
+      "withoutFix": "fail",
+      "withFix": "pass",
+      "established": {
+        "kind": "measured"
+      }
+    },
+    "testForegroundAdoptsANewerBackgroundCache": {
+      "withoutFix": "fail",
+      "withFix": "pass",
+      "established": {
+        "kind": "measured"
+      }
+    },
+    "testLockedBackgroundReadKeepsCacheAndStamp": {
+      "withoutFix": "fail",
+      "withFix": "pass",
+      "established": {
+        "kind": "measured"
+      }
+    },
+    "testRefreshStandsDownWhileAnotherIsInFlight": {
+      "withoutFix": "fail",
+      "withFix": "pass",
+      "established": {
+        "kind": "measured"
+      }
+    }
+  },
+  "proof": {
+    "verdict": "proven",
+    "flipped": [
+      "testBackgroundRejectsAnAllZeroRead",
+      "testLockedBackgroundReadKeepsCacheAndStamp",
+      "testFailedStravaImportLeavesNoStamp",
+      "testForegroundAdoptsANewerBackgroundCache",
+      "testRefreshStandsDownWhileAnotherIsInFlight"
+    ]
+  }
+}

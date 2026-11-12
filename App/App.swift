@@ -1,13 +1,16 @@
 import SwiftUI
 import AppCore
+import BackgroundTasks
 import UIKit
 import UserNotifications
 
 /// App delegate whose only job is the background-relaunch case: when iOS wakes the
 /// app in the background to deliver new HealthKit data (no SwiftUI scene becomes
 /// active), re-establish the movement observer so the inactivity nudge re-arms
-/// against the user's real last movement. In-app foreground/Settings paths are
-/// driven by `OtterpaceModel` via `ContentView`; this covers the closed-app case.
+/// against the user's real last movement, and run the throttled
+/// `BackgroundRefresh` on that wake and on one infrequent `BGAppRefreshTask`.
+/// In-app foreground/Settings paths are driven by `OtterpaceModel` via
+/// `ContentView`; this covers the closed-app case.
 final class AppDelegate: NSObject, UIApplicationDelegate {
     private var monitor: MovementActivityMonitor?
     private let pushRegistration = PushRegistrationService()
@@ -19,14 +22,52 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         // now: it is armed from a live step read rather than pre-scheduled, so a
         // goal-only user still needs this observer to wake the app.
         guard !HealthSource.isScenarioSeeded() else { return true }
+        registerBackgroundRefresh()
         let settings = ReminderSettings.load()
         if settings.inactivityEnabled || settings.goalEnabled {
-            let monitor = MovementActivityMonitor(source: HealthSource.make(), scheduler: MovementReminderScheduler())
+            // Each observer wake also runs the throttled background refresh, so the
+            // cached dashboard and heartbeat ride a wake iOS already gives us.
+            let monitor = MovementActivityMonitor(source: HealthSource.make(), scheduler: MovementReminderScheduler(),
+                                                  onWake: { await BackgroundRefresh.run() })
             monitor.start(settings: settings)
             self.monitor = monitor
         }
         registerForPushIfEligible()
         return true
+    }
+
+    // MARK: Background refresh (one infrequent BGAppRefreshTask)
+
+    /// Register the handler (must happen before launch finishes) and ask for the
+    /// next run each time the app leaves the foreground.
+    private func registerBackgroundRefresh() {
+        BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundRefresh.taskIdentifier, using: nil) { [weak self] task in
+            guard let task = task as? BGAppRefreshTask else { task.setTaskCompleted(success: false); return }
+            self?.handleBackgroundRefresh(task)
+        }
+        NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification,
+                                               object: nil, queue: .main) { [weak self] _ in
+            self?.scheduleBackgroundRefresh()
+        }
+    }
+
+    /// Request the next run no sooner than `RefreshPolicy.backgroundTaskSpacing`
+    /// (4h). iOS treats it as a floor and applies its own budget; submitting again
+    /// replaces any pending request rather than stacking them.
+    private func scheduleBackgroundRefresh() {
+        let request = BGAppRefreshTaskRequest(identifier: BackgroundRefresh.taskIdentifier)
+        request.earliestBeginDate = Date(timeIntervalSinceNow: RefreshPolicy.backgroundTaskSpacing)
+        try? BGTaskScheduler.shared.submit(request)
+    }
+
+    private func handleBackgroundRefresh(_ task: BGAppRefreshTask) {
+        scheduleBackgroundRefresh()   // keep exactly one future run queued
+        let work = Task { @MainActor in
+            await BackgroundRefresh.run()
+            task.setTaskCompleted(success: !Task.isCancelled)
+        }
+        // Out of time: stop and report; the next scheduled run picks it up.
+        task.expirationHandler = { work.cancel() }
     }
 
     /// Ask iOS for an APNs token only when server push is opted into: signed in,

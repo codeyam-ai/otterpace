@@ -21,13 +21,19 @@ public final class MovementActivityMonitor {
     private let source: HealthDataSource
     private let scheduler: MovementReminderScheduling
     private var query: HKObserverQuery?
+    /// Extra work to run on each observer wake, after the re-arm — the app's
+    /// background-launch path routes its throttled data refresh through here so
+    /// it rides the wake we already receive instead of adding another.
+    private let onWake: (() async -> Void)?
 
     /// Movement types whose new samples mean "the user just moved".
     private static let movementIDs: [HKQuantityTypeIdentifier] = [.stepCount, .distanceWalkingRunning]
 
-    public init(source: HealthDataSource, scheduler: MovementReminderScheduling) {
+    public init(source: HealthDataSource, scheduler: MovementReminderScheduling,
+                onWake: (() async -> Void)? = nil) {
         self.source = source
         self.scheduler = scheduler
+        self.onWake = onWake
     }
 
     /// Enable hourly background delivery for step/distance and run a long-lived
@@ -55,6 +61,7 @@ public final class MovementActivityMonitor {
             guard let self else { completion(); return }
             Task {
                 await Self.rearm(settings, source: self.source, scheduler: self.scheduler)
+                await self.onWake?()
                 completion()   // tell HealthKit we've handled this background wake
             }
         }
@@ -86,7 +93,8 @@ public final class MovementActivityMonitor {
 
 /// Non-iOS stub (macOS test build): no HealthKit, nothing to observe.
 public final class MovementActivityMonitor {
-    public init(source: HealthDataSource, scheduler: MovementReminderScheduling) {}
+    public init(source: HealthDataSource, scheduler: MovementReminderScheduling,
+                onWake: (() async -> Void)? = nil) {}
     public func start(settings: ReminderSettings) {}
     public func stop() {}
 }
