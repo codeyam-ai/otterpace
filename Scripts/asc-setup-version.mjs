@@ -11,7 +11,7 @@ if(!KEY_ID||!ISSUER_ID){console.error("set ASC_KEY_ID and ASC_ISSUER_ID");proces
 if(!NEW_VERSION){console.error("pass the new version string, e.g. 1.0.1");process.exit(1);}
 
 const SUBTITLE="Your friendly running coach";
-const WHATS_NEW="Bring the AI key you already have: Buddy now works with OpenAI and Google Gemini as well as Anthropic, and you can switch providers anytime. New Journal: jot a quick note after a run or a daily check-in on how you feel, and Buddy takes it into account. See exactly what Buddy sees with the new coach data preview. A short first-run tour, helpful tips, and starter questions make getting going easier. Smarter movement nudges: new good-morning and wind-down reminders, quiet hours that follow your time zone, and nudges that stay quiet when Buddy can't tell how much you've moved. If your AI key runs out of credits, Buddy now says so plainly, with a link to top up. Plus fixes and polish.";
+const WHATS_NEW="Otterpace now remembers your connections. Open the app and your dashboard is right there, with no need to reconnect Apple Health. Your last dashboard shows instantly while fresh data loads. Strava runs now stay in your history alongside your Apple Health workouts, and a run recorded in both shows up once. Activity history reaches back 13 weeks, and the heatmap now shows your daily steps.";
 
 const pk=crypto.createPrivateKey(fs.readFileSync(`${os.homedir()}/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8`));
 const b=x=>Buffer.from(x).toString("base64url");
