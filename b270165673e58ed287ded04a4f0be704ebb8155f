@@ -1,0 +1,1 @@
+{"commitKind":"unfinalized","pushedRef":"refs/heads/main","reason":"Release bump only: MARKETING_VERSION 1.0.4/build 16 and the What's New string. Full swift test (522), vitest (236), tsc, simulator build and App Store validation all passed on this tip.","timestamp":"2026-11-12T14:40:10Z","user":"30483582+nseldeib@users.noreply.github.com"}
