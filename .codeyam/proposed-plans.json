@@ -20,9 +20,9 @@
     {
       "id": "split-oversized-model-swift-and-settingsview-swift",
       "title": "Split oversized Model.swift and SettingsView.swift",
-      "mode": "ui",
-      "body": "## Summary\nSources/AppCore/Model.swift is 714 lines and Sources/AppCore/SettingsView.swift is 1017 lines, both far past the ~300-line budget. This feature touched Model.swift again to call `WorkoutMerge.compose`.\n\n## Key Decisions\n- Pure moves only, with no behavior change. The existing 522 tests and scenario captures must stay green and unchanged.\n- Model.swift: move persistence and cache handling (snapshot cache, Strava workout store) and source refresh coordination into extensions or helper types in their own files.\n- SettingsView.swift: split each section (connections, race import, theme, account) into its own subview file.\n\n## Implementation\n1. Pull the Model cache and persistence members into `Model+Persistence.swift`, and refresh orchestration into `Model+Refresh.swift`.\n2. Pull the SettingsView sections into `Settings/<Section>View.swift` files.\n3. Run analyze-imports on the new files explicitly, then refresh tests and confirm the scenario hashes haven't changed.",
-      "reason": "Model.swift (714 lines) and SettingsView.swift (1017 lines) are well over the ~300-line budget, which makes every change to them riskier.",
+      "mode": "backend",
+      "body": "## Summary\nSplit Sources/AppCore/Model.swift and Sources/AppCore/SettingsView.swift into focused extensions/subviews.\n\n## Key Decisions\n- Follow the Model+Refresh.swift extension pattern added this cycle.\n\n## Implementation\n- Move cohesive groups out of Model.swift into Model+<Area>.swift files.\n- Extract SettingsView sections into subviews.",
+      "reason": "Model.swift (728 lines) and SettingsView.swift (1004 lines) are well over the ~300-line budget.",
       "severity": 2,
       "source": "session-review",
       "category": "debt",
@@ -30,7 +30,10 @@
       "proposedAt": "2026-11-11T20:39:35.860291+00:00",
       "kind": "tech-debt",
       "rank": 2,
-      "sightings": 1
+      "sightings": 2,
+      "notes": [
+        "2026-11-12: Seen again 2026-11-12: Model.swift now 728 lines even after moving refresh logic into Model+Refresh.swift; SettingsView.swift 1004 lines."
+      ]
     },
     {
       "id": "two-planned-demos-have-no-screenshot-merged-health-strava-history-with-duplicates-removed-and-a-strava-only-relaunch-screenshot-setups-skip-the-merge-by-design",
@@ -66,6 +69,7 @@
       "status": "pending",
       "proposedAt": "2026-11-11T20:39:35.860291+00:00",
       "kind": "tech-debt",
+      "rank": 3,
       "sightings": 1
     },
     {
@@ -80,6 +84,7 @@
       "status": "pending",
       "proposedAt": "2026-11-11T20:39:35.860291+00:00",
       "kind": "tech-debt",
+      "rank": 4,
       "sightings": 1
     },
     {
@@ -94,6 +99,77 @@
       "status": "pending",
       "proposedAt": "2026-11-11T20:39:35.860291+00:00",
       "kind": "tech-debt",
+      "rank": 5,
+      "sightings": 1
+    },
+    {
+      "id": "register-test-fix-command-omits-required-file",
+      "title": "register-test fix command omits required --file",
+      "mode": "backend",
+      "body": "## What happened\nREGISTRY_TEST_MISSING_DESCRIPTION's fixCommand prints `register-test` without `--file`, which is rejected. `backfill-descriptions` does not support the Swift `tests` runner, so 36 tests had to be removed and re-registered by hand, then `refresh-tests --force` run to restore evidence.\n\n## What would have helped\nA fixCommand that runs as printed, and backfill-descriptions support for the Swift runner (reading descriptions from the test's leading `//` comment).",
+      "reason": "The suggested fix for missing test descriptions is rejected when run as printed.",
+      "severity": 3,
+      "source": "codeyam-improvement",
+      "status": "pending",
+      "proposedAt": "2026-11-12T18:11:41.009468+00:00",
+      "sightings": 1
+    },
+    {
+      "id": "start-simulator-picks-an-ios-18-1-device-that-mismatches-committed-captures",
+      "title": "start-simulator picks an iOS 18.1 device that mismatches committed captures",
+      "mode": "backend",
+      "body": "## What happened\nstart-simulator silently defaulted to an iOS 18.1 device; its frames differ from the committed iOS 26 set (flat tab bar), so every recapture would show as changed. Had to manually boot the iOS 26.5 iPhone 17 Pro.\n\n## What would have helped\nPick the device/runtime that matches the committed captures (record it alongside them), or warn loudly on mismatch.",
+      "reason": "Recaptures came out with a different (flat) tab bar than the committed iOS 26 screenshots.",
+      "severity": 3,
+      "source": "codeyam-improvement",
+      "status": "pending",
+      "proposedAt": "2026-11-12T18:11:41.009468+00:00",
+      "sightings": 1
+    },
+    {
+      "id": "recapture-stale-per-scenario-time-budget-too-short-under-load",
+      "title": "recapture-stale per-scenario time budget too short under load",
+      "mode": "backend",
+      "body": "## What happened\nrecapture-stale derived a 16s/scenario budget, but captures took 40-120s under host load; slugs failed with a bare \"error sending request\" when the per-capture request timed out.\n\n## What would have helped\nA budget derived from observed capture times, and a timeout error that names the budget exceeded.",
+      "reason": "Captures failed with a bare 'error sending request' when they exceeded a 16s budget.",
+      "severity": 3,
+      "source": "codeyam-improvement",
+      "status": "pending",
+      "proposedAt": "2026-11-12T18:11:41.009468+00:00",
+      "sightings": 1
+    },
+    {
+      "id": "finalize-coverage-silently-invalidated-by-a-later-gitignore-edit",
+      "title": "Finalize coverage silently invalidated by a later .gitignore edit",
+      "mode": "backend",
+      "body": "## What happened\n`.codeyam/state/finalize-debt.json` was gitignored, which only surfaced at verify-full-finalize after a full finalize. Un-ignoring it changed .gitignore after the finalize, so `push` refused with 'not yet finalized' even though session-finalize had just reported status=ok; a second finalize was needed.\n\n## What would have helped\nDon't gitignore the coverage marker by default (or flag it at scaffold/first finalize), and have the commit step warn when files change after the finalize it relies on.",
+      "reason": "Push was refused after a passing finalize because .gitignore changed afterwards; finalize had to be re-run.",
+      "severity": 3,
+      "source": "codeyam-improvement",
+      "status": "pending",
+      "proposedAt": "2026-11-12T18:11:41.009468+00:00",
+      "sightings": 1
+    },
+    {
+      "id": "the-closed-app-wiring-the-iphone-background-refresh-task-the-health-wake-hook-and-sending-the-heartbeat-only-after-fresh-data-has-no-automated-test-it-is-iphone-only-code-and-only-the-decisions-it-relies-on-are-tested",
+      "title": "The closed-app wiring — the iPhone background refresh task, the Health wake hook, and sending the heartbeat only after fresh data — has no automated test; it is iPhone-only code, and only the decisions it relies on are tested.",
+      "mode": "backend",
+      "body": "## Summary\n\nThe closed-app wiring — the iPhone background refresh task, the Health wake hook, and sending the heartbeat only after fresh data — has no automated test; it is iPhone-only code, and only the decisions it relies on are tested.\n\nAt the approval gate for \"Battery-light background refresh\" the user approved the built work past this gap: it differs from what the plan asked for. Built from plan `battery-light-background-refresh` (now at `.codeyam/plans/completed/battery-light-background-refresh.md`).\n\nOtterpace now keeps your activity data fresh on its own, without opening the app and without draining the battery.\n\n## What you can now do\n- Open the app and see up-to-date numbers (refreshes on foreground, at most every 15 min)\n- Get coaching nudges based on fresh movement data, piggybacking on HealthKit wakes iOS already grants\n- Have Strava re-sync in the background every few hours via one long-interval iOS refresh task\n- Pull-to-refresh still forces an immediate update; the AI coach never runs while the app is closed\n\nRead that plan and the code it changed before planning how to close the gap.",
+      "reason": "Approved past at the approval gate for \"Battery-light background refresh\".",
+      "source": "session-review",
+      "status": "pending",
+      "proposedAt": "2026-11-12T18:11:41.009468+00:00",
+      "sightings": 1
+    },
+    {
+      "id": "the-plan-s-very-active-day-no-wrong-get-moving-nudge-scenario-is-not-tested-end-to-end-its-parts-are-tested-separately",
+      "title": "The plan's 'very active day, no wrong get-moving nudge' scenario is not tested end to end; its parts are tested separately.",
+      "mode": "backend",
+      "body": "## Summary\n\nThe plan's 'very active day, no wrong get-moving nudge' scenario is not tested end to end; its parts are tested separately.\n\nAt the approval gate for \"Battery-light background refresh\" the user approved the built work past this gap: it differs from what the plan asked for. Built from plan `battery-light-background-refresh` (now at `.codeyam/plans/completed/battery-light-background-refresh.md`).\n\nOtterpace now keeps your activity data fresh on its own, without opening the app and without draining the battery.\n\n## What you can now do\n- Open the app and see up-to-date numbers (refreshes on foreground, at most every 15 min)\n- Get coaching nudges based on fresh movement data, piggybacking on HealthKit wakes iOS already grants\n- Have Strava re-sync in the background every few hours via one long-interval iOS refresh task\n- Pull-to-refresh still forces an immediate update; the AI coach never runs while the app is closed\n\nRead that plan and the code it changed before planning how to close the gap.",
+      "reason": "Approved past at the approval gate for \"Battery-light background refresh\".",
+      "source": "session-review",
+      "status": "pending",
+      "proposedAt": "2026-11-12T18:11:41.009468+00:00",
       "sightings": 1
     }
   ],
@@ -114,6 +190,27 @@
       "rankedIds": [
         "model-level-tests-for-cache-restore-and-strava-health-merge",
         "split-oversized-model-swift-and-settingsview-swift"
+      ]
+    },
+    {
+      "at": "2026-11-12T18:11:41.009468+00:00",
+      "feature": "Battery-light background refresh",
+      "notes": "Backend-only cycle (background refresh). Main friction was CodeYam-side: test-description backfill, simulator runtime mismatch, recapture timeouts, and finalize coverage invalidated by a post-finalize .gitignore edit. App debt unchanged: M…",
+      "proposedIds": [
+        "split-oversized-model-swift-and-settingsview-swift",
+        "register-test-fix-command-omits-required-file",
+        "start-simulator-picks-an-ios-18-1-device-that-mismatches-committed-captures",
+        "recapture-stale-per-scenario-time-budget-too-short-under-load",
+        "finalize-coverage-silently-invalidated-by-a-later-gitignore-edit",
+        "the-closed-app-wiring-the-iphone-background-refresh-task-the-health-wake-hook-and-sending-the-heartbeat-only-after-fresh-data-has-no-automated-test-it-is-iphone-only-code-and-only-the-decisions-it-relies-on-are-tested",
+        "the-plan-s-very-active-day-no-wrong-get-moving-nudge-scenario-is-not-tested-end-to-end-its-parts-are-tested-separately"
+      ],
+      "rankedIds": [
+        "model-level-tests-for-cache-restore-and-strava-health-merge",
+        "split-oversized-model-swift-and-settingsview-swift",
+        "refactor:Sources/AppCore/Model.swift:1",
+        "refactor:Sources/AppCore/SettingsView.swift:2",
+        "refactor:Sources/AppCore/Health/HealthKitDataSource.swift:0"
       ]
     }
   ]
